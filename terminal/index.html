@@ -218,7 +218,13 @@ html.fit .board.house{padding:0}html.fit .board.house .htag{font-size:13px;paddi
 #ttsModal p{font-size:12px;line-height:1.6;margin-top:10px}
 #ttsModal textarea{width:100%;margin-top:6px;background:#050914;border:1px solid var(--line);color:#fff;font:inherit;padding:8px;height:80px;resize:none}
 #ttsModal .acts{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
-#ttsModal .box{max-width:520px}
+#ttsModal .box{max-width:520px;position:relative;max-height:94vh;overflow-y:auto}
+#ttsModal .x{position:absolute;top:8px;right:10px;background:none;border:0;color:var(--dim);font-size:20px;line-height:1;padding:6px;cursor:pointer}
+#ttsModal .x:hover{color:#fff}#ttsModal h3{padding-right:30px}
+#mySec{margin-top:14px;border-top:1px solid var(--line)}
+#myToggle{display:flex;justify-content:space-between;align-items:center;width:100%;background:none;border:0;color:var(--txt);font:inherit;font-size:11px;letter-spacing:1.5px;padding:10px 0;cursor:pointer}
+#myToggle .chev{transition:transform .2s}#myToggle[aria-expanded="true"] .chev{transform:rotate(180deg)}
+#myOrders .more{display:block;width:100%;margin-top:8px;background:none;border:1px solid var(--line);color:var(--blue2);font:inherit;font-size:10px;letter-spacing:1.5px;padding:7px;cursor:pointer}
 #ttsModal input,#ttsModal select{width:100%;margin-top:6px;background:#050914;border:1px solid var(--line);color:#fff;font:inherit;padding:7px 8px}
 #ttsModal label.f{display:block;font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;margin-top:12px}
 #ttsModal .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -227,7 +233,7 @@ html.fit .board.house{padding:0}html.fit .board.house .htag{font-size:13px;paddi
 #ttsModal .kind button.on{color:#000;background:var(--amber);border-color:var(--amber)}
 #ttsModal .total{font-family:'VT323';font-size:30px;color:var(--amber)}
 #payMsg{font-size:12px;margin-top:10px;min-height:18px;line-height:1.5}
-#myOrders{max-height:260px;overflow-y:auto;margin-top:6px}#myOrders:empty{display:none}
+#myOrders:empty{display:none}
 #myOrders .o{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:11px}
 #myOrders .o .w{color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#myOrders .o .d{color:var(--dim)}
 #myOrders .o .st{grid-column:2/4;color:var(--dim)}#myOrders .o .st.ok{color:var(--green)}#myOrders .o .st.bad{color:var(--red)}#myOrders .o .st.wait{color:var(--amber)}
@@ -454,6 +460,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 <div id="pulseTO"><div class="k">⚡ PULSE FIRED ⚡</div><div class="n" id="ptN"></div><div class="s" id="ptS"></div><div class="d" id="ptD"></div></div>
 <div id="audioGate">🔊 click anywhere to turn on sound</div>
 <div id="ttsModal"><div class="box">
+  <button class="x" id="ttsClose" type="button" aria-label="Close">✕</button>
   <h3>ON SCREEN · ON STREAM</h3>
   <div class="kind" id="kind"><button data-k="t" class="on">🔊 TTS</button><button data-k="a">📢 BILLBOARD</button><button data-k="i">🖼 IMAGE AD</button></div>
   <label class="f">Your name / X handle</label><input id="fFrom" maxlength="24" placeholder="@you">
@@ -477,10 +484,13 @@ html.fit #tip{font-size:20px;padding:10px 14px}
     <div><label class="f">Pay with</label><select id="fTok"><option value="usdc">USDC</option><option value="sol">SOL</option></select></div>
     <div style="text-align:right"><div class="dim" style="font-size:10px;letter-spacing:1.5px">TOTAL</div><div class="total" id="fTotal">—</div></div>
   </div>
-  <p style="font-size:11px" class="dim" id="rules">TTS is a donation: it plays on stream about a minute after the payment confirms. Keep it within Twitch / Kick / YouTube / X rules. No links, contract addresses, or anything hateful. Anything that breaks the rules is held for a mod and, if rejected, not refunded. Want a longer run or an all-day sponsor slot? DM <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener" style="color:var(--amber)">@TheMarinesX</a>.</p>
+  <p style="font-size:11px" class="dim" id="rules">TTS is a donation: it plays on stream a few seconds after the payment confirms. Keep it within Twitch / Kick / YouTube / X rules. No links, contract addresses, or anything hateful. Anything that breaks the rules is held for a mod and, if rejected, not refunded. Want a longer run or an all-day sponsor slot? DM <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener" style="color:var(--amber)">@TheMarinesX</a>.</p>
   <div id="payMsg"></div>
-  <div id="myOrders"></div>
-  <div class="acts"><button class="btn" id="wBtn" type="button">CONNECT WALLET</button><button class="btn" id="myBtn" type="button" style="display:none">MY ORDERS</button><button class="btn" id="ttsClose">CLOSE</button><a class="btn" id="payLink" href="#">OPEN IN WALLET APP</a><button class="btn primary" id="payBtn">PAY</button></div>
+  <div class="acts"><button class="btn" id="wBtn" type="button">CONNECT WALLET</button><a class="btn" id="payLink" href="#">OPEN IN WALLET APP</a><button class="btn primary" id="payBtn">PAY</button></div>
+  <div id="mySec" style="display:none">
+    <button id="myToggle" type="button" aria-expanded="false"><span>MY ORDERS <span class="dim" id="myCount"></span></span><span class="chev">▾</span></button>
+    <div id="myOrders"></div>
+  </div>
 </div></div>
 
 <script>
@@ -837,7 +847,7 @@ function say(h,c){$('payMsg').innerHTML=h;$('payMsg').className=c||''}
 function openBuy(k,slot){kind=k;fillSlotSel();if(slot)$('fSlot').value=slot;
   [...$('kind').children].forEach(b=>b.classList.toggle('on',b.dataset.k===k));$('kT').style.display=k==='t'?'':'none';$('kA').style.display=k!=='t'?'':'none';
   $('kAt').style.display=k==='a'?'':'none';$('kAi').style.display=k==='i'?'':'none';
-  $('rules').textContent=k==='i'?'Every image is checked by a mod before it goes on screen, usually within minutes. Nothing NSFW, hateful, or scammy (no QR codes, links or contract addresses in the image). If it\'s rejected you get refunded. Paid on Solana.':k==='t'?'TTS is a donation: it plays on stream about a minute after the payment confirms. Keep it within Twitch / Kick / YouTube / X rules. No links, contract addresses, or anything hateful. Anything that breaks the rules is held for a mod and, if rejected, not refunded.':'Text only. No links, no contract addresses, nothing hateful. Paid on Solana. A mod approves every billboard before it goes on screen, usually within minutes. If it is not approved, you get refunded to the wallet you paid from.';
+  $('rules').textContent=k==='i'?'Every image is checked by a mod before it goes on screen, usually within minutes. Nothing NSFW, hateful, or scammy (no QR codes, links or contract addresses in the image). If it\'s rejected you get refunded. Paid on Solana.':k==='t'?'TTS is a donation: it plays on stream a few seconds after the payment confirms. Keep it within Twitch / Kick / YouTube / X rules. No links, contract addresses, or anything hateful. Anything that breaks the rules is held for a mod and, if rejected, not refunded.':'Text only. No links, no contract addresses, nothing hateful. Paid on Solana. A mod approves every billboard before it goes on screen, usually within minutes. If it is not approved, you get refunded to the wallet you paid from.';
   say('');$('ttsModal').classList.add('show');getSolPx().then(refresh);refresh()}
 $('kind').onclick=e=>{const b=e.target.closest('button');if(b)openBuy(b.dataset.k)};
 ['fSlot','fBlocks','fTok','fFrom','fHead','fSub','ttsText'].forEach(id=>$(id).addEventListener('input',()=>{refresh();if($('payMsg').className==='err')say('')}));
@@ -854,22 +864,27 @@ document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>openBuy(b.datas
 $('wBtn').onclick=()=>connectWallet(true);
 // ---------- MY ORDERS: every order paid from the connected wallet (receipts.json) ----------
 const ST={live:['✅ played on stream','ok'],approved:['✅ approved','ok'],pending:['⏳ waiting for a mod','wait'],underpaid:['⚠ came in short','bad']};
-async function showOrders(){if(!wAddr)return;const box=$('myOrders');
-  if(box.dataset.open==='1'){box.dataset.open='';box.innerHTML='';$('myBtn').textContent='MY ORDERS';return}
-  box.dataset.open='1';$('myBtn').textContent='HIDE ORDERS';box.innerHTML='<div class="dim" style="font-size:11px">loading…</div>';
-  try{const d=await j('receipts.json?'+Date.now()),L=(d.items||[]).filter(r=>r.buyer===wAddr).sort((a,b)=>b.at-a.at);
-    const name={tts:'🔊 TTS',ad:'📢 BILLBOARD',img:'🖼 IMAGE AD'};
-    box.innerHTML=L.length?L.map(r=>{const ad=r.kind!=='tts';
-      const st=r.status==='rejected'?(ad?(r.refund==='done'?['↩ rejected · refunded','bad']:['❌ rejected · refund on the way','bad']):['❌ rejected · donation, not refunded','bad']):(ST[r.status]||[r.status,'']);
-      const what=r.text||[r.head,r.sub].filter(Boolean).join(' / ')||(ad&&r.slot?SLOTN[r.slot]+' · '+(r.blocks*(PAY?.blockMinutes||10))+' min':'');
-      return `<div class="o"><span>${name[r.kind]||esc(r.kind)}</span><span class="w">${esc(what)}</span><span>$${(+r.usd||0).toFixed(2)}</span>
-        <span class="d">${new Date(r.at*1000).toLocaleString()}</span><span class="st ${st[1]}">${st[0]} · <a href="https://solscan.io/tx/${esc(r.sig)}" target="_blank" rel="noopener">tx</a></span></div>`}).join('')
-      :'<div class="dim" style="font-size:11px">No orders from this wallet yet.</div>'}
-  catch(e){box.innerHTML='<div class="dim" style="font-size:11px">Could not load orders.</div>'}}
-$('myBtn').onclick=showOrders;
+// collapsible, newest first: 3 at a time, VIEW MORE for the rest
+let myAll=null,myShown=3,myOpen=false;
+async function loadOrders(){if(!wAddr)return;
+  try{const d=await j('receipts.json?'+Date.now());myAll=(d.items||[]).filter(r=>r.buyer===wAddr).sort((a,b)=>b.at-a.at)}catch(e){myAll=myAll||[]}
+  $('myCount').textContent=myAll.length?'('+myAll.length+')':'';renderOrders()}
+function renderOrders(){const box=$('myOrders');$('myToggle').setAttribute('aria-expanded',myOpen);
+  if(!myOpen){box.innerHTML='';return}
+  if(!myAll){box.innerHTML='<div class="dim" style="font-size:11px">loading…</div>';return}
+  if(!myAll.length){box.innerHTML='<div class="dim" style="font-size:11px;padding-bottom:6px">No orders from this wallet yet.</div>';return}
+  const name={tts:'🔊 TTS',ad:'📢 BILLBOARD',img:'🖼 IMAGE AD'};
+  box.innerHTML=myAll.slice(0,myShown).map(r=>{const ad=r.kind!=='tts';
+    const st=r.status==='rejected'?(ad?(r.refund==='done'?['↩ rejected · refunded','bad']:['❌ rejected · refund on the way','bad']):['❌ rejected · donation, not refunded','bad']):(ST[r.status]||[r.status,'']);
+    const what=r.text||[r.head,r.sub].filter(Boolean).join(' / ')||(ad&&r.slot?SLOTN[r.slot]+' · '+(r.blocks*(PAY?.blockMinutes||10))+' min':'');
+    return `<div class="o"><span>${name[r.kind]||esc(r.kind)}</span><span class="w">${esc(what)}</span><span>$${(+r.usd||0).toFixed(2)}</span>
+      <span class="d">${new Date(r.at*1000).toLocaleString()}</span><span class="st ${st[1]}">${st[0]} · <a href="https://solscan.io/tx/${esc(r.sig)}" target="_blank" rel="noopener">tx</a></span></div>`}).join('')
+    +(myAll.length>myShown?`<button class="more" id="myMore" type="button">VIEW MORE (${myAll.length-myShown})</button>`:'');
+  const m=$('myMore');if(m)m.onclick=()=>{myShown+=10;renderOrders()}}
+$('myToggle').onclick=()=>{myOpen=!myOpen;myShown=3;renderOrders();if(myOpen)loadOrders()};
 $('ttsClose').onclick=()=>$('ttsModal').classList.remove('show');
 $('ttsModal').onclick=e=>{if(e.target.id==='ttsModal')$('ttsModal').classList.remove('show')};
-$('payLink').onclick=e=>{const m=check();if(m){e.preventDefault();say(m,'err')}else say(kind==='t'?'Approve it in your wallet. It plays about a minute after it confirms.':'Approve it in your wallet. A mod puts it on screen once it confirms, usually within minutes.','ok')};
+$('payLink').onclick=e=>{const m=check();if(m){e.preventDefault();say(m,'err')}else say(kind==='t'?'Approve it in your wallet. It plays a few seconds after it confirms.':'Approve it in your wallet. A mod puts it on screen once it confirms, usually within minutes.','ok')};
 // ---------- wallet picker: no default, the user chooses ----------
 // Wallets show up two ways: the Wallet Standard (how Phantom, Solflare, Backpack, Jupiter,
 // OKX, Coinbase and most new wallets announce themselves) and older injected window objects.
@@ -920,7 +935,7 @@ function detected(){
     extra.forEach((p,i)=>{const nm=p?.isPhantom?'Phantom':(p?._name||p?.name||'Injected wallet');
       if(p&&!seen.has(p)&&!names.has(wKey(nm))){seen.add(p);names.add(wKey(nm));out.push({id:'other'+i,name:nm,make:()=>p})}})}catch(e){}
   return out}
-function wBtnSet(){const b=$('wBtn');if(!b)return;b.classList.toggle('on',!!wAddr);$('myBtn').style.display=wAddr?'':'none';
+function wBtnSet(){const b=$('wBtn');if(!b)return;b.classList.toggle('on',!!wAddr);$('mySec').style.display=wAddr?'':'none';myAll=null;if(wAddr)loadOrders();
   b.textContent=wAddr?'◆ '+wAddr.slice(0,4)+'…'+wAddr.slice(-4)+' · CHANGE':'CONNECT WALLET'}
 // Always shows the list. The last wallet used is just marked and listed first.
 function pickWallet(){
@@ -982,7 +997,7 @@ $('payBtn').onclick=async()=>{const m=check();if(m)return say(m,'err');
     let sig;if(w.signAndSendTransaction){const o=await w.signAndSendTransaction(tx);sig=o.signature||o}
     else{const st=await w.signTransaction(tx);sig=await rpcCall('sendTransaction',[btoa(String.fromCharCode(...st.serialize())),{encoding:'base64'}])}
     sig=typeof sig==='string'?sig:null;
-    say((kind==='t'?'Sent. It plays in about a minute…':'Sent. Waiting for a mod to approve it…')+(sig?` <a href="https://solscan.io/tx/${sig}" target="_blank" rel="noopener">tx</a>`:''),'ok');
+    say((kind==='t'?'Sent. It plays in a few seconds…':'Sent. Waiting for a mod to approve it…')+(sig?` <a href="https://solscan.io/tx/${sig}" target="_blank" rel="noopener">tx</a>`:''),'ok');
     if(sig){watchReceipt(sig);checkNow(sig)}}
   catch(e){say(/reject|cancel|denied/i.test(e.message||'')?'Cancelled.':'Failed: '+esc(e.message||e),'err')}
   b.disabled=false};
@@ -993,7 +1008,7 @@ async function checkNow(sig){if(!PAY||!PAY.bot)return;
     else if(r.status==='pending')say('Paid. Waiting for a mod to approve it, usually within minutes.','ok')}catch(e){}}
 function watchReceipt(sig){let n=0;const t=setInterval(async()=>{if(++n>150)return clearInterval(t);
   try{const d=await j('receipts.json?'+Date.now()),r=(d.items||[]).find(i=>i.sig===sig);if(!r)return;
-    if(r.status==='pending')return say('Paid. Waiting for a mod to approve it, usually within minutes.','ok');clearInterval(t);
+    if(r.status==='pending'){loadOrders();return say('Paid. Waiting for a mod to approve it, usually within minutes.','ok')}clearInterval(t);loadOrders();
     const ad=r.kind!=='tts'&&r.kind!=='t';
     say({live:'✅ Live. Look at the screen.',approved:'✅ Approved. It\'s in the queue and plays / goes up next.',held:r.kind==='i'?'Paid. Your image is with a mod for approval, usually within minutes. Refunded if rejected.':'Held for a mod to review. You\'ll be refunded if it\'s rejected.',underpaid:'Payment came in short ('+esc(r.note||'')+'). DM @TheMarinesX.',rejected:ad?'Rejected by a mod. You\'ll be refunded to the wallet you paid from.':'Rejected by a mod for breaking stream rules. TTS is a donation and isn\'t refunded.'}[r.status]||r.status,/^(live|approved)$/.test(r.status)?'ok':'err');loadAds();loadTTS()}catch(e){}},8000)}
 
