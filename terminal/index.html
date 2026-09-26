@@ -738,7 +738,12 @@ function renderApy(){if(!board)return;const m=boardStats(),ranked=!!(m&&m.rank);
 // ---------- TTS: queue in tts.json, popped + read on screen ----------
 const played=new Set(JSON.parse(localStorage.getItem('ttsPlayed')||'[]'));const bootAt=Date.now()/1000-120;
 let ttsQ=[],ttsBusy=false,audioOk=false;
-async function loadTTS(){try{const d=await j('tts.json?'+Date.now());
+// With pay.json "bot" set, TTS and ads come straight from the approval bot's live feed
+// (seconds after payment); the committed tts.json / ads.json stay as the fallback.
+let FEED=null,feedAt=0;
+async function botFeed(){if(!PAY||!PAY.bot)return null;if(Date.now()-feedAt<2500)return FEED;
+  try{FEED=await j(PAY.bot.replace(/\/$/,'')+'/feed');feedAt=Date.now()}catch(e){FEED=null}return FEED}
+async function loadTTS(){try{const f=await botFeed();const d=f&&f.tts?{items:f.tts}:await j('tts.json?'+Date.now());
   (d.items||[]).forEach(i=>{if(i.at>=bootAt&&!played.has(i.id)&&!ttsQ.some(q=>q.id===i.id))ttsQ.push(i)});nextTTS()}catch(e){}}
 function nextTTS(){if(ttsBusy||!ttsQ.length)return;const i=ttsQ.shift();ttsBusy=true;
   played.add(i.id);localStorage.setItem('ttsPlayed',JSON.stringify([...played].slice(-100)));
@@ -762,7 +767,9 @@ const fld=v=>v.replace(/[|\n\r]/g,'/').replace(/\s+/g,' ').trim();
 // "tokenLink":"https://…/{mint}" (e.g. a ref link) without touching this file.
 function tokLink(m){return m?(PAY&&PAY.tokenLink?PAY.tokenLink:'https://jup.ag/tokens/{mint}').replace('{mint}',encodeURIComponent(m)):'https://thestonkboard.com/'}
 async function loadPay(){try{PAY=await j('pay.json?'+Date.now());$('ttsPrice').textContent='$'+PAY.prices.tts;renderAds()}catch(e){}}
-async function loadAds(){try{ADS=await j('ads.json?'+Date.now());renderAds()}catch(e){}}
+async function loadAds(){try{const a=await j('ads.json?'+Date.now()),f=await botFeed();
+  if(f&&f.slots)for(const k in f.slots){const have=new Set((a.slots[k]||[]).map(x=>x.id));a.slots[k]=[...(a.slots[k]||[]),...f.slots[k].filter(x=>!have.has(x.id))]}
+  ADS=a;renderAds()}catch(e){}}
 function curAd(k){const n=Date.now()/1000;return(ADS.slots?.[k]||[]).find(a=>a.start<=n&&a.end>n)}
 function queueEnd(k){const n=Date.now()/1000;return Math.max(n,...(ADS.slots?.[k]||[]).map(a=>a.end))}
 function renderAds(){['1','2','3'].forEach(k=>{const el=$('slot'+k);if(!el)return;const a=curAd(k),pr=PAY?'$'+PAY.prices.slots[k]+' / '+PAY.blockMinutes+' MIN':'';
@@ -956,9 +963,14 @@ $('payBtn').onclick=async()=>{const m=check();if(m)return say(m,'err');
     else{const st=await w.signTransaction(tx);sig=await rpcCall('sendTransaction',[btoa(String.fromCharCode(...st.serialize())),{encoding:'base64'}])}
     sig=typeof sig==='string'?sig:null;
     say((kind==='t'?'Sent. It plays in about a minute…':'Sent. Waiting for a mod to approve it…')+(sig?` <a href="https://solscan.io/tx/${sig}" target="_blank" rel="noopener">tx</a>`:''),'ok');
-    if(sig)watchReceipt(sig)}
+    if(sig){watchReceipt(sig);checkNow(sig)}}
   catch(e){say(/reject|cancel|denied/i.test(e.message||'')?'Cancelled.':'Failed: '+esc(e.message||e),'err')}
   b.disabled=false};
+// tell the bot about the payment right away instead of waiting for its next minute
+async function checkNow(sig){if(!PAY||!PAY.bot)return;
+  try{const r=await(await fetch(PAY.bot.replace(/\/$/,'')+'/check',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({sig})})).json();
+    if(r.status==='live'){say('✅ Live. Look at the screen.','ok');feedAt=0;loadTTS()}
+    else if(r.status==='pending')say('Paid. Waiting for a mod to approve it, usually within minutes.','ok')}catch(e){}}
 function watchReceipt(sig){let n=0;const t=setInterval(async()=>{if(++n>150)return clearInterval(t);
   try{const d=await j('receipts.json?'+Date.now()),r=(d.items||[]).find(i=>i.sig===sig);if(!r)return;
     if(r.status==='pending')return say('Paid. Waiting for a mod to approve it, usually within minutes.','ok');clearInterval(t);
@@ -982,7 +994,7 @@ loadRewards();loadMarket();loadChart();loadTrades();loadTicker();loadBoard();loa
 setInterval(loadAds,15000);setInterval(loadPay,300000);setTimeout(()=>{renderAds();setInterval(renderAds,20000)},20000-Date.now()%20000);
 setInterval(loadTrades,20000);setInterval(loadMarket,30000);setInterval(loadRewards,60000);
 setInterval(loadChart,120000);setInterval(loadTicker,300000);setInterval(loadBoard,300000);
-setInterval(loadTTS,10000);setInterval(tickLast,1000);
+{let n=0;setInterval(()=>{if(!document.hidden&&(PAY?.bot||++n%3===0))loadTTS()},4000)}setInterval(tickLast,1000);
 document.fonts?.ready.then(draw);
 {const dm=new URLSearchParams(location.search).get('demo');if(dm)setTimeout(()=>{
   if(dm==='pulse')pulseTakeover(29.4,391,2439,6555.2);
