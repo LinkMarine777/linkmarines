@@ -38,6 +38,7 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
 .btn:hover{border-color:var(--blue2);text-decoration:none}
 .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
 .btn.tts{border-color:var(--amber);color:var(--amber)}
+.btn.chat{border-color:var(--blue2);color:#fff}
 
 /* tickers */
 .tape-bar{border-bottom:1px solid var(--line);background:#02030a;overflow:hidden;white-space:nowrap;position:relative;flex:none}
@@ -121,8 +122,6 @@ tr.whale td{background:rgba(74,122,255,.08)}
 .slots{display:grid;grid-template-rows:1fr 1fr;gap:8px}
 
 /* comms column */
-.warroom{display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(90deg,rgba(42,90,218,.25),rgba(42,90,218,.05))}
-.warroom b{font-family:'VT323';font-size:22px;color:#fff;font-weight:400;display:block;line-height:1}
 .feed{display:flex;flex-direction:column;flex:1}
 #mb{display:flex;flex-direction:column;gap:10px}
 #mb .mbg{display:grid;grid-template-columns:minmax(0,.75fr) minmax(0,1fr) minmax(0,1fr);gap:8px}
@@ -133,14 +132,14 @@ tr.whale td{background:rgba(74,122,255,.08)}
 #mb .hi b{color:var(--green)}
 #mb p{font-size:11px;margin:0;line-height:1.5}
 #mbList{display:flex;flex-direction:column;min-height:0}
-#mbList .br,#mbList .bh{display:grid;grid-template-columns:18px 22px minmax(0,1fr) repeat(4,minmax(0,62px));gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid rgba(26,36,68,.7);font-size:11px;color:var(--txt)}
-#mbList .bh{font-size:9px;letter-spacing:1px;color:var(--dim);padding-top:0}
+#mbList .br,#mbList .bh{display:grid;grid-template-columns:20px 24px minmax(0,1fr) repeat(3,minmax(0,78px));gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(26,36,68,.7);font-size:13px;color:var(--txt)}
+#mbList .bh{font-size:10px;letter-spacing:1px;color:var(--dim);padding-top:0}
 #mbList .br:hover{text-decoration:none;background:rgba(74,122,255,.06)}
 #mbList .br>span:nth-child(n+4),#mbList .bh>span:nth-child(n+4){text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #mbList .rk{color:var(--dim);font-size:10px;text-align:right}
-#mbList img{width:22px;height:22px;border-radius:50%;background:#111;object-fit:cover}
+#mbList img{width:24px;height:24px;border-radius:50%;background:#111;object-fit:cover}
 #mbList .sym{color:#fff;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-#mbList .sym .q{color:var(--dim);font-size:9px}
+#mbList .sym .q{color:var(--dim);font-size:11px}
 #mbList .apy{color:var(--green)}
 #mbList .nt{font-size:10px;color:var(--dim);padding-top:6px;line-height:1.4}
 .post{display:grid;grid-template-columns:32px 1fr;gap:9px;padding:9px 0;border-bottom:1px solid rgba(26,36,68,.7);color:var(--txt)}
@@ -276,10 +275,9 @@ html.fit .board.sold .by,html.fit .board.sold .left,html.fit .board.sold .buy{fo
 html.fit .board.sold{padding:22px 16px 30px}
 html.fit .priceline{font-size:22px;margin-top:10px;padding-top:10px}
 html.fit .col.comms{display:flex;flex-direction:column}
-html.fit .warroom b{font-size:40px}html.fit .warroom .dim{font-size:18px!important}
 html.fit .feed{min-height:0;overflow:hidden}
 html.fit .ads .ph .meta{display:none}
-html.fit #mbList .br,html.fit #mbList .bh{grid-template-columns:22px 22px minmax(0,1fr) repeat(4,minmax(0,84px));gap:8px;font-size:16px;line-height:1.2;padding:1px 0}html.fit #mbList .bh{font-size:12px}html.fit #mbList img{width:20px;height:20px}html.fit #mbList .rk{font-size:13px}html.fit #mbList .sym .q{font-size:11px}html.fit #mbList .nt{display:none}html.fit .feed .ph{margin-bottom:6px}
+html.fit #mbList .br,html.fit #mbList .bh{grid-template-columns:26px 30px minmax(0,1fr) repeat(3,minmax(0,112px));gap:10px;font-size:21px;line-height:1.2;padding:2px 0}html.fit #mbList .bh{font-size:15px}html.fit #mbList img{width:28px;height:28px}html.fit #mbList .rk{font-size:16px}html.fit #mbList .sym .q{font-size:14px}html.fit #mbList .nt{display:none}html.fit .feed .ph{margin-bottom:6px}
 html.fit #mb{flex:1;justify-content:center;gap:16px}html.fit #mb .mbg{gap:12px}html.fit #mb .mbg>div{padding:14px 16px}html.fit #mb label{font-size:16px}html.fit #mb b{font-size:54px}html.fit #mb p{font-size:17px}
 html.fit .post{grid-template-columns:48px 1fr;gap:14px;padding:14px 0}
 html.fit .post img{width:48px;height:48px}
@@ -314,7 +312,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .moreStats{display:block;grid-column:span 2;background:transparent;border:0;border-bottom:1px solid var(--line);color:var(--blue2);font:inherit;font-size:11px;letter-spacing:1.5px;padding:8px;cursor:pointer}
   main{display:flex;flex-direction:column}.col,.lower{display:contents}
   .chartP{order:1}.bill{order:2}.ads{order:3}.tapeP{order:4}.feed{order:5}
-  .ads .slots{gap:6px}.wrP{display:none}
+  .ads .slots{gap:6px}
   .panel{padding:10px 12px}
   .acc>.ph{cursor:pointer;margin-bottom:8px;flex-wrap:nowrap;user-select:none;-webkit-tap-highlight-color:transparent}
   .acc>.ph h2{font-size:20px;display:flex;align-items:center;gap:8px}
@@ -323,7 +321,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .acc.shut>:not(.ph){display:none!important}
   .acc.shut>.ph .tabs,.acc.shut>.ph .meta{display:none}
   #chartWrap{height:230px}
-  #mbList .br,#mbList .bh{grid-template-columns:14px 18px minmax(0,1fr) repeat(4,minmax(0,50px));gap:5px;font-size:10px}#mbList img{width:18px;height:18px}#mbList .sym .q{display:none}#mbList .bh{font-size:8px;letter-spacing:0}
+  #mbList .br,#mbList .bh{grid-template-columns:16px 22px minmax(0,1fr) repeat(3,minmax(0,64px));gap:6px;font-size:12px}#mbList img{width:22px;height:22px}#mbList .sym .q{display:none}#mbList .bh{font-size:9px;letter-spacing:.5px}
   .post .txt{-webkit-line-clamp:3}
   .board{min-height:90px}#slot1{aspect-ratio:1112/358;min-height:0}.slots .board.house,.slots .board.img{aspect-ratio:912/176;min-height:0}.bill .board.sold .head,.board.sold .head{font-size:30px}
   .src .fx{display:none}.src{padding:6px 12px}
@@ -343,6 +341,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
     <a class="btn fx" href="https://dexscreener.com/solana/bnkyfw796xxq9uq9kmyox9iqsgxnjw7sfcscvwvdicua" target="_blank" rel="noopener">CHART</a>
     <a class="btn fx" href="https://x.com/TheMarinesX" target="_blank" rel="noopener">X</a>
     <a class="btn fx" href="../">HQ</a>
+    <a class="btn chat" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ WAR ROOM CHAT</a>
     <button class="btn tts" id="ttsBtn">🔊 BUY TTS</button>
     <a class="btn primary" href="https://jup.ag/tokens/F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">ENLIST · BUY $MARINE</a>
   </nav>
@@ -411,10 +410,6 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   </div>
 
   <div class="col comms">
-    <section class="panel warroom wrP">
-      <div><b>THE WAR ROOM CHAT</b><span class="dim" style="font-size:11px">live on X · calls, alerts, orders</span></div>
-      <a class="btn primary" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">JOIN ⚔</a>
-    </section>
     <section class="panel feed acc" data-acc="apy" data-def="1">
       <div class="ph"><h2><span id="mbTitle">$MARINE APY</span></h2><span class="meta" id="mbAt"></span></div>
       <div id="mbList" style="display:none"></div>
@@ -476,7 +471,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   </div>
   <p style="font-size:11px" class="dim" id="rules">Text only. No links, no contract addresses, nothing hateful. Anything that trips the filter is held for a mod and refunded if rejected. Paid on Solana. A mod approves every order before it goes on screen, usually within minutes. Want a longer run or an all-day sponsor slot? DM <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener" style="color:var(--amber)">@TheMarinesX</a>.</p>
   <div id="payMsg"></div>
-  <div class="acts"><button class="btn" id="wBtn" type="button">CONNECT WALLET</button><button class="btn" id="ttsClose">CLOSE</button><a class="btn" id="payLink" href="#">OPEN IN WALLET APP</a><button class="btn primary" id="payBtn">PAY WITH WALLET</button></div>
+  <div class="acts"><button class="btn" id="wBtn" type="button">CONNECT WALLET</button><button class="btn" id="ttsClose">CLOSE</button><a class="btn" id="payLink" href="#">OPEN IN WALLET APP</a><button class="btn primary" id="payBtn">PAY</button></div>
 </div></div>
 
 <script>
@@ -717,12 +712,12 @@ async function fillVol(list){const miss=list.map(t=>t.mint).filter(m=>m&&!TOKS.s
   try{const d=await j('https://api.dexscreener.com/tokens/v1/solana/'+miss.join(','));
     (Array.isArray(d)?d:[]).forEach(p=>{const m=p.baseToken?.address;if(m)dsVol[m]=(dsVol[m]||0)+(+p.volume?.h24||0)});renderApy()}catch(e){}}
 function renderList(){const by={};TOKS.forEach(t=>by[t.mint]=t);const L=(board[boardKey]||[]).slice(0,10),lab=boardKey==='apy3d'?'3D':'24H';
-  $('mbList').innerHTML=`<div class="bh"><span></span><span></span><span>TOKEN</span><span>VOL 24H</span><span>MCAP</span><span>APY ${lab}</span><span>PAID OUT</span></div>`
+  $('mbList').innerHTML=`<div class="bh"><span></span><span></span><span>TOKEN</span><span>VOL 24H</span><span>MCAP</span><span>APY ${lab}</span></div>`
     +L.map((t,i)=>{const s=by[t.mint]||{},v=s.vol24!=null?s.vol24:dsVol[t.mint];
       return `<a class="br" href="${esc(tokLink(t.mint))}" target="_blank" rel="noopener"><span class="rk">${i+1}</span>`
       +(t.logo?`<img src="${esc(t.logo)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span></span>')
       +`<span class="sym">$${esc(String(t.symbol||'?').replace(/^\$/,''))}<span class="q">/${esc(t.quote||'')}</span></span>`
-      +`<span>${v!=null?compact(v):'—'}</span><span>${compact(t.mcap??s.mcap)}</span><span class="apy">${apyFmt(t.apy)}</span><span>${s.paidUsd!=null?compact(s.paidUsd):'—'}</span></a>`}).join('')
+      +`<span>${v!=null?compact(v):'—'}</span><span>${compact(t.mcap??s.mcap)}</span><span class="apy">${apyFmt(t.apy)}</span></a>`}).join('')
     +`<div class="nt">$${TK.symbol} isn't in the thestonkboard.com top 100 right now. Showing the board's top 10 until it ranks.</div>`;
   fillVol(L)}
 function renderApy(){if(!board)return;const m=boardStats(),ranked=!!(m&&m.rank);
