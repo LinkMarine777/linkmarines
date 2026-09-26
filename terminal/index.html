@@ -38,7 +38,9 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
 .btn:hover{border-color:var(--blue2);text-decoration:none}
 .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
 .btn.tts{border-color:var(--amber);color:var(--amber)}
-#soundBtn.off{color:var(--dim);border-color:var(--line)}
+#soundBtn{background:none;border:1px solid var(--line);color:var(--txt);font-size:14px;line-height:1;padding:3px 7px;cursor:pointer}
+#soundBtn:hover{border-color:var(--blue2)}#soundBtn.off{opacity:.55}
+html.fit #soundBtn{font-size:24px;padding:4px 10px}
 .btn.chat{border-color:var(--blue2);color:#fff}
 
 /* tickers */
@@ -342,13 +344,13 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   <a href="../"><img src="../logo.png" alt="Marines"></a>
   <div class="brand">THE WAR ROOM<small>$1000 LINK WAITING ROOM</small></div>
   <span class="live" id="live"><i></i><span id="liveTxt">LIVE</span></span>
+  <button id="soundBtn" type="button" title="Sound on: click to mute TTS and alerts" aria-label="Mute sounds"></button>
   <nav>
     <a class="btn fx" href="https://dexscreener.com/solana/bnkyfw796xxq9uq9kmyox9iqsgxnjw7sfcscvwvdicua" target="_blank" rel="noopener">CHART</a>
     <a class="btn fx" href="https://x.com/TheMarinesX" target="_blank" rel="noopener">X</a>
     <a class="btn fx" href="../">HQ</a>
     <a class="btn chat" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ WAR ROOM CHAT</a>
-    <button class="btn" id="soundBtn" type="button" title="Turn all notification sounds on or off"></button>
-    <button class="btn tts" id="ttsBtn">🔊 BUY TTS</button>
+    <button class="btn tts" id="ttsBtn">BUY TTS</button>
     <a class="btn primary" href="https://jup.ag/tokens/F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">ENLIST · BUY $MARINE</a>
   </nav>
 </header>
@@ -439,7 +441,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 
 </div>
 
-<nav id="mbar"><a class="btn primary" href="https://jup.ag/tokens/F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">BUY $MARINE</a><button class="btn tts" data-buy="t">🔊 TTS</button><a class="btn" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ CHAT</a></nav>
+<nav id="mbar"><a class="btn primary" href="https://jup.ag/tokens/F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">BUY $MARINE</a><button class="btn tts" data-buy="t">TTS</button><a class="btn" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ CHAT</a></nav>
 <div id="wModal"><div class="box">
   <h3>CHOOSE A WALLET</h3>
   <div class="sb">Your call. We don't default you into anything.</div>
@@ -656,7 +658,8 @@ function renderTape(){
 const BUYMIN=100,alerted=new Set();let tradesBoot=true,bpQ=[],bpBusy=false,actx=null;
 // sound: on by default, one toggle for TTS and every notification beep (remembered per browser)
 let soundOn=true;try{soundOn=localStorage.getItem('wrSound')!=='0'}catch(e){}
-function soundSet(){$('soundBtn').textContent=soundOn?'🔊 SOUND':'🔇 MUTED';$('soundBtn').classList.toggle('off',!soundOn);
+function soundSet(){const b=$('soundBtn');b.textContent=soundOn?'🔊':'🔇';b.classList.toggle('off',!soundOn);
+  b.title=soundOn?'Sound on: click to mute TTS and alerts':'Muted: click to turn sound on';b.setAttribute('aria-label',soundOn?'Mute sounds':'Turn sound on');
   if(!soundOn){try{speechSynthesis.cancel()}catch(e){}if(curAudio)curAudio.pause()}}
 function beep(big){if(!soundOn)return;try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();const t=actx.currentTime;
   (big?[523,659,784,1047]:[659,988]).forEach((f,i)=>{const o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=f;
