@@ -469,7 +469,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
     <div><label class="f">Pay with</label><select id="fTok"><option value="usdc">USDC</option><option value="sol">SOL</option></select></div>
     <div style="text-align:right"><div class="dim" style="font-size:10px;letter-spacing:1.5px">TOTAL</div><div class="total" id="fTotal">—</div></div>
   </div>
-  <p style="font-size:11px" class="dim" id="rules">Text only. No links, no contract addresses, nothing hateful. Anything that trips the filter is held for a mod and refunded if rejected. Paid on Solana. A mod approves every order before it goes on screen, usually within minutes. Want a longer run or an all-day sponsor slot? DM <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener" style="color:var(--amber)">@TheMarinesX</a>.</p>
+  <p style="font-size:11px" class="dim" id="rules">Text only. No links, no contract addresses, nothing hateful. Paid on Solana; it plays on stream about a minute after the payment confirms. Anything that trips the filter is held for a mod and refunded if rejected. Want a longer run or an all-day sponsor slot? DM <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener" style="color:var(--amber)">@TheMarinesX</a>.</p>
   <div id="payMsg"></div>
   <div class="acts"><button class="btn" id="wBtn" type="button">CONNECT WALLET</button><button class="btn" id="ttsClose">CLOSE</button><a class="btn" id="payLink" href="#">OPEN IN WALLET APP</a><button class="btn primary" id="payBtn">PAY</button></div>
 </div></div>
@@ -713,7 +713,7 @@ async function fillVol(list){const miss=list.map(t=>t.mint).filter(m=>m&&!TOKS.s
     (Array.isArray(d)?d:[]).forEach(p=>{const m=p.baseToken?.address;if(m)dsVol[m]=(dsVol[m]||0)+(+p.volume?.h24||0)});renderApy()}catch(e){}}
 function renderList(){const by={};TOKS.forEach(t=>by[t.mint]=t);const L=(board[boardKey]||[]).slice(0,10),lab=boardKey==='apy3d'?'3D':'24H';
   $('mbList').innerHTML=`<div class="bh"><span></span><span></span><span>TOKEN</span><span>VOL 24H</span><span>MCAP</span><span>APY ${lab}</span></div>`
-    +L.map((t,i)=>{const s=by[t.mint]||{},v=s.vol24!=null?s.vol24:dsVol[t.mint];
+    +L.map((t,i)=>{const s=by[t.mint]||{},v=s.vol24??board.tokens?.[t.mint]?.vol24??dsVol[t.mint];
       return `<a class="br" href="${esc(tokLink(t.mint))}" target="_blank" rel="noopener"><span class="rk">${i+1}</span>`
       +(t.logo?`<img src="${esc(t.logo)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span></span>')
       +`<span class="sym">$${esc(String(t.symbol||'?').replace(/^\$/,''))}<span class="q">/${esc(t.quote||'')}</span></span>`
@@ -805,7 +805,7 @@ function say(h,c){$('payMsg').innerHTML=h;$('payMsg').className=c||''}
 function openBuy(k,slot){kind=k;fillSlotSel();if(slot)$('fSlot').value=slot;
   [...$('kind').children].forEach(b=>b.classList.toggle('on',b.dataset.k===k));$('kT').style.display=k==='t'?'':'none';$('kA').style.display=k!=='t'?'':'none';
   $('kAt').style.display=k==='a'?'':'none';$('kAi').style.display=k==='i'?'':'none';
-  $('rules').textContent=k==='i'?'Every image is checked by a mod before it goes on screen, usually within minutes. Nothing NSFW, hateful, or scammy (no QR codes, links or contract addresses in the image). If it\'s rejected you get refunded. Paid on Solana.':'Text only. No links, no contract addresses, nothing hateful. Anything that trips the filter is held for a mod and refunded if rejected. Paid on Solana. A mod approves every order before it goes on screen, usually within minutes.';
+  $('rules').textContent=k==='i'?'Every image is checked by a mod before it goes on screen, usually within minutes. Nothing NSFW, hateful, or scammy (no QR codes, links or contract addresses in the image). If it\'s rejected you get refunded. Paid on Solana.':k==='t'?'Text only. No links, no contract addresses, nothing hateful. Paid on Solana; it plays on stream about a minute after the payment confirms. Anything that trips the filter is held for a mod and refunded if rejected.':'Text only. No links, no contract addresses, nothing hateful. Paid on Solana. A mod approves every billboard before it goes on screen, usually within minutes, and refunds it if rejected.';
   say('');$('ttsModal').classList.add('show');getSolPx().then(refresh);refresh()}
 $('kind').onclick=e=>{const b=e.target.closest('button');if(b)openBuy(b.dataset.k)};
 ['fSlot','fBlocks','fTok','fFrom','fHead','fSub','ttsText'].forEach(id=>$(id).addEventListener('input',()=>{refresh();if($('payMsg').className==='err')say('')}));
@@ -822,7 +822,7 @@ document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>openBuy(b.datas
 $('wBtn').onclick=()=>connectWallet(true);
 $('ttsClose').onclick=()=>$('ttsModal').classList.remove('show');
 $('ttsModal').onclick=e=>{if(e.target.id==='ttsModal')$('ttsModal').classList.remove('show')};
-$('payLink').onclick=e=>{const m=check();if(m){e.preventDefault();say(m,'err')}else say('Approve it in your wallet. A mod puts it on screen once it confirms, usually within minutes.','ok')};
+$('payLink').onclick=e=>{const m=check();if(m){e.preventDefault();say(m,'err')}else say(kind==='t'?'Approve it in your wallet. It plays about a minute after it confirms.':'Approve it in your wallet. A mod puts it on screen once it confirms, usually within minutes.','ok')};
 // ---------- wallet picker: no default, the user chooses ----------
 // Wallets show up two ways: the Wallet Standard (how Phantom, Solflare, Backpack, Jupiter,
 // OKX, Coinbase and most new wallets announce themselves) and older injected window objects.
@@ -935,7 +935,7 @@ $('payBtn').onclick=async()=>{const m=check();if(m)return say(m,'err');
     let sig;if(w.signAndSendTransaction){const o=await w.signAndSendTransaction(tx);sig=o.signature||o}
     else{const st=await w.signTransaction(tx);sig=await rpcCall('sendTransaction',[btoa(String.fromCharCode(...st.serialize())),{encoding:'base64'}])}
     sig=typeof sig==='string'?sig:null;
-    say('Sent. Waiting for a mod to approve it…'+(sig?` <a href="https://solscan.io/tx/${sig}" target="_blank" rel="noopener">tx</a>`:''),'ok');
+    say((kind==='t'?'Sent. It plays in about a minute…':'Sent. Waiting for a mod to approve it…')+(sig?` <a href="https://solscan.io/tx/${sig}" target="_blank" rel="noopener">tx</a>`:''),'ok');
     if(sig)watchReceipt(sig)}
   catch(e){say(/reject|cancel|denied/i.test(e.message||'')?'Cancelled.':'Failed: '+esc(e.message||e),'err')}
   b.disabled=false};
