@@ -58,11 +58,11 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
 
 /* stats row */
 .stats{display:grid;grid-template-columns:1.25fr 1.5fr 1fr 1fr 1fr 1fr 1fr;border-bottom:1px solid var(--line);flex:none}
-.stat{padding:10px 14px;border-right:1px solid var(--line);min-width:0}
+.stat{padding:10px 14px;border-right:1px solid var(--line);min-width:0;overflow:hidden}
 .stat:last-child{border-right:0}
 .stat label{display:block;font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;white-space:nowrap}
 .stat b{display:block;font-family:'VT323';font-size:32px;font-weight:400;color:#fff;line-height:1.05;white-space:nowrap}
-.stat span{font-size:11px;white-space:nowrap}
+.stat span{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .stat.hero b{color:var(--blue2);font-size:38px}
 .stat.pulse{background:rgba(42,90,218,.07)}
 .stat.pulse .row{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
@@ -124,11 +124,14 @@ tr.whale td{background:rgba(74,122,255,.08)}
 .warroom{display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(90deg,rgba(42,90,218,.25),rgba(42,90,218,.05))}
 .warroom b{font-family:'VT323';font-size:22px;color:#fff;font-weight:400;display:block;line-height:1}
 .feed{display:flex;flex-direction:column;flex:1}
-#xfeed{overflow:hidden;position:relative;flex:1;min-height:200px;max-height:520px}
-#xlist{display:flex;flex-direction:column}
-#xlist.roll{animation:vroll linear infinite}
-#xfeed:hover #xlist{animation-play-state:paused}
-@keyframes vroll{to{transform:translateY(-50%)}}
+#mb{display:flex;flex-direction:column;gap:10px}
+#mb .mbg{display:grid;grid-template-columns:minmax(0,.75fr) minmax(0,1fr) minmax(0,1fr);gap:8px}
+#mb .mbg>div{border:1px solid var(--line);padding:9px 11px;background:rgba(74,122,255,.05);min-width:0}
+#mb .mbg>div.hi{border-color:rgba(57,255,106,.3)}
+#mb label{display:block;font-size:10px;letter-spacing:1.5px;color:var(--dim);white-space:nowrap}
+#mb b{display:block;font-family:'VT323';font-size:36px;font-weight:400;color:#fff;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mb .hi b{color:var(--green)}
+#mb p{font-size:11px;margin:0;line-height:1.5}
 .post{display:grid;grid-template-columns:32px 1fr;gap:9px;padding:9px 0;border-bottom:1px solid rgba(26,36,68,.7);color:var(--txt)}
 .post:hover{text-decoration:none;background:rgba(74,122,255,.05)}
 .post img{width:32px;height:32px;border-radius:50%;background:#111}
@@ -137,20 +140,6 @@ tr.whale td{background:rgba(74,122,255,.08)}
 .post .txt{font-size:12px;line-height:1.45;word-break:break-word;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .post .txt .ct{color:var(--amber)}
 .post.m{border-left:2px solid var(--amber);padding-left:8px;margin-left:-10px}
-.feedtabs button{font-size:10px}
-.trow{display:grid;grid-template-columns:22px 26px 1fr auto;gap:9px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(26,36,68,.7);color:var(--txt)}
-.trow:hover{text-decoration:none;background:rgba(74,122,255,.06)}
-.trow .rk{font-size:10px;color:var(--dim);text-align:right}
-.trow img{width:26px;height:26px;border-radius:50%;background:#111;object-fit:cover}
-.trow .sym{font-size:12px;color:#fff;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.trow .sym .q{color:var(--dim);font-size:10px}
-.trow .sym .rw{color:var(--amber);font-size:9px;letter-spacing:1px;margin-left:5px}
-.trow .met{text-align:right;line-height:1.25}
-.trow .met b{display:block;font-size:12px;color:#fff;font-weight:500}
-.trow .met span{font-size:10px}
-.trow.me{border-left:2px solid var(--amber);padding-left:8px;margin-left:-10px;background:rgba(255,210,63,.06)}
-html.fit .trow{padding:9px 0}html.fit .trow .sym{font-size:15px}html.fit .trow .met b{font-size:15px}
-html.fit .trow img{width:30px;height:30px}html.fit .trow .met span,html.fit .trow .rk{font-size:12px}
 
 
 .src{font-size:10px;color:var(--dim);padding:4px 16px;background:#02030a;border-top:1px solid var(--line);flex:none}
@@ -189,7 +178,7 @@ html.fit .board.house{padding:0}html.fit .board.house .htag{font-size:13px;paddi
 #wModal .wrow.off .st{color:var(--dim)}
 #wModal .foot{font-size:10px;color:var(--dim);margin-top:10px;line-height:1.5}
 #wModal .foot a{color:var(--amber)}
-#wBadge{font-size:10px;color:var(--green);letter-spacing:1px;margin-right:auto;align-self:center}
+#wBtn{margin-right:auto;font-size:11px;letter-spacing:1px}#wBtn.on{color:var(--green);border-color:rgba(57,255,106,.45)}
 #iPrev{display:none;margin-top:8px;max-height:140px;max-width:100%;border:1px solid var(--line)}
 #buyPop{position:fixed;left:50%;bottom:16%;transform:translate(-50%,30px);opacity:0;pointer-events:none;z-index:55;transition:all .35s cubic-bezier(.2,1.4,.4,1);
   background:linear-gradient(135deg,#06240f,#0a0f1f);border:3px solid var(--green);box-shadow:0 0 50px rgba(57,255,106,.4);padding:18px 44px;text-align:center;min-width:600px}
@@ -279,7 +268,7 @@ html.fit .col.comms{display:flex;flex-direction:column}
 html.fit .warroom b{font-size:40px}html.fit .warroom .dim{font-size:18px!important}
 html.fit .feed{min-height:0;overflow:hidden}
 html.fit .ads .ph .meta{display:none}
-html.fit #xfeed{max-height:none}
+html.fit #mb{flex:1;justify-content:center;gap:16px}html.fit #mb .mbg{gap:12px}html.fit #mb .mbg>div{padding:14px 16px}html.fit #mb label{font-size:16px}html.fit #mb b{font-size:54px}html.fit #mb p{font-size:17px}
 html.fit .post{grid-template-columns:48px 1fr;gap:14px;padding:14px 0}
 html.fit .post img{width:48px;height:48px}
 html.fit .post .who{font-size:19px;gap:10px}
@@ -322,7 +311,6 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .acc.shut>:not(.ph){display:none!important}
   .acc.shut>.ph .tabs,.acc.shut>.ph .meta{display:none}
   #chartWrap{height:230px}
-  #xfeed{max-height:460px;overflow-y:auto}
   .post .txt{-webkit-line-clamp:3}
   .board{min-height:90px}#slot1{aspect-ratio:1112/358;min-height:0}.slots .board.house,.slots .board.img{aspect-ratio:912/176;min-height:0}.bill .board.sold .head,.board.sold .head{font-size:30px}
   .src .fx{display:none}.src{padding:6px 12px}
@@ -343,7 +331,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
     <a class="btn fx" href="https://x.com/TheMarinesX" target="_blank" rel="noopener">X</a>
     <a class="btn fx" href="../">HQ</a>
     <button class="btn tts" id="ttsBtn">🔊 BUY TTS</button>
-    <a class="btn primary" href="https://jup.ag/swap/LinkhB3afbBKb2EQQu7s7umdZceV3wcvAUJhQAfQ23L-F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">ENLIST · BUY $MARINE</a>
+    <a class="btn primary" href="https://jup.ag/tokens/F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">ENLIST · BUY $MARINE</a>
   </nav>
 </header>
 
@@ -399,7 +387,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
         </div>
       </section>
       <section class="panel ads">
-        <div class="ph"><h2>AD SPACE</h2><span class="meta" id="adMeta">paid on-chain · live in ~2 min</span></div>
+        <div class="ph"><h2>AD SPACE</h2><span class="meta" id="adMeta">paid on-chain · mod approved</span></div>
         <div class="slots">
           <div class="board" data-slot="2" id="slot2"></div>
           <div class="board" data-slot="3" id="slot3"></div>
@@ -414,11 +402,16 @@ html.fit #tip{font-size:20px;padding:10px 14px}
       <div><b>THE WAR ROOM CHAT</b><span class="dim" style="font-size:11px">live on X · calls, alerts, orders</span></div>
       <a class="btn primary" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">JOIN ⚔</a>
     </section>
-    <section class="panel feed acc" data-acc="intel" data-def="0">
-      <div class="ph"><h2>THE STONK BOARD</h2>
-        <div class="tabs feedtabs" id="xf"><button data-f="vol24" class="on">VOL 24H</button><button data-f="mcap">MCAP</button><button data-f="apy">APY</button><button data-f="paidUsd">PAID OUT</button></div>
+    <section class="panel feed acc" data-acc="apy" data-def="1">
+      <div class="ph"><h2><span class="tkSym">$MARINE</span> APY</h2><span class="meta" id="mbAt"></span></div>
+      <div id="mb">
+        <div class="mbg">
+          <div><label>BOARD RANK</label><b id="mbRank">—</b></div>
+          <div class="hi"><label>APY 3D</label><b id="mbA3">—</b></div>
+          <div class="hi"><label>APY 24H</label><b id="mbA24">—</b></div>
+        </div>
+        <p class="dim" id="mbNote">loading board…</p>
       </div>
-      <div id="xfeed"><div id="xlist"><div class="dim">loading board…</div></div></div>
     </section>
     <section class="panel bill">
       <div class="ph"><h2>BILLBOARD</h2><span class="meta">slot 01 · prime</span></div>
@@ -431,7 +424,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 
 </div>
 
-<nav id="mbar"><a class="btn primary" href="https://jup.ag/swap/LinkhB3afbBKb2EQQu7s7umdZceV3wcvAUJhQAfQ23L-F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">BUY $MARINE</a><button class="btn tts" data-buy="t">🔊 TTS</button><a class="btn" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ CHAT</a></nav>
+<nav id="mbar"><a class="btn primary" href="https://jup.ag/tokens/F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">BUY $MARINE</a><button class="btn tts" data-buy="t">🔊 TTS</button><a class="btn" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ CHAT</a></nav>
 <div id="wModal"><div class="box">
   <h3>CHOOSE A WALLET</h3>
   <div class="sb">Your call. We don't default you into anything.</div>
@@ -467,15 +460,17 @@ html.fit #tip{font-size:20px;padding:10px 14px}
     <div><label class="f">Pay with</label><select id="fTok"><option value="usdc">USDC</option><option value="sol">SOL</option></select></div>
     <div style="text-align:right"><div class="dim" style="font-size:10px;letter-spacing:1.5px">TOTAL</div><div class="total" id="fTotal">—</div></div>
   </div>
-  <p style="font-size:11px" class="dim" id="rules">Text only. No links, no contract addresses, nothing hateful. Anything that trips the filter is held for a mod and refunded if rejected. Paid on Solana; it goes live automatically once the payment confirms. Want a longer run or an all-day sponsor slot? DM <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener" style="color:var(--amber)">@TheMarinesX</a>.</p>
+  <p style="font-size:11px" class="dim" id="rules">Text only. No links, no contract addresses, nothing hateful. Anything that trips the filter is held for a mod and refunded if rejected. Paid on Solana. A mod approves every order before it goes on screen, usually within minutes. Want a longer run or an all-day sponsor slot? DM <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener" style="color:var(--amber)">@TheMarinesX</a>.</p>
   <div id="payMsg"></div>
-  <div class="acts"><span id="wBadge"></span><button class="btn" id="ttsClose">CLOSE</button><a class="btn" id="payLink" href="#">OPEN IN WALLET APP</a><button class="btn primary" id="payBtn">PAY WITH WALLET</button></div>
+  <div class="acts"><button class="btn" id="wBtn" type="button">CONNECT WALLET</button><button class="btn" id="ttsClose">CLOSE</button><a class="btn" id="payLink" href="#">OPEN IN WALLET APP</a><button class="btn primary" id="payBtn">PAY WITH WALLET</button></div>
 </div></div>
 
 <script>
 const MARINE='F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK';
 const POOL='BnkYfw796XXq9UQ9kMYoX9iqSgXnjw7sFCsCVWVDiCUa';
 const LINKMINT='LinkhB3afbBKb2EQQu7s7umdZceV3wcvAUJhQAfQ23L';
+// The token this terminal is about. Token-specific labels and links read from here.
+const TK={mint:MARINE,symbol:'MARINE',quote:'LINK'};
 const GT='https://api.geckoterminal.com/api/v2/networks/solana/pools/'+POOL;
 const WHALE=2500;
 const $=id=>document.getElementById(id);
@@ -492,7 +487,7 @@ function fit(){
   if(on){S=Math.min(innerWidth/1920,innerHeight/1080);st.style.transform=`scale(${S})`;
     st.style.left=((innerWidth-1920*S)/2)+'px';st.style.top=((innerHeight-1080*S)/2)+'px'}
   else{S=1;st.style.transform='';st.style.left=st.style.top=''}
-  draw();rollFeed();
+  draw();
 }
 
 // ---------- formatting ----------
@@ -527,7 +522,7 @@ async function loadRewards(){
   $('sDist').textContent=num(r.distributedTokens,1)+' LINK';
   $('sDistUsd').textContent='≈ '+usd(r.distributedUsd,0)+' at today\'s LINK price';
   $('sPayouts').textContent=num(r.payoutCount);
-  $('sHolders').textContent=num(r.holderCount)+' holders';
+  $('sHolders').textContent=num(r.holderCount)+' holders · '+(+(r.transferTaxBps/100).toFixed(1))+'% tax';
   const p=Math.min(1,(r.pendingUsd||0)/(r.minDistributionUsd||1));
   $('pPending').textContent=num(r.pendingTokens,2)+' LINK';
   $('pPendingUsd').innerHTML=usd(r.pendingUsd,0)+(r.pendingTaxUsd?'<span class="fx"> · '+usd(r.pendingTaxUsd,0)+' tax to swap</span>':'');
@@ -536,7 +531,7 @@ async function loadRewards(){
   $('pPct').textContent=(p*100).toFixed(0)+'% loaded';
   $('pThr').textContent='min '+usd(r.minDistributionUsd,0);
   $('pState').textContent=p>=1?'ARMED':'LOADING';$('pState').classList.toggle('armed',p>=1);
-  $('pMin').textContent='hold '+usd(r.minHoldingUsd,0)+'+ to receive · tax '+(r.transferTaxBps/100).toFixed(1)+'%';
+  $('pMin').textContent='hold '+usd(r.minHoldingUsd,0)+'+ to receive';
   const w=r.window24h,w7=r.window7d;
   $('s24').innerHTML=w&&w.coveredSec>=3600&&w.tokens>=0.05?'<span class="up">+'+num(Math.max(0,w.tokens),1)+' LINK</span> <span class="dim">'+(w.complete?'last 24h':'in '+ago(Date.now()-w.coveredSec*1000))+(w7&&w7.complete?' · '+num(w7.tokens,0)+' last 7d':'')+'</span>':'<span class="dim">24h total: tracking…</span>';
   tickLast();
@@ -677,54 +672,34 @@ function setTrack(id,html,base){const el=$(id);el.innerHTML=html+html;
 // ---------- top ticker: thestonkboard.com top 10 by APY ----------
 let board=null,boardKey='apy3d';
 function renderBoard(){if(!board)return;const L=board[boardKey]||[],lab=boardKey==='apy3d'?'3d':'24h';
-  let html=L.map((t,i)=>`<a class="tk" href="https://thestonkboard.com/" target="_blank" rel="noopener">
+  let html=L.map((t,i)=>`<a class="tk" href="${esc(tokLink(t.mint))}" target="_blank" rel="noopener">
     <span class="dim">#${i+1}</span>${t.logo?`<img src="${esc(t.logo)}" alt="" loading="lazy" onerror="this.remove()">`:''}
     <b>$${esc(String(t.symbol).replace(/^\$/,''))}</b><span class="q">/${esc(t.quote)}</span>
     <span class="apy">${apyFmt(t.apy)} APY ${lab}</span><span class="dim">mc ${compact(t.mcap)}</span></a>`).join('');
-  if(board.marine){const m=board.marine;html+=`<span class="tk me"><span class="dim">board #${m.rank}</span><b>$MARINE</b><span class="q">/LINK</span><span class="apy">${apyFmt(m[boardKey])} APY ${lab}</span></span>`}
+  const m=boardStats();if(m&&m.rank)html+=`<a class="tk me" href="${esc(tokLink(TK.mint))}" target="_blank" rel="noopener"><span class="dim">board #${m.rank}</span><b>$${TK.symbol}</b><span class="q">/${TK.quote}</span><span class="apy">${apyFmt(m[boardKey])} APY ${lab}</span></a>`
   setTrack('boardTicker',html,110)}
-async function loadBoard(){try{board=await j('board.json?'+Date.now());renderBoard();if(TOK.length)renderTok()}catch(e){}}
+async function loadBoard(){try{board=await j('board.json?'+Date.now());renderBoard();renderApy()}catch(e){}}
 document.querySelector('.top .lbl').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   document.querySelectorAll('.top .lbl button').forEach(x=>x.classList.toggle('on',x===b));boardKey=b.dataset.k;renderBoard()});
 // on stream nobody clicks, so alternate 3D / 24H every few minutes
 setInterval(()=>{if(!document.documentElement.classList.contains('fit'))return;
   const nx=boardKey==='apy3d'?'apy24h':'apy3d';document.querySelector(`.top .lbl button[data-k="${nx}"]`).click()},240000);
 
-// ---------- The Stonk Board: live stonkfun token analytics ----------
-// Replaces the old X cashtag feed. Data is snapshotted from stonkfun's platform-pools
-// board (top 30 by 24h volume), cross-checked on DexScreener, with APY from thestonkboard.
-let TOK=[],tf2='vol24';
-const MET={vol24:'24H VOL',mcap:'MCAP',apy:'APY 3D',paidUsd:'PAID TO HOLDERS'};
-function apyMap(){const m={};if(board)['apy3d','apy24h'].forEach(k=>(board[k]||[]).forEach(t=>{
-  if(t.mint&&m[t.mint]==null&&k==='apy3d')m[t.mint]=t.apy}));return m}
-function renderTok(){
-  const am=apyMap();
-  let L=TOK.map(t=>({...t,apy:am[t.mint]}));
-  L=L.filter(t=>t[tf2]!=null&&isFinite(t[tf2])).sort((a,b)=>b[tf2]-a[tf2]);
-  const val=t=>tf2==='apy'?apyFmt(t.apy):compact(t[tf2]);
-  let html=L.map((t,i)=>`<a class="trow" href="${tokLink(t.mint)}" target="_blank" rel="noopener">
-    <span class="rk">${i+1}</span>
-    ${t.image?`<img src="${esc(t.image)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span></span>'}
-    <span class="sym">$${esc(String(t.symbol||'?').replace(/^\$/,''))}<span class="q">/${esc(t.quote||'')}</span>${t.reward?'<span class="rw">REWARDS</span>':''}</span>
-    <span class="met"><b>${val(t)}</b>${t.chg24!=null?pct(t.chg24):'<span class="dim">&nbsp;</span>'}</span></a>`).join('');
-  if(board&&board.marine){const m=board.marine;
-    html+=`<a class="trow me" href="https://jup.ag/swap/${LINKMINT}-${MARINE}" target="_blank" rel="noopener">
-      <span class="rk">#${m.rank}</span><img src="../logo.png" alt="">
-      <span class="sym">$MARINE<span class="q">/LINK</span><span class="rw">OURS</span></span>
-      <span class="met"><b>${tf2==='apy'?apyFmt(m.apy3d):'BUY'}</b><span class="fx">board rank ${m.rank}</span></span></a>`}
-  $('xlist').innerHTML=html||'<div class="dim">board unavailable</div>';
-  $('xlist').dataset.one=$('xlist').innerHTML;rollFeed()}
-function rollFeed(){const box=$('xfeed'),l=$('xlist');if(!l.dataset.one)return;
-  l.classList.remove('roll');l.innerHTML=l.dataset.one;
-  if(document.documentElement.classList.contains('fit')&&l.scrollHeight>box.clientHeight+20){
-    l.innerHTML=l.dataset.one+l.dataset.one;l.style.animationDuration=(l.scrollHeight/2/22)+'s';l.classList.add('roll')}}
-async function loadTok(){try{const d=await j('tokens.json?'+Date.now());TOK=d.tokens||[];renderTok()}catch(e){}}
-$('xf').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
-  [...$('xf').children].forEach(x=>x.classList.toggle('on',x===b));tf2=b.dataset.f;renderTok()});
-// on stream nobody clicks, so cycle the metric every 90s
-setInterval(()=>{if(!document.documentElement.classList.contains('fit'))return;
-  const K=['vol24','mcap','apy','paidUsd'],nx=K[(K.indexOf(tf2)+1)%K.length];
-  document.querySelector(`#xf button[data-f="${nx}"]`).click()},90000);
+// ---------- APY card: this terminal's token on thestonkboard.com ----------
+// board.json is snapshotted server-side. Stats come from board.tokens[mint] when the
+// snapshot carries the full top-100 map, else board.marine, else the top-10 lists.
+// Keyed by mint so a per-token terminal only needs a different TK.
+function boardStats(mint=TK.mint){if(!board)return null;
+  if(board.tokens&&board.tokens[mint])return board.tokens[mint];
+  if(mint===MARINE&&board.marine)return board.marine;
+  const a=(board.apy3d||[]).find(t=>t.mint===mint),b=(board.apy24h||[]).find(t=>t.mint===mint);
+  return a||b?{rank:(a||b).rank,apy3d:a?.apy,apy24h:b?.apy}:null}
+function renderApy(){if(!board)return;const m=boardStats();
+  $('mbRank').textContent=m&&m.rank?'#'+m.rank:'—';
+  $('mbA3').textContent=m?apyFmt(m.apy3d):'—';$('mbA24').textContent=m?apyFmt(m.apy24h):'—';
+  $('mbNote').textContent=m?'Ranked in the thestonkboard.com top 100 by APY. Modeled figures, not a promise.'
+    :`$${TK.symbol} isn't in the thestonkboard.com top 100 right now. Its APY shows here as soon as it ranks.`;
+  $('mbAt').textContent=board.boardAt?ago(Date.parse(board.boardAt)).split(' ')[0]+' ago':''}
 
 // ---------- TTS: queue in tts.json, popped + read on screen ----------
 const played=new Set(JSON.parse(localStorage.getItem('ttsPlayed')||'[]'));const bootAt=Date.now()/1000-120;
@@ -749,7 +724,9 @@ const TOKEN='TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',ATAP='ATokenGPvbdGVxr1
 const SLOTN={'1':'SLOT 01 · PRIME','2':'SLOT 02','3':'SLOT 03'};
 const BADC=/(https?:\/\/|www\.|\.(com|xyz|io|net|org|gg|fun|app|link|ly|me|so)\b|t\.me|discord\.gg|\b[1-9A-HJ-NP-Za-km-z]{32,44}\b)/i;
 const fld=v=>v.replace(/[|\n\r]/g,'/').replace(/\s+/g,' ').trim();
-function tokLink(m){return PAY&&PAY.tokenLink?PAY.tokenLink.replace('{mint}',m):'https://dexscreener.com/solana/'+m}
+// Where a token click goes. Jupiter's token page by default; pay.json can override with
+// "tokenLink":"https://…/{mint}" (e.g. a ref link) without touching this file.
+function tokLink(m){return m?(PAY&&PAY.tokenLink?PAY.tokenLink:'https://jup.ag/tokens/{mint}').replace('{mint}',encodeURIComponent(m)):'https://thestonkboard.com/'}
 async function loadPay(){try{PAY=await j('pay.json?'+Date.now());$('ttsPrice').textContent='$'+PAY.prices.tts;renderAds()}catch(e){}}
 async function loadAds(){try{ADS=await j('ads.json?'+Date.now());renderAds()}catch(e){}}
 function curAd(k){const n=Date.now()/1000;return(ADS.slots?.[k]||[]).find(a=>a.start<=n&&a.end>n)}
@@ -792,13 +769,13 @@ function check(){if(kind==='i'){if(imgBusy)return'image still uploading…';if(!
 function refresh(){const a=amount();$('fTotal').textContent=a?a.txt:'…';
   if(kind!=='t'&&PAY){const k=$('fSlot').value,w=queueEnd(k)-Date.now()/1000;$('slotQ').textContent=w>30?'Slot is booked for '+Math.ceil(w/60)+' more min. Yours starts right after.':'Slot is open. Yours starts as soon as payment confirms.'}
   const L=$('payLink');if(PAY&&PAY.treasury&&a){L.href=`solana:${PAY.treasury}?amount=${a.ui}${$('fTok').value==='usdc'?'&spl-token='+PAY.usdcMint:''}&memo=${encodeURIComponent(memo())}&label=${encodeURIComponent('The War Room')}&message=${encodeURIComponent(kind==='t'?'TTS on stream':'Billboard')}`}
-  const off=!PAY||!PAY.treasury;$('payBtn').disabled=off;L.style.display=off?'none':'';
+  const off=!PAY||!PAY.treasury;$('payBtn').disabled=off;L.style.display=off||!(coarse()||!detected().length)?'none':'';
   if(off)say('Checkout opens shortly. Until then DM <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener">@TheMarinesX</a>.','')}
 function say(h,c){$('payMsg').innerHTML=h;$('payMsg').className=c||''}
 function openBuy(k,slot){kind=k;fillSlotSel();if(slot)$('fSlot').value=slot;
   [...$('kind').children].forEach(b=>b.classList.toggle('on',b.dataset.k===k));$('kT').style.display=k==='t'?'':'none';$('kA').style.display=k!=='t'?'':'none';
   $('kAt').style.display=k==='a'?'':'none';$('kAi').style.display=k==='i'?'':'none';
-  $('rules').textContent=k==='i'?'Every image is checked by a mod before it goes on screen, usually within minutes. Nothing NSFW, hateful, or scammy (no QR codes, links or contract addresses in the image). If it\'s rejected you get refunded. Paid on Solana.':'Text only. No links, no contract addresses, nothing hateful. Anything that trips the filter is held for a mod and refunded if rejected. Paid on Solana; it goes live automatically once the payment confirms.';
+  $('rules').textContent=k==='i'?'Every image is checked by a mod before it goes on screen, usually within minutes. Nothing NSFW, hateful, or scammy (no QR codes, links or contract addresses in the image). If it\'s rejected you get refunded. Paid on Solana.':'Text only. No links, no contract addresses, nothing hateful. Anything that trips the filter is held for a mod and refunded if rejected. Paid on Solana. A mod approves every order before it goes on screen, usually within minutes.';
   say('');$('ttsModal').classList.add('show');getSolPx().then(refresh);refresh()}
 $('kind').onclick=e=>{const b=e.target.closest('button');if(b)openBuy(b.dataset.k)};
 ['fSlot','fBlocks','fTok','fFrom','fHead','fSub','ttsText'].forEach(id=>$(id).addEventListener('input',()=>{refresh();if($('payMsg').className==='err')say('')}));
@@ -812,18 +789,38 @@ $('ttsText').addEventListener('input',()=>$('ttsCount').textContent=$('ttsText')
 $('ttsBtn').onclick=()=>openBuy('t');
 document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>openBuy(b.dataset.buy));
 ['1','2','3'].forEach(k=>$('slot'+k).onclick=e=>{if(e.target.closest('a'))return;if(!curAd(k))openBuy('a',k)});
-$('wBadge').onclick=async()=>{const p=await wallet(true);if(p){try{const r=await p.connect();wBadgeSet((r?.publicKey||p.publicKey).toString())}catch(e){}}};
-$('wBadge').style.cursor='pointer';$('wBadge').title='Switch wallet';
+$('wBtn').onclick=()=>connectWallet(true);
 $('ttsClose').onclick=()=>$('ttsModal').classList.remove('show');
 $('ttsModal').onclick=e=>{if(e.target.id==='ttsModal')$('ttsModal').classList.remove('show')};
-$('payLink').onclick=e=>{const m=check();if(m){e.preventDefault();say(m,'err')}else say('Approve it in your wallet. It goes live within ~2 min of confirming.','ok')};
+$('payLink').onclick=e=>{const m=check();if(m){e.preventDefault();say(m,'err')}else say('Approve it in your wallet. A mod puts it on screen once it confirms, usually within minutes.','ok')};
 // ---------- wallet picker: no default, the user chooses ----------
-// Every Solana wallet injects its own object. We enumerate the ones actually present
-// instead of reaching for window.phantom first, then remember the choice.
+// Wallets show up two ways: the Wallet Standard (how Phantom, Solflare, Backpack, Jupiter,
+// OKX, Coinbase and most new wallets announce themselves) and older injected window objects.
+// We list both, de-duplicated by name, and never connect until the buyer taps one.
+const STD=[];
+function addStd(...ws){ws.forEach(w=>{const f=w&&w.features||{};
+  if(!f['standard:connect']||!(f['solana:signAndSendTransaction']||f['solana:signTransaction']))return;
+  if(!(w.chains||[]).some(c=>String(c).startsWith('solana:')))return;
+  if(!STD.includes(w))STD.push(w)});return()=>{}}
+addEventListener('wallet-standard:register-wallet',e=>{try{e.detail({register:addStd})}catch(_){}});
+try{dispatchEvent(new CustomEvent('wallet-standard:app-ready',{detail:{register:addStd}}))}catch(_){}
+const B58='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+function b58(u8){let n=0n,o='';for(const b of u8)n=n*256n+BigInt(b);while(n>0n){o=B58[Number(n%58n)]+o;n/=58n}
+  for(const b of u8){if(b)break;o='1'+o}return o}
+// wrap a Wallet Standard wallet in the same shape as an injected provider
+function stdProv(w){let acct=null;const f=w.features;return{
+  async connect(){const r=await f['standard:connect'].connect();acct=(r?.accounts||w.accounts||[])[0];
+    if(!acct)throw new Error('wallet returned no account');return{publicKey:acct.address}},
+  async disconnect(){try{await f['standard:disconnect']?.disconnect()}catch(_){}},
+  async signAndSendTransaction(tx){const bytes=tx.serialize({requireAllSignatures:false,verifySignatures:false});
+    if(f['solana:signAndSendTransaction']){const [o]=await f['solana:signAndSendTransaction'].signAndSendTransaction({account:acct,chain:'solana:mainnet',transaction:bytes});return{signature:b58(o.signature)}}
+    const [o]=await f['solana:signTransaction'].signTransaction({account:acct,chain:'solana:mainnet',transaction:bytes});
+    return{signature:await rpcCall('sendTransaction',[btoa(String.fromCharCode(...o.signedTransaction)),{encoding:'base64'}])}}}}
 const WALLETS=[
   {id:'phantom',  name:'Phantom',       get:()=>window.phantom?.solana,      url:'https://phantom.app/download'},
   {id:'solflare', name:'Solflare',      get:()=>window.solflare||window.solflareWallet, url:'https://solflare.com/download'},
   {id:'backpack', name:'Backpack',      get:()=>window.backpack,             url:'https://backpack.app/downloads'},
+  {id:'jupiter',  name:'Jupiter',       get:()=>null,                        url:'https://jup.ag/mobile'},
   {id:'magiceden',name:'Magic Eden',    get:()=>window.magicEden?.solana,    url:'https://wallet.magiceden.io/'},
   {id:'okx',      name:'OKX Wallet',    get:()=>window.okxwallet?.solana,    url:'https://www.okx.com/web3'},
   {id:'coinbase', name:'Coinbase Wallet',get:()=>window.coinbaseSolana,      url:'https://www.coinbase.com/wallet/downloads'},
@@ -833,45 +830,54 @@ const WALLETS=[
   {id:'exodus',   name:'Exodus',        get:()=>window.exodus?.solana,       url:'https://www.exodus.com/download/'},
   {id:'nightly',  name:'Nightly',       get:()=>window.nightly?.solana,      url:'https://nightly.app/download'},
 ];
-let wProv=null;
+const wKey=n=>String(n||'').toLowerCase().replace(/wallet/g,'').replace(/[^a-z0-9]/g,'');
+let wProv=null,wAddr=null;
 function detected(){
-  const out=[],seen=new Set();
+  const out=[],names=new Set(),seen=new Set();
+  STD.forEach(w=>{const k=wKey(w.name);if(names.has(k))return;names.add(k);
+    out.push({id:'std:'+k,name:w.name,icon:/^data:image\//.test(w.icon||'')?w.icon:'',make:()=>stdProv(w)})});
   WALLETS.forEach(w=>{let p;try{p=w.get()}catch(e){}
-    if(p&&!seen.has(p)){seen.add(p);out.push({...w,prov:p})}});
+    if(p&&!seen.has(p)&&!names.has(wKey(w.name))){seen.add(p);names.add(wKey(w.name));out.push({...w,make:()=>p})}});
   // generic window.solana (and multi-provider shims) as a last resort, only if it is something new
   try{const g=window.solana;const extra=g?.providers||(g?[g]:[]);
-    extra.forEach((p,i)=>{if(p&&!seen.has(p)){seen.add(p);
-      out.push({id:'other'+i,name:p.isPhantom?'Phantom':(p._name||p.name||'Injected wallet'),prov:p})}})}catch(e){}
+    extra.forEach((p,i)=>{const nm=p?.isPhantom?'Phantom':(p?._name||p?.name||'Injected wallet');
+      if(p&&!seen.has(p)&&!names.has(wKey(nm))){seen.add(p);names.add(wKey(nm));out.push({id:'other'+i,name:nm,make:()=>p})}})}catch(e){}
   return out}
-function wBadgeSet(addr){const b=$('wBadge');if(b)b.textContent=addr?('◆ '+addr.slice(0,4)+'…'+addr.slice(-4)):''}
-function pickWallet(force){
+function wBtnSet(){const b=$('wBtn');if(!b)return;b.classList.toggle('on',!!wAddr);
+  b.textContent=wAddr?'◆ '+wAddr.slice(0,4)+'…'+wAddr.slice(-4)+' · CHANGE':'CONNECT WALLET'}
+// Always shows the list. The last wallet used is just marked and listed first.
+function pickWallet(){
   return new Promise(res=>{
-    const list=detected();
-    if(!force){
-      const saved=localStorage.getItem('wrWallet');
-      const hit=saved&&list.find(w=>w.id===saved);
-      if(hit)return res(hit.prov);
-      if(list.length===1)return res(list[0].prov);
-    }
+    const last=localStorage.getItem('wrWallet');
+    const list=detected().sort((a,b)=>(b.id===last)-(a.id===last));
     const box=$('wList');
     if(!list.length){
-      box.innerHTML=WALLETS.slice(0,4).map(w=>`<a class="wrow off" href="${w.url}" target="_blank" rel="noopener">
+      box.innerHTML=WALLETS.slice(0,5).map(w=>`<a class="wrow off" href="${w.url}" target="_blank" rel="noopener">
         <span class="ic"></span><span class="nm">${w.name}</span><span class="st">INSTALL</span></a>`).join('')
-        +'<div class="foot" style="margin-top:8px">No Solana wallet found in this browser. Install one, or open this page inside your wallet app.</div>';
+        +'<div class="foot" style="margin-top:8px">No Solana wallet found in this browser. Install one, or use OPEN IN WALLET APP.</div>';
     }else{
-      box.innerHTML=list.map(w=>`<button class="wrow" data-w="${w.id}">
-        <span class="ic"></span><span class="nm">${esc(w.name)}</span><span class="st">DETECTED</span></button>`).join('');
+      box.innerHTML=list.map(w=>`<button class="wrow" data-w="${esc(w.id)}">
+        ${w.icon?`<img class="ic" src="${esc(w.icon)}" alt="">`:'<span class="ic"></span>'}<span class="nm">${esc(w.name)}</span><span class="st">${w.id===last?'LAST USED':'DETECTED'}</span></button>`).join('');
     }
     let done=false;
     const close=v=>{if(done)return;done=true;$('wModal').classList.remove('show');res(v)};
     box.querySelectorAll('[data-w]').forEach(b=>b.onclick=()=>{
       const w=list.find(x=>x.id===b.dataset.w);
-      if(w){localStorage.setItem('wrWallet',w.id);close(w.prov)}});
+      if(w){localStorage.setItem('wrWallet',w.id);close(w)}});
     $('wCancel').onclick=()=>close(null);
     $('wModal').onclick=e=>{if(e.target.id==='wModal')close(null)};
     $('wModal').classList.add('show');
   })}
-async function wallet(force){const p=await pickWallet(force);wProv=p;return p}
+// Returns a connected provider. Re-uses this visit's wallet unless `change` is set.
+async function connectWallet(change){
+  if(wProv&&wAddr&&!change)return wProv;
+  const pick=await pickWallet();if(!pick)return null;
+  const p=pick.make();
+  try{const r=await p.connect();const a=(r?.publicKey||p.publicKey).toString();
+    if(wProv&&wProv!==p)try{await wProv.disconnect?.()}catch(_){}
+    wProv=p;wAddr=a;wBtnSet();say('Connected '+esc(pick.name)+'.','ok');return p}
+  catch(e){say(/reject|cancel|denied|closed/i.test(e.message||'')?'Connection cancelled.':'Could not connect: '+esc(e.message||e),'err');return null}}
+function coarse(){return matchMedia('(pointer:coarse)').matches}
 async function rpcCall(method,params){const r=await fetch(PAY.rpc,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params})});const d=await r.json();if(d.error)throw new Error(d.error.message);return d.result}
 async function buildTx(W3,from){
   const {PublicKey,Transaction,TransactionInstruction,SystemProgram,ComputeBudgetProgram}=W3;
@@ -892,20 +898,20 @@ async function buildTx(W3,from){
   return tx}
 $('payBtn').onclick=async()=>{const m=check();if(m)return say(m,'err');
   const b=$('payBtn');b.disabled=true;
-  const w=await wallet();if(!w){b.disabled=false;return say('No wallet selected. Pick one, or use OPEN IN WALLET APP on mobile.','err')}
+  const w=await connectWallet(false);if(!w){b.disabled=false;return}
   try{say('Loading…');web3=web3||await import('https://esm.sh/@solana/web3.js@1.98.0');
-    const r=await w.connect();const from=(r?.publicKey||w.publicKey).toString();wBadgeSet(from);
+    const from=wAddr;
     const tx=await buildTx(web3,from);say('Approve it in your wallet…');
     let sig;if(w.signAndSendTransaction){const o=await w.signAndSendTransaction(tx);sig=o.signature||o}
     else{const st=await w.signTransaction(tx);sig=await rpcCall('sendTransaction',[btoa(String.fromCharCode(...st.serialize())),{encoding:'base64'}])}
     sig=typeof sig==='string'?sig:null;
-    say('Sent. Waiting for it to go live…'+(sig?` <a href="https://solscan.io/tx/${sig}" target="_blank" rel="noopener">tx</a>`:''),'ok');
+    say('Sent. Waiting for a mod to approve it…'+(sig?` <a href="https://solscan.io/tx/${sig}" target="_blank" rel="noopener">tx</a>`:''),'ok');
     if(sig)watchReceipt(sig)}
   catch(e){say(/reject|cancel|denied/i.test(e.message||'')?'Cancelled.':'Failed: '+esc(e.message||e),'err')}
   b.disabled=false};
-function watchReceipt(sig){let n=0;const t=setInterval(async()=>{if(++n>40)return clearInterval(t);
+function watchReceipt(sig){let n=0;const t=setInterval(async()=>{if(++n>150)return clearInterval(t);
   try{const d=await j('receipts.json?'+Date.now()),r=(d.items||[]).find(i=>i.sig===sig);if(!r)return;clearInterval(t);
-    say({live:'✅ Live. Look at the screen.',held:r.kind==='i'?'Paid. Your image is with a mod for approval, usually within minutes. Refunded if rejected.':'Held for a mod to review. You\'ll be refunded if it\'s rejected.',underpaid:'Payment came in short ('+esc(r.note)+'). DM @TheMarinesX.',rejected:'Rejected by a mod. DM @TheMarinesX for a refund.'}[r.status]||r.status,r.status==='live'?'ok':'err');loadAds();loadTTS()}catch(e){}},8000)}
+    say({live:'✅ Live. Look at the screen.',approved:'✅ Approved. It\'s in the queue and plays / goes up next.',held:r.kind==='i'?'Paid. Your image is with a mod for approval, usually within minutes. Refunded if rejected.':'Held for a mod to review. You\'ll be refunded if it\'s rejected.',underpaid:'Payment came in short ('+esc(r.note)+'). DM @TheMarinesX.',rejected:'Rejected by a mod. DM @TheMarinesX for a refund.'}[r.status]||r.status,/^(live|approved)$/.test(r.status)?'ok':'err');loadAds();loadTTS()}catch(e){}},8000)}
 
 // ---------- mobile: collapsible sections ----------
 const accSt=JSON.parse(localStorage.getItem('wrAcc')||'{}');
@@ -915,17 +921,17 @@ document.querySelectorAll('.acc').forEach(sec=>{
   const open=k in accSt?accSt[k]:sec.dataset.def==='1';sec.classList.toggle('shut',!open);
   ph.addEventListener('click',e=>{if(document.documentElement.classList.contains('fit')||e.target.closest('button,a,select'))return;
     const shut=sec.classList.toggle('shut');accSt[k]=!shut;localStorage.setItem('wrAcc',JSON.stringify(accSt));
-    if(!shut){requestAnimationFrame(()=>{draw();rollFeed()})}});
+    if(!shut){requestAnimationFrame(draw)}});
 });
 $('moreStats').addEventListener('click',()=>{const o=document.querySelector('.stats').classList.toggle('open');$('moreStats').textContent=o?'LESS ▴':'MORE STATS ▾'});
 addEventListener('resize',fit);
 fit();
-loadRewards();loadMarket();loadChart();loadTrades();loadTicker();loadBoard();loadTok();loadTTS();loadPay();loadAds();
+loadRewards();loadMarket();loadChart();loadTrades();loadTicker();loadBoard();loadTTS();loadPay();loadAds();
 setInterval(loadAds,15000);setInterval(loadPay,300000);setTimeout(()=>{renderAds();setInterval(renderAds,20000)},20000-Date.now()%20000);
 setInterval(loadTrades,20000);setInterval(loadMarket,30000);setInterval(loadRewards,60000);
 setInterval(loadChart,120000);setInterval(loadTicker,300000);setInterval(loadBoard,300000);
-setInterval(loadTok,120000);setInterval(loadTTS,10000);setInterval(tickLast,1000);
-document.fonts?.ready.then(()=>{draw();rollFeed()});
+setInterval(loadTTS,10000);setInterval(tickLast,1000);
+document.fonts?.ready.then(draw);
 {const dm=new URLSearchParams(location.search).get('demo');if(dm)setTimeout(()=>{
   if(dm==='pulse')pulseTakeover(29.4,391,2439,6555.2);
   else{bpQ.push({v:dm==='bigbuy'?3120:240,amt:dm==='bigbuy'?2.1e6:162000,w:'Dem0'});nextBuy()}},2500)}
