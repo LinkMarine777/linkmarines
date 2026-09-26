@@ -116,7 +116,7 @@ tr.whale td{background:rgba(74,122,255,.08)}
 .board.sold .sub{font-size:13px;margin-top:6px;color:var(--txt);word-break:break-word}
 .board.sold .by{position:absolute;left:8px;bottom:5px;font-size:10px;color:var(--amber);letter-spacing:1px}
 .board.sold .left{position:absolute;right:8px;bottom:5px;font-size:10px;color:var(--dim)}
-.board.sold .buy{position:absolute;right:8px;top:5px;font-size:9px;color:var(--dim);letter-spacing:1px}
+.board.sold .xl{position:absolute;inset:0;z-index:2}.board.sold:has(.xl){cursor:pointer}.board.sold:has(.xl):hover{border-color:var(--blue2)}
 .board.sold{padding:18px 14px 24px}
 .bill .board.sold .head{font-size:40px}
 .priceline{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:12px}
@@ -286,6 +286,7 @@ html.fit .slots .board{padding:6px 10px}html.fit .board .vt{font-size:36px!impor
 html.fit .board.sold .head{font-size:48px}html.fit .board.sold .sub{font-size:21px}
 html.fit .board.sold .by,html.fit .board.sold .left,html.fit .board.sold .buy{font-size:16px}
 html.fit .board.sold{padding:22px 16px 30px}
+html.fit .slots .board.sold{padding:4px 12px 26px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}html.fit .slots .board.sold .head{font-size:38px}html.fit .slots .board.sold .sub{font-size:16px;margin-top:2px}
 html.fit .priceline{font-size:22px;margin-top:10px;padding-top:10px}
 html.fit .col.comms{display:flex;flex-direction:column}
 html.fit .feed{min-height:0;overflow:hidden}
@@ -463,7 +464,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   <button class="x" id="ttsClose" type="button" aria-label="Close">✕</button>
   <h3>ON SCREEN · ON STREAM</h3>
   <div class="kind" id="kind"><button data-k="t" class="on">🔊 TTS</button><button data-k="a">📢 BILLBOARD</button><button data-k="i">🖼 IMAGE AD</button></div>
-  <label class="f">Your name / X handle</label><input id="fFrom" maxlength="24" placeholder="@you">
+  <label class="f" id="fFromL">Your name / X handle</label><input id="fFrom" maxlength="24" placeholder="@you">
   <div id="kT">
     <label class="f">Message · read out loud</label>
     <textarea id="ttsText" maxlength="200" placeholder="your message…"></textarea>
@@ -802,9 +803,12 @@ async function loadAds(){try{const a=await j('ads.json?'+Date.now()),f=await bot
   ADS=a;renderAds()}catch(e){}}
 function curAd(k){const n=Date.now()/1000;return(ADS.slots?.[k]||[]).find(a=>a.start<=n&&a.end>n)}
 function queueEnd(k){const n=Date.now()/1000;return Math.max(n,...(ADS.slots?.[k]||[]).map(a=>a.end))}
+const xHandle=f=>{const h=String(f||'').trim().replace(/^@/,'');return /^[A-Za-z0-9_]{1,15}$/.test(h)?h:null};
 function renderAds(){['1','2','3'].forEach(k=>{const el=$('slot'+k);if(!el)return;const a=curAd(k),pr=PAY?'$'+PAY.prices.slots[k]+' / '+PAY.blockMinutes+' MIN':'';
   el.classList.toggle('sold',!!a);el.classList.toggle('img',!!(a&&a.img));
-  const html=a&&a.img?`<img src="${esc(a.img)}" alt=""><span class="buy">${SLOTN[k]}</span><span class="by">— ${esc(a.from)}</span><span class="left">${Math.ceil((a.end-Date.now()/1000)/60)}m left</span>`:a?`<span class="buy">${SLOTN[k]} · ${pr}</span><div class="head">${esc(a.head)}</div>${a.sub?`<div class="sub">${esc(a.sub)}</div>`:''}<span class="by">— ${esc(a.from)}</span><span class="left">${Math.ceil((a.end-Date.now()/1000)/60)}m left</span>`
+  // paid ads show only the buyer's content (the slot/price label is for open slots) and link to their X
+  const h=a&&xHandle(a.from),xl=h?`<a class="xl" href="https://x.com/${h}" target="_blank" rel="noopener" aria-label="@${h} on X"></a>`:'';
+  const html=a&&a.img?`<img src="${esc(a.img)}" alt=""><span class="by">— ${esc(a.from)}</span><span class="left">${Math.ceil((a.end-Date.now()/1000)/60)}m left</span>${xl}`:a?`<div class="head">${esc(a.head)}</div>${a.sub?`<div class="sub">${esc(a.sub)}</div>`:''}<span class="by">— ${esc(a.from)}</span><span class="left">${Math.ceil((a.end-Date.now()/1000)/60)}m left</span>${xl}`
     :houseAd(k,pr);if(el._h!==html){el.innerHTML=html;el._h=html}el.classList.toggle('house',!a)})}
 // ---------- filler inventory: house gags + real sponsors ----------
 // Unsold slots rotate through our own bits AND paid/ref partners. Sponsor cards
@@ -833,7 +837,8 @@ function amount(){const u=usdTotal();if($('fTok').value==='usdc')return{ui:u,txt
 function memo(){const f=fld($('fFrom').value)||'anon';
   if(kind==='i')return`WR|i|${$('fSlot').value}|${$('fBlocks').value}|${f}|${imgId||''}`;
   return kind==='t'?`WR|t|${f}|${fld($('ttsText').value)}`:`WR|a|${$('fSlot').value}|${$('fBlocks').value}|${f}|${fld($('fHead').value)}|${fld($('fSub').value)}`}
-function check(){if(kind==='i'){if(imgBusy)return'image still uploading…';if(!imgId)return'pick an image';
+function check(){if(kind!=='t'&&!xHandle($('fFrom').value))return'enter your X handle, the ad links to it';
+  if(kind==='i'){if(imgBusy)return'image still uploading…';if(!imgId)return'pick an image';
     if(BADC.test($('fFrom').value))return'no links or contract addresses';return''}
   const txt=kind==='t'?$('ttsText').value:$('fHead').value+' '+$('fSub').value;
   if(!(kind==='t'?$('ttsText').value.trim():$('fHead').value.trim()))return kind==='t'?'write a message':'write a headline';
@@ -846,6 +851,7 @@ function refresh(){const a=amount();$('fTotal').textContent=a?a.txt:'…';
 function say(h,c){$('payMsg').innerHTML=h;$('payMsg').className=c||''}
 function openBuy(k,slot){kind=k;fillSlotSel();if(slot)$('fSlot').value=slot;
   [...$('kind').children].forEach(b=>b.classList.toggle('on',b.dataset.k===k));$('kT').style.display=k==='t'?'':'none';$('kA').style.display=k!=='t'?'':'none';
+  $('fFromL').textContent=k==='t'?'Your name / X handle':'Your X handle · clicking the ad opens your X';
   $('kAt').style.display=k==='a'?'':'none';$('kAi').style.display=k==='i'?'':'none';
   $('rules').textContent=k==='i'?'Every image is checked by a mod before it goes on screen, usually within minutes. Nothing NSFW, hateful, or scammy (no QR codes, links or contract addresses in the image). If it\'s rejected you get refunded. Paid on Solana.':k==='t'?'TTS is a donation: it plays on stream a few seconds after the payment confirms. Keep it within Twitch / Kick / YouTube / X rules. No links, contract addresses, or anything hateful. Anything that breaks the rules is held for a mod and, if rejected, not refunded.':'Text only. No links, no contract addresses, nothing hateful. Paid on Solana. A mod approves every billboard before it goes on screen, usually within minutes. If it is not approved, you get refunded to the wallet you paid from.';
   say('');$('ttsModal').classList.add('show');getSolPx().then(refresh);refresh()}
@@ -853,9 +859,9 @@ $('kind').onclick=e=>{const b=e.target.closest('button');if(b)openBuy(b.dataset.
 ['fSlot','fBlocks','fTok','fFrom','fHead','fSub','ttsText'].forEach(id=>$(id).addEventListener('input',()=>{refresh();if($('payMsg').className==='err')say('')}));
 $('fImg').addEventListener('change',async()=>{const f=$('fImg').files[0];imgId=null;$('iPrev').style.display='none';if(!f)return refresh();
   if(f.size>3*1024*1024)return say('Image must be under 3 MB.','err');
-  if(!PAY||!PAY.upload)return say('Image upload is offline right now. Try again in a few minutes.','err');
+  const upURL=PAY&&(PAY.bot?PAY.bot.replace(/\/$/,''):PAY.upload);if(!upURL)return say('Image upload is offline right now. Try again in a few minutes.','err');
   $('iPrev').src=URL.createObjectURL(f);$('iPrev').style.display='block';imgBusy=true;say('Uploading image…');
-  try{const r=await fetch(PAY.upload+'/img',{method:'POST',body:f});const d=await r.json();if(!r.ok||!d.id)throw new Error(d.error||r.status);imgId=d.id;say('Image ready. Pay to submit it for review.','ok')}
+  try{const r=await fetch(upURL+'/img',{method:'POST',body:f});const d=await r.json();if(!r.ok||!d.id)throw new Error(d.error||r.status);imgId=d.id;say('Image ready. Pay to submit it for review.','ok')}
   catch(e){say('Upload failed: '+esc(e.message||e),'err')}imgBusy=false;refresh()});
 $('ttsText').addEventListener('input',()=>$('ttsCount').textContent=$('ttsText').value.length+'/200');
 $('ttsBtn').onclick=()=>openBuy('t');
