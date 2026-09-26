@@ -132,6 +132,17 @@ tr.whale td{background:rgba(74,122,255,.08)}
 #mb b{display:block;font-family:'VT323';font-size:36px;font-weight:400;color:#fff;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #mb .hi b{color:var(--green)}
 #mb p{font-size:11px;margin:0;line-height:1.5}
+#mbList{display:flex;flex-direction:column;min-height:0}
+#mbList .br,#mbList .bh{display:grid;grid-template-columns:18px 22px minmax(0,1fr) repeat(4,minmax(0,62px));gap:6px;align-items:center;padding:5px 0;border-bottom:1px solid rgba(26,36,68,.7);font-size:11px;color:var(--txt)}
+#mbList .bh{font-size:9px;letter-spacing:1px;color:var(--dim);padding-top:0}
+#mbList .br:hover{text-decoration:none;background:rgba(74,122,255,.06)}
+#mbList .br>span:nth-child(n+4),#mbList .bh>span:nth-child(n+4){text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mbList .rk{color:var(--dim);font-size:10px;text-align:right}
+#mbList img{width:22px;height:22px;border-radius:50%;background:#111;object-fit:cover}
+#mbList .sym{color:#fff;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#mbList .sym .q{color:var(--dim);font-size:9px}
+#mbList .apy{color:var(--green)}
+#mbList .nt{font-size:10px;color:var(--dim);padding-top:6px;line-height:1.4}
 .post{display:grid;grid-template-columns:32px 1fr;gap:9px;padding:9px 0;border-bottom:1px solid rgba(26,36,68,.7);color:var(--txt)}
 .post:hover{text-decoration:none;background:rgba(74,122,255,.05)}
 .post img{width:32px;height:32px;border-radius:50%;background:#111}
@@ -268,6 +279,7 @@ html.fit .col.comms{display:flex;flex-direction:column}
 html.fit .warroom b{font-size:40px}html.fit .warroom .dim{font-size:18px!important}
 html.fit .feed{min-height:0;overflow:hidden}
 html.fit .ads .ph .meta{display:none}
+html.fit #mbList .br,html.fit #mbList .bh{grid-template-columns:22px 22px minmax(0,1fr) repeat(4,minmax(0,84px));gap:8px;font-size:16px;line-height:1.2;padding:1px 0}html.fit #mbList .bh{font-size:12px}html.fit #mbList img{width:20px;height:20px}html.fit #mbList .rk{font-size:13px}html.fit #mbList .sym .q{font-size:11px}html.fit #mbList .nt{display:none}html.fit .feed .ph{margin-bottom:6px}
 html.fit #mb{flex:1;justify-content:center;gap:16px}html.fit #mb .mbg{gap:12px}html.fit #mb .mbg>div{padding:14px 16px}html.fit #mb label{font-size:16px}html.fit #mb b{font-size:54px}html.fit #mb p{font-size:17px}
 html.fit .post{grid-template-columns:48px 1fr;gap:14px;padding:14px 0}
 html.fit .post img{width:48px;height:48px}
@@ -311,6 +323,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .acc.shut>:not(.ph){display:none!important}
   .acc.shut>.ph .tabs,.acc.shut>.ph .meta{display:none}
   #chartWrap{height:230px}
+  #mbList .br,#mbList .bh{grid-template-columns:14px 18px minmax(0,1fr) repeat(4,minmax(0,50px));gap:5px;font-size:10px}#mbList img{width:18px;height:18px}#mbList .sym .q{display:none}#mbList .bh{font-size:8px;letter-spacing:0}
   .post .txt{-webkit-line-clamp:3}
   .board{min-height:90px}#slot1{aspect-ratio:1112/358;min-height:0}.slots .board.house,.slots .board.img{aspect-ratio:912/176;min-height:0}.bill .board.sold .head,.board.sold .head{font-size:30px}
   .src .fx{display:none}.src{padding:6px 12px}
@@ -403,7 +416,8 @@ html.fit #tip{font-size:20px;padding:10px 14px}
       <a class="btn primary" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">JOIN ⚔</a>
     </section>
     <section class="panel feed acc" data-acc="apy" data-def="1">
-      <div class="ph"><h2><span class="tkSym">$MARINE</span> APY</h2><span class="meta" id="mbAt"></span></div>
+      <div class="ph"><h2><span id="mbTitle">$MARINE APY</span></h2><span class="meta" id="mbAt"></span></div>
+      <div id="mbList" style="display:none"></div>
       <div id="mb">
         <div class="mbg">
           <div><label>BOARD RANK</label><b id="mbRank">—</b></div>
@@ -656,7 +670,7 @@ $('tapeF').addEventListener('click',e=>{const b=e.target.closest('button');if(!b
 // ---------- bottom ticker: stonkfun top 10 by volume ----------
 async function loadTicker(){
   try{
-    const d=await j('tokens.json?'+Date.now());
+    const d=await j('tokens.json?'+Date.now());TOKS=d.tokens||[];renderApy();
     const html=d.tokens.map((t,i)=>`<a class="tk" href="${esc(tokLink(t.mint))}" target="_blank" rel="noopener">
       <span class="dim">#${i+1}</span>${t.image?`<img src="${esc(t.image)}" alt="" loading="lazy" onerror="this.remove()">`:''}
       <b>$${esc(t.symbol)}</b><span class="q">/${esc(t.quote)}</span>
@@ -680,7 +694,7 @@ function renderBoard(){if(!board)return;const L=board[boardKey]||[],lab=boardKey
   setTrack('boardTicker',html,110)}
 async function loadBoard(){try{board=await j('board.json?'+Date.now());renderBoard();renderApy()}catch(e){}}
 document.querySelector('.top .lbl').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
-  document.querySelectorAll('.top .lbl button').forEach(x=>x.classList.toggle('on',x===b));boardKey=b.dataset.k;renderBoard()});
+  document.querySelectorAll('.top .lbl button').forEach(x=>x.classList.toggle('on',x===b));boardKey=b.dataset.k;renderBoard();renderApy()});
 // on stream nobody clicks, so alternate 3D / 24H every few minutes
 setInterval(()=>{if(!document.documentElement.classList.contains('fit'))return;
   const nx=boardKey==='apy3d'?'apy24h':'apy3d';document.querySelector(`.top .lbl button[data-k="${nx}"]`).click()},240000);
@@ -694,7 +708,27 @@ function boardStats(mint=TK.mint){if(!board)return null;
   if(mint===MARINE&&board.marine)return board.marine;
   const a=(board.apy3d||[]).find(t=>t.mint===mint),b=(board.apy24h||[]).find(t=>t.mint===mint);
   return a||b?{rank:(a||b).rank,apy3d:a?.apy,apy24h:b?.apy}:null}
-function renderApy(){if(!board)return;const m=boardStats();
+// Ranked: the token's own APY card. Not ranked: the board's top 10 with VOL / MCAP / APY /
+// PAID OUT side by side. Volume and paid-out come from the stonkfun snapshot (tokens.json);
+// volume falls back to DexScreener for tokens outside it.
+let TOKS=[],dsVol={},dsAt=0;
+async function fillVol(list){const miss=list.map(t=>t.mint).filter(m=>m&&!TOKS.some(t=>t.mint===m));
+  if(!miss.length||Date.now()-dsAt<240000)return;dsAt=Date.now();
+  try{const d=await j('https://api.dexscreener.com/tokens/v1/solana/'+miss.join(','));
+    (Array.isArray(d)?d:[]).forEach(p=>{const m=p.baseToken?.address;if(m)dsVol[m]=(dsVol[m]||0)+(+p.volume?.h24||0)});renderApy()}catch(e){}}
+function renderList(){const by={};TOKS.forEach(t=>by[t.mint]=t);const L=(board[boardKey]||[]).slice(0,10),lab=boardKey==='apy3d'?'3D':'24H';
+  $('mbList').innerHTML=`<div class="bh"><span></span><span></span><span>TOKEN</span><span>VOL 24H</span><span>MCAP</span><span>APY ${lab}</span><span>PAID OUT</span></div>`
+    +L.map((t,i)=>{const s=by[t.mint]||{},v=s.vol24!=null?s.vol24:dsVol[t.mint];
+      return `<a class="br" href="${esc(tokLink(t.mint))}" target="_blank" rel="noopener"><span class="rk">${i+1}</span>`
+      +(t.logo?`<img src="${esc(t.logo)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span></span>')
+      +`<span class="sym">$${esc(String(t.symbol||'?').replace(/^\$/,''))}<span class="q">/${esc(t.quote||'')}</span></span>`
+      +`<span>${v!=null?compact(v):'—'}</span><span>${compact(t.mcap??s.mcap)}</span><span class="apy">${apyFmt(t.apy)}</span><span>${s.paidUsd!=null?compact(s.paidUsd):'—'}</span></a>`}).join('')
+    +`<div class="nt">$${TK.symbol} isn't in the thestonkboard.com top 100 right now. Showing the board's top 10 until it ranks.</div>`;
+  fillVol(L)}
+function renderApy(){if(!board)return;const m=boardStats(),ranked=!!(m&&m.rank);
+  $('mb').style.display=ranked?'':'none';$('mbList').style.display=ranked?'none':'';
+  $('mbTitle').textContent=ranked?`$${TK.symbol} APY`:'STONK BOARD TOP 10';
+  if(!ranked)renderList();
   $('mbRank').textContent=m&&m.rank?'#'+m.rank:'—';
   $('mbA3').textContent=m?apyFmt(m.apy3d):'—';$('mbA24').textContent=m?apyFmt(m.apy24h):'—';
   $('mbNote').textContent=m?'Ranked in the thestonkboard.com top 100 by APY. Modeled figures, not a promise.'
@@ -741,7 +775,8 @@ function renderAds(){['1','2','3'].forEach(k=>{const el=$('slot'+k);if(!el)retur
 // traffic actually attributes. House cards still open the checkout.
 const HOUSE={'1':['s1-better-call-sergey','s1-holding-alone','s1-plaid-motors'],'2':['s2-paper-hands','s2-youre-reading-this'],'3':['s3-bankers-hate','s3-sergey-associates']};
 const SPONSOR={
-  '1':[{img:'house/s1-jtx.png',href:'https://app.jtx.com/ref/TheMarines',tag:'JTX · JOIN ▸'}],
+  '1':[{img:'house/s1-jtx.png',href:'https://app.jtx.com/ref/TheMarines',tag:'JTX · JOIN ▸'},
+       {img:'house/s1-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}],
   '2':[{img:'house/s2-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}],
   '3':[{img:'house/s2-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}]
 };
