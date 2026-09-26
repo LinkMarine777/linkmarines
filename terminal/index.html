@@ -473,7 +473,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
     <div><label class="f">Pay with</label><select id="fTok"><option value="usdc">USDC</option><option value="sol">SOL</option></select></div>
     <div style="text-align:right"><div class="dim" style="font-size:10px;letter-spacing:1.5px">TOTAL</div><div class="total" id="fTotal">—</div></div>
   </div>
-  <p style="font-size:11px" class="dim" id="rules">Text only. No links, no contract addresses, nothing hateful. Paid on Solana; it plays on stream about a minute after the payment confirms. Anything that trips the filter is held for a mod. TTS a mod rejects is not refunded. Want a longer run or an all-day sponsor slot? DM <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener" style="color:var(--amber)">@TheMarinesX</a>.</p>
+  <p style="font-size:11px" class="dim" id="rules">TTS is a donation: it plays on stream about a minute after the payment confirms. Keep it within Twitch / Kick / YouTube / X rules. No links, contract addresses, or anything hateful. Anything that breaks the rules is held for a mod and, if rejected, not refunded. Want a longer run or an all-day sponsor slot? DM <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener" style="color:var(--amber)">@TheMarinesX</a>.</p>
   <div id="payMsg"></div>
   <div id="myOrders"></div>
   <div class="acts"><button class="btn" id="wBtn" type="button">CONNECT WALLET</button><button class="btn" id="myBtn" type="button" style="display:none">MY ORDERS</button><button class="btn" id="ttsClose">CLOSE</button><a class="btn" id="payLink" href="#">OPEN IN WALLET APP</a><button class="btn primary" id="payBtn">PAY</button></div>
@@ -810,7 +810,7 @@ function say(h,c){$('payMsg').innerHTML=h;$('payMsg').className=c||''}
 function openBuy(k,slot){kind=k;fillSlotSel();if(slot)$('fSlot').value=slot;
   [...$('kind').children].forEach(b=>b.classList.toggle('on',b.dataset.k===k));$('kT').style.display=k==='t'?'':'none';$('kA').style.display=k!=='t'?'':'none';
   $('kAt').style.display=k==='a'?'':'none';$('kAi').style.display=k==='i'?'':'none';
-  $('rules').textContent=k==='i'?'Every image is checked by a mod before it goes on screen, usually within minutes. Nothing NSFW, hateful, or scammy (no QR codes, links or contract addresses in the image). If it\'s rejected you get refunded. Paid on Solana.':k==='t'?'Text only. No links, no contract addresses, nothing hateful. Paid on Solana; it plays on stream about a minute after the payment confirms. Anything that trips the filter is held for a mod. TTS a mod rejects is not refunded.':'Text only. No links, no contract addresses, nothing hateful. Paid on Solana. A mod approves every billboard before it goes on screen, usually within minutes, and refunds it if rejected.';
+  $('rules').textContent=k==='i'?'Every image is checked by a mod before it goes on screen, usually within minutes. Nothing NSFW, hateful, or scammy (no QR codes, links or contract addresses in the image). If it\'s rejected you get refunded. Paid on Solana.':k==='t'?'TTS is a donation: it plays on stream about a minute after the payment confirms. Keep it within Twitch / Kick / YouTube / X rules. No links, contract addresses, or anything hateful. Anything that breaks the rules is held for a mod and, if rejected, not refunded.':'Text only. No links, no contract addresses, nothing hateful. Paid on Solana. A mod approves every billboard before it goes on screen, usually within minutes. If it is not approved, you get refunded to the wallet you paid from.';
   say('');$('ttsModal').classList.add('show');getSolPx().then(refresh);refresh()}
 $('kind').onclick=e=>{const b=e.target.closest('button');if(b)openBuy(b.dataset.k)};
 ['fSlot','fBlocks','fTok','fFrom','fHead','fSub','ttsText'].forEach(id=>$(id).addEventListener('input',()=>{refresh();if($('payMsg').className==='err')say('')}));
@@ -833,7 +833,7 @@ async function showOrders(){if(!wAddr)return;const box=$('myOrders');
   try{const d=await j('receipts.json?'+Date.now()),L=(d.items||[]).filter(r=>r.buyer===wAddr).sort((a,b)=>b.at-a.at);
     const name={tts:'🔊 TTS',ad:'📢 BILLBOARD',img:'🖼 IMAGE AD'};
     box.innerHTML=L.length?L.map(r=>{const ad=r.kind!=='tts';
-      const st=r.status==='rejected'?(ad?(r.refund==='done'?['↩ rejected · refunded','bad']:['❌ rejected · refund on the way','bad']):['❌ rejected · TTS not refundable','bad']):(ST[r.status]||[r.status,'']);
+      const st=r.status==='rejected'?(ad?(r.refund==='done'?['↩ rejected · refunded','bad']:['❌ rejected · refund on the way','bad']):['❌ rejected · donation, not refunded','bad']):(ST[r.status]||[r.status,'']);
       const what=r.text||[r.head,r.sub].filter(Boolean).join(' / ')||(ad&&r.slot?SLOTN[r.slot]+' · '+(r.blocks*(PAY?.blockMinutes||10))+' min':'');
       return `<div class="o"><span>${name[r.kind]||esc(r.kind)}</span><span class="w">${esc(what)}</span><span>$${(+r.usd||0).toFixed(2)}</span>
         <span class="d">${new Date(r.at*1000).toLocaleString()}</span><span class="st ${st[1]}">${st[0]} · <a href="https://solscan.io/tx/${esc(r.sig)}" target="_blank" rel="noopener">tx</a></span></div>`}).join('')
@@ -963,7 +963,7 @@ function watchReceipt(sig){let n=0;const t=setInterval(async()=>{if(++n>150)retu
   try{const d=await j('receipts.json?'+Date.now()),r=(d.items||[]).find(i=>i.sig===sig);if(!r)return;
     if(r.status==='pending')return say('Paid. Waiting for a mod to approve it, usually within minutes.','ok');clearInterval(t);
     const ad=r.kind!=='tts'&&r.kind!=='t';
-    say({live:'✅ Live. Look at the screen.',approved:'✅ Approved. It\'s in the queue and plays / goes up next.',held:r.kind==='i'?'Paid. Your image is with a mod for approval, usually within minutes. Refunded if rejected.':'Held for a mod to review. You\'ll be refunded if it\'s rejected.',underpaid:'Payment came in short ('+esc(r.note||'')+'). DM @TheMarinesX.',rejected:ad?'Rejected by a mod. You\'ll be refunded to the wallet you paid from.':'Rejected by a mod. TTS isn\'t refundable.'}[r.status]||r.status,/^(live|approved)$/.test(r.status)?'ok':'err');loadAds();loadTTS()}catch(e){}},8000)}
+    say({live:'✅ Live. Look at the screen.',approved:'✅ Approved. It\'s in the queue and plays / goes up next.',held:r.kind==='i'?'Paid. Your image is with a mod for approval, usually within minutes. Refunded if rejected.':'Held for a mod to review. You\'ll be refunded if it\'s rejected.',underpaid:'Payment came in short ('+esc(r.note||'')+'). DM @TheMarinesX.',rejected:ad?'Rejected by a mod. You\'ll be refunded to the wallet you paid from.':'Rejected by a mod for breaking stream rules. TTS is a donation and isn\'t refunded.'}[r.status]||r.status,/^(live|approved)$/.test(r.status)?'ok':'err');loadAds();loadTTS()}catch(e){}},8000)}
 
 // ---------- mobile: collapsible sections ----------
 const accSt=JSON.parse(localStorage.getItem('wrAcc')||'{}');
