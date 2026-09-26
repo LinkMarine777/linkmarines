@@ -38,6 +38,7 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
 .btn:hover{border-color:var(--blue2);text-decoration:none}
 .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
 .btn.tts{border-color:var(--amber);color:var(--amber)}
+#soundBtn.off{color:var(--dim);border-color:var(--line)}
 .btn.chat{border-color:var(--blue2);color:#fff}
 
 /* tickers */
@@ -346,6 +347,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
     <a class="btn fx" href="https://x.com/TheMarinesX" target="_blank" rel="noopener">X</a>
     <a class="btn fx" href="../">HQ</a>
     <a class="btn chat" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ WAR ROOM CHAT</a>
+    <button class="btn" id="soundBtn" type="button" title="Turn all notification sounds on or off"></button>
     <button class="btn tts" id="ttsBtn">🔊 BUY TTS</button>
     <a class="btn primary" href="https://jup.ag/tokens/F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">ENLIST · BUY $MARINE</a>
   </nav>
@@ -448,7 +450,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 <div id="ttsPop"><div class="from" id="ttsFrom"></div><div class="msg" id="ttsMsg"></div></div>
 <div id="buyPop"><div class="t" id="bpT">NEW RECRUIT</div><div class="v" id="bpV"></div><div class="w" id="bpW"></div></div>
 <div id="pulseTO"><div class="k">⚡ PULSE FIRED ⚡</div><div class="n" id="ptN"></div><div class="s" id="ptS"></div><div class="d" id="ptD"></div></div>
-<div id="audioGate">🔊 click to enable TTS audio</div>
+<div id="audioGate">🔊 click anywhere to turn on sound</div>
 <div id="ttsModal"><div class="box">
   <h3>ON SCREEN · ON STREAM</h3>
   <div class="kind" id="kind"><button data-k="t" class="on">🔊 TTS</button><button data-k="a">📢 BILLBOARD</button><button data-k="i">🖼 IMAGE AD</button></div>
@@ -652,7 +654,11 @@ function renderTape(){
 }
 // buy alerts: every new $MARINE buy >= $100 pops on screen with a sound
 const BUYMIN=100,alerted=new Set();let tradesBoot=true,bpQ=[],bpBusy=false,actx=null;
-function beep(big){try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();const t=actx.currentTime;
+// sound: on by default, one toggle for TTS and every notification beep (remembered per browser)
+let soundOn=true;try{soundOn=localStorage.getItem('wrSound')!=='0'}catch(e){}
+function soundSet(){$('soundBtn').textContent=soundOn?'🔊 SOUND':'🔇 MUTED';$('soundBtn').classList.toggle('off',!soundOn);
+  if(!soundOn){try{speechSynthesis.cancel()}catch(e){}if(curAudio)curAudio.pause()}}
+function beep(big){if(!soundOn)return;try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();const t=actx.currentTime;
   (big?[523,659,784,1047]:[659,988]).forEach((f,i)=>{const o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=f;
     g.gain.setValueAtTime(.0001,t+i*.11);g.gain.exponentialRampToValueAtTime(.08,t+i*.11+.02);g.gain.exponentialRampToValueAtTime(.0001,t+i*.11+.16);
     o.connect(g).connect(actx.destination);o.start(t+i*.11);o.stop(t+i*.11+.18)})}catch(e){}}
@@ -737,7 +743,7 @@ function renderApy(){if(!board)return;const m=boardStats(),ranked=!!(m&&m.rank);
 
 // ---------- TTS: queue in tts.json, popped + read on screen ----------
 const played=new Set(JSON.parse(localStorage.getItem('ttsPlayed')||'[]'));const bootAt=Date.now()/1000-120;
-let ttsQ=[],ttsBusy=false,audioOk=false;
+let ttsQ=[],ttsBusy=false,audioOk=false,curAudio=null;
 // With pay.json "bot" set, TTS and ads come straight from the approval bot's live feed
 // (seconds after payment); the committed tts.json / ads.json stay as the fallback.
 let FEED=null,feedAt=0;
@@ -748,12 +754,23 @@ async function loadTTS(){try{const f=await botFeed();const d=f&&f.tts?{items:f.t
 function nextTTS(){if(ttsBusy||!ttsQ.length)return;const i=ttsQ.shift();ttsBusy=true;
   played.add(i.id);localStorage.setItem('ttsPlayed',JSON.stringify([...played].slice(-100)));
   $('ttsFrom').textContent='🔊 '+i.from+' says';$('ttsMsg').textContent=i.text;$('ttsPop').classList.add('show');
-  let done=false;const end=()=>{if(done)return;done=true;setTimeout(()=>{$('ttsPop').classList.remove('show');setTimeout(()=>{ttsBusy=false;nextTTS()},800)},1500)};
-  const synth=()=>{try{const u=new SpeechSynthesisUtterance(i.from+' says: '+i.text);u.rate=1.02;u.onend=end;u.onerror=()=>{$('audioGate').style.display='block'};
-    speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}};
-  if(i.audio){const a=new Audio(i.audio);a.onended=end;a.onerror=synth;a.play().catch(()=>{$('audioGate').style.display='block';synth()})}else synth();
-  setTimeout(end,Math.max(9000,i.text.length*85))}
+  // the popup stays up while the message is read, then closes; without sound it shows long enough to read
+  let done=false,timer=null;const end=()=>{if(done)return;done=true;clearTimeout(timer);curAudio=null;
+    setTimeout(()=>{$('ttsPop').classList.remove('show');setTimeout(()=>{ttsBusy=false;nextTTS()},700)},1200)};
+  const hold=ms=>{clearTimeout(timer);timer=setTimeout(end,ms)};
+  const readMs=Math.max(5000,Math.min(16000,1500+(i.from+' '+i.text).length*75));
+  hold(readMs+2000);
+  if(!soundOn)return hold(readMs);
+  const synth=()=>{try{const u=new SpeechSynthesisUtterance(String(i.from).replace(/^@/,'')+' says: '+i.text);u.rate=1.02;u.onend=end;
+    u.onerror=()=>{$('audioGate').style.display='block';hold(readMs)};speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){hold(readMs)}};
+  const src=i.audio||(PAY&&PAY.bot?PAY.bot.replace(/\/$/,'')+'/speak/'+encodeURIComponent(i.id):null);
+  if(!src)return synth();
+  const a=new Audio(src);curAudio=a;
+  a.onloadedmetadata=()=>{if(isFinite(a.duration))hold(a.duration*1000+2500)};
+  a.onended=end;a.onerror=synth;
+  a.play().catch(()=>{$('audioGate').style.display='block';hold(readMs)})}
 $('audioGate').onclick=()=>{try{speechSynthesis.speak(new SpeechSynthesisUtterance(' '))}catch(e){}$('audioGate').style.display='none'};
+$('soundBtn').onclick=()=>{soundOn=!soundOn;try{localStorage.setItem('wrSound',soundOn?'1':'0')}catch(e){}soundSet()};soundSet();
 addEventListener('pointerdown',()=>{audioOk=true;$('audioGate').style.display='none'},{once:true});
 // ---------- self-serve checkout: TTS + billboards, paid on Solana ----------
 // The order rides in an SPL memo (WR|t|from|text or WR|a|slot|blocks|from|head|sub); the
