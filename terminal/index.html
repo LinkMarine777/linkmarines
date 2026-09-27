@@ -991,7 +991,7 @@ const LINKMINT='LinkhB3afbBKb2EQQu7s7umdZceV3wcvAUJhQAfQ23L',LINKPOOLS=['7YRKyGC
 const LINKMIN=1000;let linkRaw=[],linkBoot=true;const lseen=new Set();
 async function loadLink(){clearTimeout(loadLink.r);try{const all=[];
     for(const pool of LINKPOOLS){const d=await j('https://api.geckoterminal.com/api/v2/networks/solana/pools/'+pool+'/trades');all.push(...d.data.map(t=>t.attributes))}
-    linkRaw=all.sort((a,b)=>Date.parse(b.block_timestamp)-Date.parse(a.block_timestamp));renderLink();checkLinkBuys(linkRaw);if(cmSlide==='link')renderSlide()}
+    linkRaw=withLive(all,linkRaw).sort((a,b)=>Date.parse(b.block_timestamp)-Date.parse(a.block_timestamp));renderLink();checkLinkBuys(linkRaw);if(cmSlide==='link')renderSlide()}
   catch(e){loadLink.r=setTimeout(loadLink,8000)}}
 function renderLink(){const rows=document.documentElement.classList.contains('fit')?5:innerWidth>=1000?24:8;
   $('ltrades').tBodies[0].innerHTML=linkRaw.filter(a=>+a.volume_in_usd>=tapeMin).slice(0,rows).map(a=>{const buy=a.to_token_address===LINKMINT,v=+a.volume_in_usd;
@@ -1047,7 +1047,22 @@ function nextBuy(){if(!alertsOn){bpQ.length=0;return}if(bpBusy||!bpQ.length||$('
 var bpTimer=null;
 function closeBuy(){clearTimeout(bpTimer);if(!$('buyPop').classList.contains('show'))return;$('buyPop').classList.remove('show');setTimeout(()=>{bpBusy=false;nextBuy()},500)}
 // a rate-limited call (GeckoTerminal 429) retries in 5 s instead of waiting for the next 20 s round
-async function loadTrades(){if(!GT)return;clearTimeout(loadTrades.r);try{const d=await j(GT+'/trades');tapeRaw=d.data.map(t=>t.attributes);renderTape();checkBuys(tapeRaw)}catch(e){loadTrades.r=setTimeout(loadTrades,5000)}}
+async function loadTrades(){if(!GT)return;clearTimeout(loadTrades.r);try{const d=await j(GT+'/trades');tapeRaw=withLive(d.data.map(t=>t.attributes),tapeRaw);renderTape();checkBuys(tapeRaw)}catch(e){loadTrades.r=setTimeout(loadTrades,5000)}}
+// real-time trades (stream VPS only): wr-live pushes each swap from the chain a second or two after it lands, ahead of
+// GeckoTerminal's ~30 s delay. Only the stream browser (?obs or ?live) connects; website visitors never do.
+function withLive(fresh,old){const have=new Set(fresh.map(a=>a.tx_hash)),top=fresh.length?Date.parse(fresh[0].block_timestamp):0;
+  return old.filter(a=>a.realtime&&!have.has(a.tx_hash)&&Date.parse(a.block_timestamp)>=top-120e3).concat(fresh)
+    .sort((a,b)=>Date.parse(b.block_timestamp)-Date.parse(a.block_timestamp))}
+// a pushed trade is new by definition, so it can alert even before the first GeckoTerminal load sets the baseline
+function liveBuy(t,done,min,k){if(done.has(t.tx_hash))return;done.add(t.tx_hash);
+  if(t.to_token_address&&+t.volume_in_usd>=min){bpQ.push({k,v:+t.volume_in_usd,amt:+t.to_token_amount,w:(t.tx_from_address||'').slice(0,4)});nextBuy()}}
+function liveConnect(){let ws;try{ws=new WebSocket('ws://127.0.0.1:8787')}catch(e){return setTimeout(liveConnect,10000)}
+  ws.onmessage=m=>{try{const{feed,trade:t}=JSON.parse(m.data);
+    if(feed==='marine'&&CA==='F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK'){if(tapeRaw.some(a=>a.tx_hash===t.tx_hash))return;
+      tapeRaw.unshift(t);renderTape();liveBuy(t,alerted,BUYMIN,'')}
+    else if(feed==='link'){if(linkRaw.some(a=>a.tx_hash===t.tx_hash))return;linkRaw.unshift(t);renderLink();liveBuy(t,lalerted,LINKMIN,'link');if(cmSlide==='link')renderSlide()}}catch(e){}};
+  ws.onclose=()=>setTimeout(liveConnect,10000)}
+if(OBS||/[?&]live\b/.test(location.search))setTimeout(liveConnect,3000);
 $('tapeF').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   [...$('tapeF').children].forEach(x=>x.classList.toggle('on',x===b));tapeMin=+b.dataset.min;renderTape();renderLink()});
 
