@@ -191,6 +191,7 @@ tr.whale td{background:rgba(74,122,255,.08)}
 .cHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,rgba(255,107,0,.12),transparent 60%)}
 .cMiss{display:block;font-size:10px;margin-top:2px}.cMiss:empty{display:none}
 .empty{font-size:12px;line-height:1.55;color:var(--dim);padding:6px 0}.empty b{color:#fff;font-weight:400}.empty a{color:var(--green)}
+.cDelay{display:block;font-size:11px;color:#FF6B00;margin-top:3px;text-decoration:none}.cDelay:hover{text-decoration:underline}.dly{font-size:9px;letter-spacing:.5px;color:#FF6B00;border:1px solid rgba(255,107,0,.5);padding:0 3px;margin-left:4px;vertical-align:1px}
 .cHead b{font-family:'VT323';font-size:24px;font-weight:400;color:#FF6B00;letter-spacing:1px}.cHead .dim{font-size:11px}
 .cbtn{border-color:#FF6B00!important;color:#FF6B00!important;white-space:nowrap}.cbtn:hover{background:rgba(255,107,0,.12)}
 /* masonry: panels stack into balanced columns (count set in JS), so uneven heights never leave holes */
@@ -451,7 +452,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   <div class="stat xtra"><label>Payouts sent</label><b id="sPayouts">—</b><span class="dim" id="sHolders">&nbsp;</span><span class="dim" id="pMin" style="display:block">&nbsp;</span></div>
   <div class="stat"><label class="tkSym">$MARINE</label><b id="sPrice">—</b><span id="sChg">&nbsp;</span></div>
   <div class="stat"><label>Market cap</label><b id="sMcap">—</b><span class="dim" id="sLiq">&nbsp;</span></div>
-  <div class="stat" id="scoreStat" style="display:none" title="CLOBr score: 0-100 balance of support vs resistance liquidity. Click for more on CLOBr"><label>CLOBr score ↗</label><b id="sScore">—</b><span class="dim" id="sScoreMsg">&nbsp;</span><span class="dim" id="sScoreWhy" style="display:block">&nbsp;</span></div>
+  <div class="stat" id="scoreStat" style="display:none" title="CLOBr score: 0-100 balance of support vs resistance liquidity. Click for more on CLOBr"><label>CLOBr score ↗ <span class="dly">delayed</span></label><b id="sScore">—</b><span class="dim" id="sScoreMsg">&nbsp;</span><span class="dim" id="sScoreWhy" style="display:block">&nbsp;</span></div>
   <div class="stat fx xtra"><label>24h volume</label><b id="sVol">—</b><span class="dim" id="sTx">&nbsp;</span></div>
   <div class="stat xtra"><label class="tkQs">$LINK</label><b id="sLink">—</b><span id="sLinkChg">&nbsp;</span></div>
   <button class="moreStats" id="moreStats" type="button">MORE STATS ▾</button>
@@ -462,7 +463,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
     <section class="panel chartP acc" data-acc="chart" data-def="1">
       <div class="ph">
         <h2><span class="tkSym">$MARINE</span> × <span class="tkQs">$LINK</span></h2>
-        <div class="legend" style="margin:0"><span><i style="background:var(--blue2)"></i><span class="tkSym">$MARINE</span> (right)</span><span><i style="background:var(--amber)"></i><span class="tkQs">$LINK</span> (left)</span><a id="depthLeg" style="display:none" target="_blank" rel="noopener" title="Market depth data from CLOBr: view more on CLOBr"><i style="background:linear-gradient(90deg,var(--green) 50%,var(--red) 50%)"></i>CLOBr depth</a></div>
+        <div class="legend" style="margin:0"><span><i style="background:var(--blue2)"></i><span class="tkSym">$MARINE</span> (right)</span><span><i style="background:var(--amber)"></i><span class="tkQs">$LINK</span> (left)</span><a id="depthLeg" style="display:none" target="_blank" rel="noopener" title="CLOBr market depth, delayed up to 1h. Real-time on CLOBr Pro"><i style="background:linear-gradient(90deg,var(--green) 50%,var(--red) 50%)"></i>CLOBr depth <span class="dly">delayed</span></a></div>
         <div class="tabs" id="dtab" style="display:none"><button id="depthBtn" class="on" type="button" title="CLOBr market depth for the token: support (green) and resistance (red) liquidity by price">DEPTH</button></div>
         <div class="tabs" id="tf">
           <button data-tf="1d">24H</button><button data-tf="7d" class="on">7D</button><button data-tf="all">ALL</button>
@@ -522,7 +523,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 </main>
 
 <section class="clobrWrap" id="clobrWrap" style="display:none">
-  <div class="cHead"><div><b>CLOBr ANALYTICS</b><span class="dim"> · <span class="tkSym">$MARINE</span> · liquidity, whale and order-flow data from CLOBr</span><span class="dim cMiss" id="clobrMiss"></span></div>
+  <div class="cHead"><div><b>CLOBr ANALYTICS</b><span class="dim"> · <span class="tkSym">$MARINE</span> · liquidity, whale and order-flow data from CLOBr</span><a class="cDelay" id="clobrDelay" target="_blank" rel="noopener">⏱ Delayed up to 1h · real-time on CLOBr Pro ▸</a><span class="dim cMiss" id="clobrMiss"></span></div>
     <a class="btn cbtn" id="clobrLink" href="https://clobr.io/?ref=DF92VC53" target="_blank" rel="noopener">VIEW MORE ON CLOBr ▸</a></div>
   <div class="clobrRow" id="clobrRow">
   <section class="panel" id="liqP"><div class="ph"><h2>LIQUIDITY &amp; WALLS</h2><span class="meta">depth near price</span></div><div id="aBody"></div></section>
@@ -811,9 +812,11 @@ const clobrUrl=()=>'https://clobr.io/token/'+encodeURIComponent(CA)+'?ref='+CLOB
 const every=s=>!s?'—':s<60?Math.round(s)+'s':s<3600?Math.floor(s/60)+'m'+(s%60?' '+Math.round(s%60)+'s':''):s<86400?Math.round(s/3600)+'h':Math.round(s/86400)+'d';
 const dshort=d=>{const t=Date.parse(d);return isNaN(t)?String(d||''):new Date(t).toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'})};
 const tokAmt=n=>n==null?'—':(n>=0?'▲ ':'▼ ')+compact(Math.abs(n),'');
-async function loadClobr(){if(!FLAGS.CLOBR_ENABLED)return;try{const d=await j(BOT+'/clobr?mint='+CA);CL=d&&!d.error?d:null}catch(e){}renderClobr();draw()}
+async function loadClobr(){if(!FLAGS.CLOBR_ENABLED)return;try{const d=await j(BOT+'/clobr?mint='+CA+'&d=1');CL=d&&!d.error?d:null}catch(e){}renderClobr();draw()}
 function renderClobr(){
-  $('clobrLink').href=clobrUrl();$('scoreStat').onclick=()=>open(clobrUrl(),'_blank','noopener');
+  $('clobrLink').href=clobrUrl();$('clobrDelay').href=clobrUrl();
+  // delayed like CLOBr's free tier: say how old the numbers are and where to get them live
+  $('clobrDelay').textContent='⏱ Delayed'+(CL&&CL.fetchedAt?' · updated '+ago(CL.fetchedAt).split(' ')[0]+' ago':' up to 1h')+' · real-time on CLOBr Pro ▸';$('scoreStat').onclick=()=>open(clobrUrl(),'_blank','noopener');
   const sc=CL&&CL.score;$('scoreStat').style.display=sc?'':'none';
   if(sc){$('sScore').textContent=sc.score!=null?(+sc.score).toFixed(1):'—';$('sScore').style.color=sc.score>=60?'var(--green)':sc.score<=40?'var(--red)':'var(--amber)';
     // CLOBr's message is "verdict: reason"; the tile shows both lines so the score explains itself
@@ -889,7 +892,7 @@ $('whWin').addEventListener('click',e=>{const b=e.target.closest('button');if(!b
 
 // ---------- CLOBr market depth (from the approval bot, which holds the API key) ----------
 let DEPTH=null,depthOn=true;try{depthOn=localStorage.getItem('wrDepth')!=='0'}catch(e){}
-async function loadDepth(){if(!FLAGS.CLOBR_ENABLED)return;try{const d=await j(BOT+'/depth?mint='+CA);
+async function loadDepth(){if(!FLAGS.CLOBR_ENABLED)return;try{const d=await j(BOT+'/depth?mint='+CA+'&d=1');
   DEPTH=d&&d.levels&&d.levels.length?d:null}catch(e){}
   $('dtab').style.display=DEPTH?'':'none';depthLeg();renderClobr();draw()}
 function depthLeg(){const l=$('depthLeg');l.style.display=DEPTH?'':'none';l.classList.toggle('off',!depthOn);l.href=clobrUrl()}
@@ -1316,7 +1319,7 @@ fit();
 resolveToken().finally(()=>{loadRewards();loadMarket();loadChart();loadTrades();loadTicker();loadBoard();loadTTS();loadPay();loadAds();});
 setInterval(()=>{if(!document.hidden)loadAds()},15000);setInterval(loadPay,300000);setTimeout(()=>{renderAds();setInterval(renderAds,20000)},20000-Date.now()%20000);
 setInterval(loadTrades,20000);setInterval(loadMarket,30000);setInterval(loadRewards,60000);
-setInterval(loadChart,120000);setTimeout(loadDepth,1500);const vis=f=>()=>{if(!document.hidden)f()};setInterval(vis(loadDepth),60000);setTimeout(loadClobr,2000);setInterval(vis(loadClobr),120000);setInterval(loadTicker,300000);setInterval(loadBoard,300000);
+setInterval(loadChart,120000);setTimeout(loadDepth,1500);const vis=f=>()=>{if(!document.hidden)f()};setInterval(vis(loadDepth),600000);setTimeout(loadClobr,2000);setInterval(vis(loadClobr),600000);setInterval(loadTicker,300000);setInterval(loadBoard,300000);
 setInterval(()=>{if(!document.hidden)loadTTS()},10000);setInterval(tickLast,1000);
 document.fonts?.ready.then(draw);
 {const dm=new URLSearchParams(location.search).get('demo');if(dm)setTimeout(()=>{
