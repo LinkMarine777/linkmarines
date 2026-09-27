@@ -190,7 +190,8 @@ tr.whale td{background:rgba(74,122,255,.08)}
 .empty{font-size:12px;line-height:1.55;color:var(--dim);padding:6px 0}.empty b{color:#fff;font-weight:400}.empty a{color:var(--green)}
 .cHead b{font-family:'VT323';font-size:24px;font-weight:400;color:#FF6B00;letter-spacing:1px}.cHead .dim{font-size:11px}
 .cbtn{border-color:#FF6B00!important;color:#FF6B00!important;white-space:nowrap}.cbtn:hover{background:rgba(255,107,0,.12)}
-.clobrRow{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1px;background:var(--line)}@media (min-width:1000px){#whP{grid-column:span 2}}
+/* masonry: panels stack into balanced columns (count set in JS), so uneven heights never leave holes */
+.clobrRow{column-gap:0;column-rule:1px solid var(--line);background:var(--panel)}.clobrRow>.panel{display:block;break-inside:avoid;border-bottom:1px solid var(--line)}
 .wcs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.wc{border:1px solid var(--line);padding:7px 8px;min-width:0}
 .wc label{display:block;font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}.wv b{font-family:'VT323';font-size:26px;font-weight:400;color:#fff}.wv span{font-size:10px}
 .wl{font-size:10px;margin-top:3px;line-height:1.35}.wl .dim{display:block}.wv{white-space:nowrap}
@@ -200,7 +201,7 @@ tr.whale td{background:rgba(74,122,255,.08)}
 .lp{border-bottom:1px solid rgba(26,36,68,.6);padding:7px 0}.lpt{font-size:12px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}.lpt .dim{font-size:10px}
 .lps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:4px;font-size:12px;color:#fff}.lps label{display:block;font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
 #scoreStat{cursor:pointer}#scoreStat:hover label{color:#FF6B00}#scoreStat #sScoreMsg,#scoreStat #sScoreWhy{font-size:10px;line-height:1.35}#scoreStat #sScoreWhy{white-space:normal;overflow:visible}
-.clobrRow .panel{min-width:0;overflow-x:auto}.clobrRow table{font-size:11px}.clobrRow td,.clobrRow th{padding:3px 5px}
+.clobrRow .panel{min-width:0;overflow:hidden}.clobrRow .lq label{white-space:nowrap}.clobrRow table{font-size:11px}.clobrRow td,.clobrRow th{padding:3px 5px}
 
 .clobrRow .r{text-align:right}.clobrRow .sub{font-size:10px;color:var(--dim);letter-spacing:1px;margin:10px 0 4px;text-transform:uppercase}
 .cbig{display:flex;gap:10px;margin-bottom:6px}.cbig>div{flex:1;border:1px solid var(--line);padding:6px 8px;min-width:0}
@@ -210,7 +211,7 @@ tr.whale td{background:rgba(74,122,255,.08)}
 .dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px}
 
 @media (max-width:999px){.cHead{flex-wrap:wrap}.cHead .dim{display:block}}
-@media (max-width:999px){.clobrRow{grid-template-columns:minmax(0,1fr)}.chartP.acc>.ph{flex-wrap:wrap;row-gap:6px}}
+@media (max-width:999px){.chartP.acc>.ph{flex-wrap:wrap;row-gap:6px}}
 .src{font-size:10px;color:var(--dim);padding:4px 16px;background:#02030a;border-top:1px solid var(--line);flex:none}
 
 /* TTS */
@@ -404,8 +405,8 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 <div id="stage">
 
 <header>
-  <a href="../"><img src="../logo.png" alt="Marines"></a>
-  <div class="brand">THE WAR ROOM<small>TERMINAL 2.0</small></div>
+  <a href="./" title="Terminal 2.0 home: trending tokens"><img src="../logo.png" alt="Marines"></a>
+  <a class="brand" href="./" title="Terminal 2.0 home: trending tokens" style="text-decoration:none">THE WAR ROOM<small>TERMINAL 2.0</small></a>
   <span class="live" id="live"><i></i><span id="liveTxt">LIVE</span></span>
   <button id="soundBtn" type="button" title="Sound on: click to mute TTS and alerts" aria-label="Mute sounds"></button>
   <button id="alertBtn" type="button" title="Alerts on: click to hide buy alerts, pulses and TTS popups" aria-label="Hide alerts"></button>
@@ -825,7 +826,11 @@ function renderClobr(){
   $('missP').style.display=miss.length&&shown<4&&any?'':'none';
   $('missBody').innerHTML=miss.length?`No ${txt} for <b>${sym}</b> on CLOBr right now.<br><br>These show up here as soon as someone places a DCA or limit order, or opens a Meteora DLMM pool for ${sym}.`:'';
   $('clobrMiss').textContent=miss.length&&shown>=4?`Nothing on CLOBr for ${txt} right now.`:'';
-  $('clobrWrap').style.display=any||sc?'':'none'}
+  $('clobrWrap').style.display=any||sc?'':'none';clobrCols()}
+// as many columns as fit (about 400px each), never more than there are panels
+function clobrCols(){const r=$('clobrRow'),n=[...r.children].filter(e=>e.style.display!=='none').length;
+  r.style.columnCount=Math.max(1,Math.min(n,innerWidth<1000?1:Math.floor(r.clientWidth/400)))}
+addEventListener('resize',()=>{clearTimeout(clobrCols.t);clobrCols.t=setTimeout(clobrCols,150)});
 function renderWhales(){const W=CL&&CL.whales;if(!W||W.none||!W.summary)return false;const S=W.summary,w=whWin;
   const card=t=>{const size=+t.slice(3),acc=S.accumulating?.[t]?.[w],neu=S.new_wallets?.[t]?.[w],net=S.net_flow?.[t]?.[w]?.net,usdv=net!=null&&marinePx?net*marinePx:null;
     return `<div class="wc"><label>Top ${size}</label><div class="wv"><b>${acc??'—'}</b><span class="dim">/${size} buying</span></div>
