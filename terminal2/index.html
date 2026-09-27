@@ -135,7 +135,6 @@ tr.whale td{background:rgba(74,122,255,.08)}
 
 /* comms column */
 .feed{display:flex;flex-direction:column;flex:1}
-#slotA{display:flex;flex-direction:column;gap:8px}
 .srcL{color:#FF6B00!important;text-decoration:none}.srcL:hover{text-decoration:underline}
 .nt{font-size:10px;line-height:1.45;margin:0}
 .ms{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;align-items:center}
@@ -192,7 +191,7 @@ tr.whale td{background:rgba(74,122,255,.08)}
 .dr{display:grid;grid-template-columns:62px 1fr auto auto;gap:8px;font-size:11px;padding:4px 0;border-bottom:1px solid rgba(26,36,68,.6);white-space:nowrap}
 .lp{border-bottom:1px solid rgba(26,36,68,.6);padding:7px 0}.lpt{font-size:12px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}.lpt .dim{font-size:10px}
 .lps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:4px;font-size:12px;color:#fff}.lps label{display:block;font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
-#scoreStat{cursor:pointer}#scoreStat:hover label{color:#FF6B00}
+#scoreStat{cursor:pointer}#scoreStat:hover label{color:#FF6B00}#scoreStat #sScoreMsg,#scoreStat #sScoreWhy{font-size:10px;line-height:1.35}#scoreStat #sScoreWhy{white-space:normal;overflow:visible}
 .clobrRow .panel{min-width:0;overflow-x:auto}.clobrRow table{font-size:11px}.clobrRow td,.clobrRow th{padding:3px 5px}
 
 .clobrRow .r{text-align:right}.clobrRow .sub{font-size:10px;color:var(--dim);letter-spacing:1px;margin:10px 0 4px;text-transform:uppercase}
@@ -374,7 +373,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .stats .xtra{display:none}.stats.open .xtra{display:block}
   .moreStats{display:block;grid-column:span 2;background:transparent;border:0;border-bottom:1px solid var(--line);color:var(--blue2);font:inherit;font-size:11px;letter-spacing:1.5px;padding:8px;cursor:pointer}
   main{display:flex;flex-direction:column}.col,.lower{display:contents}
-  .chartP{order:1}.bill{order:2}#slotA{order:3}#sbP{order:4}.ads{order:5}.tapeP{order:6}
+  .chartP{order:1}.bill{order:2}#sbP{order:3}.ads{order:5}.tapeP{order:6}
   .ads .slots{gap:6px}
   .panel{padding:10px 12px}
   .acc>.ph{cursor:pointer;margin-bottom:8px;flex-wrap:nowrap;user-select:none;-webkit-tap-highlight-color:transparent}
@@ -438,6 +437,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   <div class="stat xtra"><label>Payouts sent</label><b id="sPayouts">—</b><span class="dim" id="sHolders">&nbsp;</span><span class="dim" id="pMin" style="display:block">&nbsp;</span></div>
   <div class="stat"><label class="tkSym">$MARINE</label><b id="sPrice">—</b><span id="sChg">&nbsp;</span></div>
   <div class="stat"><label>Market cap</label><b id="sMcap">—</b><span class="dim" id="sLiq">&nbsp;</span></div>
+  <div class="stat" id="scoreStat" style="display:none" title="CLOBr score: 0-100 balance of support vs resistance liquidity. Click for more on CLOBr"><label>CLOBr score ↗</label><b id="sScore">—</b><span class="dim" id="sScoreMsg">&nbsp;</span><span class="dim" id="sScoreWhy" style="display:block">&nbsp;</span></div>
   <div class="stat fx xtra"><label>24h volume</label><b id="sVol">—</b><span class="dim" id="sTx">&nbsp;</span></div>
   <div class="stat xtra"><label class="tkQs">$LINK</label><b id="sLink">—</b><span id="sLinkChg">&nbsp;</span></div>
   <button class="moreStats" id="moreStats" type="button">MORE STATS ▾</button>
@@ -487,10 +487,6 @@ html.fit #tip{font-size:20px;padding:10px 14px}
       <div class="ph"><h2>BILLBOARD</h2><span class="meta">slot 01 · prime</span></div>
       <div class="board" data-slot="1" id="slot1"></div>
     </section>
-    <section class="panel acc" id="slotA" data-acc="mkt" data-def="1">
-      <div class="ph"><h2>MARKET STRUCTURE</h2><a class="meta srcL" id="aLink" target="_blank" rel="noopener" title="Data from CLOBr: view more on CLOBr">DATA: CLOBr ▸</a></div>
-      <div id="aBody"><p class="dim nt">loading CLOBr…</p></div>
-    </section>
     <section class="panel acc" id="sbP" data-acc="apy" data-def="1" style="display:none">
       <div class="ph"><h2><span class="tkSym">$MARINE</span> STONK BOARD</h2><a class="meta sbl" id="sbLink" target="_blank" rel="noopener">VIEW ON STONK BOARD ▸</a></div>
       <div id="mb">
@@ -510,6 +506,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   <div class="cHead"><div><b>CLOBr ANALYTICS</b><span class="dim"> · <span class="tkSym">$MARINE</span> · liquidity, whale and order-flow data from CLOBr</span></div>
     <a class="btn cbtn" id="clobrLink" href="https://clobr.io/?ref=DF92VC53" target="_blank" rel="noopener">VIEW MORE ON CLOBr ▸</a></div>
   <div class="clobrRow" id="clobrRow">
+  <section class="panel" id="liqP"><div class="ph"><h2>LIQUIDITY &amp; WALLS</h2><span class="meta">depth near price</span></div><div id="aBody"></div></section>
   <section class="panel" id="whP"><div class="ph"><h2>WHALE ACTIVITY</h2><div class="tabs" id="whWin"><button data-w="1d">1D</button><button data-w="7d" class="on">7D</button><button data-w="30d">30D</button></div></div><div id="whBody"></div></section>
   <section class="panel" id="loP"><div class="ph"><h2>LIMIT ORDERS</h2><span class="meta" id="loMeta"></span></div><div id="loBody"></div></section>
   <section class="panel" id="dcP"><div class="ph"><h2>DCA FLOW</h2><span class="meta" id="dcMeta"></span></div><div id="dcBody"></div></section>
@@ -799,11 +796,16 @@ const CLOBR_REF='DF92VC53';
 const clobrUrl=()=>'https://clobr.io/token/'+encodeURIComponent(CA)+'?ref='+CLOBR_REF;
 const every=s=>!s?'—':s<60?Math.round(s)+'s':s<3600?Math.floor(s/60)+'m'+(s%60?' '+Math.round(s%60)+'s':''):s<86400?Math.round(s/3600)+'h':Math.round(s/86400)+'d';
 const tokAmt=n=>n==null?'—':(n>=0?'▲ ':'▼ ')+compact(Math.abs(n),'');
-async function loadClobr(){if(!FLAGS.CLOBR_ENABLED)return renderSlotA();try{const d=await j(BOT+'/clobr?mint='+CA);CL=d&&!d.error?d:null}catch(e){}renderClobr();renderSlotA();draw()}
+async function loadClobr(){if(!FLAGS.CLOBR_ENABLED)return;try{const d=await j(BOT+'/clobr?mint='+CA);CL=d&&!d.error?d:null}catch(e){}renderClobr();draw()}
 function renderClobr(){
-  $('clobrLink').href=clobrUrl();const sc=CL&&CL.score;   // the score itself shows in Market structure
+  $('clobrLink').href=clobrUrl();$('scoreStat').onclick=()=>open(clobrUrl(),'_blank','noopener');
+  const sc=CL&&CL.score;$('scoreStat').style.display=sc?'':'none';
+  if(sc){$('sScore').textContent=sc.score!=null?(+sc.score).toFixed(1):'—';$('sScore').style.color=sc.score>=60?'var(--green)':sc.score<=40?'var(--red)':'var(--amber)';
+    // CLOBr's message is "verdict: reason"; the tile shows both lines so the score explains itself
+    const [v,...why]=String(sc.msg||'').split(':');$('sScoreMsg').textContent=v.trim();$('sScoreWhy').textContent=why.join(':').trim()||' ';
+    $('scoreStat').title=(sc.msg||'CLOBr score')+' · 0-100 balance of support vs resistance liquidity. Click for more on CLOBr'}
   const L=CL&&CL.limits&&CL.limits.orders&&CL.limits.orders.length?CL.limits:null;$('ltab').style.display=L?'':'none';
-  const panels={whP:renderWhales(),loP:renderLimits(),dcP:renderDca(),lpP:renderLp()};
+  const panels={liqP:renderLiq(),whP:renderWhales(),loP:renderLimits(),dcP:renderDca(),lpP:renderLp()};
   let any=false;for(const k in panels){$(k).style.display=panels[k]?'':'none';any=any||panels[k]}
   $('clobrWrap').style.display=any||sc?'':'none'}
 function renderWhales(){const W=CL&&CL.whales;if(!W||W.none||!W.summary)return false;const S=W.summary,w=whWin;
@@ -855,7 +857,7 @@ $('limBtn').classList.toggle('on',limOn);
 let DEPTH=null,depthOn=true;try{depthOn=localStorage.getItem('wrDepth')!=='0'}catch(e){}
 async function loadDepth(){if(!FLAGS.CLOBR_ENABLED)return;try{const d=await j(BOT+'/depth?mint='+CA);
   DEPTH=d&&d.levels&&d.levels.length?d:null}catch(e){}
-  $('dtab').style.display=DEPTH?'':'none';depthLeg();renderSlotA();draw()}
+  $('dtab').style.display=DEPTH?'':'none';depthLeg();renderClobr();draw()}
 function depthLeg(){const l=$('depthLeg');l.style.display=DEPTH?'':'none';l.classList.toggle('off',!depthOn);l.href=clobrUrl()}
 $('depthBtn').onclick=()=>{depthOn=!depthOn;$('depthBtn').classList.toggle('on',depthOn);depthLeg();
   try{localStorage.setItem('wrDepth',depthOn?'1':'0')}catch(e){}draw()};
@@ -931,8 +933,8 @@ document.querySelector('.top .lbl').addEventListener('click',e=>{const b=e.targe
 setInterval(()=>{if(!document.documentElement.classList.contains('fit'))return;
   const nx=boardKey==='apy3d'?'apy24h':'apy3d';document.querySelector(`.top .lbl button[data-k="${nx}"]`).click()},240000);
 
-// ---------- Terminal 2.0 right column: [CLOBr market structure] -> [Stonk Board] ----------
-// Flip a flag to false to hide that panel. CLOBr also needs its key on the bot, or it stays hidden.
+// ---------- Terminal 2.0 panels: CLOBr (score tile + analytics) and the Stonk Board card ----------
+// Flip a flag to false to hide that data. CLOBr also needs its key on the bot, or it stays hidden.
 const FLAGS={CLOBR_ENABLED:true,STONKBOARD_ENABLED:true};
 // Stonk Board figures for this mint come only from board.json (thestonkboard.com top 100, snapshotted by the bot).
 function boardStats(mint=TK.mint){if(!board)return null;
@@ -959,14 +961,11 @@ function renderApy(){const m=FLAGS.STONKBOARD_ENABLED&&board?boardStats():null;
     ${kv.length?`<div class="kv">${kv.map(([a,b])=>`<div><span>${a}</span><span>${b}</span></div>`).join('')}</div>`:''}`;
   $('mbNote').textContent='Modeled by thestonkboard.com from recent holder payouts. Not a forecast or guaranteed yield, not financial advice.'+(board.boardAt?' Updated '+ago(Date.parse(board.boardAt))+' ago.':'')}
 
-// Slot A: CLOBr market structure. Fails closed: no key, API down or no data shows a short note, never numbers we made up.
-function renderSlotA(){const a=$('slotA');$('aLink').href=clobrUrl();
-  if(!FLAGS.CLOBR_ENABLED){$('aBody').innerHTML='';a.querySelector('.ph').style.display='none';return}
-  const sc=CL&&CL.score,lv=DEPTH&&DEPTH.levels&&DEPTH.levels.length?DEPTH.levels:null;
-  if(!sc&&!lv){$('aBody').innerHTML='<p class="dim nt">CLOBr data isn\'t available for this token right now.</p>';return}
+// CLOBr liquidity near the price and the heaviest walls (first panel of CLOBr analytics). Hidden when there's no depth.
+function renderLiq(){
+  const lv=DEPTH&&DEPTH.levels&&DEPTH.levels.length?DEPTH.levels:null;
+  if(!lv)return false;
   const p=DEPTH&&DEPTH.price||marinePx||null;let h='';
-  if(sc){const v=sc.score!=null?+sc.score:null,col=v==null?'var(--dim)':v>=60?'var(--green)':v<=40?'var(--red)':'var(--amber)';
-    h+=`<div class="ms"><span class="sc" style="color:${col}">${v!=null?v.toFixed(1):'—'}</span><span class="scm"><small>CLOBr SCORE · 0-100</small>${esc(sc.msg||'support vs resistance balance')}</span></div>`}
   if(lv&&p){const band=f=>{let su=0,re=0;lv.forEach(([x,a,b])=>{if(x>=p*(1-f)&&x<=p*(1+f)){su+=a||0;re+=b||0}});return[su,re]};
     const [s10,r10]=band(.1),[s25,r25]=band(.25),t=Math.max(1,s10+r10);
     h+=`<div class="lq"><div><label>Support within 10%</label><b class="up">${compact(s10)}</b></div><div><label>Resistance within 10%</label><b class="dn">${compact(r10)}</b></div>
@@ -978,7 +977,7 @@ function renderSlotA(){const a=$('slotA');$('aLink').href=clobrUrl();
     W=[...below.sort((a,b)=>b.usd-a.usd).slice(0,3),...above.sort((a,b)=>b.usd-a.usd).slice(0,3)]}
   W=W.sort((a,b)=>b.usd-a.usd).slice(0,6).sort((a,b)=>b.price-a.price);
   if(W.length)h+=`<div><label class="dim" style="font-size:9px;letter-spacing:1px">WALLS · heaviest liquidity within 30%</label><table class="walls"><tbody>${W.map(w=>`<tr><td class="${w.side==='B'?'up':'dn'}">${w.side==='B'?'SUPPORT':'RESIST'}</td><td class="r">${px(w.price)}</td><td class="r dim">${p?((w.price/p-1)*100>=0?'+':'')+((w.price/p-1)*100).toFixed(1)+'%':''}</td><td class="r">${compact(w.usd)}</td></tr>`).join('')}</tbody></table></div>`;
-  $('aBody').innerHTML=h}
+  $('aBody').innerHTML=h;return !!h}
 
 
 // ---------- TTS: queue in tts.json, popped + read on screen ----------
