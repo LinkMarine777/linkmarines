@@ -50,6 +50,7 @@ header .ca input:focus{outline:none;border-color:var(--blue2)}
 #soundBtn,#alertBtn{background:none;border:1px solid var(--line);color:var(--txt);font-size:14px;line-height:1;padding:3px 7px;cursor:pointer}
 #soundBtn:hover,#alertBtn:hover{border-color:var(--blue2)}#soundBtn.off,#alertBtn.off{opacity:.55}
 html.fit #soundBtn{font-size:24px;padding:4px 10px}
+.btn.trend{border-color:#FF6B00;color:#FF6B00}
 .btn.chat{border-color:var(--blue2);color:#fff}
 
 /* tickers */
@@ -394,7 +395,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .post .txt{-webkit-line-clamp:3}
   .board{min-height:90px}#slot1{aspect-ratio:1112/358;min-height:0}.slots .board.house,.slots .board.img{aspect-ratio:912/176;min-height:0}.bill .board.sold .head,.board.sold .head{font-size:30px}
   .src .fx{display:none}.src{padding:6px 12px}
-  #mbar{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:6px;position:fixed;left:0;right:0;bottom:0;z-index:45;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(4,6,15,.96);border-top:1px solid var(--line);backdrop-filter:blur(6px)}
+  #mbar{display:grid;grid-template-columns:1.2fr .8fr 1.2fr 1fr;gap:6px;position:fixed;left:0;right:0;bottom:0;z-index:45;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(4,6,15,.96);border-top:1px solid var(--line);backdrop-filter:blur(6px)}
   #mbar .btn{text-align:center;padding:11px 6px;font-size:12px;text-decoration:none}
 }
 </style>
@@ -418,6 +419,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   <nav>
     <a class="btn fx" id="chartLink" href="#" target="_blank" rel="noopener">CHART</a>
     <a class="btn fx" href="https://x.com/TheMarinesX" target="_blank" rel="noopener">X</a>
+    <a class="btn trend" href="trending/" title="Trending stonkfun tokens">🔥 TRENDING</a>
     <a class="btn fx" href="../">HQ</a>
     <a class="btn chat" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ WAR ROOM CHAT</a>
     <button class="btn tts" id="ttsBtn">BUY TTS</button>
@@ -533,7 +535,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 
 </div>
 
-<nav id="mbar"><a class="btn primary buyTk" href="#" target="_blank" rel="noopener">BUY <span class="tkSym">$MARINE</span></a><button class="btn tts" data-buy="t">TTS</button><a class="btn" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ CHAT</a></nav>
+<nav id="mbar"><a class="btn primary buyTk" href="#" target="_blank" rel="noopener">BUY <span class="tkSym">$MARINE</span></a><button class="btn tts" data-buy="t">TTS</button><a class="btn trend" href="trending/">🔥 TRENDING</a><a class="btn" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ CHAT</a></nav>
 <div id="wModal"><div class="box">
   <h3>CHOOSE A WALLET</h3>
   <div class="sb">Your call. We don't default you into anything.</div>
