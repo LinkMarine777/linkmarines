@@ -596,7 +596,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 // ---------- Terminal 2.0: any stonk token, picked by ?ca=<mint> (default $MARINE) ----------
 // Shared site data (board, tickers, ads, TTS, prices) comes from ../terminal/, the same files 1.0 uses.
 const MARINE='F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK';
-const DATA='../terminal/';
+const DATA='https://war-room-bot.linkmarine777.workers.dev/data/terminal/';
 const BOT='https://war-room-bot.linkmarine777.workers.dev';
 const CA=MARINE;   // 1.1 is the $MARINE stream terminal
 let TK={mint:CA,symbol:'…',quote:'…',quoteMint:null,image:null},TKR=null,POOL='',GT='',PAIR=null;
@@ -678,7 +678,10 @@ const pct=n=>n==null?'':`<span class="${n>=0?'up':'dn'}">${n>=0?'▲':'▼'} ${M
 function ago(t){const s=Math.max(0,(Date.now()-t)/1000);if(s<60)return Math.floor(s)+'s';if(s<3600)return Math.floor(s/60)+'m';
   if(s<86400)return Math.floor(s/3600)+'h '+Math.floor(s%3600/60)+'m';return Math.floor(s/86400)+'d '+Math.floor(s%86400/3600)+'h'}
 const short=a=>a?a.slice(0,4)+'…'+a.slice(-4):'';
-async function j(u){const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw new Error(r.status);return r.json()}
+// site data (stats, board, receipts...) comes through the bot, which reads the repo's data branch; the copy Vercel
+// deployed is the fallback
+async function j(u){try{const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw new Error(r.status);return await r.json()}
+  catch(e){if(u.startsWith(DATA))return j('../terminal/'+u.slice(DATA.length));throw e}}
 
 // ---------- rewards snapshot (same-origin) ----------
 let rewards=null,prevR=null;
@@ -1150,16 +1153,16 @@ function renderAds(){['1','2','3'].forEach(k=>{const el=$('slot'+k);if(!el)retur
 // traffic actually attributes. House cards still open the checkout.
 const HOUSE={'1':['s1-better-call-sergey','s1-holding-alone','s1-plaid-motors'],'2':['s2-paper-hands','s2-youre-reading-this'],'3':['s3-bankers-hate','s3-sergey-associates']};
 const SPONSOR={
-  '1':[{img:DATA+'house/s1-jtx.png',href:'https://app.jtx.com/ref/TheMarines',tag:'JTX · JOIN ▸'},
-       {img:DATA+'house/s1-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}],
-  '2':[{img:DATA+'house/s2-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}],
-  '3':[{img:DATA+'house/s2-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}]
+  '1':[{img:'../terminal/house/s1-jtx.png',href:'https://app.jtx.com/ref/TheMarines',tag:'JTX · JOIN ▸'},
+       {img:'../terminal/house/s1-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}],
+  '2':[{img:'../terminal/house/s2-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}],
+  '3':[{img:'../terminal/house/s2-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}]
 };
 function fillers(k){return [...(HOUSE[k]||[]).map(n=>({house:n})),...(SPONSOR[k]||[])]}
 function houseAd(k,pr){
   const L=fillers(k);if(!L.length)return'';
   const f=L[Math.floor(Date.now()/20000+ +k)%L.length];
-  if(f.house)return `<img src="${DATA}house/${f.house}.png" alt="ad space open"><span class="htag">${PAY?'$'+PAY.prices.slots[k]+'/'+PAY.blockMinutes+'M · ':''}BUY ▸</span>`;
+  if(f.house)return `<img src="../terminal/house/${f.house}.png" alt="ad space open"><span class="htag">${PAY?'$'+PAY.prices.slots[k]+'/'+PAY.blockMinutes+'M · ':''}BUY ▸</span>`;
   return `<a class="sp" href="${esc(f.href)}" target="_blank" rel="noopener sponsored"><img src="${esc(f.img)}" alt=""><span class="htag">${esc(f.tag)}</span></a>`}
 function fillSlotSel(){if(!PAY)return;$('fSlot').innerHTML=['1','2','3'].map(k=>`<option value="${k}">${SLOTN[k]} · $${PAY.prices.slots[k]}/${PAY.blockMinutes}m</option>`).join('');
   $('fBlocks').innerHTML=Array.from({length:PAY.maxBlocks},(_,i)=>`<option value="${i+1}">${(i+1)*PAY.blockMinutes} min</option>`).join('')}

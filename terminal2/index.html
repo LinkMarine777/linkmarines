@@ -119,7 +119,7 @@ tr.me{background:rgba(42,90,218,.1)}
 </main>
 
 <script>
-const MARINE='F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK',BOT='https://war-room-bot.linkmarine777.workers.dev',DATA='../terminal/';
+const MARINE='F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK',BOT='https://war-room-bot.linkmarine777.workers.dev',DATA=BOT+'/data/terminal/';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function compact(n,pre='$'){if(n==null||isNaN(n))return'—';if(n===0)return pre+'0';const a=Math.abs(n);
@@ -128,7 +128,10 @@ function px(n){if(n==null||isNaN(n)||n===0)return'—';if(n>=1)return'$'+n.toFix
 function apyFmt(n){if(n==null||!isFinite(n))return'—';if(n>=1e12)return'>1T%';if(n>=1e9)return(n/1e9).toFixed(1)+'B%';if(n>=1e6)return(n/1e6).toFixed(1)+'M%';if(n>=1e4)return(n/1e3).toFixed(0)+'K%';return n.toFixed(0)+'%'}
 const num=n=>n==null?'—':Number(n).toLocaleString('en-US');
 function ago(t){const s=Math.max(0,(Date.now()-t)/1000);if(s<3600)return Math.floor(s/60)+'m';if(s<86400)return Math.floor(s/3600)+'h';return Math.floor(s/86400)+'d'}
-async function j(u){const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw new Error(r.status);return r.json()}
+// site data (stats, board, receipts...) comes through the bot, which reads the repo's data branch; the copy Vercel
+// deployed is the fallback
+async function j(u){try{const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw new Error(r.status);return await r.json()}
+  catch(e){if(u.startsWith(DATA))return j('../terminal/'+u.slice(DATA.length));throw e}}
 const open2=m=>'token.html?ca='+encodeURIComponent(m);
 
 // One row per token: stonkfun's top 30 by volume merged with thestonkboard's top 100 (both snapshotted by the bot)

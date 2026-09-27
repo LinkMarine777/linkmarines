@@ -785,7 +785,7 @@
   function load(){
     fetch(API).then(function(r){return r.json()}).then(apply)
       .catch(function(){
-        fetch('stats.json?t='+Date.now())
+        fetch('https://war-room-bot.linkmarine777.workers.dev/data/stats.json?t='+Date.now()).then(r=>r.ok?r:fetch('stats.json?t='+Date.now())).catch(()=>fetch('stats.json?t='+Date.now()))
           .then(function(r){return r.json()}).then(apply).catch(function(){});
       });
   }
