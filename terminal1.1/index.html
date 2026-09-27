@@ -269,6 +269,8 @@ html.fit .board.house{padding:0}html.fit .board.house .htag{font-size:13px;paddi
 #buyPop{position:fixed;left:50%;bottom:16%;transform:translate(-50%,30px);opacity:0;pointer-events:none;z-index:55;transition:all .35s cubic-bezier(.2,1.4,.4,1);
   background:linear-gradient(135deg,#06240f,#0a0f1f);border:3px solid var(--green);box-shadow:0 0 50px rgba(57,255,106,.4);padding:18px 44px;text-align:center;min-width:600px}
 #buyPop.show{opacity:1;transform:translate(-50%,0)}
+/* click an alert to close it; the rest of the screen never closes it */
+#ttsPop.show,#buyPop.show{pointer-events:auto;cursor:pointer}#pulseTO.show>*{pointer-events:auto;cursor:pointer}
 #buyPop .t{font-size:20px;letter-spacing:4px;color:var(--green)}
 #buyPop .v{font-family:'VT323';font-size:104px;line-height:1;color:#fff}
 #buyPop .w{font-size:18px;color:var(--dim);letter-spacing:1px}
@@ -551,9 +553,9 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   <div class="foot">On mobile, open themarines.link inside your wallet's browser, or use OPEN IN WALLET APP.
   <br><button class="btn" id="wCancel" style="margin-top:9px">CANCEL</button></div>
 </div></div>
-<div id="ttsPop"><div class="from" id="ttsFrom"></div><div class="msg" id="ttsMsg"></div></div>
-<div id="buyPop"><div class="t" id="bpT">NEW RECRUIT</div><div class="v" id="bpV"></div><div class="w" id="bpW"></div></div>
-<div id="pulseTO"><div class="k">⚡ PULSE FIRED ⚡</div><div class="n" id="ptN"></div><div class="s" id="ptS"></div><div class="d" id="ptD"></div></div>
+<div id="ttsPop" title="Click to close"><div class="from" id="ttsFrom"></div><div class="msg" id="ttsMsg"></div></div>
+<div id="buyPop" title="Click to close"><div class="t" id="bpT">NEW RECRUIT</div><div class="v" id="bpV"></div><div class="w" id="bpW"></div></div>
+<div id="pulseTO" title="Click the message to close"><div class="k">⚡ PULSE FIRED ⚡</div><div class="n" id="ptN"></div><div class="s" id="ptS"></div><div class="d" id="ptD"></div></div>
 <div id="audioGate">🔊 click anywhere to turn on sound</div>
 <div id="ttsModal"><div class="box">
   <button class="x" id="ttsClose" type="button" aria-label="Close">✕</button>
@@ -683,7 +685,9 @@ function pulseTakeover(tok,usdv,holders,total){if(!alertsOn)return;$('ptN').text
   $('ptS').textContent=(usdv>0?'≈ '+usd(usdv,0)+' ':'')+'paid to '+num(holders)+' $'+TK.symbol+' holders';
   $('ptD').textContent=num(total,0)+' '+TK.quote+' distributed all time · hold $'+TK.symbol+', get paid in $'+TK.quote;
   const el=$('pulseTO');el.classList.remove('show');void el.offsetWidth;el.classList.add('show');beep(true);setTimeout(()=>beep(true),600);
-  setTimeout(()=>{el.classList.remove('show');nextBuy()},12000)}
+  clearTimeout(ptTimer);ptTimer=setTimeout(closePulse,12000)}
+var ptTimer=null;
+function closePulse(){clearTimeout(ptTimer);const el=$('pulseTO');if(!el.classList.contains('show'))return;el.classList.remove('show');nextBuy()}
 async function loadRewards(){
   try{rewards=CA===MARINE?await j(DATA+'rewards.json?'+Date.now()):(await j(BOT+'/token/'+CA)).rewards;}catch(e){return}
   if(!rewards){$('sDist').textContent='—';$('sDistUsd').textContent='no holder rewards for this token';$('live').classList.remove('stale');$('liveTxt').textContent='LIVE';return}
@@ -957,7 +961,9 @@ function checkBuys(list){const fresh=[];list.forEach(a=>{if(alerted.has(a.tx_has
 function nextBuy(){if(!alertsOn){bpQ.length=0;return}if(bpBusy||!bpQ.length||$('pulseTO').classList.contains('show'))return;const b=bpQ.shift();bpBusy=true;const big=b.v>=WHALE;
   $('buyPop').classList.toggle('big',big);$('bpT').textContent=big?'🚨 LARGE BUY 🚨':'🟢 NEW RECRUIT';$('bpV').textContent='+'+usd(b.v,0);
   $('bpW').textContent=compact(b.amt,'')+' $'+TK.symbol+' · '+b.w;$('buyPop').classList.add('show');beep(big);
-  setTimeout(()=>{$('buyPop').classList.remove('show');setTimeout(()=>{bpBusy=false;nextBuy()},500)},bpQ.length>3?2500:5000)}
+  bpTimer=setTimeout(closeBuy,bpQ.length>3?2500:5000)}
+var bpTimer=null;
+function closeBuy(){clearTimeout(bpTimer);if(!$('buyPop').classList.contains('show'))return;$('buyPop').classList.remove('show');setTimeout(()=>{bpBusy=false;nextBuy()},500)}
 async function loadTrades(){if(!GT)return;try{const d=await j(GT+'/trades');tapeRaw=d.data.map(t=>t.attributes);renderTape();checkBuys(tapeRaw)}catch(e){}}
 $('tapeF').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   [...$('tapeF').children].forEach(x=>x.classList.toggle('on',x===b));tapeMin=+b.dataset.min;renderTape()});
@@ -1087,6 +1093,8 @@ function nextTTS(){if(!alertsOn){ttsQ.forEach(i=>played.add(i.id));ttsQ.length=0
   let done=false,timer=null;const end=()=>{if(done)return;done=true;clearTimeout(timer);curAudio=null;
     setTimeout(()=>{$('ttsPop').classList.remove('show');setTimeout(()=>{ttsBusy=false;nextTTS()},700)},1200)};
   const hold=ms=>{clearTimeout(timer);timer=setTimeout(end,ms)};
+  ttsClose=()=>{if(done)return;done=true;clearTimeout(timer);try{speechSynthesis.cancel()}catch(e){}
+    if(curAudio){curAudio.onended=curAudio.onerror=null;curAudio.pause()}curAudio=null;$('ttsPop').classList.remove('show');setTimeout(()=>{ttsBusy=false;nextTTS()},500)};
   const readMs=Math.max(5000,Math.min(16000,1500+(i.from+' '+i.text).length*75));
   hold(readMs+2000);
   if(!soundOn)return hold(readMs);
@@ -1098,6 +1106,9 @@ function nextTTS(){if(!alertsOn){ttsQ.forEach(i=>played.add(i.id));ttsQ.length=0
   a.onloadedmetadata=()=>{if(isFinite(a.duration))hold(a.duration*1000+2500)};
   a.onended=end;a.onerror=synth;
   a.play().catch(()=>{$('audioGate').style.display='block';hold(readMs)})}
+var ttsClose=null;
+$('ttsPop').addEventListener('click',()=>ttsClose&&ttsClose());$('buyPop').addEventListener('click',closeBuy);
+$('pulseTO').addEventListener('click',e=>{if(e.target!==$('pulseTO'))closePulse()});
 $('audioGate').onclick=()=>{try{speechSynthesis.speak(new SpeechSynthesisUtterance(' '))}catch(e){}$('audioGate').style.display='none'};
 $('soundBtn').onclick=()=>{soundOn=!soundOn;try{localStorage.setItem('wrSound',soundOn?'1':'0')}catch(e){}soundSet()};soundSet();
 // alerts: on by default; off hides buy alerts, pulse takeovers and TTS popups (sound is its own toggle)
