@@ -76,14 +76,37 @@ def running():
     return sh('systemctl', 'is-active', 'wr-stream') == 'active'
 
 
+PROGRESS = '/opt/wr-stream/.run/progress'
+
+
+def sending():
+    """(True, mbps) when ffmpeg is actually pushing data right now, else (False, last error line from the log)."""
+    try:
+        age = time.time() - os.path.getmtime(PROGRESS)
+        tail = open(PROGRESS).read().splitlines()[-14:]
+        kv = dict(l.split('=', 1) for l in tail if '=' in l)
+        if age < 10 and kv.get('progress') == 'continue':
+            m = re.match(r'([\d.]+)kbits', kv.get('bitrate', ''))
+            return True, (float(m[1]) / 1000 if m else None)
+    except Exception:
+        pass
+    log = sh('journalctl', '-u', 'wr-stream', '-n', '60', '--no-pager', '-o', 'cat').splitlines()
+    err = [l for l in log if re.search(r'error|fail|refused|denied|timed out|invalid|not found|unauthor|forbidden|reset', l, re.I)]
+    return False, mask(err[-1])[:300] if err else None
+
+
 def status_text():
     c = conf(); live = [NAMES.get(p, p) for p in c['live'] if p in c['dests']]
     saved = ', '.join(f"{NAMES.get(p, p)} (…{d['key'][-4:]})" for p, d in c['dests'].items()) or 'none'
     load = open('/proc/loadavg').read().split()[:3]
     vol = load_env(STREAM_ENV).get('MUSIC_VOL', '?')
     tracks = len([f for f in os.listdir('/opt/wr-stream/music') if re.search(r'\.(mp3|m4a|ogg|flac|wav)$', f, re.I)])
-    return (f"{'🔴 LIVE' if running() and live else '⚫ OFF'}"
-            f"{' on ' + ', '.join(live) if running() and live else ''}\n"
+    on = running() and live
+    ok, info = sending() if on else (False, None)
+    head = ('🔴 LIVE on ' + ', '.join(live) + (f' · sending {info:.1f} Mbps' if ok and info else ' · sending') if on and ok
+            else '⚠️ NOT CONNECTED to ' + ', '.join(live) + ('\nLast error: ' + info if info else '\n(starting up or retrying; check again in 20 s)') if on
+            else '⚫ OFF')
+    return (f"{head}\n"
             f"Keys saved: {saved}\nGo-live list: {', '.join(live) or 'none'}\n"
             f"CPU load: {' '.join(load)} (of {os.cpu_count()} cores)\nMusic: {tracks} tracks at volume {vol}")
 
@@ -130,7 +153,9 @@ def handle(msg):
         if p in DEFAULT_URL and len(args) == 2: url, key = DEFAULT_URL[p], args[1]
         elif len(args) == 3 and re.match(r'rtmps?://', args[1]): url, key = args[1], args[2]
         else: return reply(f'Usage: /key {p} ' + ('<stream key>' if p in DEFAULT_URL else '<server url rtmp(s)://…> <stream key>'))
-        c = conf(); c['dests'][p] = {'url': url.rstrip('/'), 'key': key}; save(c)
+        url = url.rstrip('/')
+        if p == 'kick' and not url.endswith('/app'): url += '/app'   # Kick (Amazon IVS) ingest lives under /app
+        c = conf(); c['dests'][p] = {'url': url, 'key': key}; save(c)
         live_now = running() and p in c['live']
         if live_now: sh('systemctl', 'restart', 'wr-stream')
         return reply(f"🔑 {NAMES[p]} key saved (…{key[-4:]}) and your message deleted." + (' Restarted the stream with it.' if live_now else f' Go live with /live {p}'))
@@ -156,7 +181,10 @@ def handle(msg):
         if missing: return reply('No key saved for ' + ', '.join(missing) + '. Add it with /key first.')
         if not c['live']: return reply('Pick where: /live x kick twitch')
         save(c); sh('systemctl', 'restart', 'wr-stream'); time.sleep(12)
-        return reply(('🔴 Going live on ' if running() else '⚠️ Could not start on ') + ', '.join(NAMES[p] for p in c['live']) + '. /status or /shot to check.')
+        time.sleep(10); ok, info = sending()
+        where = ', '.join(NAMES[p] for p in c['live'])
+        return reply(f'🔴 Live on {where}' + (f', sending {info:.1f} Mbps.' if ok and info else '.') if ok
+                     else f'⚠️ Started, but nothing is reaching {where} yet.' + (f'\nLast error: {info}' if info else '') + '\nCheck the server URL and key (/keys), then /status again.')
 
     if cmd == '/stop':
         sh('systemctl', 'stop', 'wr-stream'); return reply('⚫ Stream stopped. /live to start again.')

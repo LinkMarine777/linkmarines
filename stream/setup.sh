@@ -94,7 +94,10 @@ mk_playlist(){ find /opt/wr-stream/music -maxdepth 1 -type f \( -iname '*.mp3' -
 targets(){ python3 -c '
 import json
 c = json.load(open("/etc/wr-stream.json"))
-print("|".join("[f=flv:onfail=ignore]" + c["dests"][p]["url"].rstrip("/") + "/" + c["dests"][p]["key"] for p in c.get("live", []) if p in c.get("dests", {})))' 2>/dev/null; }
+def url(p):
+    u = c["dests"][p]["url"].rstrip("/")
+    return u + "/app" if p == "kick" and not u.endswith("/app") else u   # Kick (Amazon IVS) ingest lives under /app
+print("|".join("[f=flv:onfail=ignore]" + url(p) + "/" + c["dests"][p]["key"] for p in c.get("live", []) if p in c.get("dests", {})))' 2>/dev/null; }
 
 while true; do
   source /etc/wr-stream.env; mk_playlist; OUT=$(targets)
@@ -108,7 +111,7 @@ while true; do
     -thread_queue_size 1024 -f pulse -i wr.monitor "${IN_MUSIC[@]}" \
     -filter_complex "$V;$AF" -map "[v]" -map "[a]" \
     -c:v libx264 -preset veryfast -tune zerolatency -b:v "$BITRATE" -maxrate "$BITRATE" -bufsize "$BITRATE" -pix_fmt yuv420p -g $((FPS*2)) \
-    -c:a aac -b:a 160k -ar 44100 -flags +global_header -f tee "$OUT"
+    -c:a aac -b:a 160k -ar 44100 -flags +global_header -progress /opt/wr-stream/.run/progress -f tee "$OUT"
   echo "ffmpeg exited ($?), reconnecting in 5 s"; sleep 5
 done
 RUN
