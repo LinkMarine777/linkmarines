@@ -275,7 +275,15 @@ html.fit .board.house{padding:0}html.fit .board.house .htag{font-size:13px;paddi
 #iPrev{display:none;margin-top:8px;max-height:140px;max-width:100%;border:1px solid var(--line)}
 #buyPop{position:fixed;left:50%;bottom:16%;transform:translate(-50%,30px);opacity:0;pointer-events:none;z-index:55;transition:all .35s cubic-bezier(.2,1.4,.4,1);
   background:linear-gradient(135deg,#06240f,#0a0f1f);border:3px solid var(--green);box-shadow:0 0 50px rgba(57,255,106,.4);padding:18px 44px;text-align:center;min-width:600px}
-#buyPop.show{opacity:1;transform:translate(-50%,0)}#buyPop.lnk{border-color:#375BD2;box-shadow:0 0 40px rgba(55,91,210,.6)}#buyPop.lnk .t{color:#7d9bff}
+#buyPop.show{opacity:1;transform:translate(-50%,0)}
+/* info alerts (board / stonkfun / CLOBr / milestones): a card that drops in from the top, below buy alerts in priority */
+#infoPop{position:fixed;left:50%;top:36%;transform:translate(-50%,-30px);opacity:0;pointer-events:none;z-index:54;min-width:520px;max-width:78vw;text-align:center;
+  background:linear-gradient(180deg,rgba(13,20,40,.97),rgba(4,6,15,.97));border:1px solid var(--amber);box-shadow:0 0 40px rgba(255,210,63,.35);padding:14px 26px;transition:all .35s cubic-bezier(.2,1.4,.4,1)}
+#infoPop.show{opacity:1;transform:translate(-50%,0);pointer-events:auto;cursor:pointer}
+#infoPop .k{font-size:12px;letter-spacing:2px;color:var(--amber);text-transform:uppercase}#infoPop .h{font-family:'VT323';font-size:44px;color:#fff;line-height:1.05;margin:4px 0}#infoPop .d{font-size:13px;color:var(--txt)}
+html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #infoPop .k{font-size:20px}html.fit #infoPop .h{font-size:64px}html.fit #infoPop .d{font-size:22px}
+#testPanel{position:fixed;left:10px;bottom:10px;z-index:80;background:#000e;border:1px solid var(--amber);padding:8px;display:flex;flex-wrap:wrap;gap:4px;max-width:520px;font-size:11px}
+#testPanel b{width:100%;color:var(--amber);letter-spacing:1px}#testPanel button{background:#111a;border:1px solid var(--line);color:#fff;font:inherit;padding:4px 7px;cursor:pointer}#testPanel button:hover{border-color:var(--amber)}#buyPop.lnk{border-color:#375BD2;box-shadow:0 0 40px rgba(55,91,210,.6)}#buyPop.lnk .t{color:#7d9bff}
 /* click an alert to close it; the rest of the screen never closes it */
 #ttsPop.show,#buyPop.show{pointer-events:auto;cursor:pointer}#pulseTO.show>*{pointer-events:auto;cursor:pointer}
 #buyPop .t{font-size:20px;letter-spacing:4px;color:var(--green)}
@@ -568,6 +576,8 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 <div id="ttsPop" title="Click to close"><div class="from" id="ttsFrom"></div><div class="msg" id="ttsMsg"></div></div>
 <div id="buyPop" title="Click to close"><div class="t" id="bpT">NEW RECRUIT</div><div class="v" id="bpV"></div><div class="w" id="bpW"></div></div>
 <div id="pulseTO" title="Click the message to close"><div class="k">⚡ PULSE FIRED ⚡</div><div class="n" id="ptN"></div><div class="s" id="ptS"></div><div class="d" id="ptD"></div></div>
+<div id="infoPop" title="Click to close"><div class="k" id="ipK"></div><div class="h" id="ipH"></div><div class="d" id="ipD"></div></div>
+<div id="testPanel" style="display:none"></div>
 <div id="audioGate">🔊 click anywhere to turn on sound</div>
 <div id="ttsModal"><div class="box">
   <button class="x" id="ttsClose" type="button" aria-label="Close">✕</button>
@@ -1180,6 +1190,66 @@ function nextTTS(){if(!alertsOn){ttsQ.forEach(i=>played.add(i.id));ttsQ.length=0
   a.onended=end;a.onerror=synth;
   a.play().catch(()=>{$('audioGate').style.display='block';hold(readMs)})}
 var ttsClose=null;
+// ---------- info alerts: Stonk Board, stonkfun, CLOBr, payouts, $LINK ----------
+// Scanned every minute from data the page already loads. What was last seen is kept in localStorage so a reload
+// never re-fires old news, and the first scan only records a baseline. Buys / TTS / pulses always go first, and
+// info alerts are spaced at least INFO_GAP apart (a queue of up to 6 waits its turn).
+const INFO_GAP=180e3,TEST=/[?&]test\b/.test(location.search);let infoQ=[],infoAt=0,infoTimer=null;
+let IS={};try{IS=JSON.parse(localStorage.getItem('wrInfo')||'{}')}catch(e){}
+const saveIS=()=>{try{localStorage.setItem('wrInfo',JSON.stringify(IS))}catch(e){}};
+function infoAlert(kind,head,detail){if(!alertsOn&&!TEST)return;infoQ.push({kind,head,detail});if(infoQ.length>6)infoQ.shift();nextInfo()}
+function nextInfo(){if(!infoQ.length||$('infoPop').classList.contains('show'))return;
+  if(['buyPop','ttsPop','pulseTO'].some(id=>$(id).classList.contains('show'))||(!TEST&&Date.now()-infoAt<INFO_GAP)){clearTimeout(nextInfo.t);nextInfo.t=setTimeout(nextInfo,5000);return}
+  const a=infoQ.shift();infoAt=Date.now();$('ipK').textContent=a.kind;$('ipH').textContent=a.head;$('ipD').textContent=a.detail||'';
+  $('infoPop').classList.add('show');beep(false);infoTimer=setTimeout(closeInfo,9000)}
+function closeInfo(){clearTimeout(infoTimer);$('infoPop').classList.remove('show');setTimeout(nextInfo,800)}
+$('infoPop').addEventListener('click',closeInfo);
+const sym=t=>'$'+String(t&&t.symbol||'?').replace(/^\$/,'');
+function infoScan(){const first=!IS.init,fire=(...a)=>{if(!first)infoAlert(...a)};
+  // payouts: pulse loading up, and round-number milestones
+  const r=rewards;if(r&&CA===MARINE){
+    const load=(r.pendingUsd||0)/(r.minDistributionUsd||1);
+    if(load>=.9&&IS.pulseWarned!==r.lastPayoutAt){IS.pulseWarned=r.lastPayoutAt;fire('⚡ PULSE INCOMING',Math.round(Math.min(load,1)*100)+'% LOADED',num(r.pendingTokens,2)+' '+TK.quote+' (≈ '+usd(r.pendingUsd,0)+') is about to hit $'+TK.symbol+' holders')}
+    const ms=(k,v,step,fmt)=>{if(v==null)return;const f=Math.floor(v/step)*step;if(IS[k]!=null&&f>IS[k])fire('🏆 MILESTONE',fmt(f),'');IS[k]=Math.max(IS[k]||0,f)};
+    ms('msLink',r.distributedTokens,500,f=>num(f)+' '+TK.quote+' PAID TO HOLDERS');ms('msPay',r.payoutCount,5000,f=>num(f)+' PAYOUTS SENT');ms('msHold',r.holderCount,100,f=>num(f)+' $'+TK.symbol+' HOLDERS')}
+  // Stonk Board: $MARINE's rank, a new #1, a new token on the board, a big APY jump
+  if(board&&board.tokens){const me=boardStats(),rk=me&&me.rank||null;
+    if(rk&&!IS.rank)fire('📋 STONK BOARD','$'+TK.symbol+' ENTERS THE TOP 100','Now #'+rk+' on thestonkboard.com');
+    else if(rk&&IS.rank&&rk<=IS.rank-5)fire('📋 STONK BOARD','$'+TK.symbol+' CLIMBS TO #'+rk,'Up '+(IS.rank-rk)+' spots on thestonkboard.com');
+    if(me&&me.apy24h&&IS.apy&&me.apy24h>=IS.apy*1.5&&me.apy24h-IS.apy>100)fire('📈 APY JUMP','$'+TK.symbol+' APY '+apyFmt(me.apy24h),'Up from '+apyFmt(IS.apy)+' (24H, modeled)');
+    IS.rank=rk;IS.apy=me&&me.apy24h||null;
+    const top=(board.apy24h||[])[0];if(top){if(IS.top1&&IS.top1!==top.mint)fire('👑 NEW #1 APY',sym(top)+' TAKES THE TOP SPOT',apyFmt(top.apy)+' APY 24H · mc '+compact(top.mcap));IS.top1=top.mint}
+    const mints=Object.keys(board.tokens);if(IS.boardSet){const nw=mints.filter(m=>!IS.boardSet.includes(m));
+      if(nw.length&&nw.length<=5)nw.slice(0,2).forEach(m=>{const t=board.tokens[m];fire('🆕 NEW ON THE BOARD',sym(t)+' JOINS AT #'+t.rank,(t.apy24h?apyFmt(t.apy24h)+' APY 24H · ':'')+'mc '+compact(t.mcap))})}
+    IS.boardSet=mints}
+  // stonkfun: a new name in the top 10 by market cap, and big movers among them
+  if(TOKS&&TOKS.length){const T=TOKS.slice().sort((a,b)=>(b.mcap||0)-(a.mcap||0)).slice(0,10),ids=T.map(t=>t.mint);
+    if(IS.sfTop){ids.filter(m=>!IS.sfTop.includes(m)).slice(0,2).forEach(m=>{const t=T.find(x=>x.mint===m);fire('🚀 STONKFUN TOP 10',sym(t)+' BREAKS INTO THE TOP 10','mc '+compact(t.mcap)+(t.chg24!=null?' · '+(t.chg24>=0?'+':'')+t.chg24.toFixed(1)+'% 24h':''))})}
+    IS.sfTop=ids;const day=new Date().toISOString().slice(0,10);IS.moved=IS.moved&&IS.moved.day===day?IS.moved:{day,m:[]};
+    T.filter(t=>Math.abs(t.chg24||0)>=20&&!IS.moved.m.includes(t.mint)).slice(0,1).forEach(t=>{IS.moved.m.push(t.mint);
+      fire(t.chg24>0?'📈 BIG MOVER':'📉 BIG MOVER',sym(t)+' '+(t.chg24>0?'+':'')+t.chg24.toFixed(0)+'% IN 24H','#'+(ids.indexOf(t.mint)+1)+' on stonkfun by market cap · mc '+compact(t.mcap))})}
+  // CLOBr: the score's verdict flips, more top-20 wallets buying
+  if(CL&&CL.score&&CL.score.msg){const v=String(CL.score.msg).split(':')[0].trim();if(IS.verdict&&IS.verdict!==v)fire('🧱 CLOBr SCORE',v.toUpperCase(),'$'+TK.symbol+' now '+(+CL.score.score).toFixed(1)+'/100 · was '+IS.verdict);IS.verdict=v}
+  const acc=CL&&CL.whales&&CL.whales.summary&&CL.whales.summary.accumulating&&CL.whales.summary.accumulating.top20&&CL.whales.summary.accumulating.top20['7d'];
+  if(acc!=null){if(IS.acc20!=null&&acc>IS.acc20)fire('🐋 WHALE WATCH',(acc-IS.acc20)+' MORE TOP-20 WALLET'+(acc-IS.acc20>1?'S':'')+' BUYING',acc+' of the top 20 $'+TK.symbol+' holders are buying this week (CLOBr)');IS.acc20=acc}
+  // $LINK: a 5% move within the hour (at most once every 2 hours)
+  if(linkRaw.length){const pr=a=>+(a.to_token_address===LINKMINT?a.price_to_in_usd:a.price_from_in_usd),now=Date.now();
+    const old=linkRaw.find(a=>now-Date.parse(a.block_timestamp)>=3600e3),cur=pr(linkRaw[0]);
+    if(old&&cur){const ch=(cur/pr(old)-1)*100;if(Math.abs(ch)>=5&&now-(IS.linkMove||0)>2*3600e3){IS.linkMove=now;fire(ch>0?'🔗 $LINK PUMPING':'🔗 $LINK DIPPING','$LINK '+(ch>0?'+':'')+ch.toFixed(1)+'% IN AN HOUR','Now '+px(cur)+' on Solana')}}}
+  IS.init=1;saveIS()}
+setTimeout(()=>{infoScan();setInterval(infoScan,60e3)},45e3);
+// ---------- ?test: a panel that fires every alert type on demand (never shown on the stream) ----------
+if(TEST){const tp=$('testPanel');tp.style.display='flex';
+  const T=[['$MARINE buy',()=>{bpQ.push({v:250,amt:2.5e6,w:'TEST'});nextBuy()}],['$MARINE large buy',()=>{bpQ.push({v:3200,amt:3e7,w:'TEST'});nextBuy()}],
+    ['$LINK buy',()=>{bpQ.push({k:'link',v:1850,amt:132,w:'TEST'});nextBuy()}],['TTS',()=>{ttsQ.push({id:'test'+Date.now(),from:'@tester',text:'this is a test of the war room text to speech',at:Date.now()/1000});nextTTS()}],
+    ['Pulse fired',()=>pulseTakeover(12.5,175,2626,7100)],['Pulse incoming',()=>infoAlert('⚡ PULSE INCOMING','93% LOADED','8.12 LINK (≈ $113) is about to hit $MARINE holders')],
+    ['Milestone',()=>infoAlert('🏆 MILESTONE','7,500 LINK PAID TO HOLDERS','')],['Board entry',()=>infoAlert('📋 STONK BOARD','$MARINE ENTERS THE TOP 100','Now #87 on thestonkboard.com')],
+    ['New #1 APY',()=>infoAlert('👑 NEW #1 APY','$GP TAKES THE TOP SPOT','609.8M% APY 24H · mc $3.82M')],['New on board',()=>infoAlert('🆕 NEW ON THE BOARD','$POKE JOINS AT #64','2.7M% APY 24H · mc $163.2K')],
+    ['APY jump',()=>infoAlert('📈 APY JUMP','$MARINE APY 1,240%','Up from 610% (24H, modeled)')],['Stonkfun top 10',()=>infoAlert('🚀 STONKFUN TOP 10','$SNDK BREAKS INTO THE TOP 10','mc $5.66M · +116.2% 24h')],
+    ['Big mover',()=>infoAlert('📈 BIG MOVER','$SI +34% IN 24H','#2 on stonkfun by market cap · mc $18.38M')],['CLOBr flip',()=>infoAlert('🧱 CLOBr SCORE','STRONG BUYING PRESSURE','$MARINE now 71.2/100 · was Balanced')],
+    ['Whale watch',()=>infoAlert('🐋 WHALE WATCH','2 MORE TOP-20 WALLETS BUYING','15 of the top 20 $MARINE holders are buying this week (CLOBr)')],['$LINK move',()=>infoAlert('🔗 $LINK PUMPING','$LINK +5.4% IN AN HOUR','Now $14.71 on Solana')]];
+  tp.innerHTML='<b>TEST ALERTS (only with ?test)</b>'+T.map((t,i)=>`<button data-i="${i}">${t[0]}</button>`).join('');
+  tp.addEventListener('click',e=>{const b=e.target.closest('button');if(b)T[+b.dataset.i][1]()})}
 $('ttsPop').addEventListener('click',()=>ttsClose&&ttsClose());$('buyPop').addEventListener('click',closeBuy);
 $('pulseTO').addEventListener('click',e=>{if(e.target!==$('pulseTO'))closePulse()});
 $('audioGate').onclick=()=>{try{speechSynthesis.speak(new SpeechSynthesisUtterance(' '))}catch(e){}$('audioGate').style.display='none'};
