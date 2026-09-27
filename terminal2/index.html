@@ -67,8 +67,8 @@ html.fit #soundBtn{font-size:24px;padding:4px 10px}
 @keyframes scroll{to{transform:translateX(-50%)}}
 
 /* stats row */
-.stats{display:grid;grid-template-columns:1.25fr 1.5fr 1fr 1fr 1fr 1fr 1fr;border-bottom:1px solid var(--line);flex:none}
-.stat{padding:10px 14px;border-right:1px solid var(--line);min-width:0;overflow:hidden}
+.stats{display:flex;border-bottom:1px solid var(--line);flex:none}
+.stat{padding:10px 14px;border-right:1px solid var(--line);min-width:0;overflow:hidden;flex:1 1 0}.stat.hero{flex:1.35 1 0}.stat.pulse{flex:1.7 1 0}
 .stat:last-child{border-right:0}
 .stat label{display:block;font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;white-space:nowrap}
 .stat b{display:block;font-family:'VT323';font-size:32px;font-weight:400;color:#fff;line-height:1.05;white-space:nowrap}
@@ -161,6 +161,18 @@ tr.whale td{background:rgba(74,122,255,.08)}
 .post.m{border-left:2px solid var(--amber);padding-left:8px;margin-left:-10px}
 
 
+.clobrRow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border-top:1px solid var(--line)}
+.clobrRow .panel{min-width:0;overflow-x:auto}.clobrRow table{font-size:11px}.clobrRow td,.clobrRow th{padding:3px 5px}
+#lpBody td:first-child{white-space:normal;line-height:1.7}#lpBody th{white-space:nowrap}
+.clobrRow .r{text-align:right}.clobrRow .sub{font-size:10px;color:var(--dim);letter-spacing:1px;margin:10px 0 4px;text-transform:uppercase}
+.cbig{display:flex;gap:10px;margin-bottom:6px}.cbig>div{flex:1;border:1px solid var(--line);padding:6px 8px;min-width:0}
+.cbig label{display:block;font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}.cbig b{font-family:'VT323';font-size:24px;font-weight:400}
+.cbar{display:flex;height:6px;background:var(--line);margin:4px 0 2px}.cbar i{display:block;height:100%}
+.chip{font-size:9px;color:var(--amber);border:1px solid rgba(255,210,63,.4);padding:0 4px;margin-left:4px;white-space:nowrap}
+.dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px}
+#whSpark{width:100%;height:46px;display:block}
+@media (max-width:1300px){.clobrRow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:999px){.clobrRow{grid-template-columns:minmax(0,1fr)}.chartP.acc>.ph{flex-wrap:wrap;row-gap:6px}}
 .src{font-size:10px;color:var(--dim);padding:4px 16px;background:#02030a;border-top:1px solid var(--line);flex:none}
 
 /* TTS */
@@ -316,7 +328,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 .ph .chev{display:none}
 @media (max-width:999px){
   html,body,#stage{max-width:100vw;overflow-x:hidden}main>*,.lower>*,.col>*,.stats>*{min-width:0}.tape-bar{max-width:100vw}.tape-bar .track{max-width:none}
-  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat{border-bottom:1px solid var(--line)}.stat:nth-child(2n){border-right:0}
+  .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.stat{border-bottom:1px solid var(--line)}.stat:nth-child(2n){border-right:0}
   .stat.hero,.stat.pulse{grid-column:span 2;border-right:0}
   main{grid-template-columns:minmax(0,1fr)}.lower{grid-template-columns:minmax(0,1fr)}.ph{flex-wrap:wrap}.legend{display:none}header nav{margin-left:0}
   header nav .btn:not(.primary):not(.tts){display:none}#chartWrap{height:260px}.brand{font-size:24px}.brand small{font-size:14px}header{gap:10px;flex-wrap:wrap}
@@ -394,6 +406,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   <div class="stat xtra"><label>Payouts sent</label><b id="sPayouts">—</b><span class="dim" id="sHolders">&nbsp;</span><span class="dim" id="pMin" style="display:block">&nbsp;</span></div>
   <div class="stat"><label class="tkSym">$MARINE</label><b id="sPrice">—</b><span id="sChg">&nbsp;</span></div>
   <div class="stat"><label>Market cap</label><b id="sMcap">—</b><span class="dim" id="sLiq">&nbsp;</span></div>
+  <div class="stat" id="scoreStat" style="display:none" title="CLOBr score: 0-100 balance of support vs resistance liquidity"><label>CLOBr score</label><b id="sScore">—</b><span class="dim" id="sScoreMsg">&nbsp;</span></div>
   <div class="stat fx xtra"><label>24h volume</label><b id="sVol">—</b><span class="dim" id="sTx">&nbsp;</span></div>
   <div class="stat xtra"><label class="tkQs">$LINK</label><b id="sLink">—</b><span id="sLinkChg">&nbsp;</span></div>
   <button class="moreStats" id="moreStats" type="button">MORE STATS ▾</button>
@@ -405,6 +418,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
       <div class="ph">
         <h2><span class="tkSym">$MARINE</span> × <span class="tkQs">$LINK</span></h2>
         <div class="legend" style="margin:0"><span><i style="background:var(--blue2)"></i><span class="tkSym">$MARINE</span> (right)</span><span><i style="background:var(--amber)"></i><span class="tkQs">$LINK</span> (left)</span><span id="depthLeg" style="display:none"><i style="background:linear-gradient(90deg,var(--green) 50%,var(--red) 50%)"></i>CLOBr depth</span></div>
+        <div class="tabs" id="ltab" style="display:none"><button id="limBtn" class="on" type="button" title="Open limit orders from CLOBr: buys (green) and sells (red) at their price">LIMITS</button></div>
         <div class="tabs" id="dtab" style="display:none"><button id="depthBtn" class="on" type="button" title="CLOBr market depth for the token: support (green) and resistance (red) liquidity by price">DEPTH</button></div>
         <div class="tabs" id="tf">
           <button data-tf="1d">24H</button><button data-tf="7d" class="on">7D</button><button data-tf="all">ALL</button>
@@ -456,6 +470,13 @@ html.fit #tip{font-size:20px;padding:10px 14px}
     </section>
   </div>
 </main>
+
+<section class="clobrRow" id="clobrRow" style="display:none">
+  <section class="panel" id="whP"><div class="ph"><h2>WHALE ACTIVITY</h2><div class="tabs" id="whWin"><button data-w="1d">1D</button><button data-w="7d" class="on">7D</button><button data-w="30d">30D</button></div></div><div id="whBody"></div></section>
+  <section class="panel" id="loP"><div class="ph"><h2>LIMIT ORDERS</h2><span class="meta" id="loMeta"></span></div><div id="loBody"></div></section>
+  <section class="panel" id="dcP"><div class="ph"><h2>DCA FLOW</h2><span class="meta" id="dcMeta"></span></div><div id="dcBody"></div></section>
+  <section class="panel" id="lpP"><div class="ph"><h2>LP POOLS</h2><span class="meta">Meteora DLMM · last 1h</span></div><div id="lpBody"></div></section>
+</section>
 
 <div class="src"><span class="fx">Data: stonkfun (distributions) · thestonkboard.com (APY) · GeckoTerminal (chart, tape) · DexScreener (market) · </span>APY figures are modeled by thestonkboard.com, not a promise. Nothing here is financial advice.</div>
 
@@ -562,7 +583,7 @@ function fit(){
 
 // ---------- formatting ----------
 const usd=(n,d)=>n==null||isNaN(n)?'—':'$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:d??2,maximumFractionDigits:d??2});
-function compact(n,pre='$'){if(n==null||isNaN(n))return'—';const a=Math.abs(n);
+function compact(n,pre='$'){if(n==null||isNaN(n))return'—';if(n===0)return pre+'0';const a=Math.abs(n);
   if(a>=1e9)return pre+(n/1e9).toFixed(2)+'B';if(a>=1e6)return pre+(n/1e6).toFixed(2)+'M';
   if(a>=1e3)return pre+(n/1e3).toFixed(1)+'K';return pre+n.toFixed(a<1?4:2)}
 function px(n){if(n==null||isNaN(n)||n===0)return'—';if(n>=1)return'$'+n.toFixed(2);
@@ -688,6 +709,17 @@ function draw(){
         x.fillStyle=sup?'rgba(57,255,106,.16)':'rgba(255,51,85,.16)';x.fillRect(pad.l+w-bw,y,bw,bhh);
         x.fillStyle=sup?'rgba(57,255,106,.75)':'rgba(255,51,85,.75)';x.fillRect(pad.l+w-bw,y,FIT?3:2,bhh)});
     }else bins=null}
+  // CLOBr limit orders: every order as a tick at the right edge (length by size), and the 5 largest
+  // as dashed walls across the chart with their size
+  let lims=null;
+  if(limOn&&CL&&CL.limits&&CL.limits.orders&&CL.limits.orders.length){
+    lims=CL.limits.orders.filter(o=>o.price>=A.lo&&o.price<=A.hi&&o.usd>0);const mx=Math.max(1,...lims.map(o=>o.usd));
+    lims.forEach(o=>{const y=YA(o.price),len=4+o.usd/mx*(FIT?40:22);x.fillStyle=o.side==='B'?'#39ff6a':'#ff3355';x.fillRect(pad.l+w-len,y-1,len,2)});
+    const used=[];
+    lims.slice().sort((a,b)=>b.usd-a.usd).slice(0,5).forEach(o=>{const y=YA(o.price),col=o.side==='B'?'57,255,106':'255,51,85';
+      x.strokeStyle=`rgba(${col},.45)`;x.lineWidth=1;x.setLineDash([3,4]);x.beginPath();x.moveTo(pad.l,y);x.lineTo(pad.l+w,y);x.stroke();x.setLineDash([]);
+      if(used.some(u=>Math.abs(u-y)<CF+3))return;used.push(y);
+      x.textAlign='left';x.textBaseline='bottom';x.fillStyle=`rgba(${col},.9)`;x.fillText((o.side==='B'?'BUY ':'SELL ')+compact(o.usd)+' @ '+px(o.price),pad.l+4,y-2)})}
   const g=x.createLinearGradient(0,pad.t,0,pad.t+h);g.addColorStop(0,'rgba(74,122,255,.35)');g.addColorStop(1,'rgba(74,122,255,0)');
   x.beginPath();series.forEach((p,i)=>i?x.lineTo(X(p.t),YA(p.m)):x.moveTo(X(p.t),YA(p.m)));
   x.lineTo(X(t1),pad.t+h);x.lineTo(X(t0),pad.t+h);x.closePath();x.fillStyle=g;x.fill();
@@ -697,7 +729,9 @@ function draw(){
     [[YA(p.m),'#4a7aff'],[YB(p.l),'#ffd23f']].forEach(([y,col])=>{x.fillStyle=col;x.beginPath();x.arc(hx,y,3.5,0,7);x.fill()});
     const tip=$('tip');tip.style.display='block';
     tip.innerHTML=new Date(p.t).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'<br><span style="color:#4a7aff">'+esc(TK.symbol)+' '+px(p.m)+'</span><br><span style="color:#ffd23f">'+esc(TK.quote)+' '+px(p.l)+'</span>'
-      +(bins?(b=>b&&(b[0]||b[1])?'<br><span style="color:#39ff6a">support '+compact(b[0])+'</span> · <span style="color:#ff3355">resist '+compact(b[1])+'</span>':'')(bins[Math.min(bins.length-1,Math.max(0,Math.floor((pad.t+h-YA(p.m))/bh)))]):'');
+      +(lims&&lims.length?(()=>{const near=lims.filter(o=>Math.abs(YA(o.price)-YA(p.m))<=(FIT?14:8));const lb=near.filter(o=>o.side==='B').reduce((t,o)=>t+o.usd,0),ls=near.filter(o=>o.side==='S').reduce((t,o)=>t+o.usd,0);
+        return lb||ls?'<br>'+[lb?'<span style="color:#39ff6a">limit buys '+compact(lb)+'</span>':'',ls?'<span style="color:#ff3355">limit sells '+compact(ls)+'</span>':''].filter(Boolean).join(' · '):''})():'')
+      +(bins?(b=>b&&(b[0]||b[1])?'<br>'+[b[0]?'<span style="color:#39ff6a">support '+compact(b[0])+'</span>':'',b[1]?'<span style="color:#ff3355">resist '+compact(b[1])+'</span>':''].filter(Boolean).join(' · '):'')(bins[Math.min(bins.length-1,Math.max(0,Math.floor((pad.t+h-YA(p.m))/bh)))]):'');
     tip.style.left=Math.min(hx+12,W-tip.offsetWidth-4)+'px';tip.style.top='14px';
   }else $('tip').style.display='none';
   draw.geom={pad,w,t0,t1};
@@ -707,6 +741,54 @@ $('chart').addEventListener('mousemove',e=>{if(!series||!draw.geom)return;const{
   const r=e.target.getBoundingClientRect(),k=r.width/e.target.clientWidth,t=t0+((e.clientX-r.left)/k-pad.l)/w*(t1-t0);
   let bi=0,bd=Infinity;series.forEach((p,i)=>{const d=Math.abs(p.t-t);if(d<bd){bd=d;bi=i}});hover=bi;draw()});
 $('chart').addEventListener('mouseleave',()=>{hover=null;draw()});
+// ---------- CLOBr analytics (score, whales, limit orders, DCA, LP pools) via the bot ----------
+let CL=null,limOn=true,whWin='7d';try{limOn=localStorage.getItem('wrLimits')!=='0'}catch(e){}
+const sgn=(n,pre='')=>n==null?'—':`<span class="${n>=0?'up':'dn'}">${n>=0?'+':'−'}${compact(Math.abs(n),pre)}</span>`;
+const every=s=>!s?'—':s<3600?Math.round(s/60)+'m':s<86400?Math.round(s/3600)+'h':Math.round(s/86400)+'d';
+async function loadClobr(){try{const d=await j(BOT+'/clobr?mint='+CA);CL=d&&!d.error?d:null}catch(e){}renderClobr();draw()}
+function renderClobr(){
+  const sc=CL&&CL.score;$('scoreStat').style.display=sc?'':'none';
+  if(sc){$('sScore').textContent=sc.score!=null?(+sc.score).toFixed(1):'—';$('sScore').style.color=sc.score>=60?'var(--green)':sc.score<=40?'var(--red)':'var(--amber)';
+    $('sScoreMsg').textContent=sc.msg||'';$('sScoreMsg').title=sc.msg||''}
+  const L=CL&&CL.limits&&CL.limits.orders&&CL.limits.orders.length?CL.limits:null;$('ltab').style.display=L?'':'none';
+  const panels={whP:renderWhales(),loP:renderLimits(),dcP:renderDca(),lpP:renderLp()};
+  let any=false;for(const k in panels){$(k).style.display=panels[k]?'':'none';any=any||panels[k]}
+  $('clobrRow').style.display=any?'':'none'}
+function renderWhales(){const W=CL&&CL.whales;if(!W||W.none||!W.summary)return false;const S=W.summary,w=whWin;
+  const row=t=>`<tr><td>Top ${t.slice(3)}</td><td class="r">${S.accumulating?.[t]?.[w]??'—'}</td><td class="r">${S.new_wallets?.[t]?.[w]??'—'}</td><td class="r">${sgn(S.net_flow?.[t]?.[w]?.net,'')}</td></tr>`;
+  const sp=W.spark||[],mx=Math.max(1,...sp.map(d=>Math.abs(d.net||0))),bw=100/Math.max(1,sp.length);
+  const svg=sp.length?`<svg id="whSpark" viewBox="0 0 100 40" preserveAspectRatio="none"><line x1="0" y1="20" x2="100" y2="20" stroke="#1a2444" stroke-width=".5"/>${sp.map((d,i)=>{const h=Math.abs(d.net||0)/mx*19;return`<rect x="${(i*bw+bw*.15).toFixed(2)}" y="${(d.net>=0?20-h:20).toFixed(2)}" width="${(bw*.7).toFixed(2)}" height="${Math.max(.3,h).toFixed(2)}" fill="${d.net>=0?'#39ff6a':'#ff3355'}" opacity=".8"><title>${esc(d.day)}: net ${compact(d.net,'')} · ${d.acc??'—'} accumulating</title></rect>`}).join('')}</svg>`:'';
+  $('whBody').innerHTML=`<table><thead><tr><th>Holders</th><th class="r">Accumulating</th><th class="r">New</th><th class="r">Net flow ($${esc(TK.symbol)})</th></tr></thead><tbody>${['top20','top50','top100'].map(row).join('')}</tbody></table>`
+    +(svg?`<div class="sub">Top 100 net flow · last ${sp.length} days</div>${svg}`:'')
+    +((W.wallets||[]).length?`<div class="sub">Top wallets · change</div><table><thead><tr><th>#</th><th>Wallet</th><th class="r">Balance</th><th class="r">7d</th><th class="r">30d</th></tr></thead><tbody>${W.wallets.map(x=>`<tr><td class="dim">${x.rank}</td><td><a href="https://solscan.io/account/${esc(x.owner)}" target="_blank" rel="noopener">${esc(short(x.owner))}</a></td><td class="r">${compact(x.balance,'')}</td><td class="r">${x.d7==null?'—':pct(x.d7)}</td><td class="r">${x.d30==null?'<span class="dim">new</span>':pct(x.d30)}</td></tr>`).join('')}</tbody></table>`:'');
+  return true}
+function renderLimits(){const L=CL&&CL.limits;if(!L||!L.orders||!L.orders.length)return false;const O=L.orders;
+  const B=O.filter(o=>o.side==='B'),S=O.filter(o=>o.side==='S'),sb=B.reduce((t,o)=>t+(o.usd||0),0),ss=S.reduce((t,o)=>t+(o.usd||0),0),tot=Math.max(1,sb+ss);
+  $('loMeta').textContent=(L.count||O.length)+' open';
+  const near=O.slice().sort((a,b)=>Math.abs(a.away??9)-Math.abs(b.away??9)).slice(0,10);
+  $('loBody').innerHTML=`<div class="cbig"><div><label>Buy orders</label><b class="up">${compact(sb)}</b><span class="dim"> ${B.length}</span></div><div><label>Sell orders</label><b class="dn">${compact(ss)}</b><span class="dim"> ${S.length}</span></div></div>
+    <div class="cbar"><i style="width:${(sb/tot*100).toFixed(1)}%;background:var(--green)"></i><i style="width:${(ss/tot*100).toFixed(1)}%;background:var(--red)"></i></div>
+    <div class="sub">Nearest to price</div><table><thead><tr><th>Side</th><th class="r">Price</th><th class="r">Away</th><th class="r">Size</th><th class="r">Filled</th></tr></thead><tbody>
+    ${near.map(o=>`<tr><td class="${o.side==='B'?'up':'dn'}">${o.side==='B'?'BUY':'SELL'}</td><td class="r">${px(o.price)}</td><td class="r">${o.away==null?'—':((o.away>=0?'+':'')+(o.away*100).toFixed(1)+'%')}</td><td class="r">${compact(o.usd)}</td><td class="r dim">${o.done==null?'—':Math.round(o.done)+'%'}</td></tr>`).join('')}</tbody></table>`;
+  return true}
+function renderDca(){const D=CL&&CL.dca;if(!D||!D.orders||!D.orders.length)return false;const O=D.orders;
+  const f=(side,k)=>O.filter(o=>o.side===side&&o.active).reduce((t,o)=>t+(o[k]||0),0);
+  const b1=f('B','h1'),s1=f('S','h1'),b24=f('B','h24'),s24=f('S','h24'),tot=Math.max(1,b24+s24);
+  $('dcMeta').textContent=(D.count||O.length)+' orders';
+  $('dcBody').innerHTML=`<div class="cbig"><div><label>Net next 1h</label><b class="${b1>=s1?'up':'dn'}">${b1>=s1?'+':'−'}${compact(Math.abs(b1-s1))}</b><div class="dim" style="font-size:10px">buy ${compact(b1)} · sell ${compact(s1)}</div></div>
+    <div><label>Net next 24h</label><b class="${b24>=s24?'up':'dn'}">${b24>=s24?'+':'−'}${compact(Math.abs(b24-s24))}</b><div class="dim" style="font-size:10px">buy ${compact(b24)} · sell ${compact(s24)}</div></div></div>
+    <div class="cbar"><i style="width:${(b24/tot*100).toFixed(1)}%;background:var(--green)"></i><i style="width:${(s24/tot*100).toFixed(1)}%;background:var(--red)"></i></div>
+    <div class="sub">Largest orders</div><table><thead><tr><th>Side</th><th class="r">Left</th><th class="r">Next 24h</th><th class="r">Every</th><th class="r">Filled</th></tr></thead><tbody>
+    ${O.slice(0,10).map(o=>`<tr><td class="${o.side==='B'?'up':'dn'}"><span class="dot" style="background:${o.active?'var(--green)':'var(--dim)'}" title="${o.active?'buying/selling now':'outside its price range'}"></span>${o.side==='B'?'BUY':'SELL'}</td><td class="r">${compact(o.left)}</td><td class="r">${compact(o.h24)}</td><td class="r dim">${every(o.every)}</td><td class="r dim">${o.filled==null?'—':Math.round(o.filled*100)+'%'}</td></tr>`).join('')}</tbody></table>`;
+  return true}
+function renderLp(){const P=CL&&CL.dlmm;if(!P||!P.pools||!P.pools.length)return false;
+  $('lpBody').innerHTML=`<table><thead><tr><th>Pool</th><th class="r">TVL</th><th class="r">1h vol</th><th class="r">1h fees</th><th class="r">Yield</th></tr></thead><tbody>
+    ${P.pools.map(p=>`<tr><td><a href="https://app.meteora.ag/dlmm/${esc(p.id)}" target="_blank" rel="noopener">${esc(p.pair)}</a> <span class="dim">${p.bin??'?'}bp · ${p.fee==null?'?':p.fee+'%'}</span>${(p.lead||[]).map(l=>`<span class="chip">${esc(l)}</span>`).join('')}</td><td class="r">${compact(p.tvl)}</td><td class="r">${compact(p.vol1h)}</td><td class="r">${compact(p.fees1h)}</td><td class="r">${p.yield==null?'—':(p.yield*100).toFixed(1)+'%'}</td></tr>`).join('')}</tbody></table>`;
+  return true}
+$('whWin').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;whWin=b.dataset.w;[...$('whWin').children].forEach(x=>x.classList.toggle('on',x===b));renderWhales()});
+$('limBtn').onclick=()=>{limOn=!limOn;$('limBtn').classList.toggle('on',limOn);try{localStorage.setItem('wrLimits',limOn?'1':'0')}catch(e){}draw()};
+$('limBtn').classList.toggle('on',limOn);
+
 // ---------- CLOBr market depth (from the approval bot, which holds the API key) ----------
 let DEPTH=null,depthOn=true;try{depthOn=localStorage.getItem('wrDepth')!=='0'}catch(e){}
 async function loadDepth(){try{const d=await j(BOT+'/depth?mint='+CA);
@@ -1098,7 +1180,7 @@ fit();
 resolveToken().finally(()=>{loadRewards();loadMarket();loadChart();loadTrades();loadTicker();loadBoard();loadTTS();loadPay();loadAds();});
 setInterval(loadAds,15000);setInterval(loadPay,300000);setTimeout(()=>{renderAds();setInterval(renderAds,20000)},20000-Date.now()%20000);
 setInterval(loadTrades,20000);setInterval(loadMarket,30000);setInterval(loadRewards,60000);
-setInterval(loadChart,120000);setTimeout(loadDepth,1500);setInterval(loadDepth,60000);setInterval(loadTicker,300000);setInterval(loadBoard,300000);
+setInterval(loadChart,120000);setTimeout(loadDepth,1500);setInterval(loadDepth,60000);setTimeout(loadClobr,2000);setInterval(loadClobr,120000);setInterval(loadTicker,300000);setInterval(loadBoard,300000);
 {let n=0;setInterval(()=>{if(!document.hidden&&(PAY?.bot||++n%3===0))loadTTS()},4000)}setInterval(tickLast,1000);
 document.fonts?.ready.then(draw);
 {const dm=new URLSearchParams(location.search).get('demo');if(dm)setTimeout(()=>{
