@@ -44,8 +44,8 @@ header .ca input:focus{outline:none;border-color:var(--blue2)}
 .tkb{display:flex;align-items:center;gap:6px;font-size:13px;color:#fff;white-space:nowrap}.tkb img{width:24px;height:24px;border-radius:50%;background:#111}
 .tkb .q{color:var(--dim);font-size:11px}.tkm{font-size:11px;color:var(--amber);white-space:nowrap}.tkm:empty{display:none}
 @media (max-width:999px){header{flex-wrap:wrap!important}header .ca{order:9;flex-basis:100%;max-width:none;margin:4px 0 0}}
-#soundBtn{background:none;border:1px solid var(--line);color:var(--txt);font-size:14px;line-height:1;padding:3px 7px;cursor:pointer}
-#soundBtn:hover{border-color:var(--blue2)}#soundBtn.off{opacity:.55}
+#soundBtn,#alertBtn{background:none;border:1px solid var(--line);color:var(--txt);font-size:14px;line-height:1;padding:3px 7px;cursor:pointer}
+#soundBtn:hover,#alertBtn:hover{border-color:var(--blue2)}#soundBtn.off,#alertBtn.off{opacity:.55}
 html.fit #soundBtn{font-size:24px;padding:4px 10px}
 .btn.chat{border-color:var(--blue2);color:#fff}
 
@@ -140,6 +140,11 @@ tr.whale td{background:rgba(74,122,255,.08)}
 #mb b{display:block;font-family:'VT323';font-size:36px;font-weight:400;color:#fff;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #mb .hi b{color:var(--green)}
 #mb p{font-size:11px;margin:0;line-height:1.5}
+#mbX .sub{font-size:10px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;margin:4px 0 5px}
+.earn{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.earn>div{border:1px solid rgba(57,255,106,.3);padding:6px 8px;background:rgba(57,255,106,.04);min-width:0}
+.earn label{display:block;font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}#mb .earn b{font-size:26px;color:var(--green);overflow:visible}
+.rates{width:100%;font-size:12px}.rates td,.rates th{padding:4px 6px}.rates td{color:#fff}.rates td:first-child{color:var(--dim)}
+.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 14px;font-size:12px}.kv div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid rgba(26,36,68,.6);padding:4px 0}.kv span:first-child{color:var(--dim)}
 #mbList{display:flex;flex-direction:column;min-height:0}
 #mbList .br,#mbList .bh{display:grid;grid-template-columns:20px 24px minmax(0,1fr) repeat(3,minmax(0,78px));gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(26,36,68,.7);font-size:13px;color:var(--txt)}
 #mbList .bh{font-size:10px;letter-spacing:1px;color:var(--dim);padding-top:0}
@@ -161,17 +166,30 @@ tr.whale td{background:rgba(74,122,255,.08)}
 .post.m{border-left:2px solid var(--amber);padding-left:8px;margin-left:-10px}
 
 
-.clobrRow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border-top:1px solid var(--line)}
+.clobrWrap{border-top:1px solid var(--line);background:var(--panel)}
+.cHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,rgba(255,107,0,.12),transparent 60%)}
+.cHead b{font-family:'VT323';font-size:24px;font-weight:400;color:#FF6B00;letter-spacing:1px}.cHead .dim{font-size:11px}
+.cbtn{border-color:#FF6B00!important;color:#FF6B00!important;white-space:nowrap}.cbtn:hover{background:rgba(255,107,0,.12)}
+.clobrRow{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1px;background:var(--line)}
+.wcs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.wc{border:1px solid var(--line);padding:7px 8px;min-width:0}
+.wc label{display:block;font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}.wv b{font-family:'VT323';font-size:26px;font-weight:400;color:#fff}.wv span{font-size:10px}
+.wl{font-size:10px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spark{width:100%;height:60px;display:block}.sx{display:flex;justify-content:space-between;gap:8px;font-size:9px;color:var(--dim);margin-top:2px}
+.cbar.tall{height:10px}.cbig.one>div{flex:1}
+.dr{display:grid;grid-template-columns:62px 1fr auto auto;gap:8px;font-size:11px;padding:4px 0;border-bottom:1px solid rgba(26,36,68,.6);white-space:nowrap}
+.lp{border-bottom:1px solid rgba(26,36,68,.6);padding:7px 0}.lpt{font-size:12px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}.lpt .dim{font-size:10px}
+.lps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:4px;font-size:12px;color:#fff}.lps label{display:block;font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
+#scoreStat{cursor:pointer}#scoreStat:hover label{color:#FF6B00}
 .clobrRow .panel{min-width:0;overflow-x:auto}.clobrRow table{font-size:11px}.clobrRow td,.clobrRow th{padding:3px 5px}
-#lpBody td:first-child{white-space:normal;line-height:1.7}#lpBody th{white-space:nowrap}
+
 .clobrRow .r{text-align:right}.clobrRow .sub{font-size:10px;color:var(--dim);letter-spacing:1px;margin:10px 0 4px;text-transform:uppercase}
 .cbig{display:flex;gap:10px;margin-bottom:6px}.cbig>div{flex:1;border:1px solid var(--line);padding:6px 8px;min-width:0}
 .cbig label{display:block;font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}.cbig b{font-family:'VT323';font-size:24px;font-weight:400}
 .cbar{display:flex;height:6px;background:var(--line);margin:4px 0 2px}.cbar i{display:block;height:100%}
 .chip{font-size:9px;color:var(--amber);border:1px solid rgba(255,210,63,.4);padding:0 4px;margin-left:4px;white-space:nowrap}
 .dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px}
-#whSpark{width:100%;height:46px;display:block}
-@media (max-width:1300px){.clobrRow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+@media (max-width:999px){.cHead{flex-wrap:wrap}.cHead .dim{display:block}}
 @media (max-width:999px){.clobrRow{grid-template-columns:minmax(0,1fr)}.chartP.acc>.ph{flex-wrap:wrap;row-gap:6px}}
 .src{font-size:10px;color:var(--dim);padding:4px 16px;background:#02030a;border-top:1px solid var(--line);flex:none}
 
@@ -370,6 +388,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   <div class="brand">THE WAR ROOM<small>TERMINAL 2.0</small></div>
   <span class="live" id="live"><i></i><span id="liveTxt">LIVE</span></span>
   <button id="soundBtn" type="button" title="Sound on: click to mute TTS and alerts" aria-label="Mute sounds"></button>
+  <button id="alertBtn" type="button" title="Alerts on: click to hide buy alerts, pulses and TTS popups" aria-label="Hide alerts"></button>
   <form id="caForm" class="ca" autocomplete="off">
     <span id="tkBadge" class="tkb"></span>
     <input id="caIn" placeholder="Paste a stonk token CA…" spellcheck="false" aria-label="Token contract address">
@@ -406,7 +425,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   <div class="stat xtra"><label>Payouts sent</label><b id="sPayouts">—</b><span class="dim" id="sHolders">&nbsp;</span><span class="dim" id="pMin" style="display:block">&nbsp;</span></div>
   <div class="stat"><label class="tkSym">$MARINE</label><b id="sPrice">—</b><span id="sChg">&nbsp;</span></div>
   <div class="stat"><label>Market cap</label><b id="sMcap">—</b><span class="dim" id="sLiq">&nbsp;</span></div>
-  <div class="stat" id="scoreStat" style="display:none" title="CLOBr score: 0-100 balance of support vs resistance liquidity"><label>CLOBr score</label><b id="sScore">—</b><span class="dim" id="sScoreMsg">&nbsp;</span></div>
+  <div class="stat" id="scoreStat" style="display:none" title="CLOBr score: 0-100 balance of support vs resistance liquidity"><label>CLOBr score ↗</label><b id="sScore">—</b><span class="dim" id="sScoreMsg">&nbsp;</span></div>
   <div class="stat fx xtra"><label>24h volume</label><b id="sVol">—</b><span class="dim" id="sTx">&nbsp;</span></div>
   <div class="stat xtra"><label class="tkQs">$LINK</label><b id="sLink">—</b><span id="sLinkChg">&nbsp;</span></div>
   <button class="moreStats" id="moreStats" type="button">MORE STATS ▾</button>
@@ -461,6 +480,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
           <div class="hi"><label>APY 3D</label><b id="mbA3">—</b></div>
           <div class="hi"><label>APY 24H</label><b id="mbA24">—</b></div>
         </div>
+        <div id="mbX"></div>
         <p class="dim" id="mbNote">loading board…</p>
       </div>
     </section>
@@ -471,11 +491,15 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   </div>
 </main>
 
-<section class="clobrRow" id="clobrRow" style="display:none">
+<section class="clobrWrap" id="clobrWrap" style="display:none">
+  <div class="cHead"><div><b>CLOBr ANALYTICS</b><span class="dim"> · <span class="tkSym">$MARINE</span> · liquidity, whale and order-flow data from CLOBr</span></div>
+    <a class="btn cbtn" id="clobrLink" href="https://clobr.io/?ref=DF92VC53" target="_blank" rel="noopener">VIEW MORE ON CLOBr ▸</a></div>
+  <div class="clobrRow" id="clobrRow">
   <section class="panel" id="whP"><div class="ph"><h2>WHALE ACTIVITY</h2><div class="tabs" id="whWin"><button data-w="1d">1D</button><button data-w="7d" class="on">7D</button><button data-w="30d">30D</button></div></div><div id="whBody"></div></section>
   <section class="panel" id="loP"><div class="ph"><h2>LIMIT ORDERS</h2><span class="meta" id="loMeta"></span></div><div id="loBody"></div></section>
   <section class="panel" id="dcP"><div class="ph"><h2>DCA FLOW</h2><span class="meta" id="dcMeta"></span></div><div id="dcBody"></div></section>
   <section class="panel" id="lpP"><div class="ph"><h2>LP POOLS</h2><span class="meta">Meteora DLMM · last 1h</span></div><div id="lpBody"></div></section>
+  </div>
 </section>
 
 <div class="src"><span class="fx">Data: stonkfun (distributions) · thestonkboard.com (APY) · GeckoTerminal (chart, tape) · DexScreener (market) · </span>APY figures are modeled by thestonkboard.com, not a promise. Nothing here is financial advice.</div>
@@ -599,7 +623,7 @@ async function j(u){const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw new
 
 // ---------- rewards snapshot (same-origin) ----------
 let rewards=null,prevR=null;
-function pulseTakeover(tok,usdv,holders,total){$('ptN').textContent='+'+num(tok,tok<10?2:1)+' '+TK.quote;
+function pulseTakeover(tok,usdv,holders,total){if(!alertsOn)return;$('ptN').textContent='+'+num(tok,tok<10?2:1)+' '+TK.quote;
   $('ptS').textContent=(usdv>0?'≈ '+usd(usdv,0)+' ':'')+'paid to '+num(holders)+' $'+TK.symbol+' holders';
   $('ptD').textContent=num(total,0)+' '+TK.quote+' distributed all time · hold $'+TK.symbol+', get paid in $'+TK.quote;
   const el=$('pulseTO');el.classList.remove('show');void el.offsetWidth;el.classList.add('show');beep(true);setTimeout(()=>beep(true),600);
@@ -743,47 +767,60 @@ $('chart').addEventListener('mousemove',e=>{if(!series||!draw.geom)return;const{
 $('chart').addEventListener('mouseleave',()=>{hover=null;draw()});
 // ---------- CLOBr analytics (score, whales, limit orders, DCA, LP pools) via the bot ----------
 let CL=null,limOn=true,whWin='7d';try{limOn=localStorage.getItem('wrLimits')!=='0'}catch(e){}
-const sgn=(n,pre='')=>n==null?'—':`<span class="${n>=0?'up':'dn'}">${n>=0?'+':'−'}${compact(Math.abs(n),pre)}</span>`;
-const every=s=>!s?'—':s<3600?Math.round(s/60)+'m':s<86400?Math.round(s/3600)+'h':Math.round(s/86400)+'d';
+const CLOBR_REF='DF92VC53';
+const clobrUrl=()=>'https://clobr.io/token/'+encodeURIComponent(CA)+'?ref='+CLOBR_REF;
+const every=s=>!s?'—':s<60?Math.round(s)+'s':s<3600?Math.floor(s/60)+'m'+(s%60?' '+Math.round(s%60)+'s':''):s<86400?Math.round(s/3600)+'h':Math.round(s/86400)+'d';
+const tokAmt=n=>n==null?'—':(n>=0?'▲ ':'▼ ')+compact(Math.abs(n),'');
 async function loadClobr(){try{const d=await j(BOT+'/clobr?mint='+CA);CL=d&&!d.error?d:null}catch(e){}renderClobr();draw()}
 function renderClobr(){
+  $('clobrLink').href=clobrUrl();$('scoreStat').onclick=()=>open(clobrUrl(),'_blank','noopener');
   const sc=CL&&CL.score;$('scoreStat').style.display=sc?'':'none';
   if(sc){$('sScore').textContent=sc.score!=null?(+sc.score).toFixed(1):'—';$('sScore').style.color=sc.score>=60?'var(--green)':sc.score<=40?'var(--red)':'var(--amber)';
     $('sScoreMsg').textContent=sc.msg||'';$('sScoreMsg').title=sc.msg||''}
   const L=CL&&CL.limits&&CL.limits.orders&&CL.limits.orders.length?CL.limits:null;$('ltab').style.display=L?'':'none';
   const panels={whP:renderWhales(),loP:renderLimits(),dcP:renderDca(),lpP:renderLp()};
   let any=false;for(const k in panels){$(k).style.display=panels[k]?'':'none';any=any||panels[k]}
-  $('clobrRow').style.display=any?'':'none'}
+  $('clobrWrap').style.display=any||sc?'':'none'}
 function renderWhales(){const W=CL&&CL.whales;if(!W||W.none||!W.summary)return false;const S=W.summary,w=whWin;
-  const row=t=>`<tr><td>Top ${t.slice(3)}</td><td class="r">${S.accumulating?.[t]?.[w]??'—'}</td><td class="r">${S.new_wallets?.[t]?.[w]??'—'}</td><td class="r">${sgn(S.net_flow?.[t]?.[w]?.net,'')}</td></tr>`;
+  const card=t=>{const size=+t.slice(3),acc=S.accumulating?.[t]?.[w],neu=S.new_wallets?.[t]?.[w],net=S.net_flow?.[t]?.[w]?.net,usdv=net!=null&&marinePx?net*marinePx:null;
+    return `<div class="wc"><label>Top ${size}</label><div class="wv"><b>${acc??'—'}</b><span class="dim">/${size} buying</span></div>
+      <div class="cbar"><i style="width:${acc==null?0:Math.min(100,acc/size*100).toFixed(0)}%;background:var(--green)"></i></div>
+      <div class="wl">${neu?`+${neu} new wallet${neu>1?'s':''}`:'<span class="dim">no new wallets</span>'}</div>
+      <div class="wl ${net>=0?'up':'dn'}" title="net tokens bought by these holders">${tokAmt(net)} ${esc(TK.symbol)}${usdv!=null?` <span class="dim">≈ ${compact(Math.abs(usdv))}</span>`:''}</div></div>`};
   const sp=W.spark||[],mx=Math.max(1,...sp.map(d=>Math.abs(d.net||0))),bw=100/Math.max(1,sp.length);
-  const svg=sp.length?`<svg id="whSpark" viewBox="0 0 100 40" preserveAspectRatio="none"><line x1="0" y1="20" x2="100" y2="20" stroke="#1a2444" stroke-width=".5"/>${sp.map((d,i)=>{const h=Math.abs(d.net||0)/mx*19;return`<rect x="${(i*bw+bw*.15).toFixed(2)}" y="${(d.net>=0?20-h:20).toFixed(2)}" width="${(bw*.7).toFixed(2)}" height="${Math.max(.3,h).toFixed(2)}" fill="${d.net>=0?'#39ff6a':'#ff3355'}" opacity=".8"><title>${esc(d.day)}: net ${compact(d.net,'')} · ${d.acc??'—'} accumulating</title></rect>`}).join('')}</svg>`:'';
-  $('whBody').innerHTML=`<table><thead><tr><th>Holders</th><th class="r">Accumulating</th><th class="r">New</th><th class="r">Net flow ($${esc(TK.symbol)})</th></tr></thead><tbody>${['top20','top50','top100'].map(row).join('')}</tbody></table>`
-    +(svg?`<div class="sub">Top 100 net flow · last ${sp.length} days</div>${svg}`:'')
-    +((W.wallets||[]).length?`<div class="sub">Top wallets · change</div><table><thead><tr><th>#</th><th>Wallet</th><th class="r">Balance</th><th class="r">7d</th><th class="r">30d</th></tr></thead><tbody>${W.wallets.map(x=>`<tr><td class="dim">${x.rank}</td><td><a href="https://solscan.io/account/${esc(x.owner)}" target="_blank" rel="noopener">${esc(short(x.owner))}</a></td><td class="r">${compact(x.balance,'')}</td><td class="r">${x.d7==null?'—':pct(x.d7)}</td><td class="r">${x.d30==null?'<span class="dim">new</span>':pct(x.d30)}</td></tr>`).join('')}</tbody></table>`:'');
+  const svg=sp.length?`<svg class="spark" viewBox="0 0 100 40" preserveAspectRatio="none"><line x1="0" y1="20" x2="100" y2="20" stroke="#1a2444" stroke-width=".4"/>${sp.map((d,i)=>{const h=Math.abs(d.net||0)/mx*19;return`<rect x="${(i*bw+bw*.15).toFixed(2)}" y="${(d.net>=0?20-h:20).toFixed(2)}" width="${(bw*.7).toFixed(2)}" height="${Math.max(.3,h).toFixed(2)}" fill="${d.net>=0?'#39ff6a':'#ff3355'}" opacity=".85"><title>${esc(d.day)}: ${d.net>=0?'bought':'sold'} ${compact(Math.abs(d.net||0),'')} ${esc(TK.symbol)} · ${d.acc??'—'} of top 100 buying</title></rect>`}).join('')}</svg>
+    <div class="sx"><span>${esc(sp[0].day||'')}</span><span>top 100 · daily net ${esc(TK.symbol)} bought (green) / sold (red)</span><span>${esc(sp[sp.length-1].day||'')}</span></div>`:'';
+  const wl=(W.wallets||[]).slice(0,8);
+  $('whBody').innerHTML=`<div class="wcs">${['top20','top50','top100'].map(card).join('')}</div>`
+    +(svg?`<div class="sub">Last ${sp.length} days</div>${svg}`:'')
+    +(wl.length?`<div class="sub">Biggest holders</div><table><thead><tr><th>#</th><th>Wallet</th><th class="r">Holds</th><th class="r">7d</th></tr></thead><tbody>${wl.map(x=>`<tr><td class="dim">${x.rank}</td><td><a href="https://solscan.io/account/${esc(x.owner)}" target="_blank" rel="noopener">${esc(short(x.owner))}</a></td><td class="r">${compact(x.balance,'')}</td><td class="r">${x.d7==null?'<span class="dim">—</span>':x.d7===0?'<span class="dim">no change</span>':pct(x.d7)}</td></tr>`).join('')}</tbody></table>`:'');
   return true}
 function renderLimits(){const L=CL&&CL.limits;if(!L||!L.orders||!L.orders.length)return false;const O=L.orders;
   const B=O.filter(o=>o.side==='B'),S=O.filter(o=>o.side==='S'),sb=B.reduce((t,o)=>t+(o.usd||0),0),ss=S.reduce((t,o)=>t+(o.usd||0),0),tot=Math.max(1,sb+ss);
   $('loMeta').textContent=(L.count||O.length)+' open';
-  const near=O.slice().sort((a,b)=>Math.abs(a.away??9)-Math.abs(b.away??9)).slice(0,10);
-  $('loBody').innerHTML=`<div class="cbig"><div><label>Buy orders</label><b class="up">${compact(sb)}</b><span class="dim"> ${B.length}</span></div><div><label>Sell orders</label><b class="dn">${compact(ss)}</b><span class="dim"> ${S.length}</span></div></div>
-    <div class="cbar"><i style="width:${(sb/tot*100).toFixed(1)}%;background:var(--green)"></i><i style="width:${(ss/tot*100).toFixed(1)}%;background:var(--red)"></i></div>
-    <div class="sub">Nearest to price</div><table><thead><tr><th>Side</th><th class="r">Price</th><th class="r">Away</th><th class="r">Size</th><th class="r">Filled</th></tr></thead><tbody>
-    ${near.map(o=>`<tr><td class="${o.side==='B'?'up':'dn'}">${o.side==='B'?'BUY':'SELL'}</td><td class="r">${px(o.price)}</td><td class="r">${o.away==null?'—':((o.away>=0?'+':'')+(o.away*100).toFixed(1)+'%')}</td><td class="r">${compact(o.usd)}</td><td class="r dim">${o.done==null?'—':Math.round(o.done)+'%'}</td></tr>`).join('')}</tbody></table>`;
+  const near=O.slice().sort((a,b)=>Math.abs(a.away??9)-Math.abs(b.away??9)).slice(0,8);
+  $('loBody').innerHTML=`<div class="cbig"><div><label>Waiting to buy</label><b class="up">${compact(sb)}</b><span class="dim"> · ${B.length} orders</span></div><div><label>Waiting to sell</label><b class="dn">${compact(ss)}</b><span class="dim"> · ${S.length} orders</span></div></div>
+    <div class="cbar tall"><i style="width:${(sb/tot*100).toFixed(1)}%;background:var(--green)"></i><i style="width:${(ss/tot*100).toFixed(1)}%;background:var(--red)"></i></div>
+    <div class="sx"><span class="up">${(sb/tot*100).toFixed(0)}% buys</span><span class="dn">${(ss/tot*100).toFixed(0)}% sells</span></div>
+    <div class="sub">Closest to the price</div><table><thead><tr><th></th><th class="r">Price</th><th class="r">Distance</th><th class="r">Size</th></tr></thead><tbody>
+    ${near.map(o=>`<tr><td class="${o.side==='B'?'up':'dn'}">${o.side==='B'?'BUY':'SELL'}</td><td class="r">${px(o.price)}</td><td class="r dim">${o.away==null?'—':((o.away>=0?'+':'')+(o.away*100).toFixed(1)+'%')}</td><td class="r">${compact(o.usd)}</td></tr>`).join('')}</tbody></table>`;
   return true}
 function renderDca(){const D=CL&&CL.dca;if(!D||!D.orders||!D.orders.length)return false;const O=D.orders;
   const f=(side,k)=>O.filter(o=>o.side===side&&o.active).reduce((t,o)=>t+(o[k]||0),0);
-  const b1=f('B','h1'),s1=f('S','h1'),b24=f('B','h24'),s24=f('S','h24'),tot=Math.max(1,b24+s24);
-  $('dcMeta').textContent=(D.count||O.length)+' orders';
-  $('dcBody').innerHTML=`<div class="cbig"><div><label>Net next 1h</label><b class="${b1>=s1?'up':'dn'}">${b1>=s1?'+':'−'}${compact(Math.abs(b1-s1))}</b><div class="dim" style="font-size:10px">buy ${compact(b1)} · sell ${compact(s1)}</div></div>
-    <div><label>Net next 24h</label><b class="${b24>=s24?'up':'dn'}">${b24>=s24?'+':'−'}${compact(Math.abs(b24-s24))}</b><div class="dim" style="font-size:10px">buy ${compact(b24)} · sell ${compact(s24)}</div></div></div>
-    <div class="cbar"><i style="width:${(b24/tot*100).toFixed(1)}%;background:var(--green)"></i><i style="width:${(s24/tot*100).toFixed(1)}%;background:var(--red)"></i></div>
-    <div class="sub">Largest orders</div><table><thead><tr><th>Side</th><th class="r">Left</th><th class="r">Next 24h</th><th class="r">Every</th><th class="r">Filled</th></tr></thead><tbody>
-    ${O.slice(0,10).map(o=>`<tr><td class="${o.side==='B'?'up':'dn'}"><span class="dot" style="background:${o.active?'var(--green)':'var(--dim)'}" title="${o.active?'buying/selling now':'outside its price range'}"></span>${o.side==='B'?'BUY':'SELL'}</td><td class="r">${compact(o.left)}</td><td class="r">${compact(o.h24)}</td><td class="r dim">${every(o.every)}</td><td class="r dim">${o.filled==null?'—':Math.round(o.filled*100)+'%'}</td></tr>`).join('')}</tbody></table>`;
+  const b1=f('B','h1'),s1=f('S','h1'),b24=f('B','h24'),s24=f('S','h24'),tot=Math.max(1,b24+s24),net=b24-s24;
+  $('dcMeta').textContent=(D.count||O.length)+' active';
+  $('dcBody').innerHTML=`<div class="cbig one"><div><label>Scheduled for the next 24h</label><b class="${net>=0?'up':'dn'}">${net>=0?'NET BUY ':'NET SELL '}${compact(Math.abs(net))}</b>
+      <div class="dim" style="font-size:10px">next hour: ${compact(b1)} buys · ${compact(s1)} sells</div></div></div>
+    <div class="cbar tall"><i style="width:${(b24/tot*100).toFixed(1)}%;background:var(--green)"></i><i style="width:${(s24/tot*100).toFixed(1)}%;background:var(--red)"></i></div>
+    <div class="sx"><span class="up">buys ${compact(b24)}</span><span class="dn">sells ${compact(s24)}</span></div>
+    <div class="sub">Recurring orders</div>
+    ${O.slice(0,8).map(o=>`<div class="dr"><span class="${o.side==='B'?'up':'dn'}"><span class="dot" style="background:${o.active?(o.side==='B'?'var(--green)':'var(--red)'):'var(--dim)'}" title="${o.active?'executing now':'paused: price outside its range'}"></span>${o.side==='B'?'BUY':'SELL'}</span>
+      <span>${compact(o.left)} left</span><span class="dim">every ${every(o.every)}</span><span class="dim">${o.filled==null?'':Math.round(o.filled*100)+'% done'}</span></div>`).join('')}`;
   return true}
 function renderLp(){const P=CL&&CL.dlmm;if(!P||!P.pools||!P.pools.length)return false;
-  $('lpBody').innerHTML=`<table><thead><tr><th>Pool</th><th class="r">TVL</th><th class="r">1h vol</th><th class="r">1h fees</th><th class="r">Yield</th></tr></thead><tbody>
-    ${P.pools.map(p=>`<tr><td><a href="https://app.meteora.ag/dlmm/${esc(p.id)}" target="_blank" rel="noopener">${esc(p.pair)}</a> <span class="dim">${p.bin??'?'}bp · ${p.fee==null?'?':p.fee+'%'}</span>${(p.lead||[]).map(l=>`<span class="chip">${esc(l)}</span>`).join('')}</td><td class="r">${compact(p.tvl)}</td><td class="r">${compact(p.vol1h)}</td><td class="r">${compact(p.fees1h)}</td><td class="r">${p.yield==null?'—':(p.yield*100).toFixed(1)+'%'}</td></tr>`).join('')}</tbody></table>`;
+  $('lpBody').innerHTML=P.pools.map(p=>`<div class="lp"><div class="lpt"><a href="https://app.meteora.ag/dlmm/${esc(p.id)}" target="_blank" rel="noopener">${esc(p.pair)}</a>
+      <span class="dim">bin ${p.bin??'?'} · fee ${p.fee==null?'?':p.fee+'%'}</span>${(p.lead||[]).map(l=>`<span class="chip">${esc(l)}</span>`).join('')}</div>
+    <div class="lps"><div><label>TVL</label>${compact(p.tvl)}</div><div><label>1h volume</label>${compact(p.vol1h)}</div><div><label>1h fees</label>${compact(p.fees1h)}</div><div><label>1h yield</label>${p.yield==null?'—':(p.yield*100).toFixed(2)+'%'}</div></div></div>`).join('');
   return true}
 $('whWin').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;whWin=b.dataset.w;[...$('whWin').children].forEach(x=>x.classList.toggle('on',x===b));renderWhales()});
 $('limBtn').onclick=()=>{limOn=!limOn;$('limBtn').classList.toggle('on',limOn);try{localStorage.setItem('wrLimits',limOn?'1':'0')}catch(e){}draw()};
@@ -828,7 +865,7 @@ function beep(big){if(!soundOn)return;try{actx=actx||new(window.AudioContext||wi
 function checkBuys(list){const fresh=[];list.forEach(a=>{if(alerted.has(a.tx_hash))return;alerted.add(a.tx_hash);
   if(!tradesBoot&&a.to_token_address===CA&&+a.volume_in_usd>=BUYMIN)fresh.push(a)});tradesBoot=false;
   fresh.reverse().forEach(a=>bpQ.push({v:+a.volume_in_usd,amt:+a.to_token_amount,w:(a.tx_from_address||'').slice(0,4)}));nextBuy()}
-function nextBuy(){if(bpBusy||!bpQ.length||$('pulseTO').classList.contains('show'))return;const b=bpQ.shift();bpBusy=true;const big=b.v>=WHALE;
+function nextBuy(){if(!alertsOn){bpQ.length=0;return}if(bpBusy||!bpQ.length||$('pulseTO').classList.contains('show'))return;const b=bpQ.shift();bpBusy=true;const big=b.v>=WHALE;
   $('buyPop').classList.toggle('big',big);$('bpT').textContent=big?'🚨 LARGE BUY 🚨':'🟢 NEW RECRUIT';$('bpV').textContent='+'+usd(b.v,0);
   $('bpW').textContent=compact(b.amt,'')+' $'+TK.symbol+' · '+b.w;$('buyPop').classList.add('show');beep(big);
   setTimeout(()=>{$('buyPop').classList.remove('show');setTimeout(()=>{bpBusy=false;nextBuy()},500)},bpQ.length>3?2500:5000)}
@@ -894,13 +931,39 @@ function renderList(){const by={};TOKS.forEach(t=>by[t.mint]=t);const L=(board[b
       +`<span>${v!=null?compact(v):'—'}</span><span>${compact(t.mcap??s.mcap)}</span><span class="apy">${apyFmt(t.apy)}</span></a>`}).join('')
     +`<div class="nt">$${TK.symbol} isn't in the thestonkboard.com top 100 right now. Showing the board's top 10 until it ranks.</div>`;
   fillVol(L)}
+// Everything thestonkboard knows about a listed token: what $100 earns, APR/APY by window, holders, payouts
+function boardDetail(m){
+  const apr=m.apr3d??m.apr24h??m.apr7d,basis=m.apr3d!=null?'3D':m.apr24h!=null?'24H':'7D';
+  const per=d=>apr==null?'—':'$'+(100*apr/100*d/365).toFixed(d<7&&100*apr/100*d/365<10?2:0);
+  const cell=v=>v==null?'<span class="dim">—</span>':v;
+  const chg=v=>v==null?'':` <span class="${v>=0?'up':'dn'}">${v>=0?'+':''}${num(v)}</span>`;
+  return `<div class="sub">$100 held earns about (at ${basis} APR)</div>
+    <div class="earn"><div><label>Per day</label><b>${per(1)}</b></div><div><label>Per week</label><b>${per(7)}</b></div><div><label>Per month</label><b>${per(30)}</b></div><div><label>Per year</label><b>${per(365)}</b></div></div>
+    <div class="sub">Rates</div>
+    <table class="rates"><thead><tr><th></th><th class="r">24H</th><th class="r">3D</th><th class="r">7D</th></tr></thead><tbody>
+      <tr><td>APR</td><td class="r">${cell(m.apr24h!=null?apyFmt(m.apr24h):null)}</td><td class="r">${cell(m.apr3d!=null?apyFmt(m.apr3d):null)}</td><td class="r">${cell(m.apr7d!=null?apyFmt(m.apr7d):null)}</td></tr>
+      <tr><td>APY</td><td class="r up">${cell(m.apy24h!=null?apyFmt(m.apy24h):null)}</td><td class="r up">${cell(m.apy3d!=null?apyFmt(m.apy3d):null)}</td><td class="r up">${cell(m.apy7d!=null?apyFmt(m.apy7d):null)}</td></tr></tbody></table>
+    <div class="sub">Holders &amp; payouts</div>
+    <div class="kv">
+      <div><span>Holders</span><span>${m.holders!=null?num(m.holders):'—'}${chg(m.hold24h)}</span></div>
+      <div><span>Holder change 7d</span><span>${m.hold7d!=null?chg(m.hold7d):'—'}</span></div>
+      <div><span>Top 10 hold</span><span>${m.top10Pct!=null?m.top10Pct.toFixed(1)+'%':'—'}</span></div>
+      <div><span>Earning supply</span><span>${m.eligiblePct!=null?m.eligiblePct.toFixed(1)+'%':'—'}</span></div>
+      <div><span>Min to earn</span><span>${m.minHold!=null?'$'+num(m.minHold):'—'}</span></div>
+      <div><span>Paid to holders</span><span>${compact(m.paidUsd)}</span></div>
+      <div><span>Payouts sent</span><span>${m.payouts!=null?num(m.payouts):'—'}</span></div>
+      <div><span>Last payout</span><span>${m.lastPayout?ago(Date.parse(m.lastPayout))+' ago':'—'}</span></div>
+      <div><span>Market cap</span><span>${compact(m.mcap)}</span></div>
+      <div><span>24h volume</span><span>${compact(m.vol24)}</span></div>
+    </div>`}
 function renderApy(){if(!board)return;const m=boardStats(),ranked=!!(m&&m.rank);
   $('mb').style.display=ranked?'':'none';$('mbList').style.display=ranked?'none':'';
   $('mbTitle').textContent=ranked?`$${TK.symbol} APY`:'STONK BOARD TOP 10';
   if(!ranked)renderList();
   $('mbRank').textContent=m&&m.rank?'#'+m.rank:'—';
   $('mbA3').textContent=m?apyFmt(m.apy3d):'—';$('mbA24').textContent=m?apyFmt(m.apy24h):'—';
-  $('mbNote').textContent=m?'Ranked in the thestonkboard.com top 100 by APY. Modeled figures, not a promise.'
+  $('mbX').innerHTML=m?boardDetail(m):'';
+  $('mbNote').textContent=m?'From thestonkboard.com (top 100 by APY). Earnings are modeled from the APR: not a promise, and they move with price and volume.'
     :`$${TK.symbol} isn't in the thestonkboard.com top 100 right now. Its APY shows here as soon as it ranks.`;
   $('mbAt').textContent=board.boardAt?ago(Date.parse(board.boardAt)).split(' ')[0]+' ago':''}
 
@@ -914,7 +977,7 @@ async function botFeed(){if(!PAY||!PAY.bot)return null;if(Date.now()-feedAt<2500
   try{FEED=await j(PAY.bot.replace(/\/$/,'')+'/feed');feedAt=Date.now()}catch(e){FEED=null}return FEED}
 async function loadTTS(){try{const f=await botFeed();const d=f&&f.tts?{items:f.tts}:await j(DATA+'tts.json?'+Date.now());
   (d.items||[]).forEach(i=>{if(i.at>=bootAt&&!played.has(i.id)&&!ttsQ.some(q=>q.id===i.id))ttsQ.push(i)});nextTTS()}catch(e){}}
-function nextTTS(){if(ttsBusy||!ttsQ.length)return;const i=ttsQ.shift();ttsBusy=true;
+function nextTTS(){if(!alertsOn){ttsQ.forEach(i=>played.add(i.id));ttsQ.length=0;return}if(ttsBusy||!ttsQ.length)return;const i=ttsQ.shift();ttsBusy=true;
   played.add(i.id);localStorage.setItem('ttsPlayed',JSON.stringify([...played].slice(-100)));
   $('ttsFrom').textContent='🔊 '+i.from+' says';$('ttsMsg').textContent=i.text;$('ttsPop').classList.add('show');
   // the popup stays up while the message is read, then closes; without sound it shows long enough to read
@@ -934,6 +997,12 @@ function nextTTS(){if(ttsBusy||!ttsQ.length)return;const i=ttsQ.shift();ttsBusy=
   a.play().catch(()=>{$('audioGate').style.display='block';hold(readMs)})}
 $('audioGate').onclick=()=>{try{speechSynthesis.speak(new SpeechSynthesisUtterance(' '))}catch(e){}$('audioGate').style.display='none'};
 $('soundBtn').onclick=()=>{soundOn=!soundOn;try{localStorage.setItem('wrSound',soundOn?'1':'0')}catch(e){}soundSet()};soundSet();
+// alerts: on by default; off hides buy alerts, pulse takeovers and TTS popups (sound is its own toggle)
+let alertsOn=true;try{alertsOn=localStorage.getItem('wrAlerts')!=='0'}catch(e){}
+function alertSet(){const b=$('alertBtn');b.textContent=alertsOn?'🔔':'🔕';b.classList.toggle('off',!alertsOn);
+  b.title=alertsOn?'Alerts on: click to hide buy alerts, pulses and TTS popups':'Alerts off: click to show buy alerts, pulses and TTS popups';
+  if(!alertsOn){['buyPop','ttsPop','pulseTO'].forEach(id=>$(id)&&$(id).classList.remove('show'));try{speechSynthesis.cancel()}catch(e){}if(curAudio)curAudio.pause();bpQ.length=0;bpBusy=false;ttsBusy=false}}
+$('alertBtn').onclick=()=>{alertsOn=!alertsOn;try{localStorage.setItem('wrAlerts',alertsOn?'1':'0')}catch(e){}alertSet()};alertSet();
 addEventListener('pointerdown',()=>{audioOk=true;$('audioGate').style.display='none'},{once:true});
 // ---------- self-serve checkout: TTS + billboards, paid on Solana ----------
 // The order rides in an SPL memo (WR|t|from|text or WR|a|slot|blocks|from|head|sub); the
