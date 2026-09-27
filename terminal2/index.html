@@ -87,6 +87,8 @@ html.fit #soundBtn{font-size:24px;padding:4px 10px}
 /* main grid */
 main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:1px;background:var(--line);min-height:0}
 .col{display:flex;flex-direction:column;gap:1px;min-height:0}
+.col.comms::after{content:'';flex:1;background:var(--panel)}
+@media (min-width:1000px){.tapeP{display:flex;flex-direction:column}.tapeP .tw{position:relative;flex:1;min-height:250px;overflow:hidden}.tapeP .tw>table{position:absolute;top:0;left:0;right:0}}
 .panel{background:var(--panel);padding:12px 16px;min-height:0}
 .ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px}
 .ph h2{font-family:'VT323';font-weight:400;font-size:22px;color:#fff;letter-spacing:1px;white-space:nowrap}
@@ -180,13 +182,15 @@ tr.whale td{background:rgba(74,122,255,.08)}
 
 .clobrWrap{border-top:1px solid var(--line);background:var(--panel)}
 .cHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,rgba(255,107,0,.12),transparent 60%)}
+.cMiss{display:block;font-size:10px;margin-top:2px}.cMiss:empty{display:none}
+.empty{font-size:12px;line-height:1.55;color:var(--dim);padding:6px 0}.empty b{color:#fff;font-weight:400}.empty a{color:var(--green)}
 .cHead b{font-family:'VT323';font-size:24px;font-weight:400;color:#FF6B00;letter-spacing:1px}.cHead .dim{font-size:11px}
 .cbtn{border-color:#FF6B00!important;color:#FF6B00!important;white-space:nowrap}.cbtn:hover{background:rgba(255,107,0,.12)}
-.clobrRow{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1px;background:var(--line)}
+.clobrRow{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1px;background:var(--line)}@media (min-width:1000px){#whP{grid-column:span 2}}
 .wcs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.wc{border:1px solid var(--line);padding:7px 8px;min-width:0}
 .wc label{display:block;font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}.wv b{font-family:'VT323';font-size:26px;font-weight:400;color:#fff}.wv span{font-size:10px}
-.wl{font-size:10px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.spark{width:100%;height:60px;display:block}.sx{display:flex;justify-content:space-between;gap:8px;font-size:9px;color:var(--dim);margin-top:2px}
+.wl{font-size:10px;margin-top:3px;line-height:1.35}.wl .dim{display:block}.wv{white-space:nowrap}
+.spark{width:100%;height:60px;display:block}.sx{display:flex;justify-content:space-between;gap:8px;font-size:9px;color:var(--dim);margin-top:2px;white-space:nowrap}.sx i{font-style:normal}
 .cbar.tall{height:10px}.cbig.one>div{flex:1}
 .dr{display:grid;grid-template-columns:62px 1fr auto auto;gap:8px;font-size:11px;padding:4px 0;border-bottom:1px solid rgba(26,36,68,.6);white-space:nowrap}
 .lp{border-bottom:1px solid rgba(26,36,68,.6);padding:7px 0}.lpt{font-size:12px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}.lpt .dim{font-size:10px}
@@ -464,7 +468,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
           <span class="meta hide-sm fx"><span class="tkSym">$MARINE</span>/<span class="tkQ">LINK</span> pool · large = $2,500+</span>
           <div class="tabs" id="tapeF"><button data-min="0" class="on">ALL</button><button data-min="100">$100+</button></div>
         </div>
-        <div style="overflow-x:auto">
+        <div class="tw" style="overflow-x:auto">
         <table id="trades">
           <thead><tr><th>Time</th><th>Side</th><th class="r">USD</th><th class="r tkSym">$MARINE</th><th class="r fx">Price</th><th class="r hide-sm">Wallet</th></tr></thead>
           <tbody><tr><td colspan="6" class="dim">loading tape…</td></tr></tbody>
@@ -498,12 +502,13 @@ html.fit #tip{font-size:20px;padding:10px 14px}
         <div id="mbX"></div>
         <p class="dim" id="mbNote"></p>
       </div>
+      <div id="mbNo" class="empty" style="display:none"></div>
     </section>
   </div>
 </main>
 
 <section class="clobrWrap" id="clobrWrap" style="display:none">
-  <div class="cHead"><div><b>CLOBr ANALYTICS</b><span class="dim"> · <span class="tkSym">$MARINE</span> · liquidity, whale and order-flow data from CLOBr</span></div>
+  <div class="cHead"><div><b>CLOBr ANALYTICS</b><span class="dim"> · <span class="tkSym">$MARINE</span> · liquidity, whale and order-flow data from CLOBr</span><span class="dim cMiss" id="clobrMiss"></span></div>
     <a class="btn cbtn" id="clobrLink" href="https://clobr.io/?ref=DF92VC53" target="_blank" rel="noopener">VIEW MORE ON CLOBr ▸</a></div>
   <div class="clobrRow" id="clobrRow">
   <section class="panel" id="liqP"><div class="ph"><h2>LIQUIDITY &amp; WALLS</h2><span class="meta">depth near price</span></div><div id="aBody"></div></section>
@@ -511,6 +516,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   <section class="panel" id="loP"><div class="ph"><h2>LIMIT ORDERS</h2><span class="meta" id="loMeta"></span></div><div id="loBody"></div></section>
   <section class="panel" id="dcP"><div class="ph"><h2>DCA FLOW</h2><span class="meta" id="dcMeta"></span></div><div id="dcBody"></div></section>
   <section class="panel" id="lpP"><div class="ph"><h2>LP POOLS</h2><span class="meta">Meteora DLMM · last 1h</span></div><div id="lpBody"></div></section>
+  <section class="panel" id="missP" style="display:none"><div class="ph"><h2>ORDER FLOW</h2><span class="meta">CLOBr</span></div><div class="empty" id="missBody"></div></section>
   </div>
 </section>
 
@@ -795,6 +801,7 @@ let CL=null,limOn=true,whWin='7d';try{limOn=localStorage.getItem('wrLimits')!=='
 const CLOBR_REF='DF92VC53';
 const clobrUrl=()=>'https://clobr.io/token/'+encodeURIComponent(CA)+'?ref='+CLOBR_REF;
 const every=s=>!s?'—':s<60?Math.round(s)+'s':s<3600?Math.floor(s/60)+'m'+(s%60?' '+Math.round(s%60)+'s':''):s<86400?Math.round(s/3600)+'h':Math.round(s/86400)+'d';
+const dshort=d=>{const t=Date.parse(d);return isNaN(t)?String(d||''):new Date(t).toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'})};
 const tokAmt=n=>n==null?'—':(n>=0?'▲ ':'▼ ')+compact(Math.abs(n),'');
 async function loadClobr(){if(!FLAGS.CLOBR_ENABLED)return;try{const d=await j(BOT+'/clobr?mint='+CA);CL=d&&!d.error?d:null}catch(e){}renderClobr();draw()}
 function renderClobr(){
@@ -807,16 +814,23 @@ function renderClobr(){
   const L=CL&&CL.limits&&CL.limits.orders&&CL.limits.orders.length?CL.limits:null;$('ltab').style.display=L?'':'none';
   const panels={liqP:renderLiq(),whP:renderWhales(),loP:renderLimits(),dcP:renderDca(),lpP:renderLp()};
   let any=false;for(const k in panels){$(k).style.display=panels[k]?'':'none';any=any||panels[k]}
+  // say what CLOBr has nothing for (it only reports DCA / limit orders / DLMM pools that exist right now)
+  const names={liqP:'order-book depth',loP:'open limit orders',dcP:'active DCA orders',lpP:'DLMM LP pools'},miss=Object.keys(names).filter(k=>!panels[k]).map(k=>names[k]);
+  const shown=Object.values(panels).filter(Boolean).length,sym=esc('$'+String(TK.symbol).replace(/^\$/,''));
+  const txt=miss.length?miss.join(', ').replace(/, ([^,]*)$/,' or $1'):'';
+  $('missP').style.display=miss.length&&shown<4&&any?'':'none';
+  $('missBody').innerHTML=miss.length?`No ${txt} for <b>${sym}</b> on CLOBr right now.<br><br>These show up here as soon as someone places a DCA or limit order, or opens a Meteora DLMM pool for ${sym}.`:'';
+  $('clobrMiss').textContent=miss.length&&shown>=4?`Nothing on CLOBr for ${txt} right now.`:'';
   $('clobrWrap').style.display=any||sc?'':'none'}
 function renderWhales(){const W=CL&&CL.whales;if(!W||W.none||!W.summary)return false;const S=W.summary,w=whWin;
   const card=t=>{const size=+t.slice(3),acc=S.accumulating?.[t]?.[w],neu=S.new_wallets?.[t]?.[w],net=S.net_flow?.[t]?.[w]?.net,usdv=net!=null&&marinePx?net*marinePx:null;
     return `<div class="wc"><label>Top ${size}</label><div class="wv"><b>${acc??'—'}</b><span class="dim">/${size} buying</span></div>
       <div class="cbar"><i style="width:${acc==null?0:Math.min(100,acc/size*100).toFixed(0)}%;background:var(--green)"></i></div>
       <div class="wl">${neu?`+${neu} new wallet${neu>1?'s':''}`:'<span class="dim">no new wallets</span>'}</div>
-      <div class="wl ${net>=0?'up':'dn'}" title="net tokens bought by these holders">${tokAmt(net)} ${esc(TK.symbol)}${usdv!=null?` <span class="dim">≈ ${compact(Math.abs(usdv))}</span>`:''}</div></div>`};
+      <div class="wl ${net>=0?'up':'dn'}" title="net ${esc(TK.symbol)} bought by these holders">${tokAmt(net)}${usdv!=null?` <span class="dim">≈ ${compact(Math.abs(usdv))} ${net>=0?'bought':'sold'}</span>`:''}</div></div>`};
   const sp=W.spark||[],mx=Math.max(1,...sp.map(d=>Math.abs(d.net||0))),bw=100/Math.max(1,sp.length);
   const svg=sp.length?`<svg class="spark" viewBox="0 0 100 40" preserveAspectRatio="none"><line x1="0" y1="20" x2="100" y2="20" stroke="#1a2444" stroke-width=".4"/>${sp.map((d,i)=>{const h=Math.abs(d.net||0)/mx*19;return`<rect x="${(i*bw+bw*.15).toFixed(2)}" y="${(d.net>=0?20-h:20).toFixed(2)}" width="${(bw*.7).toFixed(2)}" height="${Math.max(.3,h).toFixed(2)}" fill="${d.net>=0?'#39ff6a':'#ff3355'}" opacity=".85"><title>${esc(d.day)}: ${d.net>=0?'bought':'sold'} ${compact(Math.abs(d.net||0),'')} ${esc(TK.symbol)} · ${d.acc??'—'} of top 100 buying</title></rect>`}).join('')}</svg>
-    <div class="sx"><span>${esc(sp[0].day||'')}</span><span>top 100 · daily net ${esc(TK.symbol)} bought (green) / sold (red)</span><span>${esc(sp[sp.length-1].day||'')}</span></div>`:'';
+    <div class="sx"><span>${esc(dshort(sp[0].day))}</span><span>top 100 · net bought <i class="up">▮</i> / sold <i class="dn">▮</i> per day</span><span>${esc(dshort(sp[sp.length-1].day))}</span></div>`:'';
   const wl=(W.wallets||[]).slice(0,8);
   $('whBody').innerHTML=`<div class="wcs">${['top20','top50','top100'].map(card).join('')}</div>`
     +(svg?`<div class="sub">Last ${sp.length} days</div>${svg}`:'')
@@ -868,7 +882,7 @@ $('tf').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)re
 // ---------- tape ----------
 let seen=new Set(),tapeLoaded=false,tapeMin=0,tapeRaw=[];
 function renderTape(){
-  const rows=(document.documentElement.classList.contains('fit')?5:8);
+  const wide=innerWidth>=1000&&!document.documentElement.classList.contains('fit'),rows=document.documentElement.classList.contains('fit')?5:wide?24:8;
   const list=tapeRaw.filter(a=>+a.volume_in_usd>=tapeMin).slice(0,rows).map(a=>{
     const buy=a.to_token_address===CA;
     const amt=+(buy?a.to_token_amount:a.from_token_amount),price=+(buy?a.price_to_in_usd:a.price_from_in_usd),v=+a.volume_in_usd;
@@ -878,7 +892,11 @@ function renderTape(){
       <td class="r">${usd(v)}</td><td class="r">${compact(amt,'')}</td><td class="r dim fx">${px(price)}</td>
       <td class="r hide-sm"><a href="https://solscan.io/tx/${a.tx_hash}" target="_blank" rel="noopener">${(a.tx_from_address||'').slice(0,4)}</a></td></tr>`});
   tapeLoaded=true;$('trades').tBodies[0].innerHTML=list.join('')||`<tr><td colspan="6" class="dim">quiet on the line${tapeMin?' (no $'+tapeMin+'+ trades in the last 300)':''}</td></tr>`;
-}
+  if(wide)fitTape()}
+// on desktop the tape shows as many whole rows as its panel has room for (it never grows the panel)
+function fitTape(){const tw=document.querySelector('.tapeP .tw');if(!tw)return;const H=tw.clientHeight;
+  [...$('trades').tBodies[0].rows].forEach(r=>{r.style.display='';if(r.offsetTop+r.offsetHeight>H)r.style.display='none'})}
+addEventListener('resize',()=>{clearTimeout(fitTape.t);fitTape.t=setTimeout(()=>tapeRaw.length&&renderTape(),150)});
 // buy alerts: every new $MARINE buy >= $100 pops on screen with a sound
 const BUYMIN=100,alerted=new Set();let tradesBoot=true,bpQ=[],bpBusy=false,actx=null;
 // sound: on by default, one toggle for TTS and every notification beep (remembered per browser)
@@ -944,9 +962,11 @@ function boardStats(mint=TK.mint){if(!board)return null;
   return a||b?{rank:(a||b).rank,apy3d:a?.apy,apy24h:b?.apy}:null}
 // Stonk Board card: only what the header doesn't already show (holders, payouts sent, min hold, amount paid out
 // and last payout live up top). Hidden when the mint isn't on the board; figures come only from board.json.
-function renderApy(){const m=FLAGS.STONKBOARD_ENABLED&&board?boardStats():null;
-  $('sbP').style.display=m&&m.rank?'':'none';if(!m||!m.rank)return;
-  $('sbLink').href='https://thestonkboard.com/coin/'+encodeURIComponent(CA);
+function renderApy(){const m=FLAGS.STONKBOARD_ENABLED&&board?boardStats():null,ranked=!!(m&&m.rank);
+  // stonkfun tokens that aren't ranked yet get a one-line note instead of an empty column; other tokens hide it
+  $('sbP').style.display=ranked||(FLAGS.STONKBOARD_ENABLED&&board&&TKR)?'':'none';$('mb').style.display=ranked?'':'none';$('mbNo').style.display=ranked?'none':'';
+  $('sbLink').href=ranked?'https://thestonkboard.com/coin/'+encodeURIComponent(CA):'https://thestonkboard.com/';$('sbLink').textContent=ranked?'VIEW ON STONK BOARD ▸':'SEE THE BOARD ▸';
+  if(!ranked){const sym=esc('$'+String(TK.symbol).replace(/^\$/,''));$('mbNo').innerHTML=`<b>${sym}</b> isn't in the Stonk Board top 100 right now.<br>Its modeled APY, what $100 held earns, and holder stats show here as soon as it ranks.`;return}
   $('mbRank').textContent='#'+m.rank;$('mbA3').textContent=apyFmt(m.apy3d);$('mbA24').textContent=apyFmt(m.apy24h);
   const apr=m.apr3d??m.apr24h??m.apr7d,basis=m.apr3d!=null?'3D':m.apr24h!=null?'24H':'7D';
   const per=d=>{if(apr==null)return'—';const v=100*apr/100*d/365;return'$'+v.toFixed(v<10?2:0)};
