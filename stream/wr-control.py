@@ -116,7 +116,7 @@ def handle(msg):
     if msg['chat'].get('type') != 'private': return
     reply = lambda t: tg('sendMessage', chat_id=chat, text=t, disable_web_page_preview='true')
     if uid not in ADMINS:
-        return reply(f'Not allowed. Your Telegram id is {uid}; add it to ADMIN_IDS in {ENV} on the VPS.')
+        return reply(f'Your Telegram id is {uid}.\n\nTo let this account control the stream, run this on the VPS:\n  wr-stream admin {uid}')
     parts = text.split(); cmd = parts[0].split('@')[0].lower() if parts else ''
     args = parts[1:]
 
@@ -185,8 +185,9 @@ def handle(msg):
 
 
 def main():
-    if not TOKEN or not ADMINS:
-        print(f'set TG_TOKEN and ADMIN_IDS in {ENV}'); time.sleep(60); return
+    if not TOKEN:
+        print(f'set TG_TOKEN in {ENV}'); time.sleep(60); return
+    # with no ADMIN_IDS yet it still answers, telling each person their id and how to authorize it
     tg('setMyCommands', commands=[{'command': c, 'description': d} for c, d in [
         ('status', 'live or not, where, CPU'), ('live', 'go live: /live x kick'), ('stop', 'stop the stream'),
         ('restart', 'restart page + stream'), ('key', 'save a stream key'), ('keys', 'saved platforms'),

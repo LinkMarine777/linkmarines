@@ -57,7 +57,7 @@ if [ ! -f $CENV ]; then
   echo "   (Enter to skip; re-run this script later to add it)"
   read -rsp "control bot token (hidden): " TGT </dev/tty; echo
   if [ -n "$TGT" ]; then
-    read -rp "your Telegram user id(s), comma separated (send /id to the War Room bot to see yours): " ADM </dev/tty
+    read -rp "your Telegram user id(s), comma separated (Enter if you don't know it: the bot will tell you): " ADM </dev/tty
     umask 077; printf 'TG_TOKEN="%s"\nADMIN_IDS="%s"\n' "$TGT" "$ADM" > $CENV; chmod 600 $CENV; umask 022
   fi
 fi
@@ -152,9 +152,12 @@ case "${1:-status}" in
   volume) [ -n "${2:-}" ] || { grep MUSIC_VOL $E; exit; }; sudo sed -i "s/^MUSIC_VOL=.*/MUSIC_VOL=$2/" $E; sudo systemctl restart wr-stream; echo "music volume $2 (0.0-1.0)";;
   key|live) echo "keys and destinations are set from the Telegram control bot: /key, /live, /stop (see /help there)";;
   bot) sudo systemctl status wr-control --no-pager; sudo journalctl -u wr-control -n 20 --no-pager -o cat;;
+  admin) [[ "${2:-}" =~ ^[0-9]+$ ]] || { echo "usage: wr-stream admin <telegram user id>"; sudo grep ADMIN_IDS /etc/wr-control.env; exit 1; }
+    C=/etc/wr-control.env; cur=$(sudo sed -n 's/^ADMIN_IDS="\(.*\)"/\1/p' $C)
+    sudo sed -i "s/^ADMIN_IDS=.*/ADMIN_IDS=\"${cur:+$cur,}$2\"/" $C; sudo systemctl restart wr-control; echo "added $2: send /help to the bot";;
   music) ls -1 /opt/wr-stream/music; echo "(add files there, then: wr-stream restart)";;
   shot) sudo -u wrstream env DISPLAY=:99 ffmpeg -loglevel error -y -f x11grab -video_size 1920x1080 -i :99 -frames:v 1 /tmp/wr-shot.png && echo "saved /tmp/wr-shot.png";;
-  *) echo "wr-stream start|stop|restart|status|logs|volume [0.15]|music|shot|bot";;
+  *) echo "wr-stream start|stop|restart|status|logs|volume [0.15]|music|shot|bot|admin <id>";;
 esac
 CTL
 chmod 755 /usr/local/bin/wr-stream
