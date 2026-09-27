@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/terminal2", "has": [{ "type": "query", "key": "ca" }], "destination": "/terminal2/token.html" },
+    { "source": "/terminal2/", "has": [{ "type": "query", "key": "ca" }], "destination": "/terminal2/token.html" }
+  ]
+}
