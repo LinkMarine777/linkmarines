@@ -2,59 +2,17 @@
 # War Room 24/7 stream: Terminal 1.1 in a headless Chrome (1920x1080) + its sounds + a quiet lofi loop -> one or more
 # RTMP destinations at once, controlled from a Telegram bot that runs here (outbound only: no open ports).
 # Ubuntu/Debian VPS, run as root:  curl -fsSL https://raw.githubusercontent.com/LinkMarine777/linkmarines/main/stream/setup.sh | sudo bash
-# Re-running is safe (it updates the scripts and keeps your config; it restarts the stream). Add "-s live" after bash
-# to install or update only the real-time trade listener, without touching the stream. Stream keys stay on this server only.
+# Re-running is safe (it updates the scripts and keeps your config; it restarts the stream). Stream keys stay on this server only.
 set -euo pipefail
 [ "$(id -u)" = 0 ] || { echo "run as root (sudo)"; exit 1; }
 [ "$(uname -m)" = x86_64 ] || { echo "this script needs an x86_64 (amd64) VPS"; exit 1; }
 
 APP=/opt/wr-stream; ENV=/etc/wr-stream.env; CONF=/etc/wr-stream.json; CENV=/etc/wr-control.env; USERN=wrstream
 RAW=https://raw.githubusercontent.com/LinkMarine777/linkmarines/main/stream
-install_live() {
-# ---- real-time trades (wr-live): a Helius websocket feeding the stream page on 127.0.0.1 only (never exposed)
-LENV=/etc/wr-live.env
-if [ ! -f $LENV ]; then
-  echo; echo "== Real-time trades: paste your Helius API key (helius.dev dashboard). It stays on this server only."
-  echo "   (Enter to skip; the stream then uses the ~30 s delayed public feed. Re-run this script later to add it)"
-  read -rsp "Helius API key (hidden): " HK </dev/tty; echo
-  [ -n "$HK" ] && { umask 077; printf 'HELIUS_KEY="%s"\n' "$HK" > $LENV; umask 022; }
-fi
-[ -f $LENV ] && { chown root:$USERN $LENV; chmod 640 $LENV; }
-mkdir -p /opt/wr-live
-curl -fsSL -o /opt/wr-live/wr-live.py "$RAW/wr-live.py"; chmod 755 /opt/wr-live/wr-live.py
-# let the https stream page reach ws://127.0.0.1:8787 (Chrome's local-network protection would otherwise block or prompt)
-mkdir -p /etc/opt/chrome/policies/managed
-cat > /etc/opt/chrome/policies/managed/wr-live.json <<'POL'
-{"LocalNetworkAccessAllowedForUrls": ["https://linkmarines.vercel.app"], "InsecurePrivateNetworkRequestsAllowed": true}
-POL
-cat > /etc/systemd/system/wr-live.service <<'UNIT'
-[Unit]
-Description=War Room real-time trades (Helius -> stream page, localhost only)
-After=network-online.target
-Wants=network-online.target
-ConditionPathExists=/etc/wr-live.env
-[Service]
-User=wrstream
-ExecStart=/usr/bin/python3 /opt/wr-live/wr-live.py
-Restart=always
-RestartSec=10
-Nice=10
-MemoryMax=200M
-[Install]
-WantedBy=multi-user.target
-UNIT
-}
-# listener only (no stream restart):  curl -fsSL .../stream/setup.sh | sudo bash -s live
-if [ "${1:-}" = live ]; then
-  apt-get install -y -qq python3-websockets >/dev/null; id $USERN >/dev/null 2>&1 || { echo "run the full setup first"; exit 1; }
-  install_live; systemctl daemon-reload; systemctl enable wr-live >/dev/null 2>&1; systemctl restart wr-live
-  sleep 4; systemctl is-active wr-live >/dev/null && echo "== wr-live running (the stream was not touched)" || echo "== wr-live not running: journalctl -u wr-live -n 20"
-  journalctl -u wr-live -n 3 --no-pager -o cat; exit 0
-fi
 echo "== installing packages (a few minutes)"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
-apt-get install -y -qq python3 xvfb ffmpeg pulseaudio pulseaudio-utils python3-websockets fonts-noto-color-emoji fonts-dejavu-core fonts-liberation curl ca-certificates >/dev/null
+apt-get install -y -qq python3 xvfb ffmpeg pulseaudio pulseaudio-utils fonts-noto-color-emoji fonts-dejavu-core fonts-liberation curl ca-certificates >/dev/null
 if ! command -v google-chrome >/dev/null; then
   curl -fsSL -o /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
   apt-get install -y -qq /tmp/chrome.deb >/dev/null; rm -f /tmp/chrome.deb
@@ -105,7 +63,6 @@ if [ ! -f $CENV ]; then
 fi
 mkdir -p /opt/wr-control
 curl -fsSL -o /opt/wr-control/wr-control.py "$RAW/wr-control.py"; chmod 700 /opt/wr-control/wr-control.py
-install_live
 # yt-dlp for /music <link> (the official build; it updates itself before each download)
 curl -fsSL -o /usr/local/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp; chmod 755 /usr/local/bin/yt-dlp
 
@@ -127,7 +84,7 @@ pactl set-default-sink wr
 ( while true; do
     google-chrome --kiosk --start-fullscreen --window-position=0,0 --window-size=1920,1080 --force-device-scale-factor=1 \
       --autoplay-policy=no-user-gesture-required --no-first-run --no-default-browser-check --noerrdialogs --disable-infobars \
-      --disable-session-crashed-bubble --disable-features=Translate,MediaRouter,LocalNetworkAccessChecks,PrivateNetworkAccessRespectPreflightResults,BlockInsecurePrivateNetworkRequests --disable-dev-shm-usage --hide-scrollbars \
+      --disable-session-crashed-bubble --disable-features=Translate,MediaRouter --disable-dev-shm-usage --hide-scrollbars \
       --user-data-dir=/opt/wr-stream/chrome --password-store=basic "$PAGE" >/dev/null 2>&1
     sleep 3
   done ) &
@@ -206,7 +163,6 @@ case "${1:-status}" in
   logs) sudo journalctl -u wr-stream -f -n 50 ;;
   volume) [ -n "${2:-}" ] || { grep MUSIC_VOL $E; exit; }; sudo sed -i "s/^MUSIC_VOL=.*/MUSIC_VOL=$2/" $E; sudo pkill -f 'ffmpeg.*wr-lofi'; echo "music volume $2 (0.0-1.0), applied now";;
   key|live) echo "keys and destinations are set from the Telegram control bot: /key, /live, /stop (see /help there)";;
-  live) sudo systemctl status wr-live --no-pager; sudo journalctl -u wr-live -n 20 --no-pager -o cat;;
   bot) sudo systemctl status wr-control --no-pager; sudo journalctl -u wr-control -n 20 --no-pager -o cat;;
   admin) [[ "${2:-}" =~ ^[0-9]+$ ]] || { echo "usage: wr-stream admin <telegram user id>"; sudo grep ADMIN_IDS /etc/wr-control.env; exit 1; }
     C=/etc/wr-control.env; cur=$(sudo sed -n 's/^ADMIN_IDS="\(.*\)"/\1/p' $C)
@@ -214,17 +170,20 @@ case "${1:-status}" in
   music) ls -1 /opt/wr-stream/music; echo "(add files there, then: wr-stream music-reload)";;
   music-reload) sudo pkill -f 'ffmpeg.*wr-lofi'; echo "music player restarted with a fresh shuffle";;
   shot) sudo -u wrstream env DISPLAY=:99 ffmpeg -loglevel error -y -f x11grab -video_size 1920x1080 -i :99 -frames:v 1 /tmp/wr-shot.png && echo "saved /tmp/wr-shot.png";;
-  *) echo "wr-stream start|stop|restart|status|logs|volume [0.15]|music|shot|live|bot|admin <id>";;
+  *) echo "wr-stream start|stop|restart|status|logs|volume [0.15]|music|shot|bot|admin <id>";;
 esac
 CTL
 chmod 755 /usr/local/bin/wr-stream
 
+# the real-time listener (wr-live) was dropped: remove it if an earlier version installed it
+systemctl disable --now wr-live >/dev/null 2>&1 || true
+rm -rf /etc/systemd/system/wr-live.service /opt/wr-live /etc/wr-live.env /etc/opt/chrome/policies/managed/wr-live.json
 systemctl daemon-reload
-systemctl enable wr-stream wr-control wr-live >/dev/null 2>&1
-systemctl restart wr-stream wr-control wr-live
+systemctl enable wr-stream wr-control >/dev/null 2>&1
+systemctl restart wr-stream wr-control
 # empty music folder: fetch the public-domain lofi album in the background (the stream restarts to include it when done)
 [ -n "$(ls -A $APP/music 2>/dev/null)" ] || { nohup python3 /opt/wr-control/wr-control.py --seed >/dev/null 2>&1 & echo "downloading 52 public-domain lofi tracks in the background"; }
 echo
 echo "== done. The terminal page is up; it goes on air once you pick a destination."
 echo "   In Telegram, open your control bot and send /help  (then /key ... and /live ...)"
-echo "   On the VPS: wr-stream status | logs | shot | volume 0.15 | restart | live | bot"
+echo "   On the VPS: wr-stream status | logs | shot | volume 0.15 | restart | bot"
