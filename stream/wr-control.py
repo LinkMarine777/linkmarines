@@ -80,22 +80,66 @@ def music_files():
     return sorted(f for f in os.listdir(MUSIC) if AUDIO_RE.search(f))
 
 
-def add_music(chat, link):
-    """Download a playlist/track's audio into the rotation with yt-dlp, then restart so the new playlist is picked up."""
-    before = set(music_files())
-    subprocess.run(['/usr/local/bin/yt-dlp', '-U'], capture_output=True, timeout=120)   # sites change often; stay current
-    r = subprocess.run(['/usr/local/bin/yt-dlp', '-x', '--audio-format', 'mp3', '--audio-quality', '5', '--restrict-filenames', '--no-overwrites',
-                        '--playlist-end', '40', '--match-filter', 'duration < 10800', '--ignore-errors', '--no-progress',
-                        '-o', MUSIC + '/%(title).80B-%(id)s.%(ext)s', link], capture_output=True, text=True, timeout=3 * 3600)
+# Public-domain (CC0) lofi by HoliznaCC0 on the Free Music Archive: free to stream anywhere, no credit needed, no DRM
+DEFAULT_LOFI = 'https://freemusicarchive.org/music/holiznacc0/public-domain-lofi/'
+UA = {'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) war-room-stream'}
+
+
+def fetch(url, timeout=60):
+    with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=timeout) as r: return r.read()
+
+
+def fma_tracks(url):
+    """Every track on a Free Music Archive album/artist page as (title, direct mp3 url)."""
+    import html as H
+    s = H.unescape(fetch(url).decode('utf-8', 'replace'))
+    out = {}
+    for m in re.finditer(r'"title":"((?:[^"\\]|\\.)*)"[^{}]*?"fileUrl":"([^"]+)"', s):
+        u = m[2].replace('\\/', '/')
+        if u.endswith('.mp3'): out[u] = json.loads('"' + m[1] + '"')
+    return [(t, u) for u, t in out.items()]
+
+
+def safe_name(title, url):
+    base = re.sub(r'[^A-Za-z0-9._-]+', '_', title).strip('_')[:70] or 'track'
+    return f"{base}-{uuid.uuid5(uuid.NAMESPACE_URL, url).hex[:8]}.mp3"
+
+
+def add_music(chat, link, quiet=False):
+    """Add audio from a link to the rotation: Free Music Archive pages and direct .mp3 links are downloaded directly;
+    anything else goes through yt-dlp. Then restart so the new playlist is picked up."""
+    before, note = set(music_files()), ''
+    try:
+        if 'freemusicarchive.org' in link or link.lower().split('?')[0].endswith('.mp3'):
+            tracks = fma_tracks(link) if 'freemusicarchive.org' in link else [(link.rsplit('/', 1)[-1].rsplit('.', 1)[0], link)]
+            if not tracks: note = 'No tracks found on that page.'
+            for title, u in tracks[:80]:
+                path = os.path.join(MUSIC, safe_name(title, u))
+                if os.path.exists(path): continue
+                try:
+                    data = fetch(u, timeout=300)
+                    if len(data) > 100000: open(path, 'wb').write(data)
+                except Exception as e: note = f'{title}: {e}'
+        else:
+            subprocess.run(['/usr/local/bin/yt-dlp', '-U'], capture_output=True, timeout=120)   # sites change often; stay current
+            r = subprocess.run(['/usr/local/bin/yt-dlp', '-x', '--audio-format', 'mp3', '--audio-quality', '5', '--restrict-filenames', '--no-overwrites',
+                                '--playlist-end', '40', '--match-filter', 'duration < 10800', '--ignore-errors', '--no-progress',
+                                '-o', MUSIC + '/%(title).80B-%(id)s.%(ext)s', link], capture_output=True, text=True, timeout=3 * 3600)
+            lines = [l for l in (r.stderr + r.stdout).splitlines() if l.strip()]
+            errs = [l for l in lines if 'ERROR' in l]
+            note = (errs or lines or [''])[-1][:300]
+            if 'DRM' in note: note += '\n(SoundCloud/Spotify-style DRM can\'t be downloaded: use /music lofi or a Free Music Archive link.)'
+    except Exception as e:
+        note = str(e)[:300]
     subprocess.run(['chown', '-R', 'wrstream:wrstream', MUSIC])
     added = sorted(set(music_files()) - before)
+    if added and running(): sh('systemctl', 'restart', 'wr-stream')
+    if quiet: return
     if added:
-        if running(): sh('systemctl', 'restart', 'wr-stream')
         tg('sendMessage', chat_id=chat, text=f'🎵 Added {len(added)} track(s); {len(music_files())} in the rotation now.' + (' Restarted the stream to include them.' if running() else ''))
     else:
-        err = [l for l in (r.stderr or '').splitlines() if 'ERROR' in l]
-        tg('sendMessage', chat_id=chat, text='⚠️ Nothing was added.' + ('\n' + err[-1][:300] if err else '') +
-           '\nIf YouTube blocks the server, try the same music from SoundCloud, or a direct .mp3 link.')
+        tg('sendMessage', chat_id=chat, text='⚠️ Nothing was added.' + (f'\n{note}' if note else '') +
+           '\nEasiest: /music lofi (52 public-domain lofi tracks). Free Music Archive links and direct .mp3 links also work; YouTube usually blocks servers.')
 
 
 def running():
@@ -149,7 +193,8 @@ HELP = """War Room stream control
 /keys — which platforms have keys saved
 /remove kick — forget a platform's key
 /volume 0.15 — lofi volume (0 to 1)
-/music <link> — add a playlist/track (StreamBeats etc.) to the lofi rotation
+/music lofi — add 52 public-domain lofi tracks (free to stream anywhere)
+/music <link> — add a Free Music Archive page or .mp3 link
 /music — what's in the rotation · /music clear — empty it
 /shot — screenshot of the stream
 /logs — last lines of the stream log
@@ -238,14 +283,15 @@ def handle(msg):
         if not args:
             fs = music_files()
             return reply(f'🎵 {len(fs)} tracks in the rotation' + (':\n' + '\n'.join('· ' + f.rsplit('.', 1)[0][:60] for f in fs[:20]) + ('\n…' if len(fs) > 20 else '') if fs else
-                         '.\nAdd some: /music <playlist or track link>\nFree for streams: StreamBeats by Harris Heller (search "StreamBeats lofi" on YouTube or SoundCloud).'))
+                         '.\nAdd some: /music lofi (52 public-domain lofi tracks, free to stream anywhere)'))
         if args[0].lower() == 'clear':
             for f in music_files(): os.remove(os.path.join(MUSIC, f))
             if running(): sh('systemctl', 'restart', 'wr-stream')
             return reply('🎵 Rotation emptied.')
-        if not re.match(r'https?://', args[0]): return reply('Usage: /music <link to a playlist or track>')
-        reply('⏳ Downloading the audio from that link (up to 40 tracks). I\'ll message you when it\'s in the rotation.')
-        threading.Thread(target=add_music, args=(chat, args[0]), daemon=True).start()
+        link = DEFAULT_LOFI if args[0].lower() in ('lofi', 'default') else args[0]
+        if not re.match(r'https?://', link): return reply('Usage: /music lofi  or  /music <Free Music Archive / .mp3 link>')
+        reply('⏳ Downloading' + (' HoliznaCC0 "Public Domain Lofi" (52 tracks, a few minutes)' if link == DEFAULT_LOFI else ' the audio from that link') + '. I\'ll message you when it\'s in the rotation.')
+        threading.Thread(target=add_music, args=(chat, link), daemon=True).start()
         return
 
     if cmd == '/logs':
@@ -261,7 +307,7 @@ def main():
     tg('setMyCommands', commands=[{'command': c, 'description': d} for c, d in [
         ('status', 'live or not, where, CPU'), ('live', 'go live: /live x kick'), ('stop', 'stop the stream'),
         ('restart', 'restart page + stream'), ('key', 'save a stream key'), ('keys', 'saved platforms'),
-        ('remove', 'forget a platform key'), ('volume', 'lofi volume 0-1'), ('music', 'add lofi: /music <link>'), ('shot', 'screenshot'), ('logs', 'stream log'), ('help', 'all commands')]])
+        ('remove', 'forget a platform key'), ('volume', 'lofi volume 0-1'), ('music', 'lofi: /music lofi'), ('shot', 'screenshot'), ('logs', 'stream log'), ('help', 'all commands')]])
     offset = None
     while True:
         r = tg('getUpdates', timeout=50, **({'offset': offset} if offset else {}), allowed_updates=['message'])
@@ -274,4 +320,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    import sys
+    if '--seed' in sys.argv:   # setup: fill an empty rotation with the public-domain lofi album
+        if not music_files(): add_music(None, DEFAULT_LOFI, quiet=True)
+    else:
+        main()

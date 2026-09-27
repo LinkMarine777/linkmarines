@@ -170,6 +170,8 @@ chmod 755 /usr/local/bin/wr-stream
 systemctl daemon-reload
 systemctl enable wr-stream wr-control >/dev/null 2>&1
 systemctl restart wr-stream wr-control
+# empty music folder: fetch the public-domain lofi album in the background (the stream restarts to include it when done)
+[ -n "$(ls -A $APP/music 2>/dev/null)" ] || { nohup python3 /opt/wr-control/wr-control.py --seed >/dev/null 2>&1 & echo "downloading 52 public-domain lofi tracks in the background"; }
 echo
 echo "== done. The terminal page is up; it goes on air once you pick a destination."
 echo "   In Telegram, open your control bot and send /help  (then /key ... and /live ...)"
