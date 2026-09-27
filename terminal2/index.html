@@ -135,26 +135,16 @@ tr.whale td{background:rgba(74,122,255,.08)}
 
 /* comms column */
 .feed{display:flex;flex-direction:column;flex:1}
-#slotA,#slotB{display:flex;flex-direction:column;gap:8px}
+#slotA{display:flex;flex-direction:column;gap:8px}
 .srcL{color:#FF6B00!important;text-decoration:none}.srcL:hover{text-decoration:underline}
 .nt{font-size:10px;line-height:1.45;margin:0}
 .ms{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;align-items:center}
 .ms .sc{font-family:'VT323';font-size:40px;line-height:.9}.ms .scm{font-size:11px;color:var(--txt)}.ms .scm small{display:block;color:var(--dim);font-size:9px;letter-spacing:1px}
-.lq label,.sbg label{display:block;font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
+.lq label{display:block;font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
 .lq{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 10px;font-size:12px}.lq b{font-weight:400;color:#fff}
 .lq .cbar{grid-column:1/-1;margin:0}
 .walls{width:100%;border-collapse:collapse;font-size:11px}.walls td{padding:3px 0;border-bottom:1px solid rgba(26,36,68,.6)}.walls td.r{text-align:right}
-.sbs{border-top:1px dashed var(--line);padding-top:8px;display:flex;flex-direction:column;gap:6px}
-.sbh{display:flex;align-items:center;gap:8px;font-size:11px}.sbh b{font-family:'VT323';font-weight:400;font-size:20px;color:#fff;letter-spacing:1px}
-.sbl{margin-left:auto;font-size:11px;color:var(--green);white-space:nowrap}
-.sbg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.sbg>div{border:1px solid var(--line);padding:5px 8px;min-width:0}
-.sbg b{display:block;font-family:'VT323';font-weight:400;font-size:22px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sbg .g b{color:var(--green)}
-.th{display:flex;flex-direction:column;gap:3px;padding:7px 0;border-bottom:1px solid rgba(26,36,68,.7)}
-.th .tm{display:flex;align-items:center;gap:6px;font-size:11px;min-width:0}.th .tm img{width:18px;height:18px;border-radius:50%;background:#111;object-fit:cover}
-.th .tm b{color:#fff;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.th .tm .pos{margin-left:auto;white-space:nowrap}
-.th p{margin:0;font-size:12px;color:var(--txt);line-height:1.4;word-break:break-word;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
-.badge{font-size:9px;letter-spacing:1px;padding:1px 4px;border:1px solid var(--blue2);color:var(--blue2)}.badge.pump{border-color:var(--green);color:var(--green)}.badge.dev{border-color:var(--amber);color:var(--amber)}
-#bBody{max-height:420px;overflow:auto}
+.sbl{color:var(--green)!important;text-decoration:none}.sbl:hover{text-decoration:underline}
 #mb{display:flex;flex-direction:column;gap:10px}
 #mb .mbg{display:grid;grid-template-columns:minmax(0,.75fr) minmax(0,1fr) minmax(0,1fr);gap:8px}
 #mb .mbg>div{border:1px solid var(--line);padding:9px 11px;background:rgba(74,122,255,.05);min-width:0}
@@ -384,7 +374,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .stats .xtra{display:none}.stats.open .xtra{display:block}
   .moreStats{display:block;grid-column:span 2;background:transparent;border:0;border-bottom:1px solid var(--line);color:var(--blue2);font:inherit;font-size:11px;letter-spacing:1.5px;padding:8px;cursor:pointer}
   main{display:flex;flex-direction:column}.col,.lower{display:contents}
-  .chartP{order:1}.bill{order:2}#slotA{order:3}#slotB{order:4}.ads{order:5}.tapeP{order:6}
+  .chartP{order:1}.bill{order:2}#slotA{order:3}#sbP{order:4}.ads{order:5}.tapeP{order:6}
   .ads .slots{gap:6px}
   .panel{padding:10px 12px}
   .acc>.ph{cursor:pointer;margin-bottom:8px;flex-wrap:nowrap;user-select:none;-webkit-tap-highlight-color:transparent}
@@ -493,23 +483,25 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   </div>
 
   <div class="col comms">
-    <section class="panel acc" id="slotA" data-acc="mkt" data-def="1">
-      <div class="ph"><h2>MARKET STRUCTURE</h2><a class="meta srcL" id="aLink" target="_blank" rel="noopener" title="Data from CLOBr: view more on CLOBr">DATA: CLOBr ▸</a></div>
-      <div id="aBody"><p class="dim nt">loading CLOBr…</p></div>
-      <div class="sbs" id="sbStrip" style="display:none">
-        <div class="sbh"><b>STONK BOARD</b><span class="dim" id="sbRank"></span><a class="sbl" id="sbLink" target="_blank" rel="noopener">View on Stonk Board ▸</a></div>
-        <div class="sbg" id="sbGrid"></div>
-        <p class="nt dim" id="sbNote"></p>
-      </div>
-    </section>
-    <section class="panel acc" id="slotB" data-acc="intel" data-def="1">
-      <div class="ph"><h2>SOCIAL INTEL</h2><div class="tabs" id="bTabs"><button data-t="theses" class="on">THESES</button><button data-t="callouts" id="bCallTab" style="display:none">CALLOUTS</button></div></div>
-      <div id="bBody"><p class="dim nt">loading…</p></div>
-      <p class="nt dim" id="bNote">Open positions only, newest first. Theses are traders' opinions via fomoapi.io (unofficial), not advice.</p>
-    </section>
     <section class="panel bill">
       <div class="ph"><h2>BILLBOARD</h2><span class="meta">slot 01 · prime</span></div>
       <div class="board" data-slot="1" id="slot1"></div>
+    </section>
+    <section class="panel acc" id="slotA" data-acc="mkt" data-def="1">
+      <div class="ph"><h2>MARKET STRUCTURE</h2><a class="meta srcL" id="aLink" target="_blank" rel="noopener" title="Data from CLOBr: view more on CLOBr">DATA: CLOBr ▸</a></div>
+      <div id="aBody"><p class="dim nt">loading CLOBr…</p></div>
+    </section>
+    <section class="panel acc" id="sbP" data-acc="apy" data-def="1" style="display:none">
+      <div class="ph"><h2><span class="tkSym">$MARINE</span> STONK BOARD</h2><a class="meta sbl" id="sbLink" target="_blank" rel="noopener">VIEW ON STONK BOARD ▸</a></div>
+      <div id="mb">
+        <div class="mbg">
+          <div><label>BOARD RANK</label><b id="mbRank">—</b></div>
+          <div class="hi"><label id="mbAL">APY 3D</label><b id="mbA3">—</b></div>
+          <div class="hi"><label id="mbBL">APY 24H</label><b id="mbA24">—</b></div>
+        </div>
+        <div id="mbX"></div>
+        <p class="dim" id="mbNote"></p>
+      </div>
     </section>
   </div>
 </main>
@@ -939,26 +931,33 @@ document.querySelector('.top .lbl').addEventListener('click',e=>{const b=e.targe
 setInterval(()=>{if(!document.documentElement.classList.contains('fit'))return;
   const nx=boardKey==='apy3d'?'apy24h':'apy3d';document.querySelector(`.top .lbl button[data-k="${nx}"]`).click()},240000);
 
-// ---------- Terminal 2.0 intel column: [CLOBr market structure] -> [Stonk Board strip] -> [social intel] ----------
-// Flip a flag to false to hide that slice. CLOBr and FOMO also need their keys on the bot, or they stay hidden.
-const FLAGS={CLOBR_ENABLED:true,STONKBOARD_ENABLED:true,FOMO_THESES_ENABLED:true,PUMP_CALLOUTS_ENABLED:false};
+// ---------- Terminal 2.0 right column: [CLOBr market structure] -> [Stonk Board] ----------
+// Flip a flag to false to hide that panel. CLOBr also needs its key on the bot, or it stays hidden.
+const FLAGS={CLOBR_ENABLED:true,STONKBOARD_ENABLED:true};
 // Stonk Board figures for this mint come only from board.json (thestonkboard.com top 100, snapshotted by the bot).
 function boardStats(mint=TK.mint){if(!board)return null;
   if(board.tokens&&board.tokens[mint])return board.tokens[mint];
   if(mint===MARINE&&board.marine)return board.marine;
   const a=(board.apy3d||[]).find(t=>t.mint===mint),b=(board.apy24h||[]).find(t=>t.mint===mint);
   return a||b?{rank:(a||b).rank,apy3d:a?.apy,apy24h:b?.apy}:null}
-function renderApy(){const m=FLAGS.STONKBOARD_ENABLED&&board?boardStats():null,strip=$('sbStrip');
-  if(!m||(m.apr3d==null&&m.apr24h==null&&m.apy3d==null&&m.apy24h==null)){strip.style.display='none';return}
-  strip.style.display='';
-  const apr=m.apr3d??m.apr24h??m.apr7d,aw=m.apr3d!=null?'3D':m.apr24h!=null?'24H':'7D',apy=m.apy3d??m.apy24h??m.apy7d,yw=m.apy3d!=null?'3D':m.apy24h!=null?'24H':'7D';
-  const day=apr==null?null:100*apr/100/365,age=m.bondedAt?ago(Date.parse(m.bondedAt)):null;
-  $('sbRank').textContent=[m.rank?'#'+m.rank+' of 100':'',age?'bonded '+age+' ago':''].filter(Boolean).join(' · ');
+// Stonk Board card: only what the header doesn't already show (holders, payouts sent, min hold, amount paid out
+// and last payout live up top). Hidden when the mint isn't on the board; figures come only from board.json.
+function renderApy(){const m=FLAGS.STONKBOARD_ENABLED&&board?boardStats():null;
+  $('sbP').style.display=m&&m.rank?'':'none';if(!m||!m.rank)return;
   $('sbLink').href='https://thestonkboard.com/coin/'+encodeURIComponent(CA);
-  const c=(l,v,g)=>`<div${g?' class="g"':''}><label>${l}</label><b title="${esc(v)}">${v}</b></div>`;
-  $('sbGrid').innerHTML=c('Modeled APR '+aw,apr!=null?apyFmt(apr):'—')+c('Hypo. APY '+yw,apy!=null?apyFmt(apy):'—',1)+c('$100 held / day',day!=null?'$'+day.toFixed(day<10?2:0):'—',1);
-  $('sbNote').textContent=`Modeled by thestonkboard.com from the last ${aw==='7D'?'7 days':aw==='3D'?'3 days':'24h'} of holder payouts. Not a forecast or guaranteed yield, not financial advice.`
-    +(board.boardAt?' Updated '+ago(Date.parse(board.boardAt))+' ago.':'')}
+  $('mbRank').textContent='#'+m.rank;$('mbA3').textContent=apyFmt(m.apy3d);$('mbA24').textContent=apyFmt(m.apy24h);
+  const apr=m.apr3d??m.apr24h??m.apr7d,basis=m.apr3d!=null?'3D':m.apr24h!=null?'24H':'7D';
+  const per=d=>{if(apr==null)return'—';const v=100*apr/100*d/365;return'$'+v.toFixed(v<10?2:0)};
+  const win=['24h','3d','7d'].filter(w=>m['apr'+w]!=null||m['apy'+w]!=null),cell=v=>v==null?'<span class="dim">—</span>':apyFmt(v);
+  const chg=v=>`<span class="${v>=0?'up':'dn'}">${v>=0?'+':''}${num(v)}</span>`;
+  const kv=[m.top10Pct!=null&&['Top 10 hold',m.top10Pct.toFixed(1)+'%'],m.eligiblePct!=null&&['Earning supply',m.eligiblePct.toFixed(1)+'%'],
+    m.hold24h!=null&&['Holders 24h',chg(m.hold24h)],m.hold7d!=null&&['Holders 7d',chg(m.hold7d)],m.bondedAt&&['Bonded',ago(Date.parse(m.bondedAt))+' ago']].filter(Boolean);
+  $('mbX').innerHTML=`<div class="sub">$100 held earns about (at ${basis} APR)</div>
+    <div class="earn"><div><label>Per day</label><b>${per(1)}</b></div><div><label>Per week</label><b>${per(7)}</b></div><div><label>Per month</label><b>${per(30)}</b></div><div><label>Per year</label><b>${per(365)}</b></div></div>
+    ${win.length?`<table class="rates"><thead><tr><th></th>${win.map(w=>`<th class="r">${w.toUpperCase()}</th>`).join('')}</tr></thead><tbody>
+      <tr><td>APR</td>${win.map(w=>`<td class="r">${cell(m['apr'+w])}</td>`).join('')}</tr></tbody></table>`:''}
+    ${kv.length?`<div class="kv">${kv.map(([a,b])=>`<div><span>${a}</span><span>${b}</span></div>`).join('')}</div>`:''}`;
+  $('mbNote').textContent='Modeled by thestonkboard.com from recent holder payouts. Not a forecast or guaranteed yield, not financial advice.'+(board.boardAt?' Updated '+ago(Date.parse(board.boardAt))+' ago.':'')}
 
 // Slot A: CLOBr market structure. Fails closed: no key, API down or no data shows a short note, never numbers we made up.
 function renderSlotA(){const a=$('slotA');$('aLink').href=clobrUrl();
@@ -981,24 +980,6 @@ function renderSlotA(){const a=$('slotA');$('aLink').href=clobrUrl();
   if(W.length)h+=`<div><label class="dim" style="font-size:9px;letter-spacing:1px">WALLS · heaviest liquidity within 30%</label><table class="walls"><tbody>${W.map(w=>`<tr><td class="${w.side==='B'?'up':'dn'}">${w.side==='B'?'SUPPORT':'RESIST'}</td><td class="r">${px(w.price)}</td><td class="r dim">${p?((w.price/p-1)*100>=0?'+':'')+((w.price/p-1)*100).toFixed(1)+'%':''}</td><td class="r">${compact(w.usd)}</td></tr>`).join('')}</tbody></table></div>`;
   $('aBody').innerHTML=h}
 
-// Slot B: FOMO theses whose author still holds the token (the bot filters and sorts; we re-check here).
-let INTEL=null,bTab='theses';
-async function loadIntel(){if(!FLAGS.FOMO_THESES_ENABLED&&!FLAGS.PUMP_CALLOUTS_ENABLED)return renderSlotB();
-  try{const d=await j(BOT+'/intel?mint='+CA);INTEL=d&&d.flags?d:null}catch(e){INTEL=INTEL||null}renderSlotB()}
-function renderSlotB(){const on={theses:FLAGS.FOMO_THESES_ENABLED&&!!INTEL?.flags?.theses,callouts:FLAGS.PUMP_CALLOUTS_ENABLED&&!!INTEL?.flags?.callouts};
-  $('slotB').style.display=on.theses||on.callouts||!INTEL?'':'none';
-  [...$('bTabs').children].forEach(b=>{b.style.display=on[b.dataset.t]?'':'none'});
-  if(!on[bTab])bTab=on.theses?'theses':'callouts';[...$('bTabs').children].forEach(b=>b.classList.toggle('on',b.dataset.t===bTab));
-  if(!INTEL){$('bBody').innerHTML='<p class="dim nt">Social intel is unavailable right now.</p>';return}
-  const rows=(bTab==='theses'?INTEL.theses:INTEL.callouts)||[];
-  const open=rows.filter(t=>t&&t.text&&(t.handle||t.userId)&&(+t.equity>0||+t.held>0)&&!t.closed).sort((a,b)=>(b.ts||0)-(a.ts||0));
-  $('bBody').innerHTML=open.length?open.map(t=>`<div class="th"><div class="tm">${t.avatar?`<img src="${esc(t.avatar)}" alt="" loading="lazy" onerror="this.remove()">`:''}
-      <b>@${esc(String(t.handle||t.name||'?').replace(/^@/,''))}</b><span class="badge ${bTab==='callouts'?'pump':''}">${bTab==='callouts'?'PUMP':'FOMO'}</span>${t.isDev?'<span class="badge dev">DEV</span>':''}
-      <span class="dim">${t.ts?ago(t.ts)+' ago':''}</span><span class="pos" title="position still open">holds ${compact(+t.equity||+t.held)}${t.pnl!=null?` <span class="${t.pnl>=0?'up':'dn'}">${t.pnl>=0?'+':''}${compact(t.pnl)}</span>`:''}</span></div>
-      <p>${esc(t.text)}</p></div>`).join('')
-    :`<p class="dim nt">${INTEL.error?'FOMO is unavailable right now.':INTEL.note?esc(INTEL.note):'No open-position theses/callouts yet.'}</p>`;
-  $('bNote').textContent='Open positions only, newest first. '+(bTab==='callouts'?'Pump.fun callouts':'Theses via fomoapi.io (unofficial)')+`: traders' opinions, not advice.`+(INTEL.stale?' Showing the last saved pull.':'')+(INTEL.at?' Updated '+ago(INTEL.at)+' ago.':'')}
-$('bTabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;bTab=b.dataset.t;renderSlotB()});
 
 // ---------- TTS: queue in tts.json, popped + read on screen ----------
 const played=new Set(JSON.parse(localStorage.getItem('ttsPlayed')||'[]'));const bootAt=Date.now()/1000-120;
@@ -1282,7 +1263,7 @@ fit();
 resolveToken().finally(()=>{loadRewards();loadMarket();loadChart();loadTrades();loadTicker();loadBoard();loadTTS();loadPay();loadAds();});
 setInterval(()=>{if(!document.hidden)loadAds()},15000);setInterval(loadPay,300000);setTimeout(()=>{renderAds();setInterval(renderAds,20000)},20000-Date.now()%20000);
 setInterval(loadTrades,20000);setInterval(loadMarket,30000);setInterval(loadRewards,60000);
-setInterval(loadChart,120000);setTimeout(loadDepth,1500);const vis=f=>()=>{if(!document.hidden)f()};setInterval(vis(loadDepth),60000);setTimeout(loadClobr,2000);setTimeout(loadIntel,2500);setInterval(vis(loadIntel),60000);setInterval(vis(loadClobr),120000);setInterval(loadTicker,300000);setInterval(loadBoard,300000);
+setInterval(loadChart,120000);setTimeout(loadDepth,1500);const vis=f=>()=>{if(!document.hidden)f()};setInterval(vis(loadDepth),60000);setTimeout(loadClobr,2000);setInterval(vis(loadClobr),120000);setInterval(loadTicker,300000);setInterval(loadBoard,300000);
 setInterval(()=>{if(!document.hidden)loadTTS()},10000);setInterval(tickLast,1000);
 document.fonts?.ready.then(draw);
 {const dm=new URLSearchParams(location.search).get('demo');if(dm)setTimeout(()=>{
