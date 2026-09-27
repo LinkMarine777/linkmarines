@@ -133,13 +133,18 @@ def add_music(chat, link, quiet=False):
         note = str(e)[:300]
     subprocess.run(['chown', '-R', 'wrstream:wrstream', MUSIC])
     added = sorted(set(music_files()) - before)
-    if added and running(): sh('systemctl', 'restart', 'wr-stream')
+    if added: reload_music()
     if quiet: return
     if added:
-        tg('sendMessage', chat_id=chat, text=f'🎵 Added {len(added)} track(s); {len(music_files())} in the rotation now.' + (' Restarted the stream to include them.' if running() else ''))
+        tg('sendMessage', chat_id=chat, text=f'🎵 Added {len(added)} track(s); {len(music_files())} in the rotation now, playing on a fresh shuffle.')
     else:
         tg('sendMessage', chat_id=chat, text='⚠️ Nothing was added.' + (f'\n{note}' if note else '') +
            '\nEasiest: /music lofi (52 public-domain lofi tracks). Free Music Archive links and direct .mp3 links also work; YouTube usually blocks servers.')
+
+
+def reload_music():
+    """Restart only the lofi player (new tracks / volume / shuffle); the stream itself keeps going."""
+    subprocess.run(['pkill', '-f', 'ffmpeg.*wr-lofi'])
 
 
 def running():
@@ -178,7 +183,8 @@ def status_text():
             else '⚫ OFF')
     return (f"{head}\n"
             f"Keys saved: {saved}\nGo-live list: {', '.join(live) or 'none'}\n"
-            f"CPU load: {' '.join(load)} (of {os.cpu_count()} cores)\nMusic: {tracks} tracks at volume {vol}")
+            f"CPU load: {' '.join(load)} (of {os.cpu_count()} cores)\nMusic: {tracks} tracks at volume {vol}"
+            + (' · ▶ playing' if subprocess.run(['pgrep', '-f', 'ffmpeg.*wr-lofi'], capture_output=True).returncode == 0 else ' · ⏸ not playing' if running() and tracks else ''))
 
 
 HELP = """War Room stream control
@@ -267,8 +273,8 @@ def handle(msg):
     if cmd == '/volume':
         if not args or not re.fullmatch(r'(0(\.\d+)?|1(\.0+)?)', args[0]): return reply('Usage: /volume 0.15  (0 to 1)')
         sh('sed', '-i', f's/^MUSIC_VOL=.*/MUSIC_VOL={args[0]}/', STREAM_ENV)
-        if running(): sh('systemctl', 'restart', 'wr-stream')
-        return reply(f'🎵 Music volume {args[0]}' + (' (restarting to apply)' if running() else ''))
+        reload_music()
+        return reply(f'🎵 Music volume {args[0]} (applied now, the stream keeps running)')
 
     if cmd == '/shot':
         if not running(): return reply('The stream is off. /live to start it.')
@@ -286,7 +292,7 @@ def handle(msg):
                          '.\nAdd some: /music lofi (52 public-domain lofi tracks, free to stream anywhere)'))
         if args[0].lower() == 'clear':
             for f in music_files(): os.remove(os.path.join(MUSIC, f))
-            if running(): sh('systemctl', 'restart', 'wr-stream')
+            reload_music()
             return reply('🎵 Rotation emptied.')
         link = DEFAULT_LOFI if args[0].lower() in ('lofi', 'default') else args[0]
         if not re.match(r'https?://', link): return reply('Usage: /music lofi  or  /music <Free Music Archive / .mp3 link>')
