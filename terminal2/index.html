@@ -8,7 +8,10 @@
 <meta property="og:title" content="Trending on stonkfun · WAR ROOM TERMINAL 2.0">
 <meta property="og:description" content="Stonkfun volume, Stonk Board APY and CLOBr score in one list. Click any token to open it in the terminal.">
 <meta property="og:image" content="https://themarines.link/banner.png">
-<link rel="icon" href="../logo.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="../favicon-64.png">
+<link rel="icon" type="image/png" sizes="192x192" href="../favicon-192.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <script>/* old token links (/terminal2/?ca=...) open the token view */
 if(new URLSearchParams(location.search).get('ca'))location.replace('token.html'+location.search+location.hash)</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,7 +27,7 @@ body{min-height:100vh;background-image:linear-gradient(rgba(42,90,218,.05) 1px,t
 a{color:var(--blue2);text-decoration:none}a:hover{text-decoration:underline}
 .up{color:var(--green)}.dn{color:var(--red)}.dim{color:var(--dim)}
 header{display:flex;align-items:center;gap:18px;padding:9px 16px;border-bottom:1px solid var(--line);background:rgba(4,6,15,.92)}
-header img{width:34px;height:34px;image-rendering:pixelated}
+header img{width:40px;height:40px;object-fit:contain}
 .brand{font-family:'VT323';font-size:34px;line-height:1;color:#fff}.brand small{display:block;font-size:17px;color:var(--blue2)}
 header .ca{display:flex;gap:6px;flex:1;max-width:620px;margin:0 8px;position:relative}
 header .ca input{flex:1;min-width:120px;background:#050914;border:1px solid var(--line);color:#fff;font:inherit;font-size:12px;padding:7px 9px}
@@ -80,7 +83,7 @@ tr.me{background:rgba(42,90,218,.1)}
 </head>
 <body>
 <header>
-  <a href="./" title="Terminal 2.0 home"><img src="../logo.png" alt="Marines"></a>
+  <a href="./" title="Terminal 2.0 home"><img src="../helmet.png" alt="Marines"></a>
   <a class="brand" href="./" style="text-decoration:none">THE WAR ROOM<small>TERMINAL 2.0</small></a>
   <form id="caForm" class="ca" autocomplete="off">
     <input id="caIn" placeholder="Paste any stonk token CA…" spellcheck="false" aria-label="Token contract address">
@@ -96,7 +99,7 @@ tr.me{background:rgba(42,90,218,.1)}
 
 <main>
   <section class="hero">
-    <div class="pin" id="pin"><img id="pinImg" alt="" src="../logo.png"><div class="t"><label>Home of the terminal</label><b>$MARINE</b><span class="s" id="pinSub">&nbsp;</span></div><a class="btn primary" href="token.html?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">OPEN ▸</a></div>
+    <div class="pin" id="pin"><img id="pinImg" alt="" src="../helmet.png"><div class="t"><label>Home of the terminal</label><b>$MARINE</b><span class="s" id="pinSub">&nbsp;</span></div><a class="btn primary" href="token.html?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">OPEN ▸</a></div>
     <div><label>24h volume · top 30</label><b id="kVol">—</b><span class="s">stonkfun tokens by volume</span></div>
     <div><label>Paid to holders</label><b id="kPaid">—</b><span class="s">all-time, Stonk Board top 100</span></div>
     <div><label>Median APY 3D</label><b id="kApy" class="apy">—</b><span class="s">Stonk Board top 100, modeled</span></div>
