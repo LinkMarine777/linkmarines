@@ -205,7 +205,18 @@ tr.whale td{background:rgba(74,122,255,.08)}
 .lp{border-bottom:1px solid rgba(26,36,68,.6);padding:7px 0}.lpt{font-size:12px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}.lpt .dim{font-size:10px}
 .lps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:4px;font-size:12px;color:#fff}.lps label{display:block;font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
 html.fit #clobrWrap{display:none!important}
-#scoreStat{cursor:pointer}#scoreStat:hover label{color:#FF6B00}#scoreStat #sScoreMsg,#scoreStat #sScoreWhy{font-size:10px;line-height:1.35}#scoreStat #sScoreWhy{white-space:normal;overflow:visible}
+#scoreStat{display:none!important}
+#cmP{display:flex;flex-direction:column;gap:10px}.cml{color:#FF6B00!important;text-decoration:none}.cml:hover{text-decoration:underline}
+.cm-apy{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.cm-apy>div,.cm-w>div{border:1px solid var(--line);padding:7px 10px;min-width:0}
+.cm-apy label,.cm-w label,.cm-sc label,.cm-lq label{display:block;font-size:10px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
+.cm-apy b{display:block;font-family:'VT323';font-weight:400;font-size:30px;color:var(--green);line-height:1.05;white-space:nowrap}
+.cm-sc{display:flex;align-items:center;gap:14px}.cm-sc .n{font-family:'VT323';font-size:64px;line-height:.9}.cm-sc .v{font-size:14px;color:#fff}.cm-sc .why{font-size:11px;color:var(--dim)}
+.cm-w{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.cm-w b{font-family:'VT323';font-weight:400;font-size:30px;color:#fff}.cm-w small{font-size:10px;color:var(--dim)}.cm-w .f{font-size:11px;margin-top:2px}
+.cm-sp{width:100%;height:56px;display:block}.cm-sx{display:flex;justify-content:space-between;font-size:10px;color:var(--dim)}
+.cm-lq{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:13px}.cm-lq .cbar{grid-column:1/-1;margin:0}
+html.fit #cmP{flex:1;min-height:0;overflow:hidden;gap:10px}html.fit #cmP .ph{margin-bottom:0}html.fit .cm-apy label,html.fit .cm-w label,html.fit .cm-sc label,html.fit .cm-lq label{font-size:14px}html.fit .cm-apy b{font-size:44px}
+html.fit .cm-sc .n{font-size:80px}html.fit .cm-sc .v{font-size:21px}html.fit .cm-sc .why{font-size:15px}html.fit .cm-w b{font-size:40px}html.fit .cm-w small{font-size:14px}html.fit .cm-w .f{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}html.fit .cm-w .f .dim{display:none}
+html.fit .cm-sp{height:62px}html.fit .cm-spl{font-size:14px!important}html.fit .cm-sx{font-size:14px}html.fit .cm-lq{font-size:20px}html.fit .cml{font-size:16px}#scoreStat:hover label{color:#FF6B00}#scoreStat #sScoreMsg,#scoreStat #sScoreWhy{font-size:10px;line-height:1.35}#scoreStat #sScoreWhy{white-space:normal;overflow:visible}
 .clobrRow .panel{min-width:0;overflow:hidden}.clobrRow .lq label{white-space:nowrap}.clobrRow table{font-size:11px}.clobrRow td,.clobrRow th{padding:3px 5px}
 
 .clobrRow .r{text-align:right}.clobrRow .sub{font-size:10px;color:var(--dim);letter-spacing:1px;margin:10px 0 4px;text-transform:uppercase}
@@ -318,11 +329,11 @@ html.fit .tape-bar .lbl{font-size:25px;padding:0 16px;gap:10px}
 html.fit .tape-bar .lbl button{font-size:20px;padding:0 9px}
 html.fit .track{padding:5px 0}
 html.fit .tk{font-size:21px;gap:9px;margin-right:50px}html.fit .tk img{width:26px;height:26px}
-html.fit .stat.hero{flex:1.4 1 0}html.fit .stat.pulse{flex:2 1 0}html.fit .stat:has(#sPrice){flex:1.35 1 0}html.fit .stat:has(#sMcap){flex:.95 1 0}html.fit #scoreStat{flex:.95 1 0}html.fit .stat:has(#sLink){flex:.85 1 0}html.fit .col.comms::after{display:none}html.fit #sbP .sbl{font-size:14px;white-space:nowrap}html.fit #scoreStat #sScoreMsg{font-size:15px}html.fit #scoreStat #sScoreWhy{display:none}html.fit #caForm{display:none}html.fit #alertBtn{font-size:24px;padding:4px 10px}
+html.fit .col.comms::after{display:none}html.fit #sbP .sbl{font-size:14px;white-space:nowrap}html.fit #scoreStat #sScoreMsg{font-size:15px}html.fit #scoreStat #sScoreWhy{display:none}html.fit #caForm{display:none}html.fit #alertBtn{font-size:24px;padding:4px 10px}
 html.fit .stat{padding:8px 20px}
 html.fit .stat label{font-size:16px;letter-spacing:1.5px}
-html.fit .stat b{font-size:46px;line-height:1}
-html.fit .stat.hero b{font-size:52px}
+html.fit .stat b{font-size:52px;line-height:1}html.fit .stat:has(#sPrice){flex:1.3 1 0}
+html.fit .stat.hero b{font-size:58px}
 html.fit #pPending{font-size:52px!important}
 html.fit .stat span{font-size:17px}
 html.fit .stat.pulse .st{font-size:17px;padding:1px 8px}
@@ -434,11 +445,11 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 </header>
 
 <div class="tape-bar top">
-  <div class="lbl">STONK<span class="lg">&nbsp;BOARD TOP 10</span>&nbsp;APY <button data-k="apy3d" class="on">3D</button><button data-k="apy24h">24H</button></div>
+  <div class="lbl">STONK<span class="lg">&nbsp;BOARD TOP 10</span>&nbsp;APY 24H</div>
   <div class="track" id="boardTicker"><span class="tk dim">loading…</span></div>
 </div>
 <div class="tape-bar vol">
-  <div class="lbl">STONKFUN<span class="lg">&nbsp;TOP 10 · 24H</span>&nbsp;VOL</div>
+  <div class="lbl">STONKFUN<span class="lg">&nbsp;TOP 10</span>&nbsp;MCAP</div>
   <div class="track" id="ticker"><span class="tk dim">loading…</span></div>
 </div>
 
@@ -507,20 +518,11 @@ html.fit #tip{font-size:20px;padding:10px 14px}
       <div class="ph"><h2>BILLBOARD</h2><span class="meta">slot 01 · prime</span></div>
       <div class="board" data-slot="1" id="slot1"></div>
     </section>
-    <section class="panel acc" id="sbP" data-acc="apy" data-def="1" style="display:none">
-      <div class="ph"><h2 id="sbTitle"><span class="tkSym">$MARINE</span> STONK BOARD</h2><a class="meta sbl" id="sbLink" target="_blank" rel="noopener">VIEW ON STONK BOARD ▸</a></div>
-      <div id="mb">
-        <div class="mbg">
-          <div><label>BOARD RANK</label><b id="mbRank">—</b></div>
-          <div class="hi"><label id="mbAL">APY 3D</label><b id="mbA3">—</b></div>
-          <div class="hi"><label id="mbBL">APY 24H</label><b id="mbA24">—</b></div>
-        </div>
-        <div id="mbX"></div>
-        <p class="dim" id="mbNote"></p>
-      </div>
-      <div id="mbNo" class="empty" style="display:none"></div>
-      <div id="mbList" style="display:none"></div>
+    <section class="panel acc" id="cmP" data-acc="clobr" data-def="1">
+      <div class="ph"><h2><span class="tkSym">$MARINE</span> · <span style="color:#FF6B00">CLOBr</span></h2><a class="meta cml" id="cmLink" target="_blank" rel="noopener">VIEW ON CLOBr ▸</a></div>
+      <div id="cmBody"><p class="dim">loading CLOBr…</p></div>
     </section>
+    <div id="sbHold" style="display:none"><div id="sbP"><h2 id="sbTitle"></h2><a id="sbLink"></a><div id="mb"><b id="mbRank"></b><b id="mbA3"></b><b id="mbA24"></b><div id="mbX"></div><p id="mbNote"></p></div><div id="mbNo"></div><div id="mbList"></div></div></div>
   </div>
 </main>
 
@@ -814,7 +816,24 @@ const every=s=>!s?'—':s<60?Math.round(s)+'s':s<3600?Math.floor(s/60)+'m'+(s%60
 const dshort=d=>{const t=Date.parse(d);return isNaN(t)?String(d||''):new Date(t).toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'})};
 const tokAmt=n=>n==null?'—':(n>=0?'▲ ':'▼ ')+compact(Math.abs(n),'');
 async function loadClobr(){if(!FLAGS.CLOBR_ENABLED)return;try{const d=await j(BOT+'/clobr?mint='+CA);CL=d&&!d.error?d:null}catch(e){}renderClobr();draw()}
-function renderClobr(){
+// ---------- 1.1 right panel: $MARINE on CLOBr (real-time), plus its Stonk Board APY when it ranks ----------
+function renderCm(){if(!$('cmBody'))return;$('cmLink').href=clobrUrl();
+  const m=board?boardStats():null,sc=CL&&CL.score,W=CL&&CL.whales&&!CL.whales.none&&CL.whales.summary?CL.whales:null,S=W&&W.summary,w='7d';let h='';
+  if(m&&m.rank)h+=`<div class="cm-apy"><div><label>Stonk Board</label><b style="color:#fff">#${m.rank}</b></div><div><label>APY 24H</label><b>${apyFmt(m.apy24h)}</b></div><div><label>APY 3D</label><b>${apyFmt(m.apy3d)}</b></div></div>`;
+  if(sc&&sc.score!=null){const v=+sc.score,c=v>=60?'var(--green)':v<=40?'var(--red)':'var(--amber)',[vd,...why]=String(sc.msg||'').split(':');
+    h+=`<div class="cm-sc"><span class="n" style="color:${c}">${v.toFixed(1)}</span><div><label>CLOBr score · 0-100</label><div class="v">${esc(vd.trim())}</div><div class="why">${esc(why.join(':').trim())}</div></div></div>`}
+  if(S){h+=`<div class="cm-w">${['top20','top50','top100'].map(t=>{const n=+t.slice(3),acc=S.accumulating?.[t]?.[w],net=S.net_flow?.[t]?.[w]?.net,u=net!=null&&marinePx?net*marinePx:null;
+      return `<div><label>Top ${n} · 7d</label><b>${acc??'—'}</b><small>/${n} buying</small><div class="cbar"><i style="width:${acc==null?0:Math.min(100,acc/n*100).toFixed(0)}%;background:var(--green)"></i></div>
+        <div class="f ${net>=0?'up':'dn'}">${net==null?'':(net>=0?'▲ ':'▼ ')+compact(Math.abs(net),'')}${u!=null?` <span class="dim">≈ ${compact(Math.abs(u))}</span>`:''}</div></div>`}).join('')}</div>`;
+    const sp=W.spark||[];if(sp.length){const mx=Math.max(1,...sp.map(d=>Math.abs(d.net||0))),bw=100/sp.length;
+      h+=`<div><label class="dim cm-spl" style="font-size:11px">Top 100 · net ${esc(TK.symbol)} bought / sold per day</label><svg class="cm-sp" viewBox="0 0 100 40" preserveAspectRatio="none"><line x1="0" y1="20" x2="100" y2="20" stroke="#1a2444" stroke-width=".4"/>${sp.map((d,i)=>{const hh=Math.abs(d.net||0)/mx*19;return`<rect x="${(i*bw+bw*.15).toFixed(2)}" y="${(d.net>=0?20-hh:20).toFixed(2)}" width="${(bw*.7).toFixed(2)}" height="${Math.max(.3,hh).toFixed(2)}" fill="${d.net>=0?'#39ff6a':'#ff3355'}"/>`}).join('')}</svg>
+        <div class="cm-sx"><span>${esc(dshort(sp[0].day))}</span><span>last ${sp.length} days</span><span>${esc(dshort(sp[sp.length-1].day))}</span></div></div>`}}
+  const lv=DEPTH&&DEPTH.levels&&DEPTH.levels.length?DEPTH.levels:null,p=DEPTH&&DEPTH.price;
+  if(lv&&p){let su=0,re=0;lv.forEach(([x,a,b])=>{if(x>=p*.9&&x<=p*1.1){su+=a||0;re+=b||0}});const t=Math.max(1,su+re);
+    h+=`<div class="cm-lq"><div><label>Support within 10%</label><b class="up">${compact(su)}</b></div><div><label>Resistance within 10%</label><b class="dn">${compact(re)}</b></div>
+      <div class="cbar"><i style="width:${(su/t*100).toFixed(1)}%;background:var(--green)"></i><i style="width:${(re/t*100).toFixed(1)}%;background:var(--red)"></i></div></div>`}
+  $('cmBody').innerHTML=h||'<p class="dim">CLOBr data isn\'t available right now.</p>'}
+function renderClobr(){renderCm();
   $('clobrLink').href=clobrUrl();$('scoreStat').onclick=()=>open(clobrUrl(),'_blank','noopener');
   const sc=CL&&CL.score;$('scoreStat').style.display=sc?'':'none';
   if(sc){$('sScore').textContent=sc.score!=null?(+sc.score).toFixed(1):'—';$('sScore').style.color=sc.score>=60?'var(--green)':sc.score<=40?'var(--red)':'var(--amber)';
@@ -947,10 +966,12 @@ $('tapeF').addEventListener('click',e=>{const b=e.target.closest('button');if(!b
 async function loadTicker(){
   try{
     const d=await j(DATA+'tokens.json?'+Date.now());TOKS=d.tokens||[];renderApy();
-    const html=d.tokens.map((t,i)=>`<a class="tk" href="${esc(tokLink(t.mint))}" target="_blank" rel="noopener">
+    // top 10 by market cap (stonkfun's platform list is already its top 30 by market cap; tokens.json is that list sorted by volume)
+    const L=d.tokens.slice().sort((a,b)=>(b.mcap||0)-(a.mcap||0)).slice(0,10);
+    const html=L.map((t,i)=>`<a class="tk" href="${esc(tokLink(t.mint))}" target="_blank" rel="noopener">
       <span class="dim">#${i+1}</span>${t.image?`<img src="${esc(t.image)}" alt="" loading="lazy" onerror="this.remove()">`:''}
       <b>$${esc(t.symbol)}</b><span class="q">/${esc(t.quote)}</span>
-      <span>vol ${compact(t.vol24)}</span>${t.chg24!=null?pct(t.chg24):''}
+      <span>mc ${compact(t.mcap)}</span>${t.chg24!=null?pct(t.chg24):''}<span class="dim">vol ${compact(t.vol24)}</span>
       ${t.paidUsd?`<span class="dim">· ${compact(t.paidUsd)} paid out</span>`:''}</a>`).join('');
     setTrack('ticker',html,130);
   }catch(e){}
@@ -960,7 +981,7 @@ function setTrack(id,html,base){const el=$(id);el.innerHTML=html+html;
   requestAnimationFrame(()=>{const w=el.scrollWidth/2;el.style.animationDuration=Math.max(base,w/45)+'s'})}
 
 // ---------- top ticker: thestonkboard.com top 10 by APY ----------
-let board=null,boardKey='apy3d';
+let board=null,boardKey='apy24h';   // 1.1: the board ticker is 24H only
 function renderBoard(){if(!board)return;const L=board[boardKey]||[],lab=boardKey==='apy3d'?'3d':'24h';
   let html=L.map((t,i)=>`<a class="tk" href="${esc(tokLink(t.mint))}" target="_blank" rel="noopener">
     <span class="dim">#${i+1}</span>${t.logo?`<img src="${esc(t.logo)}" alt="" loading="lazy" onerror="this.remove()">`:''}
@@ -972,11 +993,7 @@ function renderBoard(){if(!board)return;const L=board[boardKey]||[],lab=boardKey
 let boardX=null;
 async function loadBoard(){try{board=await j(DATA+'board.json?'+Date.now());renderBoard();renderApy()}catch(e){}
   try{boardX=await j(DATA+'board-x.json?'+Date.now());renderApy()}catch(e){}}
-document.querySelector('.top .lbl').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
-  document.querySelectorAll('.top .lbl button').forEach(x=>x.classList.toggle('on',x===b));boardKey=b.dataset.k;renderBoard();renderApy()});
-// on stream nobody clicks, so alternate 3D / 24H every few minutes
-setInterval(()=>{if(!document.documentElement.classList.contains('fit'))return;
-  const nx=boardKey==='apy3d'?'apy24h':'apy3d';document.querySelector(`.top .lbl button[data-k="${nx}"]`).click()},240000);
+// 1.1: no 3D/24H switch (24H only)
 
 // ---------- Terminal 2.0 panels: CLOBr (score tile + analytics) and the Stonk Board card ----------
 // Flip a flag to false to hide that data. CLOBr also needs its key on the bot, or it stays hidden.
@@ -1004,7 +1021,7 @@ function renderList(){const by={};TOKS.forEach(t=>by[t.mint]=t);const L=(board[b
       +`<span>${v!=null?compact(v):'—'}</span><span>${compact(t.mcap??s.mcap)}</span><span class="apy">${apyFmt(t.apy)}</span></a>`}).join('')
     +`<div class="nt">$${TK.symbol} isn't in the thestonkboard.com top 100 right now. Showing the board's top 10 until it ranks.</div>`;
   fillVol(L)}
-function renderApy(){const m=FLAGS.STONKBOARD_ENABLED&&board?boardStats():null,ranked=!!(m&&m.rank);
+function renderApy(){renderCm();if(!board)return;const m=FLAGS.STONKBOARD_ENABLED&&board?boardStats():null,ranked=!!(m&&m.rank);
   // stonkfun tokens that aren't ranked yet get a one-line note instead of an empty column; other tokens hide it
   $('sbP').style.display=FLAGS.STONKBOARD_ENABLED&&board?'':'none';$('mb').style.display=ranked?'':'none';$('mbNo').style.display=ranked?'none':'';
   $('sbLink').href=ranked?'https://thestonkboard.com/coin/'+encodeURIComponent(CA):'https://thestonkboard.com/';$('sbLink').textContent=ranked?'VIEW ON STONK BOARD ▸':'SEE THE BOARD ▸';
