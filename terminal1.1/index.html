@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>WAR ROOM TERMINAL 2.0</title>
-<meta name="description" content="Live terminal for any stonkfun token: holder rewards, next pulse, price, chart, tape, APY and CLOBr depth.">
-<meta property="og:title" content="WAR ROOM TERMINAL 2.0">
-<meta property="og:description" content="Paste any stonkfun token CA: holder rewards, price, chart, tape, APY and CLOBr depth.">
+<title>THE WAR ROOM 1.1 · $MARINE × $LINK</title>
+<meta name="description" content="Live $MARINE terminal. LINK distributed to holders, next pulse, price, tape.">
+<meta property="og:title" content="THE WAR ROOM · $MARINE × $LINK">
+<meta property="og:description" content="Live terminal: LINK distributed to $MARINE holders, next pulse, price, tape.">
 <meta property="og:image" content="https://themarines.link/banner.png">
 <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
 <link rel="icon" type="image/png" sizes="64x64" href="../favicon-64.png">
@@ -41,6 +41,7 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
 .btn:hover{border-color:var(--blue2);text-decoration:none}
 .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
 .btn.tts{border-color:var(--amber);color:var(--amber)}
+header .ca .ca11{display:none}#caIn,#caForm>.btn,#homeTk{display:none!important}
 header .ca{display:flex;align-items:center;gap:6px;flex:1;min-width:0;max-width:720px;margin:0 8px;position:relative}
 header .ca input{flex:1 1 150px;min-width:120px;background:#050914;border:1px solid var(--line);color:#fff;font:inherit;font-size:12px;padding:7px 9px}
 header .ca input:focus{outline:none;border-color:var(--blue2)}
@@ -203,6 +204,7 @@ tr.whale td{background:rgba(74,122,255,.08)}
 .dr{display:grid;grid-template-columns:62px 1fr auto auto;gap:8px;font-size:11px;padding:4px 0;border-bottom:1px solid rgba(26,36,68,.6);white-space:nowrap}
 .lp{border-bottom:1px solid rgba(26,36,68,.6);padding:7px 0}.lpt{font-size:12px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}.lpt .dim{font-size:10px}
 .lps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:4px;font-size:12px;color:#fff}.lps label{display:block;font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
+html.fit #clobrWrap{display:none!important}
 #scoreStat{cursor:pointer}#scoreStat:hover label{color:#FF6B00}#scoreStat #sScoreMsg,#scoreStat #sScoreWhy{font-size:10px;line-height:1.35}#scoreStat #sScoreWhy{white-space:normal;overflow:visible}
 .clobrRow .panel{min-width:0;overflow:hidden}.clobrRow .lq label{white-space:nowrap}.clobrRow table{font-size:11px}.clobrRow td,.clobrRow th{padding:3px 5px}
 
@@ -316,11 +318,11 @@ html.fit .tape-bar .lbl{font-size:25px;padding:0 16px;gap:10px}
 html.fit .tape-bar .lbl button{font-size:20px;padding:0 9px}
 html.fit .track{padding:5px 0}
 html.fit .tk{font-size:21px;gap:9px;margin-right:50px}html.fit .tk img{width:26px;height:26px}
-html.fit .stats{grid-template-columns:1.35fr 1.55fr 1fr 1.15fr 1fr 1fr}
+html.fit .stat.hero{flex:1.4 1 0}html.fit .stat.pulse{flex:2 1 0}html.fit .stat:has(#sPrice){flex:1.35 1 0}html.fit .stat:has(#sMcap){flex:.95 1 0}html.fit #scoreStat{flex:.95 1 0}html.fit .stat:has(#sLink){flex:.85 1 0}html.fit .col.comms::after{display:none}html.fit #sbP .sbl{font-size:14px;white-space:nowrap}html.fit #scoreStat #sScoreMsg{font-size:15px}html.fit #scoreStat #sScoreWhy{display:none}html.fit #caForm{display:none}html.fit #alertBtn{font-size:24px;padding:4px 10px}
 html.fit .stat{padding:8px 20px}
 html.fit .stat label{font-size:16px;letter-spacing:1.5px}
-html.fit .stat b{font-size:52px;line-height:1}
-html.fit .stat.hero b{font-size:58px}
+html.fit .stat b{font-size:46px;line-height:1}
+html.fit .stat.hero b{font-size:52px}
 html.fit #pPending{font-size:52px!important}
 html.fit .stat span{font-size:17px}
 html.fit .stat.pulse .st{font-size:17px;padding:1px 8px}
@@ -358,7 +360,7 @@ html.fit .post img{width:48px;height:48px}
 html.fit .post .who{font-size:19px;gap:10px}
 html.fit .post .txt{font-size:22px;line-height:1.35;-webkit-line-clamp:3}
 html.fit .post.m{border-left-width:4px;padding-left:12px;margin-left:-16px}
-html.fit .bill{flex:none;height:270px;display:flex;flex-direction:column}
+html.fit .bill{flex:none;height:270px;display:flex;flex-direction:column}html.fit #sbP{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
 html.fit .bill .board{flex:1}
 html.fit .bill .board.sold .head{font-size:62px}
 html.fit .src{font-size:16px;padding:6px 24px}
@@ -399,7 +401,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .post .txt{-webkit-line-clamp:3}
   .board{min-height:90px}#slot1{aspect-ratio:1112/358;min-height:0}.slots .board.house,.slots .board.img{aspect-ratio:912/176;min-height:0}.bill .board.sold .head,.board.sold .head{font-size:30px}
   .src .fx{display:none}.src{padding:6px 12px}
-  #mbar{display:grid;grid-template-columns:1.2fr .8fr 1.2fr 1fr;gap:6px;position:fixed;left:0;right:0;bottom:0;z-index:45;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(4,6,15,.96);border-top:1px solid var(--line);backdrop-filter:blur(6px)}
+  #mbar{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:6px;position:fixed;left:0;right:0;bottom:0;z-index:45;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(4,6,15,.96);border-top:1px solid var(--line);backdrop-filter:blur(6px)}
   #mbar .btn{text-align:center;padding:11px 6px;font-size:12px;text-decoration:none}
 }
 </style>
@@ -408,8 +410,8 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 <div id="stage">
 
 <header>
-  <a href="./" title="Terminal 2.0 home: trending tokens"><img src="../helmet.png" alt="Marines"></a>
-  <a class="brand" href="./" title="Terminal 2.0 home: trending tokens" style="text-decoration:none">THE WAR ROOM<small>TERMINAL 2.0</small></a>
+  <a href="../"><img src="../helmet.png" alt="Marines"></a>
+  <a class="brand" href="../" style="text-decoration:none">THE WAR ROOM<small>$1000 LINK WAITING ROOM</small></a>
   <span class="live" id="live"><i></i><span id="liveTxt">LIVE</span></span>
   <button id="soundBtn" type="button" title="Sound on: click to mute TTS and alerts" aria-label="Mute sounds"></button>
   <button id="alertBtn" type="button" title="Alerts on: click to hide buy alerts, pulses and TTS popups" aria-label="Hide alerts"></button>
@@ -423,7 +425,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   <nav>
     <a class="btn fx" id="chartLink" href="#" target="_blank" rel="noopener">CHART</a>
     <a class="btn fx" href="https://x.com/TheMarinesX" target="_blank" rel="noopener">X</a>
-    <a class="btn trend" href="./" title="Trending stonkfun tokens">🔥 TRENDING</a>
+    <a class="btn" href="../terminal2/" title="Terminal 2.0: any stonkfun token">2.0</a>
     <a class="btn fx" href="../">HQ</a>
     <a class="btn chat" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ WAR ROOM CHAT</a>
     <button class="btn tts" id="ttsBtn">BUY TTS</button>
@@ -506,7 +508,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
       <div class="board" data-slot="1" id="slot1"></div>
     </section>
     <section class="panel acc" id="sbP" data-acc="apy" data-def="1" style="display:none">
-      <div class="ph"><h2><span class="tkSym">$MARINE</span> STONK BOARD</h2><a class="meta sbl" id="sbLink" target="_blank" rel="noopener">VIEW ON STONK BOARD ▸</a></div>
+      <div class="ph"><h2 id="sbTitle"><span class="tkSym">$MARINE</span> STONK BOARD</h2><a class="meta sbl" id="sbLink" target="_blank" rel="noopener">VIEW ON STONK BOARD ▸</a></div>
       <div id="mb">
         <div class="mbg">
           <div><label>BOARD RANK</label><b id="mbRank">—</b></div>
@@ -517,6 +519,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
         <p class="dim" id="mbNote"></p>
       </div>
       <div id="mbNo" class="empty" style="display:none"></div>
+      <div id="mbList" style="display:none"></div>
     </section>
   </div>
 </main>
@@ -538,7 +541,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 
 </div>
 
-<nav id="mbar"><a class="btn primary buyTk" href="#" target="_blank" rel="noopener">BUY <span class="tkSym">$MARINE</span></a><button class="btn tts" data-buy="t">TTS</button><a class="btn trend" href="./">🔥 TRENDING</a><a class="btn" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ CHAT</a></nav>
+<nav id="mbar"><a class="btn primary buyTk" href="#" target="_blank" rel="noopener">BUY <span class="tkSym">$MARINE</span></a><button class="btn tts" data-buy="t">TTS</button><a class="btn" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ CHAT</a></nav>
 <div id="wModal"><div class="box">
   <h3>CHOOSE A WALLET</h3>
   <div class="sb">Your call. We don't default you into anything.</div>
@@ -590,7 +593,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 const MARINE='F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK';
 const DATA='../terminal/';
 const BOT='https://war-room-bot.linkmarine777.workers.dev';
-const CA=((new URLSearchParams(location.search).get('ca')||'').trim().match(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/)||[MARINE])[0];
+const CA=MARINE;   // 1.1 is the $MARINE stream terminal
 let TK={mint:CA,symbol:'…',quote:'…',quoteMint:null,image:null},TKR=null,POOL='',GT='',PAIR=null;
 const WHALE=2500;
 const $=id=>document.getElementById(id);
@@ -615,7 +618,6 @@ async function resolveToken(){
   $('tkBadge').innerHTML=(TK.image?`<img src="${esc(TK.image)}" alt="" onerror="this.remove()">`:'')+`${esc(sym)}<span class="q">/${esc(qs)}</span>`;
   $('caIn').value=CA;
   // the bare /terminal2/ link is $MARINE: show its CA in the address bar so any view can be shared as-is
-  if(new URLSearchParams(location.search).get('ca')!==CA)try{history.replaceState(null,'','?ca='+CA+location.hash)}catch(e){}
   $('homeTk').style.display=CA===MARINE?'none':'';
   document.title=sym+' · WAR ROOM TERMINAL 2.0';
   renderLinks(pairs);
@@ -640,7 +642,7 @@ $('caForm').addEventListener('submit',e=>{e.preventDefault();const v=$('caIn').v
   if(!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(v)){$('tkMsg').textContent='that is not a Solana token address';return}
   location.search='?ca='+v});
 // tokens on the tickers and the board open in 2.0
-function tokLink(m){return m?'?ca='+encodeURIComponent(m):'#'}
+function tokLink(m){return m?'../terminal2/token.html?ca='+encodeURIComponent(m):'#'}   // 1.1 is $MARINE only: other tokens open in 2.0
 document.addEventListener('click',e=>{const a=e.target.closest('a[href^="?ca="]');if(!a)return;e.preventDefault();location.search=a.getAttribute('href')});
 
 // ---------- 16:9 stage ----------
@@ -648,7 +650,7 @@ document.addEventListener('click',e=>{const a=e.target.closest('a[href^="?ca="]'
 // to the window, so the stream layout is identical everywhere. Phones get the flowing layout.
 let S=1;
 function fit(){
-  const on=false;   // 2.0 fills the page; the locked 16:9 stage is 1.0 (the stream)
+  const on=innerWidth>=1000&&!/[?&]flow\b/.test(location.search);   // 1.1: locked 16:9 stage like 1.0; ?flow for a normal page
   document.documentElement.classList.toggle('fit',on);
   const st=$('stage');
   if(on){S=Math.min(innerWidth/1920,innerHeight/1080);st.style.transform=`scale(${S})`;
@@ -987,11 +989,28 @@ function boardStats(mint=TK.mint){if(!board)return null;
   return a||b?{rank:(a||b).rank,apy3d:a?.apy,apy24h:b?.apy}:null}
 // Stonk Board card: only what the header doesn't already show (holders, payouts sent, min hold, amount paid out
 // and last payout live up top). Hidden when the mint isn't on the board; figures come only from board.json.
+// 1.1 (from 1.0): while $MARINE isn't ranked, the card shows the board's top 10 instead of a note
+let TOKS=[],dsVol={},dsAt=0;
+async function fillVol(list){const miss=list.map(t=>t.mint).filter(m=>m&&!TOKS.some(t=>t.mint===m));
+  if(!miss.length||Date.now()-dsAt<240000)return;dsAt=Date.now();
+  try{const d=await j('https://api.dexscreener.com/tokens/v1/solana/'+miss.join(','));
+    (Array.isArray(d)?d:[]).forEach(p=>{const m=p.baseToken?.address;if(m)dsVol[m]=(dsVol[m]||0)+(+p.volume?.h24||0)});renderApy()}catch(e){}}
+function renderList(){const by={};TOKS.forEach(t=>by[t.mint]=t);const L=(board[boardKey]||[]).slice(0,10),lab=boardKey==='apy3d'?'3D':'24H';
+  $('mbList').innerHTML=`<div class="bh"><span></span><span></span><span>TOKEN</span><span>VOL 24H</span><span>MCAP</span><span>APY ${lab}</span></div>`
+    +L.map((t,i)=>{const s=by[t.mint]||{},v=s.vol24??board.tokens?.[t.mint]?.vol24??dsVol[t.mint];
+      return `<a class="br" href="${esc(tokLink(t.mint))}" target="_blank" rel="noopener"><span class="rk">${i+1}</span>`
+      +(t.logo?`<img src="${esc(t.logo)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span></span>')
+      +`<span class="sym">$${esc(String(t.symbol||'?').replace(/^\$/,''))}<span class="q">/${esc(t.quote||'')}</span></span>`
+      +`<span>${v!=null?compact(v):'—'}</span><span>${compact(t.mcap??s.mcap)}</span><span class="apy">${apyFmt(t.apy)}</span></a>`}).join('')
+    +`<div class="nt">$${TK.symbol} isn't in the thestonkboard.com top 100 right now. Showing the board's top 10 until it ranks.</div>`;
+  fillVol(L)}
 function renderApy(){const m=FLAGS.STONKBOARD_ENABLED&&board?boardStats():null,ranked=!!(m&&m.rank);
   // stonkfun tokens that aren't ranked yet get a one-line note instead of an empty column; other tokens hide it
-  $('sbP').style.display=ranked||(FLAGS.STONKBOARD_ENABLED&&board&&TKR)?'':'none';$('mb').style.display=ranked?'':'none';$('mbNo').style.display=ranked?'none':'';
+  $('sbP').style.display=FLAGS.STONKBOARD_ENABLED&&board?'':'none';$('mb').style.display=ranked?'':'none';$('mbNo').style.display=ranked?'none':'';
   $('sbLink').href=ranked?'https://thestonkboard.com/coin/'+encodeURIComponent(CA):'https://thestonkboard.com/';$('sbLink').textContent=ranked?'VIEW ON STONK BOARD ▸':'SEE THE BOARD ▸';
-  if(!ranked){const sym=esc('$'+String(TK.symbol).replace(/^\$/,''));$('mbNo').innerHTML=`<b>${sym}</b> isn't in the Stonk Board top 100 right now.<br>Its modeled APY, what $100 held earns, and holder stats show here as soon as it ranks.`;return}
+  $('mbList').style.display=ranked?'none':'';$('mbNo').style.display='none';
+  $('sbTitle').innerHTML=ranked?`<span class="tkSym">$${esc(TK.symbol)}</span> STONK BOARD`:'STONK BOARD TOP 10';
+  if(!ranked){renderList();return}
   $('mbRank').textContent='#'+m.rank;$('mbA3').textContent=apyFmt(m.apy3d);$('mbA24').textContent=apyFmt(m.apy24h);
   const apr=m.apr3d??m.apr24h??m.apr7d,basis=m.apr3d!=null?'3D':m.apr24h!=null?'24H':'7D';
   const per=d=>{if(apr==null)return'—';const v=100*apr/100*d/365;return'$'+v.toFixed(v<10?2:0)};
