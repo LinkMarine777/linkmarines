@@ -90,7 +90,8 @@ pactl set-default-sink wr
   done ) &
 
 sleep 8
-# lofi: every mp3/m4a/ogg/flac/wav in /opt/wr-stream/music, shuffled, looped forever
+# lofi: its own player into the same audio mix as the page. Each pass is a fresh shuffle of /opt/wr-stream/music;
+# when it ends (or is killed to pick up new tracks / volume), the loop starts the next pass. Never stops.
 mk_playlist(){ find /opt/wr-stream/music -maxdepth 1 -type f \( -iname '*.mp3' -o -iname '*.m4a' -o -iname '*.ogg' -o -iname '*.opus' -o -iname '*.flac' -o -iname '*.wav' \) | shuf | sed "s/'/'\\\\''/g; s/.*/file '&'/" > /opt/wr-stream/.playlist; }
 # the go-live list -> one ffmpeg tee target ("[f=flv:onfail=ignore]url/key|..."); empty = stay off air but keep the page up
 targets(){ python3 -c '
@@ -101,16 +102,22 @@ def url(p):
     return u + "/app" if p == "kick" and not u.endswith("/app") else u   # Kick (Amazon IVS) ingest lives under /app
 print("|".join("[f=flv:onfail=ignore]" + url(p) + "/" + c["dests"][p]["key"] for p in c.get("live", []) if p in c.get("dests", {})))' 2>/dev/null; }
 
+( while true; do
+    source /etc/wr-stream.env; mk_playlist
+    if [ -s /opt/wr-stream/.playlist ]; then
+      ffmpeg -hide_banner -loglevel error -nostdin -re -f concat -safe 0 -i /opt/wr-stream/.playlist -af "volume=${MUSIC_VOL}" \
+        -ac 2 -ar 44100 -f pulse -device wr wr-lofi
+    else sleep 30; fi
+    sleep 1
+  done ) &
+
 while true; do
-  source /etc/wr-stream.env; mk_playlist; OUT=$(targets)
+  source /etc/wr-stream.env; OUT=$(targets)
   if [ -z "$OUT" ]; then sleep 15; continue; fi
   [ "${OUT_RES}" = 1920x1080 ] && V="[0:v]fps=${FPS}[v]" || V="[0:v]fps=${FPS},scale=${OUT_RES/x/:}:flags=bicubic[v]"
-  if [ -s /opt/wr-stream/.playlist ]; then
-    IN_MUSIC=(-stream_loop -1 -f concat -safe 0 -i /opt/wr-stream/.playlist)
-    AF="[1:a]aresample=44100,volume=1.0[s];[2:a]aresample=44100,volume=${MUSIC_VOL}[m];[s][m]amix=inputs=2:duration=first:dropout_transition=0:normalize=0,alimiter=limit=0.95[a]"
-  else IN_MUSIC=(); AF="[1:a]aresample=44100[a]"; fi
+  AF="[1:a]aresample=44100,alimiter=limit=0.95[a]"   # page sounds + lofi, already mixed by PulseAudio
   ffmpeg -hide_banner -loglevel warning -thread_queue_size 1024 -f x11grab -video_size 1920x1080 -framerate "$FPS" -draw_mouse 0 -i :99 \
-    -thread_queue_size 1024 -f pulse -i wr.monitor "${IN_MUSIC[@]}" \
+    -thread_queue_size 1024 -f pulse -i wr.monitor \
     -filter_complex "$V;$AF" -map "[v]" -map "[a]" \
     -c:v libx264 -preset veryfast -tune zerolatency -b:v "$BITRATE" -maxrate "$BITRATE" -bufsize "$BITRATE" -pix_fmt yuv420p -g $((FPS*2)) \
     -c:a aac -b:a 160k -ar 44100 -flags +global_header -progress /opt/wr-stream/.run/progress -f tee "$OUT"
@@ -154,13 +161,14 @@ E=/etc/wr-stream.env
 case "${1:-status}" in
   start|stop|restart|status) sudo systemctl "$1" wr-stream --no-pager ;;
   logs) sudo journalctl -u wr-stream -f -n 50 ;;
-  volume) [ -n "${2:-}" ] || { grep MUSIC_VOL $E; exit; }; sudo sed -i "s/^MUSIC_VOL=.*/MUSIC_VOL=$2/" $E; sudo systemctl restart wr-stream; echo "music volume $2 (0.0-1.0)";;
+  volume) [ -n "${2:-}" ] || { grep MUSIC_VOL $E; exit; }; sudo sed -i "s/^MUSIC_VOL=.*/MUSIC_VOL=$2/" $E; sudo pkill -f 'ffmpeg.*wr-lofi'; echo "music volume $2 (0.0-1.0), applied now";;
   key|live) echo "keys and destinations are set from the Telegram control bot: /key, /live, /stop (see /help there)";;
   bot) sudo systemctl status wr-control --no-pager; sudo journalctl -u wr-control -n 20 --no-pager -o cat;;
   admin) [[ "${2:-}" =~ ^[0-9]+$ ]] || { echo "usage: wr-stream admin <telegram user id>"; sudo grep ADMIN_IDS /etc/wr-control.env; exit 1; }
     C=/etc/wr-control.env; cur=$(sudo sed -n 's/^ADMIN_IDS="\(.*\)"/\1/p' $C)
     sudo sed -i "s/^ADMIN_IDS=.*/ADMIN_IDS=\"${cur:+$cur,}$2\"/" $C; sudo systemctl restart wr-control; echo "added $2: send /help to the bot";;
-  music) ls -1 /opt/wr-stream/music; echo "(add files there, then: wr-stream restart)";;
+  music) ls -1 /opt/wr-stream/music; echo "(add files there, then: wr-stream music-reload)";;
+  music-reload) sudo pkill -f 'ffmpeg.*wr-lofi'; echo "music player restarted with a fresh shuffle";;
   shot) sudo -u wrstream env DISPLAY=:99 ffmpeg -loglevel error -y -f x11grab -video_size 1920x1080 -i :99 -frames:v 1 /tmp/wr-shot.png && echo "saved /tmp/wr-shot.png";;
   *) echo "wr-stream start|stop|restart|status|logs|volume [0.15]|music|shot|bot|admin <id>";;
 esac
