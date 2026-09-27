@@ -9,7 +9,7 @@
 <meta property="og:description" content="Stonkfun volume, Stonk Board APY and CLOBr score in one list. Click any token to open it in the terminal.">
 <meta property="og:image" content="https://themarines.link/banner.png">
 <link rel="icon" href="../logo.png">
-<script>/* a token link (?ca=) opens the token view; Vercel rewrites it there directly, this covers other hosts */
+<script>/* old token links (/terminal2/?ca=...) open the token view */
 if(new URLSearchParams(location.search).get('ca'))location.replace('token.html'+location.search+location.hash)</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -80,8 +80,8 @@ tr.me{background:rgba(42,90,218,.1)}
 </head>
 <body>
 <header>
-  <a href="../"><img src="../logo.png" alt="Marines"></a>
-  <div class="brand">THE WAR ROOM<small>TERMINAL 2.0</small></div>
+  <a href="./" title="Terminal 2.0 home"><img src="../logo.png" alt="Marines"></a>
+  <a class="brand" href="./" style="text-decoration:none">THE WAR ROOM<small>TERMINAL 2.0</small></a>
   <form id="caForm" class="ca" autocomplete="off">
     <input id="caIn" placeholder="Paste any stonk token CA…" spellcheck="false" aria-label="Token contract address">
     <button class="btn" type="submit">GO</button>
@@ -89,14 +89,14 @@ tr.me{background:rgba(42,90,218,.1)}
   </form>
   <nav>
     <a class="btn" href="../">HQ</a>
-    <a class="btn" href="?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">$MARINE TERMINAL</a>
+    <a class="btn" href="token.html?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">$MARINE TERMINAL</a>
     <a class="btn primary" href="https://jup.ag/tokens/F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">BUY $MARINE</a>
   </nav>
 </header>
 
 <main>
   <section class="hero">
-    <div class="pin" id="pin"><img id="pinImg" alt="" src="../logo.png"><div class="t"><label>Home of the terminal</label><b>$MARINE</b><span class="s" id="pinSub">&nbsp;</span></div><a class="btn primary" href="?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">OPEN ▸</a></div>
+    <div class="pin" id="pin"><img id="pinImg" alt="" src="../logo.png"><div class="t"><label>Home of the terminal</label><b>$MARINE</b><span class="s" id="pinSub">&nbsp;</span></div><a class="btn primary" href="token.html?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">OPEN ▸</a></div>
     <div><label>24h volume · top 30</label><b id="kVol">—</b><span class="s">stonkfun tokens by volume</span></div>
     <div><label>Paid to holders</label><b id="kPaid">—</b><span class="s">all-time, Stonk Board top 100</span></div>
     <div><label>Median APY 3D</label><b id="kApy" class="apy">—</b><span class="s">Stonk Board top 100, modeled</span></div>
@@ -126,7 +126,7 @@ function apyFmt(n){if(n==null||!isFinite(n))return'—';if(n>=1e12)return'>1T%';
 const num=n=>n==null?'—':Number(n).toLocaleString('en-US');
 function ago(t){const s=Math.max(0,(Date.now()-t)/1000);if(s<3600)return Math.floor(s/60)+'m';if(s<86400)return Math.floor(s/3600)+'h';return Math.floor(s/86400)+'d'}
 async function j(u){const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw new Error(r.status);return r.json()}
-const open2=m=>'?ca='+encodeURIComponent(m);
+const open2=m=>'token.html?ca='+encodeURIComponent(m);
 
 // One row per token: stonkfun's top 30 by volume merged with thestonkboard's top 100 (both snapshotted by the bot)
 let ROWS=[],sortK='vol',showAll=false,SC={};
