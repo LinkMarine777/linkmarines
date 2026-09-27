@@ -89,6 +89,7 @@ html.fit #soundBtn{font-size:24px;padding:4px 10px}
 /* main grid */
 main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:1px;background:var(--line);min-height:0}
 .col{display:flex;flex-direction:column;gap:1px;min-height:0}
+.tapeH{display:flex;gap:14px;align-items:baseline}.tapeH button{background:none;border:0;padding:0;font:inherit;color:var(--dim);cursor:pointer;letter-spacing:inherit}.tapeH button.on{color:#fff}.tapeH button:hover{color:#fff}
 .col.comms::after{content:'';flex:1;background:var(--panel)}
 @media (min-width:1000px){.tapeP{display:flex;flex-direction:column}.tapeP .tw{position:relative;flex:1;min-height:250px;overflow:hidden}.tapeP .tw>table{position:absolute;top:0;left:0;right:0}}
 .panel{background:var(--panel);padding:12px 16px;min-height:0}
@@ -467,14 +468,19 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 
     <div class="lower">
       <section class="panel tapeP acc" data-acc="tape" data-def="1">
-        <div class="ph"><h2>THE TAPE</h2>
-          <span class="meta hide-sm fx"><span class="tkSym">$MARINE</span>/<span class="tkQ">LINK</span> pool · large = $2,500+</span>
+        <div class="ph"><h2 class="tapeH"><button data-v="trades" class="on">THE TAPE</button><button data-v="holders" id="holdTab" style="display:none">HOLDERS</button></h2>
+          <span class="meta hide-sm fx" id="tapeMeta"><span class="tkSym">$MARINE</span>/<span class="tkQ">LINK</span> pool · large = $2,500+</span>
+          <span class="meta hide-sm" id="holdMeta" style="display:none">top wallets · data from CLOBr</span>
           <div class="tabs" id="tapeF"><button data-min="0" class="on">ALL</button><button data-min="100">$100+</button></div>
         </div>
         <div class="tw" style="overflow-x:auto">
         <table id="trades">
           <thead><tr><th>Time</th><th>Side</th><th class="r">USD</th><th class="r tkSym">$MARINE</th><th class="r fx">Price</th><th class="r hide-sm">Wallet</th></tr></thead>
           <tbody><tr><td colspan="6" class="dim">loading tape…</td></tr></tbody>
+        </table>
+        <table id="holders" style="display:none">
+          <thead><tr><th>#</th><th>Wallet</th><th class="r">Holds</th><th class="r fx">≈ Value</th><th class="r">7d</th></tr></thead>
+          <tbody></tbody>
         </table>
         </div>
       </section>
@@ -823,6 +829,7 @@ function renderClobr(){
     $('scoreStat').title=(sc.msg||'CLOBr score')+' · 0-100 balance of support vs resistance liquidity. Click for more on CLOBr'}
   const L=CL&&CL.limits&&CL.limits.orders&&CL.limits.orders.length?CL.limits:null;$('ltab').style.display=L?'':'none';
   const panels={liqP:renderLiq(),whP:renderWhales(),loP:renderLimits(),dcP:renderDca(),lpP:renderLp()};
+  renderHolders();
   let any=false;for(const k in panels){$(k).style.display=panels[k]?'':'none';any=any||panels[k]}
   // say what CLOBr has nothing for (it only reports DCA / limit orders / DLMM pools that exist right now)
   const names={liqP:'order-book depth',loP:'open limit orders',dcP:'active DCA orders',lpP:'DLMM LP pools'},miss=Object.keys(names).filter(k=>!panels[k]).map(k=>names[k]);
@@ -841,11 +848,21 @@ function renderWhales(){const W=CL&&CL.whales;if(!W||W.none||!W.summary)return f
   const sp=W.spark||[],mx=Math.max(1,...sp.map(d=>Math.abs(d.net||0))),bw=100/Math.max(1,sp.length);
   const svg=sp.length?`<svg class="spark" viewBox="0 0 100 40" preserveAspectRatio="none"><line x1="0" y1="20" x2="100" y2="20" stroke="#1a2444" stroke-width=".4"/>${sp.map((d,i)=>{const h=Math.abs(d.net||0)/mx*19;return`<rect x="${(i*bw+bw*.15).toFixed(2)}" y="${(d.net>=0?20-h:20).toFixed(2)}" width="${(bw*.7).toFixed(2)}" height="${Math.max(.3,h).toFixed(2)}" fill="${d.net>=0?'#39ff6a':'#ff3355'}" opacity=".85"><title>${esc(d.day)}: ${d.net>=0?'bought':'sold'} ${compact(Math.abs(d.net||0),'')} ${esc(TK.symbol)} · ${d.acc??'—'} of top 100 buying</title></rect>`}).join('')}</svg>
     <div class="sx"><span>${esc(dshort(sp[0].day))}</span><span>top 100 · net bought <i class="up">▮</i> / sold <i class="dn">▮</i> per day</span><span>${esc(dshort(sp[sp.length-1].day))}</span></div>`:'';
-  const wl=(W.wallets||[]).slice(0,8);
-  $('whBody').innerHTML=`<div class="wcs">${['top20','top50','top100'].map(card).join('')}</div>`
+    $('whBody').innerHTML=`<div class="wcs">${['top20','top50','top100'].map(card).join('')}</div>`
     +(svg?`<div class="sub">Last ${sp.length} days</div>${svg}`:'')
-    +(wl.length?`<div class="sub">Biggest holders</div><table><thead><tr><th>#</th><th>Wallet</th><th class="r">Holds</th><th class="r">7d</th></tr></thead><tbody>${wl.map(x=>`<tr><td class="dim">${x.rank}</td><td><a href="https://solscan.io/account/${esc(x.owner)}" target="_blank" rel="noopener">${esc(short(x.owner))}</a></td><td class="r">${compact(x.balance,'')}</td><td class="r">${x.d7==null?'<span class="dim">—</span>':x.d7===0?'<span class="dim">no change</span>':pct(x.d7)}</td></tr>`).join('')}</tbody></table>`:'');
-  return true}
+    ;
+  renderHolders();return true}
+// Biggest holders (CLOBr) share the tape's panel: THE TAPE | HOLDERS
+let tapeView='trades';
+function renderHolders(){const wl=(CL&&CL.whales&&!CL.whales.none&&CL.whales.wallets)||[];
+  $('holdTab').style.display=wl.length?'':'none';if(!wl.length&&tapeView==='holders')setTapeView('trades');
+  $('holders').tBodies[0].innerHTML=wl.map(x=>`<tr><td class="dim">${x.rank}</td><td><a href="https://solscan.io/account/${esc(x.owner)}" target="_blank" rel="noopener">${esc(short(x.owner))}</a></td>
+    <td class="r">${compact(x.balance,'')}</td><td class="r dim fx">${marinePx?compact(x.balance*marinePx):'—'}</td><td class="r">${x.d7==null?'<span class="dim">—</span>':x.d7===0?'<span class="dim">no change</span>':pct(x.d7)}</td></tr>`).join('');
+  if(tapeView==='holders')fitTape()}
+function setTapeView(v){tapeView=v;[...document.querySelectorAll('.tapeH button')].forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  $('trades').style.display=v==='trades'?'':'none';$('holders').style.display=v==='holders'?'':'none';$('tapeF').style.visibility=v==='trades'?'':'hidden';
+  $('tapeMeta').style.display=v==='trades'?'':'none';$('holdMeta').style.display=v==='holders'?'':'none';fitTape()}
+document.querySelector('.tapeH').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();setTapeView(b.dataset.v)});
 function renderLimits(){const L=CL&&CL.limits;if(!L||!L.orders||!L.orders.length)return false;const O=L.orders;
   const B=O.filter(o=>o.side==='B'),S=O.filter(o=>o.side==='S'),sb=B.reduce((t,o)=>t+(o.usd||0),0),ss=S.reduce((t,o)=>t+(o.usd||0),0),tot=Math.max(1,sb+ss);
   $('loMeta').textContent=(L.count||O.length)+' open';
@@ -904,8 +921,8 @@ function renderTape(){
   tapeLoaded=true;$('trades').tBodies[0].innerHTML=list.join('')||`<tr><td colspan="6" class="dim">quiet on the line${tapeMin?' (no $'+tapeMin+'+ trades in the last 300)':''}</td></tr>`;
   if(wide)fitTape()}
 // on desktop the tape shows as many whole rows as its panel has room for (it never grows the panel)
-function fitTape(){const tw=document.querySelector('.tapeP .tw');if(!tw)return;const H=tw.clientHeight;
-  [...$('trades').tBodies[0].rows].forEach(r=>{r.style.display='';if(r.offsetTop+r.offsetHeight>H)r.style.display='none'})}
+function fitTape(){const tw=document.querySelector('.tapeP .tw');if(!tw||innerWidth<1000)return;const H=tw.clientHeight;
+  [...$(tapeView==='holders'?'holders':'trades').tBodies[0].rows].forEach(r=>{r.style.display='';if(r.offsetTop+r.offsetHeight>H)r.style.display='none'})}
 addEventListener('resize',()=>{clearTimeout(fitTape.t);fitTape.t=setTimeout(()=>tapeRaw.length&&renderTape(),150)});
 // buy alerts: every new $MARINE buy >= $100 pops on screen with a sound
 const BUYMIN=100,alerted=new Set();let tradesBoot=true,bpQ=[],bpBusy=false,actx=null;
