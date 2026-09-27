@@ -95,7 +95,7 @@ main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:1px;backg
 .col{display:flex;flex-direction:column;gap:1px;min-height:0}
 .tapeH{display:flex;gap:14px;align-items:baseline}.tapeH button{background:none;border:0;padding:0;font:inherit;color:var(--dim);cursor:pointer;letter-spacing:inherit}.tapeH button.on{color:#fff}.tapeH button:hover{color:#fff}
 .col.comms::after{content:'';flex:1;background:var(--panel)}
-@media (min-width:1000px){.tapeP{display:flex;flex-direction:column}.tapeP .tw{position:relative;flex:1;min-height:250px;overflow:hidden}.tapeP .tw>table{position:absolute;top:0;left:0;right:0}}
+@media (min-width:1000px){.col.left>.lower{flex:1}.tapeP{display:flex;flex-direction:column}.tapeP .tw{position:relative;flex:1;min-height:250px;overflow:hidden}.tapeP .tw>table{position:absolute;top:0;left:0;right:0}}
 .panel{background:var(--panel);padding:12px 16px;min-height:0}
 .ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px}
 .ph h2{font-family:'VT323';font-weight:400;font-size:22px;color:#fff;letter-spacing:1px;white-space:nowrap}
@@ -916,6 +916,8 @@ function renderTape(){
 // on desktop the tape shows as many whole rows as its panel has room for (it never grows the panel)
 function fitTape(){const tw=document.querySelector('.tapeP .tw');if(!tw||innerWidth<1000)return;const H=tw.clientHeight;
   [...$(tapeView==='holders'?'holders':'trades').tBodies[0].rows].forEach(r=>{r.style.display='';if(r.offsetTop+r.offsetHeight>H)r.style.display='none'})}
+// re-fit whenever the tape panel changes height (e.g. the Stonk Board card fills in next to it)
+try{new ResizeObserver(()=>{clearTimeout(fitTape.r);fitTape.r=setTimeout(()=>tapeRaw.length&&renderTape(),120)}).observe(document.querySelector('.tapeP .tw'))}catch(e){}
 addEventListener('resize',()=>{clearTimeout(fitTape.t);fitTape.t=setTimeout(()=>tapeRaw.length&&renderTape(),150)});
 // buy alerts: every new $MARINE buy >= $100 pops on screen with a sound
 const BUYMIN=100,alerted=new Set();let tradesBoot=true,bpQ=[],bpBusy=false,actx=null;
@@ -964,7 +966,10 @@ function renderBoard(){if(!board)return;const L=board[boardKey]||[],lab=boardKey
     <span class="apy">${apyFmt(t.apy)} APY ${lab}</span><span class="dim">mc ${compact(t.mcap)}</span></a>`).join('');
   const m=boardStats();if(m&&m.rank)html+=`<a class="tk me" href="${esc(tokLink(TK.mint))}" target="_blank" rel="noopener"><span class="dim">board #${m.rank}</span><b>$${TK.symbol}</b><span class="q">/${TK.quote}</span><span class="apy">${apyFmt(m[boardKey])} APY ${lab}</span></a>`
   setTrack('boardTicker',html,110)}
-async function loadBoard(){try{board=await j(DATA+'board.json?'+Date.now());renderBoard();renderApy()}catch(e){}}
+// board-x.json: the hourly extras for each coin (launch, flywheel rank, transfers, holder growth, concentration)
+let boardX=null;
+async function loadBoard(){try{board=await j(DATA+'board.json?'+Date.now());renderBoard();renderApy()}catch(e){}
+  try{boardX=await j(DATA+'board-x.json?'+Date.now());renderApy()}catch(e){}}
 document.querySelector('.top .lbl').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   document.querySelectorAll('.top .lbl button').forEach(x=>x.classList.toggle('on',x===b));boardKey=b.dataset.k;renderBoard();renderApy()});
 // on stream nobody clicks, so alternate 3D / 24H every few minutes
@@ -976,7 +981,7 @@ setInterval(()=>{if(!document.documentElement.classList.contains('fit'))return;
 const FLAGS={CLOBR_ENABLED:true,STONKBOARD_ENABLED:true};
 // Stonk Board figures for this mint come only from board.json (thestonkboard.com top 100, snapshotted by the bot).
 function boardStats(mint=TK.mint){if(!board)return null;
-  if(board.tokens&&board.tokens[mint])return board.tokens[mint];
+  if(board.tokens&&board.tokens[mint])return {...board.tokens[mint],...(boardX&&boardX.tokens&&boardX.tokens[mint]||{})};
   if(mint===MARINE&&board.marine)return board.marine;
   const a=(board.apy3d||[]).find(t=>t.mint===mint),b=(board.apy24h||[]).find(t=>t.mint===mint);
   return a||b?{rank:(a||b).rank,apy3d:a?.apy,apy24h:b?.apy}:null}
@@ -992,13 +997,22 @@ function renderApy(){const m=FLAGS.STONKBOARD_ENABLED&&board?boardStats():null,r
   const per=d=>{if(apr==null)return'—';const v=100*apr/100*d/365;return'$'+v.toFixed(v<10?2:0)};
   const win=['24h','3d','7d'].filter(w=>m['apr'+w]!=null||m['apy'+w]!=null),cell=v=>v==null?'<span class="dim">—</span>':apyFmt(v);
   const chg=v=>`<span class="${v>=0?'up':'dn'}">${v>=0?'+':''}${num(v)}</span>`;
-  const kv=[m.top10Pct!=null&&['Top 10 hold',m.top10Pct.toFixed(1)+'%'],m.eligiblePct!=null&&['Earning supply',m.eligiblePct.toFixed(1)+'%'],
-    m.hold24h!=null&&['Holders 24h',chg(m.hold24h)],m.hold7d!=null&&['Holders 7d',chg(m.hold7d)],m.bondedAt&&['Bonded',ago(Date.parse(m.bondedAt))+' ago']].filter(Boolean);
+  const grow=(c,p)=>c==null?null:chg(c)+(p!=null?` <span class="dim">(${p>=0?'+':''}${p.toFixed(p>=100?0:1)}%)</span>`:'');
+  const since=t=>t?ago(Date.parse(t))+' ago':null;
+  // grouped so related numbers sit together; anything the header already shows (holders, payouts, min hold) stays out
+  const groups=[
+    ['Holders',[['Growth 24h',grow(m.hold24h,m.holdPct24h)],['Growth 3d',grow(m.hold3d,m.holdPct3d)],['Growth 7d',grow(m.hold7d,m.holdPct7d)],
+      ['Top 10 hold',m.top10Pct!=null?m.top10Pct.toFixed(1)+'%':null],['Largest wallet',m.largestPct!=null?m.largestPct.toFixed(1)+'%':null],['In pools & programs',m.programPct!=null?m.programPct.toFixed(1)+'%':null]]],
+    ['Rewards',[['Earning supply',m.eligiblePct!=null?m.eligiblePct.toFixed(1)+'%':null],['Earning value',m.earningUsd!=null?compact(m.earningUsd):null],
+      ['Fees to holders',m.payoutShare!=null?(m.payoutShare*100).toFixed(1)+'%':null],['Transfers 24h',m.transfers24h!=null?num(m.transfers24h):null]]],
+    ['Timeline',[['Launched',since(m.launchedAt)],['Bonded',since(m.bondedAt)],['On the board',since(m.boardSince)],['Stonkfun flywheel',m.flywheelRank!=null?'#'+m.flywheelRank:null]]]];
+  const kvs=groups.map(([t,rows])=>[t,rows.filter(r=>r[1]!=null)]).filter(g=>g[1].length);
+  const wait7=m.apr7d==null&&m.hours7d!=null&&m.hours7d<168?`<div class="dim" style="font-size:10px;margin-top:4px">7D rates fill in after a full week of data (${Math.round(m.hours7d)}h of 168h so far).</div>`:'';
   $('mbX').innerHTML=`<div class="sub">$100 held earns about (at ${basis} APR)</div>
     <div class="earn"><div><label>Per day</label><b>${per(1)}</b></div><div><label>Per week</label><b>${per(7)}</b></div><div><label>Per month</label><b>${per(30)}</b></div><div><label>Per year</label><b>${per(365)}</b></div></div>
     ${win.length?`<table class="rates"><thead><tr><th></th>${win.map(w=>`<th class="r">${w.toUpperCase()}</th>`).join('')}</tr></thead><tbody>
-      <tr><td>APR</td>${win.map(w=>`<td class="r">${cell(m['apr'+w])}</td>`).join('')}</tr></tbody></table>`:''}
-    ${kv.length?`<div class="kv">${kv.map(([a,b])=>`<div><span>${a}</span><span>${b}</span></div>`).join('')}</div>`:''}`;
+      <tr><td>APR</td>${win.map(w=>`<td class="r">${cell(m['apr'+w])}</td>`).join('')}</tr></tbody></table>`:''}${wait7}
+    ${kvs.map(([t,rows])=>`<div class="sub">${t}</div><div class="kv">${rows.map(([a,b])=>`<div><span>${a}</span><span>${b}</span></div>`).join('')}</div>`).join('')}`;
   $('mbNote').textContent='Modeled by thestonkboard.com from recent holder payouts. Not a forecast or guaranteed yield, not financial advice.'+(board.boardAt?' Updated '+ago(Date.parse(board.boardAt))+' ago.':'')}
 
 // CLOBr liquidity near the price and the heaviest walls (first panel of CLOBr analytics). Hidden when there's no depth.
