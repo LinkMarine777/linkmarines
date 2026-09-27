@@ -961,7 +961,8 @@ function nextBuy(){if(!alertsOn){bpQ.length=0;return}if(bpBusy||!bpQ.length||$('
   bpTimer=setTimeout(closeBuy,bpQ.length>3?2500:5000)}
 var bpTimer=null;
 function closeBuy(){clearTimeout(bpTimer);if(!$('buyPop').classList.contains('show'))return;$('buyPop').classList.remove('show');setTimeout(()=>{bpBusy=false;nextBuy()},500)}
-async function loadTrades(){if(!GT)return;try{const d=await j(GT+'/trades');tapeRaw=d.data.map(t=>t.attributes);renderTape();checkBuys(tapeRaw)}catch(e){}}
+// a rate-limited call (GeckoTerminal 429) retries in 5 s instead of waiting for the next 20 s round
+async function loadTrades(){if(!GT)return;clearTimeout(loadTrades.r);try{const d=await j(GT+'/trades');tapeRaw=d.data.map(t=>t.attributes);renderTape();checkBuys(tapeRaw)}catch(e){loadTrades.r=setTimeout(loadTrades,5000)}}
 $('tapeF').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   [...$('tapeF').children].forEach(x=>x.classList.toggle('on',x===b));tapeMin=+b.dataset.min;renderTape()});
 

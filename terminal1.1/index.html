@@ -748,8 +748,9 @@ async function loadLive(k){
   const pts=m.data.attributes.ohlcv_list.slice().reverse().map(c=>{if(L.has(c[0]))last=L.get(c[0]);return[c[0],c[4],last]});
   const f=pts.find(p=>p[2]!=null)?.[2];pts.forEach(p=>{if(p[2]==null)p[2]=f});CH[k]=pts}
 async function loadChart(){
-  // candles come live from GeckoTerminal; a failed call (rate limit) retries a few times
-  try{await loadLive(tf);loadChart.fails=0}catch(e){if((loadChart.fails=(loadChart.fails||0)+1)<4)setTimeout(loadChart,4000*loadChart.fails)}
+  // 1.1 ($MARINE): the bot's chart.json first, like 1.0, so GeckoTerminal's rate limit is left for the tape; live candles only as a fallback
+  try{const d=await j(DATA+'chart.json?'+Date.now());if(d&&d['7d'])CH=d}catch(e){}
+  if(!CH[tf]){try{await loadLive(tf);loadChart.fails=0}catch(e){if((loadChart.fails=(loadChart.fails||0)+1)<4)setTimeout(loadChart,4000*loadChart.fails)}}
   setSeries()}
 function nice(min,max,count=5){
   if(min===max){min*=.95;max*=1.05}
@@ -964,7 +965,8 @@ function nextBuy(){if(!alertsOn){bpQ.length=0;return}if(bpBusy||!bpQ.length||$('
   bpTimer=setTimeout(closeBuy,bpQ.length>3?2500:5000)}
 var bpTimer=null;
 function closeBuy(){clearTimeout(bpTimer);if(!$('buyPop').classList.contains('show'))return;$('buyPop').classList.remove('show');setTimeout(()=>{bpBusy=false;nextBuy()},500)}
-async function loadTrades(){if(!GT)return;try{const d=await j(GT+'/trades');tapeRaw=d.data.map(t=>t.attributes);renderTape();checkBuys(tapeRaw)}catch(e){}}
+// a rate-limited call (GeckoTerminal 429) retries in 5 s instead of waiting for the next 20 s round
+async function loadTrades(){if(!GT)return;clearTimeout(loadTrades.r);try{const d=await j(GT+'/trades');tapeRaw=d.data.map(t=>t.attributes);renderTape();checkBuys(tapeRaw)}catch(e){loadTrades.r=setTimeout(loadTrades,5000)}}
 $('tapeF').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   [...$('tapeF').children].forEach(x=>x.classList.toggle('on',x===b));tapeMin=+b.dataset.min;renderTape()});
 
