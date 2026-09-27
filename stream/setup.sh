@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
-# War Room 24/7 stream: Terminal 1.1 in a headless Chrome (1920x1080) + its sounds + a quiet lofi loop -> RTMP.
+# War Room 24/7 stream: Terminal 1.1 in a headless Chrome (1920x1080) + its sounds + a quiet lofi loop -> one or more
+# RTMP destinations at once, controlled from a Telegram bot that runs here (outbound only: no open ports).
 # Ubuntu/Debian VPS, run as root:  curl -fsSL https://raw.githubusercontent.com/LinkMarine777/linkmarines/main/stream/setup.sh | sudo bash
-# Re-running is safe (it updates the scripts and keeps your config). Your stream key stays on this server only.
+# Re-running is safe (it updates the scripts and keeps your config). Stream keys stay on this server only.
 set -euo pipefail
 [ "$(id -u)" = 0 ] || { echo "run as root (sudo)"; exit 1; }
 [ "$(uname -m)" = x86_64 ] || { echo "this script needs an x86_64 (amd64) VPS"; exit 1; }
 
-APP=/opt/wr-stream; ENV=/etc/wr-stream.env; USERN=wrstream
+APP=/opt/wr-stream; ENV=/etc/wr-stream.env; CONF=/etc/wr-stream.json; CENV=/etc/wr-control.env; USERN=wrstream
+RAW=https://raw.githubusercontent.com/LinkMarine777/linkmarines/main/stream
 echo "== installing packages (a few minutes)"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
-apt-get install -y -qq xvfb ffmpeg pulseaudio pulseaudio-utils fonts-noto-color-emoji fonts-dejavu-core fonts-liberation curl ca-certificates >/dev/null
+apt-get install -y -qq python3 xvfb ffmpeg pulseaudio pulseaudio-utils fonts-noto-color-emoji fonts-dejavu-core fonts-liberation curl ca-certificates >/dev/null
 if ! command -v google-chrome >/dev/null; then
   curl -fsSL -o /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
   apt-get install -y -qq /tmp/chrome.deb >/dev/null; rm -f /tmp/chrome.deb
@@ -19,34 +21,48 @@ fi
 id $USERN >/dev/null 2>&1 || useradd -r -m -d $APP -s /usr/sbin/nologin $USERN
 mkdir -p $APP/music $APP/chrome; chown -R $USERN:$USERN $APP
 
-# ---- config (asked once; edit later with: wr-stream key / wr-stream volume)
+# ---- stream settings (resolution picked from the CPU count; edit /etc/wr-stream.env to change)
 if [ ! -f $ENV ]; then
-  echo; echo "== where should it stream?"
-  echo "  1) X (Twitter)  2) Twitch  3) YouTube  4) Kick  5) other RTMP URL"
-  read -rp "pick 1-5: " P </dev/tty
-  case "$P" in
-    1) read -rp "X 'Server URL' from Media Studio / Producer (rtmp://...): " URL </dev/tty ;;
-    2) URL=rtmp://live.twitch.tv/app ;;
-    3) URL=rtmp://a.rtmp.youtube.com/live2 ;;
-    4) read -rp "Kick 'Stream URL' (rtmps://.../app): " URL </dev/tty ;;
-    *) read -rp "RTMP server URL: " URL </dev/tty ;;
-  esac
-  read -rsp "stream key (hidden): " KEY </dev/tty; echo
   CORES=$(nproc); RES=1920x1080; BITRATE=4500k
   [ "$CORES" -lt 4 ] && { RES=1280x720; BITRATE=3000k; }
-  umask 077
-  cat > $ENV <<EOF
-RTMP_URL="$URL"
-STREAM_KEY="$KEY"
-PAGE="https://linkmarines.vercel.app/terminal1.1/?obs"
-OUT_RES=$RES
-BITRATE=$BITRATE
-FPS=30
-MUSIC_VOL=0.15
-EOF
-  chown root:$USERN $ENV; chmod 640 $ENV   # readable by the stream service only
-  echo "saved $ENV (output $RES @ $BITRATE on $CORES vCPU)"
+  printf 'PAGE="https://linkmarines.vercel.app/terminal1.1/?obs"\nOUT_RES=%s\nBITRATE=%s\nFPS=30\nMUSIC_VOL=0.15\n' "$RES" "$BITRATE" > $ENV
+  echo "stream output: $RES @ $BITRATE ($CORES vCPU)"
 fi
+chown root:$USERN $ENV; chmod 640 $ENV
+
+# ---- destinations + keys live in /etc/wr-stream.json (set from Telegram); a key saved by the first setup version carries over
+python3 - "$ENV" "$CONF" <<'PY'
+import json, os, re, sys
+env, conf = sys.argv[1], sys.argv[2]
+c = json.load(open(conf)) if os.path.exists(conf) else {'dests': {}, 'live': []}
+lines = open(env).read().splitlines(); kv = {}
+for l in lines:
+    m = re.match(r'(RTMP_URL|STREAM_KEY)="?(.*?)"?$', l)
+    if m: kv[m[1]] = m[2]
+if kv.get('RTMP_URL') and kv.get('STREAM_KEY'):
+    u = kv['RTMP_URL']
+    p = ('twitch' if 'twitch' in u else 'youtube' if 'youtube' in u else 'kick' if ('kick' in u or 'live-video.net' in u)
+         else 'x' if ('pscp' in u or 'x.com' in u or 'twitter' in u) else 'custom')
+    c['dests'][p] = {'url': u.rstrip('/'), 'key': kv['STREAM_KEY']}
+    c['live'] = c['live'] or [p]
+    open(env, 'w').write('\n'.join(l for l in lines if not re.match(r'(RTMP_URL|STREAM_KEY)=', l)) + '\n')
+    print('moved your saved', p, 'key into', conf)
+json.dump(c, open(conf, 'w'), indent=1)
+PY
+chown root:$USERN $CONF; chmod 640 $CONF
+
+# ---- the Telegram control bot (a new bot from @BotFather, separate from the War Room approval bot)
+if [ ! -f $CENV ]; then
+  echo; echo "== Telegram control bot: create one with @BotFather (/newbot), then paste its token here."
+  echo "   (Enter to skip; re-run this script later to add it)"
+  read -rsp "control bot token (hidden): " TGT </dev/tty; echo
+  if [ -n "$TGT" ]; then
+    read -rp "your Telegram user id(s), comma separated (send /id to the War Room bot to see yours): " ADM </dev/tty
+    umask 077; printf 'TG_TOKEN="%s"\nADMIN_IDS="%s"\n' "$TGT" "$ADM" > $CENV; chmod 600 $CENV; umask 022
+  fi
+fi
+mkdir -p /opt/wr-control
+curl -fsSL -o /opt/wr-control/wr-control.py "$RAW/wr-control.py"; chmod 700 /opt/wr-control/wr-control.py
 
 # ---- the runner: virtual screen + audio + chrome + ffmpeg, each restarted if it dies
 cat > $APP/run.sh <<'RUN'
@@ -74,9 +90,15 @@ pactl set-default-sink wr
 sleep 8
 # lofi: every mp3/m4a/ogg/flac/wav in /opt/wr-stream/music, shuffled, looped forever
 mk_playlist(){ find /opt/wr-stream/music -maxdepth 1 -type f \( -iname '*.mp3' -o -iname '*.m4a' -o -iname '*.ogg' -o -iname '*.flac' -o -iname '*.wav' \) | shuf | sed "s/'/'\\\\''/g; s/.*/file '&'/" > /opt/wr-stream/.playlist; }
+# the go-live list -> one ffmpeg tee target ("[f=flv:onfail=ignore]url/key|..."); empty = stay off air but keep the page up
+targets(){ python3 -c '
+import json
+c = json.load(open("/etc/wr-stream.json"))
+print("|".join("[f=flv:onfail=ignore]" + c["dests"][p]["url"].rstrip("/") + "/" + c["dests"][p]["key"] for p in c.get("live", []) if p in c.get("dests", {})))' 2>/dev/null; }
 
 while true; do
-  source /etc/wr-stream.env; mk_playlist
+  source /etc/wr-stream.env; mk_playlist; OUT=$(targets)
+  if [ -z "$OUT" ]; then sleep 15; continue; fi
   [ "${OUT_RES}" = 1920x1080 ] && V="[0:v]fps=${FPS}[v]" || V="[0:v]fps=${FPS},scale=${OUT_RES/x/:}:flags=bicubic[v]"
   if [ -s /opt/wr-stream/.playlist ]; then
     IN_MUSIC=(-stream_loop -1 -f concat -safe 0 -i /opt/wr-stream/.playlist)
@@ -86,13 +108,13 @@ while true; do
     -thread_queue_size 1024 -f pulse -i wr.monitor "${IN_MUSIC[@]}" \
     -filter_complex "$V;$AF" -map "[v]" -map "[a]" \
     -c:v libx264 -preset veryfast -tune zerolatency -b:v "$BITRATE" -maxrate "$BITRATE" -bufsize "$BITRATE" -pix_fmt yuv420p -g $((FPS*2)) \
-    -c:a aac -b:a 160k -ar 44100 -f flv "${RTMP_URL%/}/${STREAM_KEY}"
+    -c:a aac -b:a 160k -ar 44100 -flags +global_header -f tee "$OUT"
   echo "ffmpeg exited ($?), reconnecting in 5 s"; sleep 5
 done
 RUN
 chmod 755 $APP/run.sh; chown $USERN:$USERN $APP/run.sh
 
-cat > /etc/systemd/system/wr-stream.service <<EOF
+cat > /etc/systemd/system/wr-stream.service <<UNIT
 [Unit]
 Description=War Room 24/7 stream (Terminal 1.1 -> RTMP)
 After=network-online.target
@@ -105,9 +127,22 @@ RestartSec=5
 KillMode=control-group
 [Install]
 WantedBy=multi-user.target
-EOF
+UNIT
 
-# ---- control command
+cat > /etc/systemd/system/wr-control.service <<'UNIT'
+[Unit]
+Description=War Room stream control bot (Telegram)
+After=network-online.target
+Wants=network-online.target
+[Service]
+ExecStart=/usr/bin/python3 /opt/wr-control/wr-control.py
+Restart=always
+RestartSec=10
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+# ---- control command on the VPS
 cat > /usr/local/bin/wr-stream <<'CTL'
 #!/usr/bin/env bash
 E=/etc/wr-stream.env
@@ -115,18 +150,19 @@ case "${1:-status}" in
   start|stop|restart|status) sudo systemctl "$1" wr-stream --no-pager ;;
   logs) sudo journalctl -u wr-stream -f -n 50 ;;
   volume) [ -n "${2:-}" ] || { grep MUSIC_VOL $E; exit; }; sudo sed -i "s/^MUSIC_VOL=.*/MUSIC_VOL=$2/" $E; sudo systemctl restart wr-stream; echo "music volume $2 (0.0-1.0)";;
-  key) read -rsp "new stream key (hidden): " K; echo; sudo sed -i "s|^STREAM_KEY=.*|STREAM_KEY=\"$K\"|" $E; sudo systemctl restart wr-stream; echo "saved";;
+  key|live) echo "keys and destinations are set from the Telegram control bot: /key, /live, /stop (see /help there)";;
+  bot) sudo systemctl status wr-control --no-pager; sudo journalctl -u wr-control -n 20 --no-pager -o cat;;
   music) ls -1 /opt/wr-stream/music; echo "(add files there, then: wr-stream restart)";;
   shot) sudo -u wrstream env DISPLAY=:99 ffmpeg -loglevel error -y -f x11grab -video_size 1920x1080 -i :99 -frames:v 1 /tmp/wr-shot.png && echo "saved /tmp/wr-shot.png";;
-  *) echo "wr-stream start|stop|restart|status|logs|volume [0.15]|key|music|shot";;
+  *) echo "wr-stream start|stop|restart|status|logs|volume [0.15]|music|shot|bot";;
 esac
 CTL
 chmod 755 /usr/local/bin/wr-stream
 
 systemctl daemon-reload
-systemctl enable --now wr-stream >/dev/null
-systemctl restart wr-stream
+systemctl enable wr-stream wr-control >/dev/null 2>&1
+systemctl restart wr-stream wr-control
 echo
-echo "== done. the stream is starting (give it ~20 s)."
-echo "   wr-stream status | logs | shot | volume 0.15 | key | restart"
-echo "   lofi: copy tracks you're licensed to stream into /opt/wr-stream/music, then: wr-stream restart"
+echo "== done. The terminal page is up; it goes on air once you pick a destination."
+echo "   In Telegram, open your control bot and send /help  (then /key ... and /live ...)"
+echo "   On the VPS: wr-stream status | logs | shot | volume 0.15 | restart | bot"
