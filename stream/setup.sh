@@ -63,6 +63,8 @@ if [ ! -f $CENV ]; then
 fi
 mkdir -p /opt/wr-control
 curl -fsSL -o /opt/wr-control/wr-control.py "$RAW/wr-control.py"; chmod 700 /opt/wr-control/wr-control.py
+# yt-dlp for /music <link> (the official build; it updates itself before each download)
+curl -fsSL -o /usr/local/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp; chmod 755 /usr/local/bin/yt-dlp
 
 # ---- the runner: virtual screen + audio + chrome + ffmpeg, each restarted if it dies
 cat > $APP/run.sh <<'RUN'
@@ -89,7 +91,7 @@ pactl set-default-sink wr
 
 sleep 8
 # lofi: every mp3/m4a/ogg/flac/wav in /opt/wr-stream/music, shuffled, looped forever
-mk_playlist(){ find /opt/wr-stream/music -maxdepth 1 -type f \( -iname '*.mp3' -o -iname '*.m4a' -o -iname '*.ogg' -o -iname '*.flac' -o -iname '*.wav' \) | shuf | sed "s/'/'\\\\''/g; s/.*/file '&'/" > /opt/wr-stream/.playlist; }
+mk_playlist(){ find /opt/wr-stream/music -maxdepth 1 -type f \( -iname '*.mp3' -o -iname '*.m4a' -o -iname '*.ogg' -o -iname '*.opus' -o -iname '*.flac' -o -iname '*.wav' \) | shuf | sed "s/'/'\\\\''/g; s/.*/file '&'/" > /opt/wr-stream/.playlist; }
 # the go-live list -> one ffmpeg tee target ("[f=flv:onfail=ignore]url/key|..."); empty = stay off air but keep the page up
 targets(){ python3 -c '
 import json

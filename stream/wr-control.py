@@ -6,7 +6,7 @@ wr-stream service: pick destinations, save stream keys, start/stop, screenshots,
 Stream keys go Telegram -> this server only, and the message that carried a key is deleted right away.
 Only Telegram user ids in ADMIN_IDS (/etc/wr-control.env) are obeyed, in private chats.
 """
-import json, os, re, subprocess, time, urllib.parse, urllib.request, uuid
+import json, os, re, subprocess, threading, time, urllib.parse, urllib.request, uuid
 
 ENV = '/etc/wr-control.env'
 CONF = '/etc/wr-stream.json'
@@ -72,6 +72,32 @@ def mask(text):
     return text
 
 
+MUSIC = '/opt/wr-stream/music'
+AUDIO_RE = re.compile(r'\.(mp3|m4a|ogg|opus|flac|wav)$', re.I)
+
+
+def music_files():
+    return sorted(f for f in os.listdir(MUSIC) if AUDIO_RE.search(f))
+
+
+def add_music(chat, link):
+    """Download a playlist/track's audio into the rotation with yt-dlp, then restart so the new playlist is picked up."""
+    before = set(music_files())
+    subprocess.run(['/usr/local/bin/yt-dlp', '-U'], capture_output=True, timeout=120)   # sites change often; stay current
+    r = subprocess.run(['/usr/local/bin/yt-dlp', '-x', '--audio-format', 'mp3', '--audio-quality', '5', '--restrict-filenames', '--no-overwrites',
+                        '--playlist-end', '40', '--match-filter', 'duration < 10800', '--ignore-errors', '--no-progress',
+                        '-o', MUSIC + '/%(title).80B-%(id)s.%(ext)s', link], capture_output=True, text=True, timeout=3 * 3600)
+    subprocess.run(['chown', '-R', 'wrstream:wrstream', MUSIC])
+    added = sorted(set(music_files()) - before)
+    if added:
+        if running(): sh('systemctl', 'restart', 'wr-stream')
+        tg('sendMessage', chat_id=chat, text=f'🎵 Added {len(added)} track(s); {len(music_files())} in the rotation now.' + (' Restarted the stream to include them.' if running() else ''))
+    else:
+        err = [l for l in (r.stderr or '').splitlines() if 'ERROR' in l]
+        tg('sendMessage', chat_id=chat, text='⚠️ Nothing was added.' + ('\n' + err[-1][:300] if err else '') +
+           '\nIf YouTube blocks the server, try the same music from SoundCloud, or a direct .mp3 link.')
+
+
 def running():
     return sh('systemctl', 'is-active', 'wr-stream') == 'active'
 
@@ -100,7 +126,7 @@ def status_text():
     saved = ', '.join(f"{NAMES.get(p, p)} (…{d['key'][-4:]})" for p, d in c['dests'].items()) or 'none'
     load = open('/proc/loadavg').read().split()[:3]
     vol = load_env(STREAM_ENV).get('MUSIC_VOL', '?')
-    tracks = len([f for f in os.listdir('/opt/wr-stream/music') if re.search(r'\.(mp3|m4a|ogg|flac|wav)$', f, re.I)])
+    tracks = len(music_files())
     on = running() and live
     ok, info = sending() if on else (False, None)
     head = ('🔴 LIVE on ' + ', '.join(live) + (f' · sending {info:.1f} Mbps' if ok and info else ' · sending') if on and ok
@@ -123,6 +149,8 @@ HELP = """War Room stream control
 /keys — which platforms have keys saved
 /remove kick — forget a platform's key
 /volume 0.15 — lofi volume (0 to 1)
+/music <link> — add a playlist/track (StreamBeats etc.) to the lofi rotation
+/music — what's in the rotation · /music clear — empty it
 /shot — screenshot of the stream
 /logs — last lines of the stream log
 
@@ -206,6 +234,20 @@ def handle(msg):
         else: reply('Could not grab a screenshot.')
         return
 
+    if cmd == '/music':
+        if not args:
+            fs = music_files()
+            return reply(f'🎵 {len(fs)} tracks in the rotation' + (':\n' + '\n'.join('· ' + f.rsplit('.', 1)[0][:60] for f in fs[:20]) + ('\n…' if len(fs) > 20 else '') if fs else
+                         '.\nAdd some: /music <playlist or track link>\nFree for streams: StreamBeats by Harris Heller (search "StreamBeats lofi" on YouTube or SoundCloud).'))
+        if args[0].lower() == 'clear':
+            for f in music_files(): os.remove(os.path.join(MUSIC, f))
+            if running(): sh('systemctl', 'restart', 'wr-stream')
+            return reply('🎵 Rotation emptied.')
+        if not re.match(r'https?://', args[0]): return reply('Usage: /music <link to a playlist or track>')
+        reply('⏳ Downloading the audio from that link (up to 40 tracks). I\'ll message you when it\'s in the rotation.')
+        threading.Thread(target=add_music, args=(chat, args[0]), daemon=True).start()
+        return
+
     if cmd == '/logs':
         return reply(mask(sh('journalctl', '-u', 'wr-stream', '-n', '25', '--no-pager', '-o', 'cat'))[-3500:] or 'No log lines yet.')
 
@@ -219,7 +261,7 @@ def main():
     tg('setMyCommands', commands=[{'command': c, 'description': d} for c, d in [
         ('status', 'live or not, where, CPU'), ('live', 'go live: /live x kick'), ('stop', 'stop the stream'),
         ('restart', 'restart page + stream'), ('key', 'save a stream key'), ('keys', 'saved platforms'),
-        ('remove', 'forget a platform key'), ('volume', 'lofi volume 0-1'), ('shot', 'screenshot'), ('logs', 'stream log'), ('help', 'all commands')]])
+        ('remove', 'forget a platform key'), ('volume', 'lofi volume 0-1'), ('music', 'add lofi: /music <link>'), ('shot', 'screenshot'), ('logs', 'stream log'), ('help', 'all commands')]])
     offset = None
     while True:
         r = tg('getUpdates', timeout=50, **({'offset': offset} if offset else {}), allowed_updates=['message'])
