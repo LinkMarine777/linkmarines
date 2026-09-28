@@ -40,6 +40,11 @@
       "source": "/bridge",
       "destination": "/bridge/",
       "permanent": false
+    },
+    {
+      "source": "/flywheel",
+      "destination": "/flywheel/",
+      "permanent": false
     }
   ]
 }
