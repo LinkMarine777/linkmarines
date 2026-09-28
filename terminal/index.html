@@ -465,7 +465,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   <nav>
     <a class="btn fx" id="chartLink" href="#" target="_blank" rel="noopener">CHART</a>
     <a class="btn fx" href="https://x.com/TheMarinesX" target="_blank" rel="noopener">X</a>
-    <a class="btn" href="/trending/" title="Terminal 2.0: any stonkfun token">2.0</a>
+    <a class="btn" href="/trending/" title="Terminal 7: any stonkfun token">TERMINAL 7</a>
     <a class="btn fx" href="../">HQ</a>
     <a class="btn chat" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ WAR ROOM CHAT</a>
     <button class="btn tts" id="ttsBtn">BUY TTS</button>
@@ -621,7 +621,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 </div></div>
 
 <script>
-// ---------- Terminal 2.0: any stonk token, picked by ?ca=<mint> (default $MARINE) ----------
+// ---------- Terminal 7: any stonk token, picked by ?ca=<mint> (default $MARINE) ----------
 // Shared site data (board, tickers, ads, TTS, prices) comes from ../terminal/, the same files 1.0 uses.
 const MARINE='F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK';
 const DATA='https://war-room-bot.linkmarine777.workers.dev/data/terminal/';
@@ -652,7 +652,7 @@ async function resolveToken(){
   $('caIn').value=CA;
   // the bare /terminal/ link is $MARINE: show its CA in the address bar so any view can be shared as-is
   $('homeTk').style.display=CA===MARINE?'none':'';
-  document.title=sym+' · WAR ROOM TERMINAL 2.0';
+  document.title=sym+' · THE WAR ROOM';
   renderLinks(pairs);
 }
 // The token's own links as DexScreener lists them (X, website, Telegram), plus a live X search for its cashtag
@@ -1145,7 +1145,7 @@ async function loadBoard(){try{board=await j(DATA+'board.json?'+Date.now());rend
   try{boardX=await j(DATA+'board-x.json?'+Date.now());renderApy()}catch(e){}}
 // 1.1: no 3D/24H switch (24H only)
 
-// ---------- Terminal 2.0 panels: CLOBr (score tile + analytics) and the Stonk Board card ----------
+// ---------- Terminal 7 panels: CLOBr (score tile + analytics) and the Stonk Board card ----------
 // Flip a flag to false to hide that data. CLOBr also needs its key on the bot, or it stays hidden.
 const FLAGS={CLOBR_ENABLED:true,STONKBOARD_ENABLED:true};
 // Stonk Board figures for this mint come only from board.json (thestonkboard.com top 100, snapshotted by the bot).

@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<script>/* terminal7.xyz is the terminal's own domain: its front page is trending */
-if(/(^|\.)terminal7\.xyz$/.test(location.hostname))location.replace('/trending/'+location.search+location.hash)</script>
+<script>/* terminal7.xyz is the terminal's own domain: arriving there opens trending; HQ links inside the site still show HQ */
+if(/(^|\.)terminal7\.xyz$/.test(location.hostname)&&!document.referrer.startsWith(location.origin))location.replace('/trending/'+location.search+location.hash)</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LINK MARINES · $MARINE · reflections paid in $LINK</title>
 <meta name="description" content="The first cult that was right. Hold $MARINE, get paid in $LINK. Semper Fidelity.">
