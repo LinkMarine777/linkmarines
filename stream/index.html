@@ -444,8 +444,8 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 #akPop{position:absolute;z-index:90;display:none;width:250px;background:var(--panel2,#0d1428);border:1px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,.6);padding:10px 12px;font-size:12px;color:var(--txt)}
 #akPop.open{display:block}#akPop label{display:flex;gap:8px;align-items:center;padding:4px 0;cursor:pointer}#akPop .all{border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:4px;color:#fff;letter-spacing:1px}
 #akPop .dis{opacity:.45;cursor:default}#akPop input{accent-color:var(--blue2)}#akPop small{display:block;color:var(--dim);margin-top:6px;font-size:10px}
-#soundBtn,#alertBtn{display:inline-flex;align-items:center;justify-content:center;color:var(--blue2)!important;padding:6px 9px!important;font-size:0!important}#soundBtn.off,#alertBtn.off{color:var(--dim)!important;opacity:1!important}#soundBtn svg,#alertBtn svg{display:block}
-.soc{display:inline-flex;gap:8px}.soc a{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);color:var(--blue2);padding:6px 8px;line-height:0}.soc a:hover{border-color:var(--blue2);color:#fff;text-decoration:none}
+#soundBtn,#alertBtn{display:inline-flex;align-items:center;justify-content:center;color:var(--blue2)!important;padding:4px 6px!important;font-size:0!important}#soundBtn svg,#alertBtn svg{width:16px;height:16px}#soundBtn.off,#alertBtn.off{color:var(--dim)!important;opacity:1!important}#soundBtn svg,#alertBtn svg{display:block}
+.soc{display:inline-flex;gap:8px}.soc{gap:6px!important}.soc a{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);color:var(--blue2);padding:4px 6px;line-height:0}.soc svg{width:16px;height:16px}.soc a:hover{border-color:var(--blue2);color:#fff;text-decoration:none}
 </style>
 </head>
 <body>
@@ -794,10 +794,17 @@ async function loadLive(k){
   const pts=m.data.attributes.ohlcv_list.slice().reverse().map(c=>{if(L.has(c[0]))last=L.get(c[0]);return[c[0],c[4],last]});
   const f=pts.find(p=>p[2]!=null)?.[2];pts.forEach(p=>{if(p[2]==null)p[2]=f});CH[k]=pts}
 async function loadChart(){
-  // the bot's chart.json while it's fresh (leaves GeckoTerminal's rate limit for the tape); live candles when it's stale or missing
-  let fresh=false;try{const d=await j(DATA+'chart.json?'+Date.now());if(d&&d['7d']&&Date.now()/1000-(d.at||0)<1800){CH=d;fresh=true}}catch(e){}
-  if(!fresh||!CH[tf]){try{await loadLive(tf);loadChart.fails=0}catch(e){if((loadChart.fails=(loadChart.fails||0)+1)<4)setTimeout(loadChart,4000*loadChart.fails)}}
-  liveTail();setSeries()}
+  // shows a chart at once: this browser's last copy (kept 6 h) or, for $MARINE, the saved chart.json (the whale job rebuilds it
+  // every 30 min); live candles from GeckoTerminal only when the saved copy is over 20 min old. The last point always follows
+  // the live price (liveTail).
+  const k=tf;let fresh=false;
+  if(!CH[k]){const c=chartMem(k);if(c){CH[k]=c;liveTail();setSeries()}}
+  if(CA===MARINE){try{const d=await j(DATA+'chart.json?'+Date.now()),age=Date.now()/1000-(d.at||0);
+    if(d&&d['7d']&&age<5400){['1d','7d','all'].forEach(x=>{if(d[x]&&d[x].length&&(!CH[x]||age<1200))CH[x]=d[x]});fresh=age<1200;if(tf===k){liveTail();setSeries()}}}catch(e){}}
+  if(!fresh){try{await loadLive(k);chartMem(k,CH[k]);loadChart.fails=0}catch(e){if((loadChart.fails=(loadChart.fails||0)+1)<4)setTimeout(loadChart,3000*loadChart.fails)}}
+  if(tf===k){liveTail();setSeries()}}
+const chartMem=(k,v)=>{const key='wrChart:'+CA+':'+k;try{if(v){localStorage.setItem(key,JSON.stringify({at:Date.now(),v}));return}
+  const c=JSON.parse(localStorage.getItem(key)||'null');return c&&Date.now()-c.at<6*3600e3?c.v:null}catch(e){return null}};
 // the chart's last point follows the live price (DexScreener, every 30 s), so the chart never trails the ticker
 let QPX=0;
 function liveTail(){const r=CH[tf];if(!r||!r.length||!marinePx)return;const B={'1d':900,'7d':3600,all:14400}[tf]||3600,t=Math.floor(Date.now()/1000/B)*B,last=r[r.length-1];
@@ -1626,7 +1633,9 @@ document.querySelectorAll('.acc').forEach(sec=>{
 $('moreStats').addEventListener('click',()=>{const o=document.querySelector('.stats').classList.toggle('open');$('moreStats').textContent=o?'LESS ▴':'MORE STATS ▾'});
 addEventListener('resize',fit);
 fit();
-resolveToken().finally(()=>{loadRewards();loadMarket();loadChart();loadTrades();loadTicker();loadBoard();loadTTS();loadPay();loadAds();});
+// $MARINE's pool is known up front, so its chart starts loading right away, alongside the token lookup
+if(CA===MARINE){if(!GT){POOL='BnkYfw796XXq9UQ9kMYoX9iqSgXnjw7sFCsCVWVDiCUa';GT='https://api.geckoterminal.com/api/v2/networks/solana/pools/'+POOL}loadChart()}
+resolveToken().finally(()=>{loadRewards();loadMarket();if(CA!==MARINE||!CH[tf])loadChart();loadTrades();loadTicker();loadBoard();loadTTS();loadPay();loadAds();});
 setInterval(()=>{if(!document.hidden)loadAds()},15000);setInterval(loadPay,300000);setTimeout(()=>{renderAds();setInterval(renderAds,20000)},20000-Date.now()%20000);
 setInterval(loadTrades,20000);setTimeout(()=>{loadLink();setInterval(loadLink,15000)},6000);setInterval(loadMarket,30000);setInterval(loadRewards,30000);
 setInterval(loadChart,120000);setTimeout(loadDepth,1500);const vis=f=>()=>{if(!document.hidden)f()};setInterval(vis(loadDepth),60000);setTimeout(loadClobr,2000);setInterval(vis(loadClobr),120000);setInterval(loadTicker,300000);setInterval(loadBoard,300000);

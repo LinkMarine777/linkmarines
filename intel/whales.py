@@ -448,4 +448,23 @@ save('whales.json', {
     'selling': sorted([r for r in rows if r['net'] < 0], key=lambda r: (-r['sellers'], r['net']))[:15],
     'signals': signals, 'recent': recent, 'lp': lp, 'marine': marine})
 save('whales-state.json', state)
+
+# ---------- the $MARINE chart (chart.json): GeckoTerminal answers GitHub's runners, while the bot's copy from Cloudflare's
+# shared addresses keeps getting rate-limited. Same format as the bot's: 1d (15m closes), 7d (hourly), all (4h), [t, marine $, LINK $]
+def ohlcv(tf, agg, side):
+    time.sleep(2.5)
+    return get(f'https://api.geckoterminal.com/api/v2/networks/solana/pools/{MARINE_POOL}/ohlcv/{tf}?aggregate={agg}&limit=1000&currency=usd&token={side}')
+def series(tf, agg):
+    b, q = ohlcv(tf, agg, 'base'), ohlcv(tf, agg, 'quote')
+    tok, other = (b, q) if b['meta']['base']['address'] == MARINE else (q, b)
+    o = {r[0]: r[4] for r in other['data']['attributes']['ohlcv_list']}
+    return sorted([r[0], r[4], o[r[0]]] for r in tok['data']['attributes']['ohlcv_list'] if r[0] in o)
+try:
+    m15, h4 = series('minute', 15), series('hour', 4)
+    if m15:
+        hourly = {}
+        for r in m15: hourly[r[0] // 3600 * 3600] = [r[0] // 3600 * 3600, r[1], r[2]]   # last close in each hour
+        save('chart.json', {'1d': m15[-96:], '7d': list(hourly.values())[-168:], 'all': h4, 'at': int(time.time())})
+        log(f'chart: {len(m15)} 15m, {len(h4)} 4h candles')
+except Exception as e: log('chart', e)
 log(f"done: {len(trades)} whale swaps in 24h, {len(signals)} signals, {calls} RPC calls, rpc={'helius' if KEY else 'public'}")
