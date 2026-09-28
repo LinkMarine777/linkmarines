@@ -654,7 +654,6 @@ function renderLinks(pairs){const info=(pairs||[]).map(p=>p.info).find(i=>i&&((i
   a(POOL?'https://dexscreener.com/solana/'+POOL:'https://dexscreener.com/solana/'+CA,'chart','$'+sym+' chart on DexScreener');
   a(soc('twitter'),'x','$'+sym+' on X');a(safe((info.websites||[])[0]?.url),'web','$'+sym+' website');a(soc('telegram'),'tg','$'+sym+' Telegram');
   if(sym&&/^[A-Za-z0-9_]{1,15}$/.test(sym))a('https://x.com/search?q='+encodeURIComponent('$'+sym)+'&f=live','search','Search $'+sym+' on X');
-  L.push(`<a class="buyJ" href="https://jup.ag/tokens/${encodeURIComponent(CA)}" target="_blank" rel="noopener" title="Buy ${esc('$'+sym)} on Jupiter">BUY ON JUP ▸</a>`);
   L.push(`<button type="button" id="copyCa" title="Copy ${esc('$'+sym)} contract address" aria-label="Copy contract address"><svg viewBox="0 0 24 24">${ICO.copy}</svg></button>`);
   $('tkLinks').innerHTML=L.join('');
   $('copyCa').onclick=async()=>{try{await navigator.clipboard.writeText(CA)}catch(e){$('caIn').select();document.execCommand('copy')}
@@ -768,7 +767,10 @@ async function loadLive(k){
   const pts=m.data.attributes.ohlcv_list.slice().reverse().map(c=>{if(L.has(c[0]))last=L.get(c[0]);return[c[0],c[4],last]});
   const f=pts.find(p=>p[2]!=null)?.[2];pts.forEach(p=>{if(p[2]==null)p[2]=f});CH[k]=pts}
 async function loadChart(){
-  // candles come live from GeckoTerminal; a failed call (rate limit) retries a few times
+  // $MARINE: the bot's saved candles first (all three timeframes, like 1.0), which leaves GeckoTerminal's rate limit for
+  // the tape; every other token (and $MARINE as a fallback) comes live from GeckoTerminal, retried a few times
+  if(CA===MARINE&&!CH[tf]){try{const d=await j(DATA+'chart.json?'+Date.now());if(d&&d['7d'])Object.assign(CH,d)}catch(e){}}
+  if(CH[tf]&&CA===MARINE)return setSeries();
   try{await loadLive(tf);loadChart.fails=0}catch(e){if((loadChart.fails=(loadChart.fails||0)+1)<4)setTimeout(loadChart,4000*loadChart.fails)}
   setSeries()}
 function nice(min,max,count=5){
