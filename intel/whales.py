@@ -299,29 +299,8 @@ def pct_s(v):
         if abs(v) >= d: return (f'{v / d:.1f}{u}%' if abs(v) < d * 1e3 or u != 'T' else f'{v:.1e}%')
     return f'{v:.0f}%'
 bd = load('board.json', {}); btoks = bd.get('tokens') or {}; mk = state.setdefault('market', {})
-def mark(kind, key, text, m, usd=0, icon=None, symbol=None):
-    sig_(kind, key, now, text, m, usd); signals[-1].update({k: v for k, v in (('s', symbol), ('i', icon)) if v})
-t1 = (bd.get('apy24h') or [{}])[0]
-if t1.get('mint') and mk.get('top1') and mk['top1'] != t1['mint']:
-    mark('board', f"top1:{t1['mint']}:{now // 3600}", f"${t1.get('symbol')} takes #1 APY on the Stonk Board ({pct_s(t1.get('apy'))} 24h · mc ${t1.get('mcap') or 0:,.0f})", t1['mint'], 0, t1.get('logo'), t1.get('symbol'))
-if t1.get('mint'): mk['top1'] = t1['mint']
-if btoks:
-    if mk.get('board'):
-        for m in [m for m in btoks if m not in set(mk['board'])][:3]:
-            b = btoks[m]
-            mark('board', f"new:{m}", f"${b.get('symbol')} joins the Stonk Board at #{b.get('rank')} · {pct_s(b.get('apy24h'))} APY 24h · mc ${b.get('mcap') or 0:,.0f}", m, 0, None, b.get('symbol'))
-    mk['board'] = sorted(btoks)
-t10 = sorted(toks, key=lambda t: -(t.get('mcap') or 0))[:10]
-if mk.get('top10'):
-    for t in [t for t in t10 if t['mint'] not in set(mk['top10'])][:2]:
-        mark('top10', f"{t['mint']}:{time.strftime('%Y%m%d', time.gmtime(now))}", f"${t.get('symbol')} breaks into stonkfun's top 10 by market cap · mc ${t.get('mcap') or 0:,.0f}", t['mint'], 0, t.get('image'), t.get('symbol'))
-if t10: mk['top10'] = [t['mint'] for t in t10]
-paid = mk.get('paid') or {}
-for t in toks:
-    p0, p1 = paid.get(t['mint']), t.get('paidUsd')
-    if p0 and p1 and p1 - p0 >= 2500:
-        mark('payout', f"{t['mint']}:{now // 1800}", f"${t.get('symbol')} paid holders ${p1 - p0:,.0f} since the last check · ${p1:,.0f} all-time", t['mint'], p1 - p0, t.get('image'), t.get('symbol'))
-mk['paid'] = {t['mint']: t.get('paidUsd') for t in toks if t.get('paidUsd')}
+# top 1 / new on the Stonk Board, top 10, holder payouts, $LINK ±5% and the LINK/payout milestones are recorded by the
+# bot every few minutes now (same ids), so this job doesn't repeat them 30 min late
 
 # ---------- the stream's own alerts, recorded (same rules as the terminal) ----------
 st = state.setdefault('stream', {})
@@ -364,9 +343,7 @@ try:   # pulse (a $MARINE payout) + milestones, from stonkfun's live payout numb
         signals[-1].update({'s': 'MARINE'})
     if pv:
         hold_now, hold_was = (marine or {}).get('holders'), st.get('holders')
-        for key, cur, old, step, text in (('link', r.get('distributedTokens'), pv.get('distributedTokens'), 500, '{:,.0f} LINK paid to $MARINE holders'),
-                                         ('payouts', r.get('payoutCount'), pv.get('payoutCount'), 5000, '{:,.0f} payouts sent to $MARINE holders'),
-                                         ('holders', hold_now, hold_was, 100, '{:,.0f} $MARINE holders')):
+        for key, cur, old, step, text in (('holders', hold_now, hold_was, 100, '{:,.0f} $MARINE holders'),):
             if cur and old and int(cur // step) > int(old // step):
                 sig_('milestone', f"{key}:{int(cur // step) * step}", now, '🏆 ' + text.format(int(cur // step) * step), MARINE, 0)
                 signals[-1].update({'s': 'MARINE'})
@@ -378,18 +355,6 @@ try:   # pulse (a $MARINE payout) + milestones, from stonkfun's live payout numb
     st['rewards'] = {k: r.get(k) for k in ('lastPayoutAt', 'distributedTokens', 'payoutCount')}
     st['holders'] = (marine or {}).get('holders') or st.get('holders')
 except Exception as e: log('pulse', e)
-try:   # $LINK ±5% within an hour (at most once every 2 hours)
-    lp_now = (meta.get(LINK) or {}).get('p') or get(f'https://lite-api.jup.ag/price/v3?ids={LINK}').get(LINK, {}).get('usdPrice')
-    hist = [h for h in st.get('linkpx', []) if h[0] > now - 7200] + ([[now, lp_now]] if lp_now else [])
-    old = [h for h in hist if h[0] <= now - 3000]
-    if old and lp_now and now - st.get('linkmove', 0) > 7200:
-        ch = (lp_now / old[-1][1] - 1) * 100
-        if abs(ch) >= 5:
-            st['linkmove'] = now
-            sig_('link', f"link:{now // 3600}", now, f"$LINK {'+' if ch > 0 else ''}{ch:.1f}% in an hour · now ${lp_now:,.2f} on Solana", LINK, 0)
-            signals[-1].update({'s': 'LINK', 'side': 'up' if ch > 0 else 'down'})
-    st['linkpx'] = hist
-except Exception as e: log('link price', e)
 mb = btoks.get(MARINE)   # $MARINE on the Stonk Board: enters or climbs 5+, APY up 1.5x
 if mb:
     pr, pa = st.get('mrank'), st.get('mapy')
