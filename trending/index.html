@@ -364,7 +364,7 @@ let apSeen=null,apQ=[],apBusy=false,apT=null;
 async function pollAlerts(){try{const L=((await j(BOT+'/alerts?limit=40')).signals)||[];
   if(!apSeen){apSeen=new Set(L.map(x=>x.id));return}   // what's already in the history when the page opens doesn't pop
   const fresh=L.filter(x=>!apSeen.has(x.id)).reverse();// same pop-ups as the stream and 1.0 (other tokens' buys, seen only by whoever has that token open, stay history-only)
-  fresh.forEach(x=>{apSeen.add(x.id);if(alertsOn&&akOn(akCat(x))&&!(x.kind==='buy'&&!WRBUY(x)))apQ.push(x)});
+  fresh.forEach(x=>{apSeen.add(x.id);if(Date.now()/1000-x.t<=900&&alertsOn&&akOn(akCat(x))&&!(x.kind==='buy'&&!WRBUY(x)))apQ.push(x)});
   if(fresh.length)loadIntel();nextAp()}catch(e){}}
 function nextAp(){if(apBusy||!apQ.length)return;const x=apQ.shift(),[h,c]=kindOf(x),p=$('infoPop');apBusy=true;
   $('ipK').textContent=h;$('ipH').textContent=(x.s?'$'+x.s:'')+(x.u?' · '+compact(x.u):'');$('ipD').textContent=x.text;
