@@ -496,9 +496,10 @@ function renderAds(){['1','2','3'].forEach(k=>{const el=$('slot'+k);if(!el)retur
 const HOUSE={'1':['s1-better-call-sergey','s1-holding-alone','s1-plaid-motors'],'2':['s2-paper-hands','s2-youre-reading-this'],'3':['s3-bankers-hate','s3-sergey-associates']};
 const SPONSOR={
   '1':[{img:'/terminal/house/s1-jtx.png',href:'https://app.jtx.com/ref/TheMarines',tag:'JTX · JOIN ▸'},
-       {img:'/terminal/house/s1-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}],
+       {img:'/terminal/house/s1-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'},
+       {img:'/terminal/house/s1-clobr-pro.png',href:'https://clobr.io/premium?ref=DF92VC53',tag:'CLOBr PRO · 7 DAYS FREE ▸'}],
   '2':[{img:'/terminal/house/s2-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}],
-  '3':[{img:'/terminal/house/s2-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}]
+  '3':[{img:'/terminal/house/s2-clobr-pro.png',href:'https://clobr.io/premium?ref=DF92VC53',tag:'CLOBr PRO · 7 DAYS FREE ▸'}]
 };
 function fillers(k){return [...(HOUSE[k]||[]).map(n=>({house:n})),...(SPONSOR[k]||[])]}
 function houseAd(k,pr){
