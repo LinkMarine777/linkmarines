@@ -441,6 +441,9 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 /* scrollbars: slim and dark to match the site (not the default white bar) */
 *{scrollbar-width:thin;scrollbar-color:#24345e transparent}*::-webkit-scrollbar{width:6px;height:6px}*::-webkit-scrollbar-track{background:transparent}
 *::-webkit-scrollbar-thumb{background:#24345e;border-radius:3px}*::-webkit-scrollbar-thumb:hover{background:#34508f}*::-webkit-scrollbar-button{display:none}*::-webkit-scrollbar-corner{background:transparent}
+#akPop{position:absolute;z-index:90;display:none;width:250px;background:var(--panel2,#0d1428);border:1px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,.6);padding:10px 12px;font-size:12px;color:var(--txt)}
+#akPop.open{display:block}#akPop label{display:flex;gap:8px;align-items:center;padding:4px 0;cursor:pointer}#akPop .all{border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:4px;color:#fff;letter-spacing:1px}
+#akPop .dis{opacity:.45;cursor:default}#akPop input{accent-color:var(--blue2)}#akPop small{display:block;color:var(--dim);margin-top:6px;font-size:10px}
 </style>
 </head>
 <body>
@@ -712,7 +715,7 @@ async function j(u){try{const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw
 let rewards=null,prevR=null;
 // true holders (counted on-chain by the intel job every 30 min); stonkfun's holderCount is an all-time number
 const holdersNow=r=>(CA===MARINE&&WR&&WR.marine&&WR.marine.holders)||r.holderCount,earningNow=()=>CA===MARINE&&WR&&WR.marine&&WR.marine.eligible;
-function pulseTakeover(tok,usdv,holders,total){if(!alertsOn)return;$('ptN').textContent='+'+num(tok,tok<10?2:1)+' '+TK.quote;
+function pulseTakeover(tok,usdv,holders,total){if(!alertsOn||!akOn('pulse'))return;$('ptN').textContent='+'+num(tok,tok<10?2:1)+' '+TK.quote;
   $('ptS').textContent=(usdv>0?'≈ '+usd(usdv,0)+' ':'')+'paid to '+num(holders)+' $'+TK.symbol+' holders';
   $('ptD').textContent=num(total,0)+' '+TK.quote+' distributed all time · hold $'+TK.symbol+', get paid in $'+TK.quote;
   const el=$('pulseTO');el.classList.remove('show');void el.offsetWidth;el.classList.add('show');beep(true);setTimeout(()=>beep(true),600);
@@ -1091,7 +1094,7 @@ function beep(big){if(!soundOn)return;try{actx=actx||new(window.AudioContext||wi
 function checkBuys(list){const fresh=[];list.forEach(a=>{if(alerted.has(a.tx_hash))return;alerted.add(a.tx_hash);
   if(!tradesBoot&&a.to_token_address===CA&&+a.volume_in_usd>=BUYMIN)fresh.push(a)});tradesBoot=false;
   fresh.reverse().forEach(a=>bpQ.push({v:+a.volume_in_usd,amt:+a.to_token_amount,w:(a.tx_from_address||'').slice(0,4)}));nextBuy()}
-function nextBuy(){if(!alertsOn){bpQ.length=0;return}if(bpBusy||!bpQ.length||$('pulseTO').classList.contains('show'))return;const b=bpQ.shift();bpBusy=true;const big=b.v>=WHALE;
+function nextBuy(){if(!alertsOn){bpQ.length=0;return}while(bpQ.length&&!akOn(bpQ[0].k==='link'?'link':'marine'))bpQ.shift();if(bpBusy||!bpQ.length||$('pulseTO').classList.contains('show'))return;const b=bpQ.shift();bpBusy=true;const big=b.v>=WHALE;
   const lk=b.k==='link';$('buyPop').classList.toggle('big',big);$('buyPop').classList.toggle('lnk',lk);
   $('bpT').textContent=lk?'🔗 $LINK BUY':big?'🚨 LARGE BUY 🚨':'🟢 NEW RECRUIT';$('bpV').textContent='+'+usd(b.v,0);
   $('bpW').textContent=compact(b.amt,'')+(lk?' $LINK':' $'+TK.symbol)+' · '+b.w;$('buyPop').classList.add('show');beep(big||lk);
@@ -1221,7 +1224,7 @@ async function botFeed(){if(!PAY||!PAY.bot)return null;if(Date.now()-feedAt<2500
   try{FEED=await j(PAY.bot.replace(/\/$/,'')+'/feed');feedAt=Date.now()}catch(e){FEED=null}return FEED}
 async function loadTTS(){try{const f=await botFeed();const d=f&&f.tts?{items:f.tts}:await j(DATA+'tts.json?'+Date.now());
   (d.items||[]).forEach(i=>{if(i.at>=bootAt&&!played.has(i.id)&&!ttsQ.some(q=>q.id===i.id))ttsQ.push(i)});nextTTS()}catch(e){}}
-function nextTTS(){if(!alertsOn){ttsQ.forEach(i=>played.add(i.id));ttsQ.length=0;return}if(ttsBusy||!ttsQ.length)return;const i=ttsQ.shift();ttsBusy=true;
+function nextTTS(){if(!alertsOn||!akOn('tts')){ttsQ.forEach(i=>played.add(i.id));ttsQ.length=0;return}if(ttsBusy||!ttsQ.length)return;const i=ttsQ.shift();ttsBusy=true;
   played.add(i.id);localStorage.setItem('ttsPlayed',JSON.stringify([...played].slice(-100)));
   $('ttsFrom').textContent='🔊 '+i.from+' says';$('ttsMsg').textContent=i.text;$('ttsPop').classList.add('show');
   // the popup stays up while the message is read, then closes; without sound it shows long enough to read
@@ -1251,7 +1254,7 @@ const INFO_GAP=180e3,TEST=/[?&]test\b/.test(location.search);let infoQ=[],infoAt
 // testing never uses up an alert the real terminal (or the stream) should still show
 const IS_KEY=TEST?'wrInfoTest':'wrInfo';let IS={};try{IS=JSON.parse(localStorage.getItem(IS_KEY)||'{}')}catch(e){}
 const saveIS=()=>{try{localStorage.setItem(IS_KEY,JSON.stringify(IS))}catch(e){}};
-function infoAlert(kind,head,detail,side){if(!alertsOn&&!TEST)return;infoQ.push({kind,head,detail,side});if(infoQ.length>6)infoQ.shift();nextInfo()}
+function infoAlert(kind,head,detail,side){if(!TEST&&(!alertsOn||!akOn(catOf(kind))))return;infoQ.push({kind,head,detail,side});if(infoQ.length>6)infoQ.shift();nextInfo()}
 function nextInfo(){if(!infoQ.length||$('infoPop').classList.contains('show'))return;
   if(['buyPop','ttsPop','pulseTO'].some(id=>$(id).classList.contains('show'))||(!TEST&&Date.now()-infoAt<INFO_GAP)){clearTimeout(nextInfo.t);nextInfo.t=setTimeout(nextInfo,5000);return}
   const a=infoQ.shift();infoAt=Date.now();$('ipK').textContent=a.kind;$('ipH').textContent=a.head;$('ipD').textContent=a.detail||'';
@@ -1321,9 +1324,28 @@ $('soundBtn').onclick=()=>{soundOn=!soundOn;try{localStorage.setItem('wrSound',s
 // alerts: on by default; off hides buy alerts, pulse takeovers and TTS popups (sound is its own toggle)
 let alertsOn=true;try{alertsOn=OBS||localStorage.getItem('wrAlerts')!=='0'}catch(e){}
 function alertSet(){const b=$('alertBtn');b.textContent=alertsOn?'🔔':'🔕';b.classList.toggle('off',!alertsOn);
-  b.title=alertsOn?'Alerts on: click to hide buy alerts, pulses and TTS popups':'Alerts off: click to show buy alerts, pulses and TTS popups';
+  b.title=alertsOn?'Alerts on: click to choose which alerts you see':'Alerts off: click to turn alerts back on';
   if(!alertsOn){['buyPop','ttsPop','pulseTO'].forEach(id=>$(id)&&$(id).classList.remove('show'));try{speechSynthesis.cancel()}catch(e){}if(curAudio)curAudio.pause();bpQ.length=0;bpBusy=false;ttsBusy=false}}
-$('alertBtn').onclick=()=>{alertsOn=!alertsOn;try{localStorage.setItem('wrAlerts',alertsOn?'1':'0')}catch(e){}alertSet()};alertSet();
+// ---------- alert settings: all on/off plus which kinds (saved in this browser, shared by 1.0 and 2.0; the stream
+// always shows everything) ----------
+const AK=[['marine','$MARINE buys'],['link','$LINK buys'],['tts','TTS messages'],['pulse','Payouts & milestones'],['whales','Whale radar'],
+  ['market','Stonk Board & movers'],['clobr','CLOBr'],['linkmove','$LINK price moves']];
+let AKOFF=[];try{AKOFF=JSON.parse(localStorage.getItem('wrAlertOff')||'[]')}catch(e){}
+const akOn=k=>(typeof OBS!=='undefined'&&OBS)||!AKOFF.includes(k);
+const catOf=kind=>/PULSE|MILESTONE/.test(kind)?'pulse':/CLOBr|WHALE WATCH/.test(kind)?'clobr':/\$LINK (PUMP|DIP)/.test(kind)?'linkmove':/WHALE|ROTATION|DIP BUY|REWARDS|DUMPING/.test(kind)?'whales':'market';
+function akBuild(){let p=$('akPop');
+  if(!p){p=document.createElement('div');p.id='akPop';document.body.appendChild(p);
+    p.addEventListener('change',e=>{const i=e.target;
+      if(i.dataset.all!==undefined){alertsOn=i.checked;try{localStorage.setItem('wrAlerts',alertsOn?'1':'0')}catch(x){}alertSet()}
+      else{AKOFF=i.checked?AKOFF.filter(k=>k!==i.dataset.k):[...new Set([...AKOFF,i.dataset.k])];try{localStorage.setItem('wrAlertOff',JSON.stringify(AKOFF))}catch(x){}}
+      akBuild()});
+    document.addEventListener('click',e=>{if(!e.target.closest('#akPop,#alertBtn'))p.classList.remove('open')})}
+  p.innerHTML=`<label class="all"><input type="checkbox" data-all ${alertsOn?'checked':''}> All alerts</label>`
+    +AK.map(([k,n])=>`<label class="${alertsOn?'':'dis'}"><input type="checkbox" data-k="${k}" ${akOn(k)?'checked':''} ${alertsOn?'':'disabled'}> ${n}</label>`).join('')
+    +'<small>Saved in this browser. The stream always shows every alert.</small>'}
+function akToggle(){akBuild();const p=$('akPop'),r=$('alertBtn').getBoundingClientRect();
+  p.style.top=(r.bottom+6+scrollY)+'px';p.style.left=Math.max(8,Math.min(innerWidth-258,r.left))+'px';p.classList.toggle('open')}
+$('alertBtn').onclick=e=>{e.stopPropagation();akToggle()};alertSet();
 // browsers start page audio muted until the first click or key; unmute the alert beeps then (an alert that fired
 // earlier created the audio muted, and it would otherwise stay silent)
 function unlockAudio(){audioOk=true;$('audioGate').style.display='none';try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();actx.resume()}catch(e){}}
