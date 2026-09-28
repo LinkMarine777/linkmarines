@@ -750,7 +750,7 @@ async function loadMarket(){
     const p=d.pair||(d.pairs||[])[0];if(!p)return;const flip=p.baseToken.address!==CA;
     marinePx=flip?(+p.priceUsd/+p.priceNative):+p.priceUsd;
     $('sPrice').textContent=px(marinePx);$('sChg').innerHTML=pct(p.priceChange?.h24)+' <span class="dim">24h</span>';
-    $('sMcap').textContent=flip?'—':compact(p.marketCap||p.fdv);$('sLiq').textContent='liq '+compact(p.liquidity?.usd);
+    MCAP=flip?0:(p.marketCap||p.fdv||0);$('sMcap').textContent=flip?'—':compact(p.marketCap||p.fdv);$('sLiq').textContent='liq '+compact(p.liquidity?.usd);
     $('sVol').textContent=compact(p.volume?.h24);
     const t=p.txns?.h24||{};$('sTx').textContent=num(t.buys)+' buys / '+num(t.sells)+' sells';
     const linkPx=flip?+p.priceUsd:marinePx/(+p.priceNative);
@@ -956,7 +956,8 @@ function fitTape(){const tw=document.querySelector('.tapeP .tw');if(!tw||innerWi
 try{new ResizeObserver(()=>{clearTimeout(fitTape.r);fitTape.r=setTimeout(()=>tapeRaw.length&&renderTape(),120)}).observe(document.querySelector('.tapeP .tw'))}catch(e){}
 addEventListener('resize',()=>{clearTimeout(fitTape.t);fitTape.t=setTimeout(()=>tapeRaw.length&&renderTape(),150)});
 // buy alerts: every new $MARINE buy >= $100 pops on screen with a sound
-const BUYMIN=100,alerted=new Set();let tradesBoot=true,bpQ=[],bpBusy=false,actx=null;
+// buy alerts: $100+, or $1,000+ once the token's market cap is over $1M (so a bigger token doesn't spam small buys)
+let MCAP=0;const buyMin=()=>MCAP>1e6?1000:100;const alerted=new Set();let tradesBoot=true,bpQ=[],bpBusy=false,actx=null;
 // sound: on by default, one toggle for TTS and every notification beep (remembered per browser)
 let soundOn=true;try{soundOn=localStorage.getItem('wrSound')!=='0'}catch(e){}
 function soundSet(){const b=$('soundBtn');b.textContent=soundOn?'🔊':'🔇';b.classList.toggle('off',!soundOn);
@@ -967,7 +968,7 @@ function beep(big){if(!soundOn)return;try{actx=actx||new(window.AudioContext||wi
     g.gain.setValueAtTime(.0001,t+i*.11);g.gain.exponentialRampToValueAtTime(.08,t+i*.11+.02);g.gain.exponentialRampToValueAtTime(.0001,t+i*.11+.16);
     o.connect(g).connect(actx.destination);o.start(t+i*.11);o.stop(t+i*.11+.18)})}catch(e){}}
 function checkBuys(list){const fresh=[];list.forEach(a=>{if(alerted.has(a.tx_hash))return;alerted.add(a.tx_hash);
-  if(!tradesBoot&&a.to_token_address===CA&&+a.volume_in_usd>=BUYMIN)fresh.push(a)});tradesBoot=false;
+  if(!tradesBoot&&a.to_token_address===CA&&+a.volume_in_usd>=buyMin())fresh.push(a)});tradesBoot=false;
   fresh.reverse().forEach(a=>bpQ.push({v:+a.volume_in_usd,amt:+a.to_token_amount,w:(a.tx_from_address||'').slice(0,4)}));nextBuy()}
 function nextBuy(){if(!alertsOn){bpQ.length=0;return}while(bpQ.length&&!akOn(bpQ[0].k==='link'?'link':'marine'))bpQ.shift();if(bpBusy||!bpQ.length||$('pulseTO').classList.contains('show'))return;const b=bpQ.shift();bpBusy=true;const big=b.v>=WHALE;
   $('buyPop').classList.toggle('big',big);$('bpT').textContent=big?'🚨 LARGE BUY 🚨':'🟢 NEW RECRUIT';$('bpV').textContent='+'+usd(b.v,0);

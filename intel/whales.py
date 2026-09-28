@@ -337,7 +337,10 @@ def gt_trades(pool, min_usd):
     return out
 first_run = 'seen' not in st
 seen_tx = set(st.get('seen', []))
-for mint, pools_, min_usd, symbol in ((MARINE, [MARINE_POOL], 100, 'MARINE'), (LINK, LINK_POOLS, 1000, 'LINK')):
+try:   # $MARINE buys from $100, or $1,000 once its market cap is over $1M (same rule as the terminals)
+    _p = get(f'https://api.dexscreener.com/latest/dex/pairs/solana/{MARINE_POOL}')['pairs'][0]; marine_min = 1000 if (_p.get('marketCap') or _p.get('fdv') or 0) > 1e6 else 100
+except Exception: marine_min = 100
+for mint, pools_, min_usd, symbol in ((MARINE, [MARINE_POOL], marine_min, 'MARINE'), (LINK, LINK_POOLS, 1000, 'LINK')):
     for pool in pools_:
         if not pool: continue
         try:
