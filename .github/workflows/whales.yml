@@ -1,6 +1,6 @@
 # Whale radar: every 30 min, read what the top holders of $MARINE and stonkfun's top 10 bought and sold, and write
 # terminal/whales.json to the data branch (Vercel doesn't deploy that branch; the terminals read the file from GitHub).
-# Free: public repo Actions minutes, Solana RPC (Helius when the HELIUS_KEY repository secret is set), Jupiter.
+# Free: public repo Actions minutes, Solana RPC (Helius when the SOLANA_RPC or HELIUS_KEY repository secret is set), Jupiter.
 name: whale radar
 on:
   schedule:
@@ -27,6 +27,7 @@ jobs:
       - name: scan whales
         env:
           HELIUS_KEY: ${{ secrets.HELIUS_KEY }}
+          SOLANA_RPC: ${{ secrets.SOLANA_RPC }}
         run: python3 main/intel/whales.py data/terminal
       - name: save to the data branch
         working-directory: data
