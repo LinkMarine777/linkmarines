@@ -1036,7 +1036,7 @@ function checkLinkBuys(list,first){const fresh=[];list.forEach(a=>{if(lalerted.h
   fresh.reverse().forEach(a=>bpQ.push({k:'link',v:+a.volume_in_usd,amt:+a.to_token_amount,w:(a.tx_from_address||'').slice(0,4)}));nextBuy()}
 // one tape for both: $MARINE trades (its pool) and Solana $LINK trades (LINK/USDC + LINK/SOL), newest first, each row
 // marked with its token's logo
-const TLOGO={m:()=>CA===MARINE?'img/marine.webp':(TK.image||''),l:()=>'img/link.svg'};
+const TLOGO={m:()=>CA===MARINE?'../terminal/img/marine.webp':(TK.image||''),l:()=>'../terminal/img/link.svg'};   // works at /terminal and /terminal/
 const lastTradeAt=()=>Math.max(0,...[tapeRaw[0],linkRaw[0]].filter(Boolean).map(a=>Date.parse(a.block_timestamp)));
 function renderTape(){
   const wide=innerWidth>=1000&&!document.documentElement.classList.contains('fit'),rows=document.documentElement.classList.contains('fit')?5:wide?24:8;
@@ -1047,7 +1047,7 @@ function renderTape(){
     const amt=+(buy?a.to_token_amount:a.from_token_amount),price=+(buy?a.price_to_in_usd:a.price_from_in_usd),v=+a.volume_in_usd;
     const id=k+a.tx_hash,fresh=!seen.has(id);seen.add(id);const logo=TLOGO[k]();
     return`<tr class="${v>=big?'whale':''}"${fresh&&tapeLoaded?'':' style="animation:none"'}><td class="dim">${ago(Date.parse(a.block_timestamp))}</td>
-      <td class="${buy?'up':'dn'}">${logo?`<img class="tl" src="${esc(logo)}" alt="${esc(sym)}" title="${esc(sym)}">`:''}${buy?'BUY':'SELL'}${v>=big?'<span class="tag">LARGE</span>':''}</td>
+      <td class="${buy?'up':'dn'}">${logo?`<img class="tl" src="${esc(logo)}" alt="" title="${esc(sym)}" onerror="this.style.display='none'">`:''}${buy?'BUY':'SELL'}${v>=big?'<span class="tag">LARGE</span>':''}</td>
       <td class="r">${usd(v)}</td><td class="r">${compact(amt,'')}</td><td class="r dim fx">${px(price)}</td>
       <td class="r hide-sm"><a href="https://solscan.io/tx/${a.tx_hash}" target="_blank" rel="noopener">${(a.tx_from_address||'').slice(0,4)}</a></td></tr>`});
   tapeLoaded=true;$('trades').tBodies[0].innerHTML=list.join('')||`<tr><td colspan="6" class="dim">quiet on the line${tapeMin?' (no $'+tapeMin+'+ trades lately)':''}</td></tr>`;

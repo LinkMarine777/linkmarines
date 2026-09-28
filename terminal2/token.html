@@ -412,6 +412,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   #mbar{display:grid;grid-template-columns:1.2fr .8fr 1.2fr 1fr;gap:6px;position:fixed;left:0;right:0;bottom:0;z-index:45;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(4,6,15,.96);border-top:1px solid var(--line);backdrop-filter:blur(6px)}
   #mbar .btn{text-align:center;padding:11px 6px;font-size:12px;text-decoration:none}
 }
+.tkl .buyJ{width:auto!important;min-width:0;display:inline-flex;align-items:center;height:26px;padding:0 9px;border:1px solid var(--green);color:var(--green);font-size:11px;letter-spacing:1px;text-decoration:none;white-space:nowrap}.tkl .buyJ:hover{background:rgba(57,255,106,.1)}
 </style>
 </head>
 <body>
@@ -650,6 +651,7 @@ function renderLinks(pairs){const info=(pairs||[]).map(p=>p.info).find(i=>i&&((i
   a(POOL?'https://dexscreener.com/solana/'+POOL:'https://dexscreener.com/solana/'+CA,'chart','$'+sym+' chart on DexScreener');
   a(soc('twitter'),'x','$'+sym+' on X');a(safe((info.websites||[])[0]?.url),'web','$'+sym+' website');a(soc('telegram'),'tg','$'+sym+' Telegram');
   if(sym&&/^[A-Za-z0-9_]{1,15}$/.test(sym))a('https://x.com/search?q='+encodeURIComponent('$'+sym)+'&f=live','search','Search $'+sym+' on X');
+  L.push(`<a class="buyJ" href="https://jup.ag/swap/SOL-${encodeURIComponent(CA)}" target="_blank" rel="noopener" title="Buy ${esc('$'+sym)} on Jupiter">BUY ON JUP ▸</a>`);
   L.push(`<button type="button" id="copyCa" title="Copy ${esc('$'+sym)} contract address" aria-label="Copy contract address"><svg viewBox="0 0 24 24">${ICO.copy}</svg></button>`);
   $('tkLinks').innerHTML=L.join('');
   $('copyCa').onclick=async()=>{try{await navigator.clipboard.writeText(CA)}catch(e){$('caIn').select();document.execCommand('copy')}
