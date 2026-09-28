@@ -306,10 +306,12 @@ try:
     ch.sort(key=lambda c: -c[0])
     if len(ch) == 1:
         _, m, at, txt = ch[0]; sig_('score', f"{m}:{at}", now, f"{txt.split(' ', 1)[0]} CLOBr {txt.split(' ', 1)[1]}", m, 0); signals[-1]['s'] = names.get(m) or signals[-1]['s']
+        signals[-1]['i'] = 'mints:' + m   # the pages show CLOBr's logo, with each token linked to its terminal
     elif ch:
         m = ch[0][1]
         sig_('score', f"batch:{max(c[2] for c in ch)}", now, f"CLOBr: " + ' · '.join(c[3] for c in ch[:3]) + (f" · +{len(ch) - 3} more" if len(ch) > 3 else ''), m, 0)
         signals[-1]['s'] = names.get(m) or signals[-1]['s']
+        signals[-1]['i'] = 'mints:' + ','.join(c[1] for c in ch[:3])
 except Exception as e: log('scores', e)
 
 # ---------- big trades ($2,500+) on $MARINE + the top 10, and big movers (free: GeckoTerminal, stonkfun list) ----------

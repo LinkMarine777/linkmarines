@@ -47,6 +47,7 @@ main{max-width:1500px;margin:0 auto;padding:16px;display:flex;flex-direction:col
 .feed::-webkit-scrollbar-track,.lpw::-webkit-scrollbar-track{background:transparent}.feed::-webkit-scrollbar-thumb,.lpw::-webkit-scrollbar-thumb{background:#24345e;border-radius:3px}
 .feed::-webkit-scrollbar-thumb:hover,.lpw::-webkit-scrollbar-thumb:hover{background:#34508f}.feed::-webkit-scrollbar-button,.lpw::-webkit-scrollbar-button{display:none}.fi{display:grid;grid-template-columns:auto 22px minmax(0,1fr);gap:8px;align-items:start;padding:8px 14px;border-bottom:1px solid var(--line);font-size:12px;color:inherit;text-decoration:none}
 .fi:hover{background:rgba(255,255,255,.03)}.fi .ft{color:var(--dim);font-size:11px;min-width:30px}.fi img,.fi .ph0{width:22px;height:22px;border-radius:50%;object-fit:cover;background:#0b1a2e}
+.fi .fsc{display:inline-flex;align-items:center;gap:5px;margin:1px 12px 1px 0;color:inherit;text-decoration:none;white-space:nowrap}.fi a.fsc:hover{color:#fff;text-decoration:underline}.fi .fsc img{width:16px;height:16px;border-radius:50%;object-fit:cover}.fi img.clg{background:#111;border-radius:4px;padding:2px}
 .fi .fk{display:block;font-size:10px;letter-spacing:1.5px;margin-bottom:2px}.k-up{color:var(--green)}.k-dn{color:var(--red)}.k-am{color:var(--amber)}.k-bl{color:#7d9bff}.k-or{color:#FF6B00}
 .lpw{max-height:330px;overflow-y:auto}.lpw td .pp{display:flex;align-items:center;gap:8px}.lpw td img{width:20px;height:20px;border-radius:50%}.lpw .dx{display:block;font-size:10px;color:var(--dim)}
 .lpw a.add{color:var(--green);text-decoration:none;white-space:nowrap;font-size:11px}
@@ -287,9 +288,17 @@ const kindOf=x=>x.kind==='bigtrade'?(x.side==='sell'?['🐳 BIG SELL','k-dn']:['
 // holder payouts also get their own tab
 const WRBUY=x=>x.kind==='buy'&&(x.s==='MARINE'||x.s==='LINK'||/whale watch/i.test(x.text));   // other tokens' buys (from 2.0 pages) are market alerts
 const group=(k,x)=>k==='score'?'score':k==='payout'?'payout':['mover','board','top10'].includes(k)||(k==='buy'&&x&&!WRBUY(x))?'mover':['buy','pulse','milestone','link','tts'].includes(k)?'marine':'whale';
+// CLOBr score alerts: CLOBr's logo, then each token with its own logo, each one opening that token's terminal
+function scoreRow(x,h,c,icon){const ms=String(x.i||'').startsWith('mints:')?x.i.slice(6).split(','):null;
+  const bySym=s=>{s=s.toUpperCase();const t=Object.values(TOK).find(t=>String(t.symbol||'').toUpperCase()===s);return t&&t.mint};
+  const parts=String(x.text).replace(/^CLOBr( update)?:\s*(\d+ scores moved · )?/,'').split(' · ');
+  const chips=parts.map((p,k)=>{const sm=/^\$(\S+)/.exec(p),mint=ms?ms[k]:(sm&&bySym(sm[1]))||(parts.length===1?x.m:null),img=mint?icon(mint):'',
+      txt=p.replace(' CLOBr score ',' ').replace(' CLOBr ',' ').replace(/ \(now [^)]*\)/,'');
+    return mint?`<a class="fsc" href="${open2(mint)}">${img?`<img src="${esc(img)}" alt="" loading="lazy" onerror="this.remove()">`:''}${esc(txt)}</a>`:`<span class="fsc">${esc(txt)}</span>`}).join('');
+  return`<div class="fi"><span class="ft">${ago(x.t*1000)}</span><img src="/terminal/img/clobr.svg" alt="CLOBr" class="clg"><span><b class="fk ${c}">${h}</b><span class="scs">${chips}</span></span></div>`}
 function renderIntel(){if(!IN)return;const icon=m=>m===MARINE?MLOGO:(TOK[m]&&TOK[m].image)||'';
   const L=(IN.signals||[]).filter(x=>fk==='all'||group(x.kind,x)===fk);
-  $('feed').innerHTML=L.length?L.map(x=>{const [h,c]=kindOf(x),im=x.m===MARINE?MLOGO:x.i||icon(x.m);
+  $('feed').innerHTML=L.length?L.map(x=>{const [h,c]=kindOf(x),im=x.m===MARINE?MLOGO:x.i||icon(x.m);if(x.kind==='score')return scoreRow(x,h,c,icon);
     return`<a class="fi" href="${x.m?open2(x.m):'#'}"><span class="ft">${ago(x.t*1000)}</span>${im?`<img src="${esc(im)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span class="ph0"></span>'}
       <span><b class="fk ${c}">${h}</b>${esc(x.text)}</span></a>`}).join('')
     :`<p class="nt">${{score:'No CLOBr score changes',mover:'No market alerts',payout:'No holder payouts',whale:'No whale alerts',marine:'No $MARINE alerts'}[fk]||'No alerts'} yet.</p>`;
