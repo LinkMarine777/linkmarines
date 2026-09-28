@@ -253,9 +253,9 @@ for s in trades:
 for m, L in by.items():
     ws = {s['w'] for s in L}
     if len(ws) >= 3:
-        tot = sum(s['buy']['u'] for s in L); groups = sorted({x['symbol'] for w in ws for x in whale.get(w, [])})
+        tot = sum(s['buy']['u'] for s in L)
         sig_('convergence', f"{m}:{time.strftime('%Y%m%d', time.gmtime(now))}", max(s['t'] for s in L),
-             f"{len(ws)} whales bought ${sym(m)} in the last 24h (${tot:,.0f}) · whales of " + ', '.join('$' + g for g in groups[:4]), m, tot)
+             f"{len(ws)} whales bought ${sym(m)} today (${tot:,.0f})", m, tot)
 sold = {}
 for s in trades:
     if s['sell']['m'] not in BASE: sold.setdefault(s['sell']['m'], []).append(s)
@@ -264,7 +264,7 @@ for m, L in sold.items():
     if len(ws) >= 3:
         tot = sum(s['sell']['u'] for s in L)
         sig_('dumping', f"{m}:{time.strftime('%Y%m%d', time.gmtime(now))}", max(s['t'] for s in L),
-             f"{len(ws)} whales sold ${sym(m)} in the last 24h (${tot:,.0f})", m, tot)
+             f"{len(ws)} whales sold ${sym(m)} today (${tot:,.0f})", m, tot)
 for s in trades:
     mine = {x['mint']: x for x in whale.get(s['w'], [])}
     sm, bm = s['sell']['m'], s['buy']['m']
@@ -272,11 +272,10 @@ for s in trades:
         sig_('rotation', s['sig'], s['t'], f"{label(s['w'])} whale rotated ${s['sell']['u']:,.0f} of ${sym(sm)} into ${sym(bm)}", bm, s['sell']['u'])
     if sm in mine and mine[sm]['balance'] and s['sell']['a'] >= 0.3 * (mine[sm]['balance'] + s['sell']['a']) and s['sell']['u'] >= 500:
         pct = s['sell']['a'] / (mine[sm]['balance'] + s['sell']['a']) * 100
-        sig_('exit', s['sig'], s['t'], f"#{mine[sm]['rank']} ${sym(sm)} whale sold {pct:.0f}% of their bag (${s['sell']['u']:,.0f})"
-             + (' · held 30+ days' if mine[sm]['veteran'] else ''), sm, s['sell']['u'])
+        sig_('exit', s['sig'], s['t'], f"#{mine[sm]['rank']} ${sym(sm)} whale sold {pct:.0f}% of their bag (${s['sell']['u']:,.0f})", sm, s['sell']['u'])
     t = top_mints.get(bm)
     if t and (t.get('chg24') or 0) <= -10 and s['buy']['u'] >= 500:
-        sig_('dip', s['sig'], s['t'], f"{label(s['w'])} whale bought the dip on ${sym(bm)} ({t['chg24']:.0f}% today) · ${s['buy']['u']:,.0f}", bm, s['buy']['u'])
+        sig_('dip', s['sig'], s['t'], f"{label(s['w'])} whale bought the ${sym(bm)} dip · ${s['buy']['u']:,.0f} ({t['chg24']:.0f}% today)", bm, s['buy']['u'])
 for tm, q in quote.items():   # rewards: whales of a reward token swapping their payout token
     comp = sell = 0
     for s in trades:
@@ -286,7 +285,7 @@ for tm, q in quote.items():   # rewards: whales of a reward token swapping their
     if comp + sell >= 300:
         pc = comp / (comp + sell) * 100
         sig_('rewards', f"{tm}:{time.strftime('%Y%m%d', time.gmtime(now))}", now,
-             f"${sym(tm)} whales compounded {pc:.0f}% of their ${sym(q)} rewards today (${comp:,.0f} back in, ${sell:,.0f} sold)", tm, comp + sell)
+             (f"${sym(tm)} whales put {pc:.0f}% of their ${sym(q)} rewards back in today" if pc >= 20 else f"${sym(tm)} whales sold their ${sym(q)} rewards today (${sell:,.0f})"), tm, comp + sell)
 # ---------- CLOBr score changes (the hour-delayed scores the trending page already shows) ----------
 ranked = sorted(toks, key=lambda t: -(t.get('mcap') or 0))[:20]
 names = {t['mint']: t.get('symbol') for t in toks}; names[MARINE] = 'MARINE'
@@ -298,15 +297,17 @@ try:
         v, verdict = float(x['score']), str(x.get('msg') or '').split(':')[0].strip()
         p = prev.get(m)
         if p and (p['v'] != verdict or abs(v - p['s']) >= 10):
-            ch.append((abs(v - p['s']), m, int(x.get('at') or now * 1000), f"${names.get(m) or m[:4]} {p['s']:.0f} → {v:.0f}" + (f" (now {verdict})" if p['v'] != verdict else '')))
-        prev[m] = {'s': v, 'v': verdict}
+            if now - p.get('al', 0) < 3600: continue   # one alert per token per hour: keep the baseline, so a wobble back isn't news
+            ch.append((abs(v - p['s']), m, int(x.get('at') or now * 1000), f"${names.get(m) or m[:4]} {p['s']:.0f} → {v:.0f} {'▲' if v > p['s'] else '▼'}"))
+            prev[m] = {'s': v, 'v': verdict, 'al': now}; continue
+        prev[m] = {'s': v, 'v': verdict, 'al': (p or {}).get('al', 0)}
     # CLOBr's delayed scores refresh for every token at once (hourly), so the changes come as one alert, not a burst of them
     ch.sort(key=lambda c: -c[0])
     if len(ch) == 1:
-        _, m, at, txt = ch[0]; sig_('score', f"{m}:{at}", now, f"{txt.split(' ', 1)[0]} CLOBr score {txt.split(' ', 1)[1]}", m, 0); signals[-1]['s'] = names.get(m) or signals[-1]['s']
+        _, m, at, txt = ch[0]; sig_('score', f"{m}:{at}", now, f"{txt.split(' ', 1)[0]} CLOBr {txt.split(' ', 1)[1]}", m, 0); signals[-1]['s'] = names.get(m) or signals[-1]['s']
     elif ch:
         m = ch[0][1]
-        sig_('score', f"batch:{max(c[2] for c in ch)}", now, f"CLOBr update: {len(ch)} scores moved · " + ' · '.join(c[3] for c in ch[:4]) + (f" · +{len(ch) - 4} more" if len(ch) > 4 else ''), m, 0)
+        sig_('score', f"batch:{max(c[2] for c in ch)}", now, f"CLOBr: " + ' · '.join(c[3] for c in ch[:3]) + (f" · +{len(ch) - 3} more" if len(ch) > 3 else ''), m, 0)
         signals[-1]['s'] = names.get(m) or signals[-1]['s']
 except Exception as e: log('scores', e)
 
@@ -321,7 +322,7 @@ for t in toks:
     c = t.get('chg24')
     if c is not None and abs(c) >= 20 and (t.get('vol24') or 0) >= 50000:
         sig_('mover', f"{t['mint']}:{time.strftime('%Y%m%d', time.gmtime(now))}", now,
-             f"${t.get('symbol')} {'+' if c > 0 else ''}{c:.0f}% in 24h · volume ${t.get('vol24', 0):,.0f} · mc ${t.get('mcap') or 0:,.0f}", t['mint'], t.get('vol24') or 0)
+             f"${t.get('symbol')} {'+' if c > 0 else ''}{c:.0f}% today · mc ${t.get('mcap') or 0:,.0f}", t['mint'], t.get('vol24') or 0)
         signals[-1].update({'s': t.get('symbol'), 'i': t.get('image'), 'side': 'up' if c > 0 else 'down'})
 
 # ---------- market: new #1 APY, new on the Stonk Board, new stonkfun top 10, big holder payouts ----------
