@@ -20,6 +20,8 @@ Signals (each fires once):
   board        a new #1 APY on the Stonk Board, or a token joining the board
   top10        a token breaking into stonkfun's top 10 by market cap
   payout       a stonkfun token paid its holders $2,500+ since the last run
+  buy / pulse / milestone / link / tts   the stream's own alerts, recorded so the history matches what the stream
+               showed: $MARINE buys $100+, $LINK buys $1,000+, payouts, milestones, $LINK ±5%/h, paid TTS
   score        a token's CLOBr score changed verdict or moved 10+ points (hour-delayed scores via the bot)
 Also: lp = stonkfun tokens' Raydium + Meteora pools ranked by what liquidity earned in fees over 24 h (free APIs).
 """
@@ -32,6 +34,9 @@ RPC = f'https://mainnet.helius-rpc.com/?api-key={KEY}' if KEY else 'https://sola
 RPC_IDX = RPC if KEY else 'https://api.mainnet-beta.solana.com'   # publicnode won't list a token's largest holders
 SF = 'https://www.stonkfun.xyz/api/public/v1/tokens/'
 MARINE = 'F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK'
+LINK = 'LinkhB3afbBKb2EQQu7s7umdZceV3wcvAUJhQAfQ23L'
+MARINE_POOL = 'BnkYfw796XXq9UQ9kMYoX9iqSgXnjw7sFCsCVWVDiCUa'   # MARINE/LINK, where $MARINE trades (stonkfun's listed pool is empty)
+LINK_POOLS = ['7YRKyGCHBJYAE2uyAGRDiz5WNq68FPzh2uDvDaYv1cNE', 'C4Nnrur8ZDVsdX4Y3vwaCFJXCHWRrS9LdRxV7wuU6Xrr']   # LINK/USDC, LINK/SOL
 SOL = 'So11111111111111111111111111111111111111112'
 STABLE = {'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'}   # USDC, USDT
 BASE = STABLE | {SOL}
@@ -89,7 +94,7 @@ quote, pools, pool_of = {}, set(), {}   # reward (quote) token per token; the to
 for t in watch:
     try:
         d = get(SF + t['mint'])['data']['token']
-        quote[t['mint']] = (d.get('quote') or {}).get('mint'); pools.add(d.get('pool')); pool_of[t['mint']] = d.get('pool')
+        quote[t['mint']] = (d.get('quote') or {}).get('mint'); pools.add(d.get('pool')); pool_of[t['mint']] = MARINE_POOL if t['mint'] == MARINE else d.get('pool')
     except Exception as e: log('stonkfun', t['symbol'], e)
 H = state.setdefault('holders', {})
 for t in watch:   # top holders straight from the chain, refreshed every 6 h
@@ -269,11 +274,11 @@ for t in watch:
     if not pool: continue
     try:
         time.sleep(2.5)   # GeckoTerminal allows ~30 calls a minute
-        tr = get(f'https://api.geckoterminal.com/api/v2/networks/solana/pools/{pool}/trades?trade_volume_in_usd_greater_than=2500').get('data') or []
+        tr = get(f'https://api.geckoterminal.com/api/v2/networks/solana/pools/{pool}/trades' + ('' if pool == MARINE_POOL else '?trade_volume_in_usd_greater_than=2500')).get('data') or []
         big = []
         for x in tr:
             a = x['attributes']; ts = int(time.mktime(time.strptime(a['block_timestamp'][:19], '%Y-%m-%dT%H:%M:%S'))) - time.timezone
-            if ts > now - 86400: big.append((float(a['volume_in_usd']), ts, a))
+            if ts > now - 86400 and float(a['volume_in_usd']) >= 2500: big.append((float(a['volume_in_usd']), ts, a))
         for u, ts, a in sorted(big, key=lambda b: -b[0])[:3]:
             buy = a.get('to_token_address') == t['mint']
             sig_('bigtrade', a['tx_hash'], ts, f"{'Bought' if buy else 'Sold'} ${u:,.0f} of ${t['symbol']} · wallet {a.get('tx_from_address', '')[:4]}", t['mint'], u)
@@ -318,6 +323,75 @@ for t in toks:
         mark('payout', f"{t['mint']}:{now // 1800}", f"${t.get('symbol')} paid holders ${p1 - p0:,.0f} since the last check · ${p1:,.0f} all-time", t['mint'], p1 - p0, t.get('image'), t.get('symbol'))
 mk['paid'] = {t['mint']: t.get('paidUsd') for t in toks if t.get('paidUsd')}
 
+# ---------- the stream's own alerts, recorded (same rules as the terminal) ----------
+st = state.setdefault('stream', {})
+def gt_trades(pool, min_usd):
+    # GeckoTerminal's size filter misses small pools like $MARINE's, so read the latest trades and filter here
+    time.sleep(2.5)
+    out = []
+    q = '' if pool == MARINE_POOL else f'?trade_volume_in_usd_greater_than={min_usd}'
+    for x in get(f'https://api.geckoterminal.com/api/v2/networks/solana/pools/{pool}/trades{q}').get('data') or []:
+        a = x['attributes']
+        if float(a.get('volume_in_usd') or 0) < min_usd: continue
+        a['ts'] = int(time.mktime(time.strptime(a['block_timestamp'][:19], '%Y-%m-%dT%H:%M:%S'))) - time.timezone; out.append(a)
+    return out
+first_run = 'seen' not in st
+seen_tx = set(st.get('seen', []))
+for mint, pools_, min_usd, symbol in ((MARINE, [MARINE_POOL], 100, 'MARINE'), (LINK, LINK_POOLS, 1000, 'LINK')):
+    for pool in pools_:
+        if not pool: continue
+        try:
+            for a in gt_trades(pool, min_usd):
+                if a['tx_hash'] in seen_tx or a.get('to_token_address') != mint: continue
+                seen_tx.add(a['tx_hash'])
+                if a['ts'] < now - 86400: continue
+                u = float(a['volume_in_usd']); amt = float(a.get('to_token_amount') or 0)
+                sig_('buy', a['tx_hash'], a['ts'], f"{'🚨 Large ' if symbol == 'MARINE' and u >= 2500 else ''}${symbol} buy: ${u:,.0f} · {amt:,.0f} ${symbol} · wallet {a.get('tx_from_address', '')[:4]}" if amt >= 100 else
+                     f"${symbol} buy: ${u:,.0f} · {amt:,.2f} ${symbol} · wallet {a.get('tx_from_address', '')[:4]}", mint, u)
+                signals[-1].update({'s': symbol, 'side': 'buy'})
+        except Exception as e: log('buys', symbol, e)
+st['seen'] = list(seen_tx)[-3000:]
+try:   # pulse (a $MARINE payout) + milestones, from stonkfun's live payout numbers
+    r = get(f'https://www.stonkfun.xyz/api/rewards?mint={MARINE}')
+    pv = st.get('rewards')
+    if pv and r.get('lastPayoutAt') and r['lastPayoutAt'] != pv.get('lastPayoutAt') and (r.get('distributedTokens') or 0) > (pv.get('distributedTokens') or 0):
+        tok = r['distributedTokens'] - pv['distributedTokens']; paid_to = (r.get('payoutCount') or 0) - (pv.get('payoutCount') or 0)
+        ts = int(time.mktime(time.strptime(r['lastPayoutAt'][:19], '%Y-%m-%dT%H:%M:%S'))) - time.timezone
+        sig_('pulse', f"pulse:{r['lastPayoutAt']}", ts, f"Pulse: {tok:,.2f} LINK (≈ ${tok * (r.get('quotePriceUsd') or 0):,.0f}) paid to {paid_to:,} $MARINE holders", MARINE, tok * (r.get('quotePriceUsd') or 0))
+        signals[-1].update({'s': 'MARINE'})
+    if pv:
+        hold_now, hold_was = (marine or {}).get('holders'), st.get('holders')
+        for key, cur, old, step, text in (('link', r.get('distributedTokens'), pv.get('distributedTokens'), 500, '{:,.0f} LINK paid to $MARINE holders'),
+                                         ('payouts', r.get('payoutCount'), pv.get('payoutCount'), 5000, '{:,.0f} payouts sent to $MARINE holders'),
+                                         ('holders', hold_now, hold_was, 100, '{:,.0f} $MARINE holders')):
+            if cur and old and int(cur // step) > int(old // step):
+                sig_('milestone', f"{key}:{int(cur // step) * step}", now, '🏆 ' + text.format(int(cur // step) * step), MARINE, 0)
+                signals[-1].update({'s': 'MARINE'})
+    st['rewards'] = {k: r.get(k) for k in ('lastPayoutAt', 'distributedTokens', 'payoutCount')}
+    st['holders'] = (marine or {}).get('holders') or st.get('holders')
+except Exception as e: log('pulse', e)
+try:   # $LINK ±5% within an hour (at most once every 2 hours)
+    lp_now = (meta.get(LINK) or {}).get('p') or get(f'https://lite-api.jup.ag/price/v3?ids={LINK}').get(LINK, {}).get('usdPrice')
+    hist = [h for h in st.get('linkpx', []) if h[0] > now - 7200] + ([[now, lp_now]] if lp_now else [])
+    old = [h for h in hist if h[0] <= now - 3000]
+    if old and lp_now and now - st.get('linkmove', 0) > 7200:
+        ch = (lp_now / old[-1][1] - 1) * 100
+        if abs(ch) >= 5:
+            st['linkmove'] = now
+            sig_('link', f"link:{now // 3600}", now, f"$LINK {'+' if ch > 0 else ''}{ch:.1f}% in an hour · now ${lp_now:,.2f} on Solana", LINK, 0)
+            signals[-1].update({'s': 'LINK', 'side': 'up' if ch > 0 else 'down'})
+    st['linkpx'] = hist
+except Exception as e: log('link price', e)
+for x in (load('tts.json', {}).get('items') or [])[-30:]:   # paid TTS that played on the stream
+    if x.get('at', 0) > now - 3 * 86400:
+        sig_('tts', f"tts:{x['id']}", int(x['at']), f"📢 {x.get('from') or 'someone'}: “{str(x.get('text', ''))[:140]}”", None, 0)
+movers_top = sorted(toks, key=lambda t: -(t.get('mcap') or 0))[:10]   # the terminal's rule: top 10 by market cap, ±20% in 24h
+for t in movers_top:
+    c = t.get('chg24')
+    if c is not None and abs(c) >= 20 and (t.get('vol24') or 0) < 50000:
+        sig_('mover', f"{t['mint']}:{time.strftime('%Y%m%d', time.gmtime(now))}", now, f"${t.get('symbol')} {'+' if c > 0 else ''}{c:.0f}% in 24h · mc ${t.get('mcap') or 0:,.0f}", t['mint'], 0)
+        signals[-1].update({'s': t.get('symbol'), 'i': t.get('image'), 'side': 'up' if c > 0 else 'down'})
+
 # ---------- LP: which stonkfun pools earned the most fees per $ of liquidity in 24 h ----------
 lp = []
 board = load('board.json', {}).get('tokens', {})
@@ -347,7 +421,7 @@ old = {s['id']: s['t'] for s in load('whales.json', {}).get('signals', [])}
 for s in signals: s['t'] = old.get(s['id'], s['t'])            # a signal keeps the time it first fired
 for s in load('whales.json', {}).get('signals', []):   # history: signals from earlier runs stay for 3 days
     if s['id'] not in {x['id'] for x in signals} and s['t'] > now - 3 * 86400: signals.append(s)
-signals = sorted(signals, key=lambda s: -s['t'])[:120]
+signals = sorted(signals, key=lambda s: -s['t'])[:250]
 
 # ---------- what whales are buying / selling (24 h) ----------
 flow = {}

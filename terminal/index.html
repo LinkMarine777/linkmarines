@@ -1287,7 +1287,7 @@ function infoScan(){const first=!IS.init,fire=(...a)=>{if(!first)infoAlert(...a)
     if(old&&cur){const ch=(cur/pr(old)-1)*100;if(Math.abs(ch)>=5&&now-(IS.linkMove||0)>2*3600e3){IS.linkMove=now;fire(ch>0?'🔗 $LINK PUMPING':'🔗 $LINK DIPPING','$LINK '+(ch>0?'+':'')+ch.toFixed(1)+'% IN AN HOUR','Now '+px(cur)+' on Solana')}}}
   // whale radar signals: whales piling into a token, rotating, exiting, buying a dip, compounding rewards
   if(WR&&WR.signals){const SIDE={convergence:'buy',dip:'buy',dumping:'sell',exit:'sell'};const HEAD={dumping:'🐋 WHALES DUMPING',score:'🧱 CLOBr SCORE',convergence:'🐋 WHALES PILING IN',rotation:'🔄 WHALE ROTATION',exit:'🚪 WHALE EXIT',dip:'🩸 WHALES BUYING THE DIP',rewards:'♻️ WHALE REWARDS'};
-    if(IS.wr)WR.signals.filter(x=>!IS.wr.includes(x.id)&&!['bigtrade','mover','board','top10','payout'].includes(x.kind)&&Date.now()/1000-x.t<6*3600).slice(0,3).reverse()
+    if(IS.wr)WR.signals.filter(x=>!IS.wr.includes(x.id)&&!['bigtrade','mover','board','top10','payout','buy','pulse','milestone','link','tts'].includes(x.kind)&&Date.now()/1000-x.t<6*3600).slice(0,3).reverse()
       .forEach(x=>infoAlert(HEAD[x.kind]||'🐋 WHALE RADAR',(x.s?'$'+x.s:'')+(x.u?' · '+compact(x.u):''),x.text,SIDE[x.kind]));
     IS.wr=[...new Set([...WR.signals.map(x=>x.id),...(IS.wr||[])])].slice(0,300)}
   IS.init=1;saveIS()}
