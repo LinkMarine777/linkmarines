@@ -714,7 +714,12 @@ async function j(u){try{const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw
 
 // ---------- rewards snapshot (same-origin) ----------
 let rewards=null,prevR=null;
-function pulseTakeover(tok,usdv,holders,total){if(!alertsOn||!akOn('pulse'))return;$('ptN').textContent='+'+num(tok,tok<10?2:1)+' '+TK.quote;
+// one pop-up on screen at a time: every kind waits for whatever is showing, then they play in order (pulse, TTS, buy, info)
+const onScreen=except=>['buyPop','ttsPop','pulseTO','infoPop'].some(id=>id!==except&&$(id)&&$(id).classList.contains('show'));
+let pulseQ=[];
+setInterval(()=>{if(onScreen())return;if(pulseQ.length)return pulseTakeover(...pulseQ.shift());
+  if(typeof nextTTS==='function')nextTTS();if(!onScreen()&&typeof nextBuy==='function')nextBuy();if(!onScreen()&&typeof nextInfo==='function')nextInfo()},700);
+function pulseTakeover(tok,usdv,holders,total){if(!alertsOn||!akOn('pulse'))return;if(onScreen('pulseTO')){pulseQ.push([tok,usdv,holders,total]);return}$('ptN').textContent='+'+num(tok,tok<10?2:1)+' '+TK.quote;
   $('ptS').textContent=(usdv>0?'≈ '+usd(usdv,0)+' ':'')+'paid to '+num(holders)+' $'+TK.symbol+' holders';
   $('ptD').textContent=num(total,0)+' '+TK.quote+' distributed all time · hold $'+TK.symbol+', get paid in $'+TK.quote;
   const el=$('pulseTO');el.classList.remove('show');void el.offsetWidth;el.classList.add('show');beep(true);setTimeout(()=>beep(true),600);
@@ -1004,7 +1009,7 @@ function checkBuys(list){const fresh=[];list.forEach(a=>{if(alerted.has(a.tx_has
   // the bot records $MARINE's buys itself; for any other token, ask it to read this pool's trades into the shared history
   if(fresh.length&&CA!==MARINE&&POOL)fetch(BOT+'/alerts/buy?pool='+POOL+'&mint='+CA).catch(()=>{});
   fresh.reverse().forEach(a=>bpQ.push({v:+a.volume_in_usd,amt:+a.to_token_amount,w:(a.tx_from_address||'').slice(0,4)}));nextBuy()}
-function nextBuy(){if(!alertsOn){bpQ.length=0;return}while(bpQ.length&&!akOn(bpQ[0].k==='link'?'link':'marine'))bpQ.shift();if(bpBusy||!bpQ.length||$('pulseTO').classList.contains('show'))return;const b=bpQ.shift();bpBusy=true;const big=b.v>=WHALE;
+function nextBuy(){if(!alertsOn){bpQ.length=0;return}while(bpQ.length&&!akOn(bpQ[0].k==='link'?'link':'marine'))bpQ.shift();if(bpBusy||!bpQ.length||onScreen('buyPop'))return;const b=bpQ.shift();bpBusy=true;const big=b.v>=WHALE;
   $('buyPop').classList.toggle('big',big);$('bpT').textContent=big?'🚨 LARGE BUY 🚨':'🟢 NEW RECRUIT';$('bpV').textContent='+'+usd(b.v,0);
   $('bpW').textContent=compact(b.amt,'')+' $'+TK.symbol+' · '+b.w;$('buyPop').classList.add('show');beep(big);
   bpTimer=setTimeout(closeBuy,bpQ.length>3?2500:5000)}
@@ -1118,7 +1123,7 @@ async function botFeed(){if(!PAY||!PAY.bot)return null;if(Date.now()-feedAt<2500
   try{FEED=await j(PAY.bot.replace(/\/$/,'')+'/feed');feedAt=Date.now()}catch(e){FEED=null}return FEED}
 async function loadTTS(){try{const f=await botFeed();const d=f&&f.tts?{items:f.tts}:await j(DATA+'tts.json?'+Date.now());
   (d.items||[]).forEach(i=>{if(i.at>=bootAt&&!played.has(i.id)&&!ttsQ.some(q=>q.id===i.id))ttsQ.push(i)});nextTTS()}catch(e){}}
-function nextTTS(){if(!alertsOn||!akOn('tts')){ttsQ.forEach(i=>played.add(i.id));ttsQ.length=0;return}if(ttsBusy||!ttsQ.length)return;const i=ttsQ.shift();ttsBusy=true;
+function nextTTS(){if(!alertsOn||!akOn('tts')){ttsQ.forEach(i=>played.add(i.id));ttsQ.length=0;return}if(ttsBusy||!ttsQ.length||onScreen('ttsPop'))return;const i=ttsQ.shift();ttsBusy=true;
   played.add(i.id);localStorage.setItem('ttsPlayed',JSON.stringify([...played].slice(-100)));
   $('ttsFrom').textContent='🔊 '+i.from+' says';$('ttsMsg').textContent=i.text;$('ttsPop').classList.add('show');
   // the popup stays up while the message is read, then closes; without sound it shows long enough to read
