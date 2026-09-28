@@ -113,6 +113,7 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
 .lr img,.lr .ph0{width:22px;height:22px;border-radius:50%;object-fit:cover;background:#0b1a2e;flex:none}.lr .ln{flex:1;min-width:0;overflow:hidden}.lr .ln b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lr small{display:block;color:var(--dim);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lr .r{text-align:right;flex:none}.lr .r b{display:block}.lr .rk2{color:var(--dim);width:22px;text-align:right;flex:none}
 #audioGate{position:fixed;right:12px;bottom:40px;z-index:40;font-size:11px;background:#000c;border:1px solid var(--amber,#ffb000);color:var(--amber,#ffb000);padding:5px 9px;cursor:pointer;display:none}
+#audioGate{display:none!important}
 </style>
 </head>
 <body>
@@ -387,18 +388,14 @@ setInterval(()=>{if(!document.hidden)load()},300000);setInterval(()=>{if(!docume
 let seenAt=Date.now();document.addEventListener('visibilitychange',()=>{if(document.hidden){seenAt=Date.now();return}
   if(Date.now()-seenAt<20e3)return;load().then(loadQuotes);loadPin();loadIntel();loadFlow()});
 
-// browsers keep a page silent until it's clicked once: check right away and, while sound is blocked, say so until the
-// first click (alert beeps used to fail silently). The broadcast's browser is allowed to play sound, so it never shows there.
-(()=>{const g=$('audioGate');if(!g||(typeof OBS!=='undefined'&&OBS))return;let ctx=null;
-  try{ctx=actx=actx||new(window.AudioContext||window.webkitAudioContext)()}catch(e){}
-  const show=()=>{g.style.display=soundOn&&ctx&&ctx.state!=='running'?'block':'none'};show();
-  if(ctx)ctx.onstatechange=show;addEventListener('pointerdown',()=>setTimeout(show,300));addEventListener('keydown',()=>setTimeout(show,300));
-  g.addEventListener('click',()=>{try{ctx&&ctx.resume()}catch(e){}g.style.display='none'})})();
+// sound is on by default; browsers only allow it after the visitor's first click, tap or key press anywhere, which
+// switches it on silently (no prompt). The broadcast's browser is allowed to play sound from the start.
+addEventListener('touchend',()=>{try{unlockAudio()}catch(e){}},{once:true});
 
 // when a new version of the site goes live, reload at a quiet moment (no pop-up showing, checkout closed, not typing), so
 // every open page runs the same code and shows the same alerts. Never on the broadcast (the stream bot reloads that).
 (()=>{if(typeof OBS!=='undefined'&&OBS)return;let tag=null;
-  const busy=()=>document.hidden||document.querySelector('#infoPop.show,#buyPop.show,#ttsPop.show,#pulseTO.show,#ttsModal.show,#akPop.open,.mnu.open')||['INPUT','TEXTAREA','SELECT'].includes((document.activeElement||{}).tagName);
+  const busy=()=>document.hidden||document.querySelector('#infoPop.show,#buyPop.show,#ttsPop.show,#pulseTO.show,#ttsModal.show,#akPop.open,.mnu.open')||['infoQ','bpQ','ttsQ','apQ','pulseQ'].some(q=>{try{return eval(q).length>0}catch(e){return false}})||['INPUT','TEXTAREA','SELECT'].includes((document.activeElement||{}).tagName);
   const chk=async()=>{try{const r=await fetch(location.pathname,{method:'HEAD',cache:'no-store'});const t=r.ok&&(r.headers.get('etag')||r.headers.get('last-modified'));if(!t)return;
     if(tag===null){tag=t;return}if(t!==tag){const go=()=>busy()?setTimeout(go,5000):location.reload();go()}}catch(e){}};
   chk();setInterval(chk,300e3)})();

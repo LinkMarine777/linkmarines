@@ -497,8 +497,9 @@ const HOUSE={'1':['s1-better-call-sergey','s1-holding-alone','s1-plaid-motors'],
 const SPONSOR={
   '1':[{img:'/terminal/house/s1-jtx.png',href:'https://app.jtx.com/ref/TheMarines',tag:'JTX · JOIN ▸'},
        {img:'/terminal/house/s1-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'},
-       {img:'/terminal/house/s1-clobr-pro.png',href:'https://clobr.io/premium?ref=DF92VC53',tag:'CLOBr PRO · 7 DAYS FREE ▸'}],
-  '2':[{img:'/terminal/house/s2-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}],
+       {img:'/terminal/house/s1-clobr-pro.png',href:'https://clobr.io/premium?ref=DF92VC53',tag:'CLOBr PRO · 7 DAYS FREE ▸'},
+       {img:'/terminal/house/s1-bridge.png',href:'/bridge/',tag:'NEW TO SOLANA? ▸'}],
+  '2':[{img:'/terminal/house/s2-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'},{img:'/terminal/house/s2-bridge.png',href:'/bridge/',tag:'NEW TO SOLANA? ▸'}],
   '3':[{img:'/terminal/house/s2-clobr-pro.png',href:'https://clobr.io/premium?ref=DF92VC53',tag:'CLOBr PRO · 7 DAYS FREE ▸'}]
 };
 function fillers(k){return [...(HOUSE[k]||[]).map(n=>({house:n})),...(SPONSOR[k]||[])]}
