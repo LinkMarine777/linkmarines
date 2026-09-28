@@ -250,9 +250,10 @@ for s in trades:
     m = s['buy']['m']
     if m in BASE: continue
     by.setdefault(m, []).append(s)
+rewardq = set(quote.values())   # the reward tokens ($LINK, ...): whales swapping payouts is the 'rewards' alert, not buying or dumping
 for m, L in by.items():
     ws = {s['w'] for s in L}
-    if len(ws) >= 3:
+    if len(ws) >= 3 and m not in rewardq and sum(s['buy']['u'] for s in L) >= 1000:
         tot = sum(s['buy']['u'] for s in L)
         sig_('convergence', f"{m}:{time.strftime('%Y%m%d', time.gmtime(now))}", max(s['t'] for s in L),
              f"{len(ws)} whales bought ${sym(m)} today (${tot:,.0f})", m, tot)
@@ -261,7 +262,7 @@ for s in trades:
     if s['sell']['m'] not in BASE: sold.setdefault(s['sell']['m'], []).append(s)
 for m, L in sold.items():
     ws = {s['w'] for s in L}
-    if len(ws) >= 3:
+    if len(ws) >= 3 and m not in rewardq and sum(s['sell']['u'] for s in L) >= 1000:
         tot = sum(s['sell']['u'] for s in L)
         sig_('dumping', f"{m}:{time.strftime('%Y%m%d', time.gmtime(now))}", max(s['t'] for s in L),
              f"{len(ws)} whales sold ${sym(m)} today (${tot:,.0f})", m, tot)
