@@ -1244,8 +1244,10 @@ var ttsClose=null;
 // never re-fires old news, and the first scan only records a baseline. Buys / TTS / pulses always go first, and
 // info alerts are spaced at least INFO_GAP apart (a queue of up to 6 waits its turn).
 const INFO_GAP=180e3,TEST=/[?&]test\b/.test(location.search);let infoQ=[],infoAt=0,infoTimer=null;
-let IS={};try{IS=JSON.parse(localStorage.getItem('wrInfo')||'{}')}catch(e){}
-const saveIS=()=>{try{localStorage.setItem('wrInfo',JSON.stringify(IS))}catch(e){}};
+// which alerts this browser already showed (so a reload doesn't repeat them); the ?test page keeps its own list, so
+// testing never uses up an alert the real terminal (or the stream) should still show
+const IS_KEY=TEST?'wrInfoTest':'wrInfo';let IS={};try{IS=JSON.parse(localStorage.getItem(IS_KEY)||'{}')}catch(e){}
+const saveIS=()=>{try{localStorage.setItem(IS_KEY,JSON.stringify(IS))}catch(e){}};
 function infoAlert(kind,head,detail,side){if(!alertsOn&&!TEST)return;infoQ.push({kind,head,detail,side});if(infoQ.length>6)infoQ.shift();nextInfo()}
 function nextInfo(){if(!infoQ.length||$('infoPop').classList.contains('show'))return;
   if(['buyPop','ttsPop','pulseTO'].some(id=>$(id).classList.contains('show'))||(!TEST&&Date.now()-infoAt<INFO_GAP)){clearTimeout(nextInfo.t);nextInfo.t=setTimeout(nextInfo,5000);return}
