@@ -367,6 +367,11 @@ try:   # pulse (a $MARINE payout) + milestones, from stonkfun's live payout numb
             if cur and old and int(cur // step) > int(old // step):
                 sig_('milestone', f"{key}:{int(cur // step) * step}", now, '🏆 ' + text.format(int(cur // step) * step), MARINE, 0)
                 signals[-1].update({'s': 'MARINE'})
+    load_ = (r.get('pendingUsd') or 0) / (r.get('minDistributionUsd') or 1)   # pulse incoming: next payout 90%+ loaded
+    if load_ >= 0.9 and st.get('pulseWarned') != r.get('lastPayoutAt'):
+        st['pulseWarned'] = r.get('lastPayoutAt')
+        sig_('pulse', f"incoming:{r.get('lastPayoutAt')}", now, f"Pulse incoming: {min(load_, 1) * 100:.0f}% loaded · {r.get('pendingTokens') or 0:,.2f} LINK (≈ ${r.get('pendingUsd') or 0:,.0f}) about to hit $MARINE holders", MARINE, r.get('pendingUsd') or 0)
+        signals[-1].update({'s': 'MARINE'})
     st['rewards'] = {k: r.get(k) for k in ('lastPayoutAt', 'distributedTokens', 'payoutCount')}
     st['holders'] = (marine or {}).get('holders') or st.get('holders')
 except Exception as e: log('pulse', e)
@@ -382,6 +387,26 @@ try:   # $LINK ±5% within an hour (at most once every 2 hours)
             signals[-1].update({'s': 'LINK', 'side': 'up' if ch > 0 else 'down'})
     st['linkpx'] = hist
 except Exception as e: log('link price', e)
+mb = btoks.get(MARINE)   # $MARINE on the Stonk Board: enters or climbs 5+, APY up 1.5x
+if mb:
+    pr, pa = st.get('mrank'), st.get('mapy')
+    if (pr is None and st.get('mseen')) or (pr and mb.get('rank') and pr - mb['rank'] >= 5):
+        sig_('board', f"marine:{mb.get('rank')}:{now // 3600}", now, f"$MARINE {'enters the Stonk Board' if pr is None else 'climbs to'} #{mb.get('rank')}" + (f" (from #{pr})" if pr else ''), MARINE, 0)
+        signals[-1].update({'s': 'MARINE'})
+    if pa and mb.get('apy24h') and mb['apy24h'] >= 1.5 * pa:
+        sig_('board', f"mapy:{now // 3600}", now, f"$MARINE APY jumps to {pct_s(mb['apy24h'])} (24h, modeled) from {pct_s(pa)}", MARINE, 0)
+        signals[-1].update({'s': 'MARINE'})
+    st['mrank'], st['mapy'] = mb.get('rank'), mb.get('apy24h')
+else: st['mrank'] = None
+st['mseen'] = True
+try:   # whale watch: more of $MARINE's top-20 wallets buying this week (CLOBr's hour-delayed data the terminals already use)
+    acc = ((((get(f"{BOT}/clobr?mint={MARINE}&d=1").get('whales') or {}).get('summary') or {}).get('accumulating') or {}).get('top20') or {}).get('7d')
+    if acc is not None:
+        if st.get('acc20') is not None and acc > st['acc20']:
+            sig_('buy', f"whalewatch:{acc}:{now // 3600}", now, f"🐋 Whale watch: {acc - st['acc20']} more top-20 $MARINE wallet{'s' if acc - st['acc20'] > 1 else ''} buying · {acc} of the top 20 are buying this week", MARINE, 0)
+            signals[-1].update({'s': 'MARINE', 'side': 'buy'})
+        st['acc20'] = acc
+except Exception as e: log('whale watch', e)
 for x in (load('tts.json', {}).get('items') or [])[-30:]:   # paid TTS that played on the stream
     if x.get('at', 0) > now - 3 * 86400:
         sig_('tts', f"tts:{x['id']}", int(x['at']), f"📢 {x.get('from') or 'someone'}: “{str(x.get('text', ''))[:140]}”", None, 0)
