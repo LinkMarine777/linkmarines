@@ -1418,6 +1418,14 @@ document.fonts?.ready.then(draw);
 {const dm=new URLSearchParams(location.search).get('demo');if(dm)setTimeout(()=>{
   if(dm==='pulse')pulseTakeover(29.4,391,2439,6555.2);
   else{bpQ.push({v:dm==='bigbuy'?3120:240,amt:dm==='bigbuy'?2.1e6:162000,w:'Dem0'});nextBuy()}},2500)}
+
+// when a new version of the site goes live, reload at a quiet moment (no pop-up showing, checkout closed, not typing), so
+// every open page runs the same code and shows the same alerts. Never on the broadcast (the stream bot reloads that).
+(()=>{if(typeof OBS!=='undefined'&&OBS)return;let tag=null;
+  const busy=()=>document.hidden||document.querySelector('#infoPop.show,#buyPop.show,#ttsPop.show,#pulseTO.show,#ttsModal.show,#akPop.open,.mnu.open')||['INPUT','TEXTAREA','SELECT'].includes((document.activeElement||{}).tagName);
+  const chk=async()=>{try{const r=await fetch(location.pathname,{method:'HEAD',cache:'no-store'});const t=r.ok&&(r.headers.get('etag')||r.headers.get('last-modified'));if(!t)return;
+    if(tag===null){tag=t;return}if(t!==tag){const go=()=>busy()?setTimeout(go,5000):location.reload();go()}}catch(e){}};
+  chk();setInterval(chk,300e3)})();
 </script>
 </body>
 </html>

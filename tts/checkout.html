@@ -694,9 +694,10 @@ function watchReceipt(sig){let n=0;const t=setInterval(async()=>{if(++n>150)retu
     const ad=r.kind!=='tts'&&r.kind!=='t';
     say({live:'✅ Live. Look at the screen.',approved:'✅ Approved. It\'s in the queue and plays / goes up next.',held:r.kind==='i'?'Paid. Your image is with a mod for approval, usually within minutes. Refunded if rejected.':'Held for a mod to review. You\'ll be refunded if it\'s rejected.',underpaid:'Payment came in short ('+esc(r.note||'')+'). DM @TheMarinesX.',rejected:ad?'Rejected by a mod. You\'ll be refunded to the wallet you paid from.':'Rejected by a mod for breaking stream rules. TTS is a donation and isn\'t refunded.'}[r.status]||r.status,/^(live|approved)$/.test(r.status)?'ok':'err');loadAds();loadTTS()}catch(e){}},8000)}
 
-// open straight to what was asked for (?k=t TTS · a billboard · i image ad, &slot=1-3); closing closes the window
+// open straight to what was asked for (?k=t TTS · a billboard · i image ad, &slot=1-3); closing goes back
 const Q=new URLSearchParams(location.search);
-function closeCheckout(){if(window.opener)window.close();else location.href='/stream/'}
+function closeCheckout(){if(window.opener)return window.close();   // closing goes back to the page you came from
+  if(document.referrer.startsWith(location.origin)&&history.length>1)history.back();else location.href='/stream/'}
 $('ttsClose').onclick=closeCheckout;$('ttsModal').onclick=e=>{if(e.target.id==='ttsModal')closeCheckout()};
 loadPay().then(()=>{loadAds();openBuy(['t','a','i'].includes(Q.get('k'))?Q.get('k'):'t',Q.get('slot')||undefined)});
 </script>
