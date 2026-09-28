@@ -90,7 +90,7 @@ for t in watch:   # top holders straight from the chain, refreshed every 6 h
     h = H.get(t['mint'])
     if h and now - h['at'] < 6 * 3600: continue
     try:
-        accs = rpc('getTokenLargestAccounts', [t['mint']], RPC_IDX)['value']
+        accs = rpc('getTokenLargestAccounts', [t['mint']], RPC_IDX, tries=5 if KEY else 2)['value']
         info = rpc('getMultipleAccounts', [[a['address'] for a in accs], {'encoding': 'jsonParsed'}])['value']
         bal = {}
         for v in info:
@@ -110,6 +110,7 @@ for t in watch:
         whale.setdefault(w, []).append({'mint': t['mint'], 'symbol': t['symbol'], 'rank': rank, 'balance': b,
                                         'veteran': now - first[f"{w}:{t['mint']}"] >= 30 * 86400})
 log(f'watching {len(whale)} wallets across {len(watch)} tokens')
+if not whale and not KEY: log('no holder lists: public nodes refuse getTokenLargestAccounts. Add the HELIUS_KEY repository secret (Settings -> Secrets and variables -> Actions).')
 
 # ---------- new transactions per whale ----------
 bots = set(state.get('bots', []))
