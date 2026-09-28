@@ -83,7 +83,7 @@ tr.me{background:rgba(42,90,218,.1)}
 @media (max-width:999px){
   header{flex-wrap:wrap;gap:10px}.brand{font-size:24px}.brand small{font-size:13px}
   header .ca{order:9;flex-basis:100%;max-width:none;margin:0}.tkm{position:static}
-  header nav .btn:not(.primary){display:none}
+  header nav .btn:not(.primary):not(#menuBtn){display:none}
   .hero{grid-template-columns:repeat(3,minmax(0,1fr))}.pin{grid-column:1/-1}.hero>div:not(.pin){padding:9px 10px}.hero b{font-size:24px}.hero .s{display:none}.hero label{font-size:9px;letter-spacing:.5px}
   .hide-sm{display:none}main{padding:10px}
   .rk{display:none}.tok{min-width:0;gap:7px}.tok img{width:22px;height:22px}td,th{padding:8px 6px}.ph h1{font-size:22px}.ph{padding:10px 12px}
@@ -93,12 +93,27 @@ tr.me{background:rgba(42,90,218,.1)}
 /* scrollbars: slim and dark to match the site (not the default white bar) */
 *{scrollbar-width:thin;scrollbar-color:#24345e transparent}*::-webkit-scrollbar{width:6px;height:6px}*::-webkit-scrollbar-track{background:transparent}
 *::-webkit-scrollbar-thumb{background:#24345e;border-radius:3px}*::-webkit-scrollbar-thumb:hover{background:#34508f}*::-webkit-scrollbar-button{display:none}*::-webkit-scrollbar-corner{background:transparent}
+#akPop{position:absolute;z-index:90;display:none;width:250px;background:var(--panel2,#0d1428);border:1px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,.6);padding:10px 12px;font-size:12px;color:var(--txt)}
+#akPop.open{display:block}#akPop label{display:flex;gap:8px;align-items:center;padding:4px 0;cursor:pointer}#akPop .all{border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:4px;color:#fff;letter-spacing:1px}
+#akPop .dis{opacity:.45;cursor:default}#akPop input{accent-color:var(--blue2)}#akPop small{display:block;color:var(--dim);margin-top:6px;font-size:10px}
+header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center}.btn.tts{border-color:var(--amber);color:var(--amber)}
+.menu{position:relative}#menuBtn{font-size:15px;padding:5px 11px;line-height:1}
+.mnu{display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:60;min-width:230px;background:var(--panel2);border:1px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,.5);padding:6px 0}
+.menu.open .mnu{display:block}.mnu a{display:block;padding:8px 14px;color:var(--txt);font-size:12px;text-decoration:none;white-space:nowrap}.mnu a:hover{background:rgba(74,122,255,.12);color:#fff}
+#soundBtn,#alertBtn{background:none;border:1px solid var(--line);color:var(--txt);font-size:14px;line-height:1;padding:3px 7px;cursor:pointer}#soundBtn:hover,#alertBtn:hover{border-color:var(--blue2)}#soundBtn.off,#alertBtn.off{opacity:.55}
+#infoPop{position:fixed;left:50%;top:30%;transform:translate(-50%,-30px);opacity:0;pointer-events:none;z-index:70;min-width:min(520px,92vw);max-width:92vw;text-align:center;
+  background:linear-gradient(180deg,rgba(13,20,40,.97),rgba(4,6,15,.97));border:1px solid var(--blue2);box-shadow:0 0 40px rgba(74,122,255,.35);padding:14px 26px;transition:all .35s cubic-bezier(.2,1.4,.4,1)}
+#infoPop.show{opacity:1;transform:translate(-50%,0);pointer-events:auto;cursor:pointer}#infoPop .k{font-size:12px;letter-spacing:2px;color:var(--blue2);text-transform:uppercase}
+#infoPop .h{font-family:'VT323',monospace;font-size:40px;color:#fff;line-height:1.05;margin:4px 0}#infoPop .d{font-size:13px;color:var(--txt)}
+#infoPop.buy{border-color:var(--green);box-shadow:0 0 40px rgba(57,255,106,.3)}#infoPop.sell{border-color:var(--red);box-shadow:0 0 40px rgba(255,51,85,.3)}#infoPop.buy .k{color:var(--green)}#infoPop.sell .k{color:var(--red)}
 </style>
 </head>
 <body>
 <header>
   <a href="./" title="Terminal 2.0 home"><img src="../helmet.png" alt="Marines"></a>
   <a class="brand" href="./" style="text-decoration:none">THE WAR ROOM<small>TERMINAL 2.0</small></a>
+  <button id="soundBtn" type="button" title="Sound on: click to mute alert sounds" aria-label="Mute sounds"></button>
+  <button id="alertBtn" type="button" title="Alerts on: click to choose which alerts you see" aria-label="Alert settings"></button>
   <form id="caForm" class="ca" autocomplete="off">
     <input id="caIn" placeholder="Paste any stonk token CA…" spellcheck="false" aria-label="Token contract address">
     <button class="btn" type="submit">GO</button>
@@ -107,8 +122,21 @@ tr.me{background:rgba(42,90,218,.1)}
   <nav>
     <a class="btn" href="../">HQ</a>
     <a class="btn" href="token.html?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">$MARINE TERMINAL</a>
+    <a class="btn tts" href="token.html?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK&buy=tts">BUY TTS</a>
     <a class="btn primary" href="https://jup.ag/tokens/F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">BUY $MARINE</a>
+    <div class="menu"><button class="btn" id="menuBtn" type="button" aria-haspopup="true" aria-expanded="false" title="More">☰</button>
+      <div class="mnu" id="mnu" role="menu">
+        <a href="./">🔥 Trending tokens</a>
+        <a href="token.html?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">⚓ $MARINE terminal</a>
+        <a href="token.html?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK&buy=tts">📢 Buy TTS on the stream</a>
+        <a href="../terminal1.1/">📺 Terminal 1.1 (stream)</a>
+        <a href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ War Room chat</a>
+        <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener">𝕏 @TheMarinesX</a>
+        <a href="../">🏠 HQ</a>
+      </div></div>
   </nav>
+</header>
+<div id="infoPop" title="Click to close"><div class="k" id="ipK"></div><div class="h" id="ipH"></div><div class="d" id="ipD"></div></div>
 </header>
 
 <main>
@@ -227,6 +255,56 @@ async function loadIntel(){const [a,b]=await Promise.allSettled([j(BOT+'/alerts?
   if(a.status==='fulfilled'&&a.value&&a.value.signals)IN.signals=a.value.signals;renderIntel()}
 $('fk').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;fk=b.dataset.f;[...$('fk').children].forEach(x=>x.classList.toggle('on',x===b));renderIntel()});
 loadIntel();setInterval(loadIntel,60e3);
+
+// ---------- sound + alerts: the same controls as the terminals; new alerts from the shared history pop up here too ----------
+let soundOn=true,alertsOn=true,actx=null;try{soundOn=localStorage.getItem('wrSound')!=='0';alertsOn=localStorage.getItem('wrAlerts')!=='0'}catch(e){}
+function soundSet(){const b=$('soundBtn');b.textContent=soundOn?'🔊':'🔇';b.classList.toggle('off',!soundOn);b.title=soundOn?'Sound on: click to mute alert sounds':'Muted: click to turn sound on'}
+$('soundBtn').onclick=()=>{soundOn=!soundOn;try{localStorage.setItem('wrSound',soundOn?'1':'0')}catch(e){}soundSet()};soundSet();
+function beep(big){if(!soundOn)return;try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume();const t=actx.currentTime;
+  (big?[523,659,784,1047]:[659,988]).forEach((f,i)=>{const o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=f;
+    g.gain.setValueAtTime(.0001,t+i*.11);g.gain.exponentialRampToValueAtTime(.08,t+i*.11+.02);g.gain.exponentialRampToValueAtTime(.0001,t+i*.11+.16);
+    o.connect(g).connect(actx.destination);o.start(t+i*.11);o.stop(t+i*.11+.18)})}catch(e){}}
+const unlockAudio=()=>{try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();actx.resume()}catch(e){}};
+addEventListener('pointerdown',unlockAudio,{once:true});addEventListener('keydown',unlockAudio,{once:true});
+function alertSet(){const b=$('alertBtn');b.textContent=alertsOn?'🔔':'🔕';b.classList.toggle('off',!alertsOn);
+  b.title=alertsOn?'Alerts on: click to choose which alerts you see':'Alerts off: click to turn alerts back on';if(!alertsOn){apQ.length=0;closeInfo()}}
+// ---------- alert settings: all on/off plus which kinds (saved in this browser, shared by 1.0 and 2.0; the stream
+// always shows everything) ----------
+const AK=[['marine','$MARINE buys'],['link','$LINK buys'],['tts','TTS messages'],['pulse','Payouts & milestones'],['whales','Whale radar'],
+  ['market','Stonk Board & movers'],['clobr','CLOBr'],['linkmove','$LINK price moves']];
+let AKOFF=[];try{AKOFF=JSON.parse(localStorage.getItem('wrAlertOff')||'[]')}catch(e){}
+const akOn=k=>(typeof OBS!=='undefined'&&OBS)||!AKOFF.includes(k);
+const catOf=kind=>/PULSE|MILESTONE/.test(kind)?'pulse':/CLOBr|WHALE WATCH/.test(kind)?'clobr':/\$LINK (PUMP|DIP)/.test(kind)?'linkmove':/WHALE|ROTATION|DIP BUY|REWARDS|DUMPING/.test(kind)?'whales':'market';
+function akBuild(){let p=$('akPop');
+  if(!p){p=document.createElement('div');p.id='akPop';document.body.appendChild(p);
+    p.addEventListener('change',e=>{const i=e.target;
+      if(i.dataset.all!==undefined){alertsOn=i.checked;try{localStorage.setItem('wrAlerts',alertsOn?'1':'0')}catch(x){}alertSet()}
+      else{AKOFF=i.checked?AKOFF.filter(k=>k!==i.dataset.k):[...new Set([...AKOFF,i.dataset.k])];try{localStorage.setItem('wrAlertOff',JSON.stringify(AKOFF))}catch(x){}}
+      akBuild()});
+    document.addEventListener('click',e=>{if(!e.target.closest('#akPop,#alertBtn'))p.classList.remove('open')})}
+  p.innerHTML=`<label class="all"><input type="checkbox" data-all ${alertsOn?'checked':''}> All alerts</label>`
+    +AK.map(([k,n])=>`<label class="${alertsOn?'':'dis'}"><input type="checkbox" data-k="${k}" ${akOn(k)?'checked':''} ${alertsOn?'':'disabled'}> ${n}</label>`).join('')
+    +'<small>Saved in this browser. The stream always shows every alert.</small>'}
+function akToggle(){akBuild();const p=$('akPop'),r=$('alertBtn').getBoundingClientRect();
+  p.style.top=(r.bottom+6+scrollY)+'px';p.style.left=Math.max(8,Math.min(innerWidth-258,r.left))+'px';p.classList.toggle('open')}
+$('alertBtn').onclick=e=>{e.stopPropagation();akToggle()};
+// which setting a saved alert falls under
+const akCat=x=>x.kind==='buy'?(x.s==='LINK'?'link':'marine'):x.kind==='tts'?'tts':x.kind==='pulse'||x.kind==='milestone'?'pulse':x.kind==='score'?'clobr':x.kind==='link'?'linkmove'
+  :['convergence','dumping','rotation','exit','dip','rewards'].includes(x.kind)?'whales':'market';
+let apSeen=null,apQ=[],apBusy=false,apT=null;
+async function pollAlerts(){try{const L=((await j(BOT+'/alerts?limit=40')).signals)||[];
+  if(!apSeen){apSeen=new Set(L.map(x=>x.id));return}   // what's already in the history when the page opens doesn't pop
+  const fresh=L.filter(x=>!apSeen.has(x.id)).reverse();fresh.forEach(x=>{apSeen.add(x.id);if(alertsOn&&akOn(akCat(x)))apQ.push(x)});
+  if(fresh.length)loadIntel();nextAp()}catch(e){}}
+function nextAp(){if(apBusy||!apQ.length)return;const x=apQ.shift(),[h,c]=kindOf(x),p=$('infoPop');apBusy=true;
+  $('ipK').textContent=h;$('ipH').textContent=(x.s?'$'+x.s:'')+(x.u?' · '+compact(x.u):'');$('ipD').textContent=x.text;
+  p.classList.toggle('buy',c==='k-up');p.classList.toggle('sell',c==='k-dn');p.classList.add('show');beep(c==='k-up');apT=setTimeout(closeInfo,8000)}
+function closeInfo(){clearTimeout(apT);$('infoPop').classList.remove('show');setTimeout(()=>{apBusy=false;nextAp()},600)}
+$('infoPop').addEventListener('click',closeInfo);alertSet();
+pollAlerts();setInterval(pollAlerts,30e3);
+$('menuBtn').onclick=e=>{e.stopPropagation();const m=$('menuBtn').parentNode,o=!m.classList.contains('open');m.classList.toggle('open',o);$('menuBtn').setAttribute('aria-expanded',o)};
+document.addEventListener('click',e=>{if(!e.target.closest('.menu'))$('menuBtn').parentNode.classList.remove('open')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('menuBtn').parentNode.classList.remove('open')});
 $('pinCopy').onclick=async()=>{const b=$('pinCopy');try{await navigator.clipboard.writeText('F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK');b.textContent='COPIED ✓';b.classList.add('ok')}catch(e){b.textContent='F8Sc…TNK'}
   setTimeout(()=>{b.textContent='COPY CA';b.classList.remove('ok')},1500)};
 
