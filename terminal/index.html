@@ -876,12 +876,12 @@ function renderSlide(){const b=$('cmBody');
   if(cmSlide==='sfun'){slideHead('STONKFUN · <span class="am">MCAP</span>','https://www.stonkfun.xyz/','STONKFUN ▸');
     const L=(TOKS||[]).slice().sort((a,b)=>(b.mcap||0)-(a.mcap||0)).slice(0,10).map(t=>({...t,logo:t.image}));
     b.innerHTML=L.length?listRows(L,t=>`<span class="r">${compact(t.mcap)}</span><span class="r">${t.chg24!=null?pct(t.chg24):''}</span>`):'<p class="dim">loading stonkfun…</p>';return}
-  if(cmSlide==='whales'){slideHead('🐋 WHALE RADAR · <span class="up">WHAT WHALES BUY</span>','../terminal2/','TRENDING ▸');
+  if(cmSlide==='whales'){slideHead('🐋 WHALE <span class="up">RADAR</span>','../terminal2/','TRENDING ▸');
     const L=((WR&&WR.buying)||[]).slice(0,8).map(t=>({symbol:t.s,logo:t.i,quote:'24h',...t})),sg=WR&&WR.signals&&WR.signals[0];
     b.innerHTML=L.length?listRows(L,t=>`<span class="r up">${t.buyers} whale${t.buyers>1?'s':''}</span><span class="r">+${compact(t.net)}</span>`)
       +(sg?`<p class="wrSig">${esc(sg.text)}</p>`:'')+`<p class="dim wrFoot">Top 20 holders of ${esc((WR.tokens||[]).slice(0,4).join(' '))}… · ${WR.wallets} wallets · updated ${ago(WR.at*1000)} ago</p>`
       :'<p class="dim">Whale radar is warming up: no whale buys in the last 24h yet.</p>';return}
-  if(cmSlide==='flow'){slideHead('STONKFUN · <span class="am">LIVE FLOW</span>','https://www.stonkfun.xyz/','STONKFUN ▸');
+  if(cmSlide==='flow'){slideHead('STONKFUN <span class="am">FLOW</span>','https://www.stonkfun.xyz/','STONKFUN ▸');
     b.innerHTML=FLOW.length?listRows(FLOW,t=>`<span class="r"><b class="up">▲${t.b}</b> <b class="dn">▼${t.s}</b></span><span class="r">${t.c!=null?pct(t.c):'<span class="dim">—</span>'}</span>`)
       +'<p class="dim wrFoot">Buys ▲ and sells ▼ in the last hour, busiest first · top 10 by market cap</p>':'<p class="dim">loading stonkfun flow…</p>';return}
   if(cmSlide==='link'){slideHead('<span style="color:#7d9bff">$LINK</span> · LAST HOUR','https://dexscreener.com/solana/'+LINKPOOLS[0],'CHART ▸');
