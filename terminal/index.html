@@ -1319,7 +1319,12 @@ async function dbAlerts(){try{const L=((await j(BOT+'/alerts?limit=50')).signals
   if(!dbSeen){dbSeen=new Set(L.map(x=>x.id));return}   // what's already in the history when the page opens doesn't pop
   L.filter(x=>!dbSeen.has(x.id)).reverse().forEach(x=>{dbSeen.add(x.id);
     // popped straight from the chain already (buys, TTS, payouts fired); other tokens' holder payouts stay history-only
-    if(x.kind==='tts'||x.kind==='payout'||x.id.startsWith('pulse:pulse:')||(x.kind==='buy'&&!/whale watch/i.test(x.text)))return;
+    if(x.kind==='tts'||x.kind==='payout'||x.id.startsWith('pulse:pulse:'))return;
+    // $MARINE/$LINK buys pop from this page's own tape; one the tape missed (GeckoTerminal rate-limits a browser with
+    // several terminals open) pops from the history instead, never twice
+    if(x.kind==='buy'&&!/whale watch/i.test(x.text)){const set=x.s==='LINK'?lalerted:x.s==='MARINE'&&CA===MARINE?alerted:null,tx=x.id.slice(4);
+      if(!set||set.has(tx))return;set.add(tx);const m=/· ([\d,.]+) \$\w+ · wallet (\w+)/.exec(x.text)||[];
+      bpQ.push({k:x.s==='LINK'?'link':undefined,v:x.u||0,amt:+(m[1]||'0').replace(/,/g,''),w:m[2]||''});nextBuy();return}
     const [h,side]=DB_HEAD(x);infoAlert(h,(x.s?'$'+x.s:'')+(x.u?' · '+compact(x.u):''),x.text,side)})}catch(e){}}
 setTimeout(()=>{dbAlerts();setInterval(dbAlerts,20e3)},5000);
 // ---------- ?test: a panel that fires every alert type on demand (never shown on the stream) ----------
