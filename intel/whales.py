@@ -82,11 +82,11 @@ toks = load('tokens.json', {}).get('tokens', [])
 top = sorted([t for t in toks if t.get('mint') != MARINE], key=lambda t: -(t.get('mcap') or 0))[:10]
 watch = [{'mint': MARINE, 'symbol': 'MARINE'}] + [{'mint': t['mint'], 'symbol': t.get('symbol'), 'chg24': t.get('chg24')} for t in top]
 state = load('whales-state.json', {'last': {}, 'swaps': [], 'bots': [], 'holders': {}, 'first': {}})
-quote, pools = {}, set()   # token mint -> its reward (quote) token; the tokens' own pools (never whales)
+quote, pools, pool_of = {}, set(), {}   # reward (quote) token per token; the tokens' own pools (never whales)
 for t in watch:
     try:
         d = get(SF + t['mint'])['data']['token']
-        quote[t['mint']] = (d.get('quote') or {}).get('mint'); pools.add(d.get('pool'))
+        quote[t['mint']] = (d.get('quote') or {}).get('mint'); pools.add(d.get('pool')); pool_of[t['mint']] = d.get('pool')
     except Exception as e: log('stonkfun', t['symbol'], e)
 H = state.setdefault('holders', {})
 for t in watch:   # top holders straight from the chain, refreshed every 6 h
@@ -240,10 +240,37 @@ try:
         prev[m] = {'s': v, 'v': verdict}
 except Exception as e: log('scores', e)
 
+# ---------- big trades ($2,500+) on $MARINE + the top 10, and big movers (free: GeckoTerminal, stonkfun list) ----------
+for t in watch:
+    pool = pool_of.get(t['mint'])
+    if not pool: continue
+    try:
+        time.sleep(2.5)   # GeckoTerminal allows ~30 calls a minute
+        tr = get(f'https://api.geckoterminal.com/api/v2/networks/solana/pools/{pool}/trades?trade_volume_in_usd_greater_than=2500').get('data') or []
+        big = []
+        for x in tr:
+            a = x['attributes']; ts = int(time.mktime(time.strptime(a['block_timestamp'][:19], '%Y-%m-%dT%H:%M:%S'))) - time.timezone
+            if ts > now - 86400: big.append((float(a['volume_in_usd']), ts, a))
+        for u, ts, a in sorted(big, key=lambda b: -b[0])[:3]:
+            buy = a.get('to_token_address') == t['mint']
+            sig_('bigtrade', a['tx_hash'], ts, f"{'Bought' if buy else 'Sold'} ${u:,.0f} of ${t['symbol']} · wallet {a.get('tx_from_address', '')[:4]}", t['mint'], u)
+            signals[-1].update({'s': t['symbol'], 'side': 'buy' if buy else 'sell'})
+    except Exception as e: log('trades', t['symbol'], e)
+for t in toks:
+    c = t.get('chg24')
+    if c is not None and abs(c) >= 20 and (t.get('vol24') or 0) >= 50000:
+        sig_('mover', f"{t['mint']}:{time.strftime('%Y%m%d', time.gmtime(now))}", now,
+             f"${t.get('symbol')} {'+' if c > 0 else ''}{c:.0f}% in 24h · volume ${t.get('vol24', 0):,.0f} · mc ${t.get('mcap') or 0:,.0f}", t['mint'], t.get('vol24') or 0)
+        signals[-1].update({'s': t.get('symbol'), 'i': t.get('image'), 'side': 'up' if c > 0 else 'down'})
+
 # ---------- LP: which stonkfun pools earned the most fees per $ of liquidity in 24 h ----------
 lp = []
-for t in sorted(toks, key=lambda t: -(t.get('mcap') or 0))[:30]:
+board = load('board.json', {}).get('tokens', {})
+every = {t['mint']: t for t in toks}
+for m, b in board.items(): every.setdefault(m, {'mint': m, 'symbol': b.get('symbol'), 'image': b.get('image')})
+for t in every.values():
     m = t['mint']
+    time.sleep(0.3)
     try:
         for p in get(f'https://api-v3.raydium.io/pools/info/mint?mint1={m}&poolType=all&poolSortField=default&sortType=desc&pageSize=5&page=1')['data']['data']:
             tvl, fee = p.get('tvl') or 0, (p.get('day') or {}).get('volumeFee') or 0
@@ -259,7 +286,7 @@ for t in sorted(toks, key=lambda t: -(t.get('mcap') or 0))[:30]:
                 lp.append({'m': m, 's': t.get('symbol'), 'i': t.get('image'), 'pair': (p.get('name') or '').replace('-', '/'), 'dex': 'Meteora DLMM',
                            'tvl': round(tvl), 'fee': round(fee), 'd': round(fee / tvl * 100, 2), 'url': f"https://app.meteora.ag/dlmm/{p['address']}"})
     except Exception as e: log('meteora', t.get('symbol'), e)
-lp = sorted(lp, key=lambda x: -x['d'])[:15]
+lp = sorted(lp, key=lambda x: -x['d'])[:20]
 
 old = {s['id']: s['t'] for s in load('whales.json', {}).get('signals', [])}
 for s in signals: s['t'] = old.get(s['id'], s['t'])            # a signal keeps the time it first fired

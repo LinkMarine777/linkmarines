@@ -435,6 +435,9 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   #mbar{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:6px;position:fixed;left:0;right:0;bottom:0;z-index:45;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(4,6,15,.96);border-top:1px solid var(--line);backdrop-filter:blur(6px)}
   #mbar .btn{text-align:center;padding:11px 6px;font-size:12px;text-decoration:none}
 }
+/* scrollbars: slim and dark to match the site (not the default white bar) */
+*{scrollbar-width:thin;scrollbar-color:#24345e transparent}*::-webkit-scrollbar{width:6px;height:6px}*::-webkit-scrollbar-track{background:transparent}
+*::-webkit-scrollbar-thumb{background:#24345e;border-radius:3px}*::-webkit-scrollbar-thumb:hover{background:#34508f}*::-webkit-scrollbar-button{display:none}*::-webkit-scrollbar-corner{background:transparent}
 </style>
 </head>
 <body>
@@ -881,6 +884,13 @@ function renderSlide(){const b=$('cmBody');
     b.innerHTML=L.length?listRows(L,t=>`<span class="r up">${t.buyers} whale${t.buyers>1?'s':''}</span><span class="r">+${compact(t.net)}</span>`)
       +(sg?`<p class="wrSig">${esc(sg.text)}</p>`:'')+`<p class="dim wrFoot">Top 20 holders of ${esc((WR.tokens||[]).slice(0,4).join(' '))}… · ${WR.wallets} wallets · updated ${ago(WR.at*1000)} ago</p>`
       :'<p class="dim">Whale radar is warming up: no whale buys in the last 24h yet.</p>';return}
+  if(cmSlide==='lp'){slideHead('💧 BEST <span class="up">LP</span> · 24H','../terminal2/','ALL ▸');
+    const L=((WR&&WR.lp)||[]).slice(0,8).map(x=>({symbol:x.s,logo:x.i||((TOKS||[]).find(t=>t.mint===x.m)||{}).image,quote:x.pair.split('/').find(q=>q!==x.s)||'',...x}));
+    b.innerHTML=L.length?listRows(L,t=>`<span class="r up">${t.d.toFixed(1)}%/day</span><span class="r dim">${compact(t.tvl)} liq</span>`)
+      +'<p class="dim wrFoot">Fees earned per $ of liquidity in the last 24h, before impermanent loss · Raydium + Meteora</p>':'<p class="dim">loading pools…</p>';return}
+  if(cmSlide==='feed'){slideHead('🐋 LATEST <span class="up">ALERTS</span>','../terminal2/','HISTORY ▸');
+    const L=((WR&&WR.signals)||[]).slice(0,6);
+    b.innerHTML=L.length?L.map(x=>`<p class="wrSig" style="border-color:${/sell|down|dump|exit/.test((x.side||'')+x.kind)?'var(--red)':'var(--green)'}"><span class="dim">${ago(x.t*1000)} ago · </span>${esc(x.text)}</p>`).join(''):'<p class="dim">No alerts yet.</p>';return}
   if(cmSlide==='flow'){slideHead('STONKFUN <span class="am">FLOW</span>','https://www.stonkfun.xyz/','STONKFUN ▸');
     b.innerHTML=FLOW.length?listRows(FLOW,t=>`<span class="r"><b class="up">▲${t.b}</b> <b class="dn">▼${t.s}</b></span><span class="r">${t.c!=null?pct(t.c):'<span class="dim">—</span>'}</span>`)
       +'<p class="dim wrFoot">Buys ▲ and sells ▼ in the last hour, busiest first · top 10 by market cap</p>':'<p class="dim">loading stonkfun flow…</p>';return}
@@ -953,8 +963,8 @@ const ROT=[
   {id:'chart',bar:'rbChart',steps:[['7d',240],['1d',45],['7d',240],['all',45]],apply:k=>{const b=document.querySelector(`#tf button[data-tf="${k}"]`);if(b&&tf!==k){ROT.auto=1;b.click();ROT.auto=0}}},
   // holders only when the tape is quiet (no $MARINE or $LINK trade in the last 5 min)
   {id:'tape',bar:'rbTape',steps:[['trades',90],['holders',25]],apply:k=>{if(k==='holders'&&($('holdTab').style.display==='none'||Date.now()-lastTradeAt()<300e3))return false;setTapeView(k)}},
-  {id:'side',bar:'rbSide',steps:[['clobr',60],['whales',45],['board',40],['flow',40],['sfun',35],['link',40]],
-   apply:k=>{if(k==='whales'&&!(WR&&WR.buying&&WR.buying.length)||k==='flow'&&!FLOW.length)return false;showSlide(k)}}];
+  {id:'side',bar:'rbSide',steps:[['clobr',60],['whales',45],['board',40],['flow',40],['feed',35],['sfun',35],['lp',40],['link',40]],
+   apply:k=>{if(k==='whales'&&!(WR&&WR.buying&&WR.buying.length)||k==='flow'&&!FLOW.length||k==='lp'&&!(WR&&WR.lp&&WR.lp.length)||k==='feed'&&!(WR&&WR.signals&&WR.signals.length))return false;showSlide(k)}}];
 ROT.forEach(g=>{g.i=0;g.t=0;g.hold=0});
 const alertUp=()=>['buyPop','ttsPop','pulseTO','infoPop'].some(id=>$(id)&&$(id).classList.contains('show'));
 setInterval(()=>{if(!document.documentElement.classList.contains('fit')||/[?&]norotate\b/.test(location.search))return;
@@ -1273,7 +1283,7 @@ function infoScan(){const first=!IS.init,fire=(...a)=>{if(!first)infoAlert(...a)
     if(old&&cur){const ch=(cur/pr(old)-1)*100;if(Math.abs(ch)>=5&&now-(IS.linkMove||0)>2*3600e3){IS.linkMove=now;fire(ch>0?'🔗 $LINK PUMPING':'🔗 $LINK DIPPING','$LINK '+(ch>0?'+':'')+ch.toFixed(1)+'% IN AN HOUR','Now '+px(cur)+' on Solana')}}}
   // whale radar signals: whales piling into a token, rotating, exiting, buying a dip, compounding rewards
   if(WR&&WR.signals){const HEAD={convergence:'🐋 WHALES PILING IN',rotation:'🔄 WHALE ROTATION',exit:'🚪 WHALE EXIT',dip:'🩸 WHALES BUYING THE DIP',rewards:'♻️ WHALE REWARDS'};
-    if(IS.wr)WR.signals.filter(x=>!IS.wr.includes(x.id)&&Date.now()/1000-x.t<6*3600).slice(0,3).reverse()
+    if(IS.wr)WR.signals.filter(x=>!IS.wr.includes(x.id)&&x.kind!=='bigtrade'&&x.kind!=='mover'&&Date.now()/1000-x.t<6*3600).slice(0,3).reverse()
       .forEach(x=>infoAlert(HEAD[x.kind]||'🐋 WHALE RADAR',(x.s?'$'+x.s:'')+(x.u?' · '+compact(x.u):''),x.text));
     IS.wr=[...new Set([...WR.signals.map(x=>x.id),...(IS.wr||[])])].slice(0,300)}
   IS.init=1;saveIS()}
