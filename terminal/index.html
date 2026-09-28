@@ -870,6 +870,9 @@ function listRows(L,cols){return`<div class="cmL">${L.map((t,i)=>`<span class="r
 // whale radar (intel job on GitHub Actions, every 30 min): what the top holders of $MARINE and stonkfun's top 10 buy
 const WR_URL='https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/whales.json';let WR=null;
 async function loadWhales(){try{WR=await j(WR_URL);if(cmSlide==='whales')renderSlide()}catch(e){}}
+// the shared alert history (the bot's database: every alert, in order) for the Latest Alerts slide
+let ALH=null;async function loadAlh(){try{const d=await j(BOT+'/alerts?limit=20');if(d&&d.signals)ALH=d.signals;if(cmSlide==='feed')renderSlide()}catch(e){}}
+setTimeout(()=>{loadAlh();setInterval(loadAlh,60e3)},9000);
 // stonkfun live flow: buys vs sells in the last hour on the top 10 by market cap (one free DexScreener call a minute)
 let FLOW=[];
 async function loadFlow(){const top=(TOKS||[]).filter(t=>t.mint!==MARINE).sort((a,b)=>(b.mcap||0)-(a.mcap||0)).slice(0,10);if(!top.length)return;
@@ -895,7 +898,7 @@ function renderSlide(){const b=$('cmBody');
     b.innerHTML=L.length?listRows(L,t=>`<span class="r up">${t.d.toFixed(1)}%/day</span><span class="r dim">${compact(t.tvl)} liq</span>`)
       +'<p class="dim wrFoot">Fees earned per $ of liquidity in the last 24h, before impermanent loss · Raydium + Meteora</p>':'<p class="dim">loading pools…</p>';return}
   if(cmSlide==='feed'){slideHead('🐋 LATEST <span class="up">ALERTS</span>','../terminal2/','HISTORY ▸');
-    const L=((WR&&WR.signals)||[]).slice(0,6);
+    const L=(ALH||(WR&&WR.signals)||[]).slice(0,6);
     b.innerHTML=L.length?L.map(x=>`<p class="wrSig" style="border-color:${x.side==='sell'||x.kind==='dumping'||x.kind==='exit'?'var(--red)':x.side==='buy'||x.kind==='convergence'||x.kind==='dip'?'var(--green)':'var(--blue2)'}"><span class="dim">${ago(x.t*1000)} ago · </span>${esc(x.text)}</p>`).join(''):'<p class="dim">No alerts yet.</p>';return}
   if(cmSlide==='flow'){slideHead('STONKFUN <span class="am">FLOW</span>','https://www.stonkfun.xyz/','STONKFUN ▸');
     b.innerHTML=FLOW.length?listRows(FLOW,t=>`<span class="r"><b class="up">▲${t.b}</b> <b class="dn">▼${t.s}</b></span><span class="r">${t.c!=null?pct(t.c):'<span class="dim">—</span>'}</span>`)
@@ -968,7 +971,7 @@ let tapeView='trades';
 const ROT=[
   {id:'chart',bar:'rbChart',steps:[['7d',240],['1d',45],['7d',240],['all',45]],apply:k=>{const b=document.querySelector(`#tf button[data-tf="${k}"]`);if(b&&tf!==k){ROT.auto=1;b.click();ROT.auto=0}}},
   {id:'side',bar:'rbSide',steps:[['clobr',60],['whales',45],['board',40],['flow',40],['feed',35],['sfun',35],['lp',40],['link',40]],
-   apply:k=>{if(k==='whales'&&!(WR&&WR.buying&&WR.buying.length)||k==='flow'&&!FLOW.length||k==='lp'&&!(WR&&WR.lp&&WR.lp.length)||k==='feed'&&!(WR&&WR.signals&&WR.signals.length))return false;showSlide(k)}}];
+   apply:k=>{if(k==='whales'&&!(WR&&WR.buying&&WR.buying.length)||k==='flow'&&!FLOW.length||k==='lp'&&!(WR&&WR.lp&&WR.lp.length)||k==='feed'&&!((ALH&&ALH.length)||(WR&&WR.signals&&WR.signals.length)))return false;showSlide(k)}}];
 ROT.forEach(g=>{g.i=0;g.t=0;g.hold=0});
 const alertUp=()=>['buyPop','ttsPop','pulseTO','infoPop'].some(id=>$(id)&&$(id).classList.contains('show'));
 setInterval(()=>{if(!document.documentElement.classList.contains('fit')||/[?&]norotate\b/.test(location.search))return;
