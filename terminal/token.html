@@ -421,6 +421,13 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 #akPop.open{display:block}#akPop label{display:flex;gap:8px;align-items:center;padding:4px 0;cursor:pointer}#akPop .all{border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:4px;color:#fff;letter-spacing:1px}
 #akPop .dis{opacity:.45;cursor:default}#akPop input{accent-color:var(--blue2)}#akPop small{display:block;color:var(--dim);margin-top:6px;font-size:10px}
 #soundBtn,#alertBtn{display:inline-flex;align-items:center;justify-content:center;color:var(--blue2)!important;padding:4px 6px!important;font-size:0!important}#soundBtn svg,#alertBtn svg{width:16px;height:16px}#soundBtn.off,#alertBtn.off{color:var(--dim)!important;opacity:1!important}#soundBtn svg,#alertBtn svg{display:block}
+#infoPop{position:fixed;left:50%;top:36%;transform:translate(-50%,-30px);opacity:0;pointer-events:none;z-index:54;min-width:520px;max-width:78vw;text-align:center;
+  background:linear-gradient(180deg,rgba(13,20,40,.97),rgba(4,6,15,.97));border:1px solid var(--blue2);box-shadow:0 0 40px rgba(74,122,255,.35);padding:14px 26px;transition:all .35s cubic-bezier(.2,1.4,.4,1)}
+/* alert colors: green = a buy, red = a sell, the site's blue for everything else */
+#infoPop.buy{border-color:var(--green);box-shadow:0 0 40px rgba(57,255,106,.3)}#infoPop.sell{border-color:var(--red);box-shadow:0 0 40px rgba(255,51,85,.3)}#infoPop.buy .k{color:var(--green)}#infoPop.sell .k{color:var(--red)}
+#infoPop.show{opacity:1;transform:translate(-50%,0);pointer-events:auto;cursor:pointer}
+#infoPop .k{font-size:12px;letter-spacing:2px;color:var(--blue2);text-transform:uppercase}#infoPop .h{font-family:'VT323';font-size:44px;color:#fff;line-height:1.05;margin:4px 0}#infoPop .d{font-size:13px;color:var(--txt)}
+html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #infoPop .k{font-size:20px}html.fit #infoPop .h{font-size:64px}html.fit #infoPop .d{font-size:22px}
 </style>
 </head>
 <body>
@@ -569,6 +576,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   <div class="foot">On mobile, open themarines.link inside your wallet's browser, or use OPEN IN WALLET APP.
   <br><button class="btn" id="wCancel" style="margin-top:9px">CANCEL</button></div>
 </div></div>
+<div id="infoPop" title="Click to close"><div class="k" id="ipK"></div><div class="h" id="ipH"></div><div class="d" id="ipD"></div></div>
 <div id="ttsPop" title="Click to close"><div class="from" id="ttsFrom"></div><div class="msg" id="ttsMsg"></div></div>
 <div id="buyPop" title="Click to close"><div class="t" id="bpT">NEW RECRUIT</div><div class="v" id="bpV"></div><div class="w" id="bpW"></div></div>
 <div id="pulseTO" title="Click the message to close"><div class="k">⚡ PULSE FIRED ⚡</div><div class="n" id="ptN"></div><div class="s" id="ptS"></div><div class="d" id="ptD"></div></div>
@@ -1419,6 +1427,43 @@ document.fonts?.ready.then(draw);
 {const dm=new URLSearchParams(location.search).get('demo');if(dm)setTimeout(()=>{
   if(dm==='pulse')pulseTakeover(29.4,391,2439,6555.2);
   else{bpQ.push({v:dm==='bigbuy'?3120:240,amt:dm==='bigbuy'?2.1e6:162000,w:'Dem0'});nextBuy()}},2500)}
+
+// info alerts are spaced at least INFO_GAP apart (a queue of up to 40 waits its turn).
+const INFO_GAP=12e3,TEST=/[?&]test\b/.test(location.search);let infoQ=[],infoAt=0,infoTimer=null;
+// which alerts this browser already showed (so a reload doesn't repeat them); the ?test page keeps its own list, so
+// testing never uses up an alert the real terminal (or the stream) should still show
+const IS_KEY=TEST?'wrInfoTest':'wrInfo';let IS={};try{IS=JSON.parse(localStorage.getItem(IS_KEY)||'{}')}catch(e){}
+const saveIS=()=>{try{localStorage.setItem(IS_KEY,JSON.stringify(IS))}catch(e){}};
+function infoAlert(kind,head,detail,side){if(!TEST&&(!alertsOn||!akOn(catOf(kind))))return;infoQ.push({kind,head,detail,side});if(infoQ.length>40)infoQ.shift();nextInfo()}
+function nextInfo(){if(!infoQ.length||$('infoPop').classList.contains('show'))return;
+  if(['buyPop','ttsPop','pulseTO'].some(id=>$(id).classList.contains('show'))||(!TEST&&Date.now()-infoAt<INFO_GAP)){clearTimeout(nextInfo.t);nextInfo.t=setTimeout(nextInfo,5000);return}
+  const a=infoQ.shift();infoAt=Date.now();$('ipK').textContent=a.kind;$('ipH').textContent=a.head;$('ipD').textContent=a.detail||'';
+  $('infoPop').classList.toggle('buy',a.side==='buy');$('infoPop').classList.toggle('sell',a.side==='sell');$('infoPop').classList.add('show');beep(false);infoTimer=setTimeout(closeInfo,9000)}
+function closeInfo(){clearTimeout(infoTimer);$('infoPop').classList.remove('show');setTimeout(nextInfo,800)}
+$('infoPop').addEventListener('click',closeInfo);
+// Alerts from the shared history (the bot's database), the same ones the stream and trending show: every page and the stream
+// show the same ones, and every one shown is in the history. Buys, TTS and payouts still pop straight from the chain
+// here (fastest), with the same rules the bot records every minute. The old in-browser checks (infoScan) are retired.
+const DB_HEAD=x=>{const k=x.kind,sd=x.side;
+  if(k==='buy'&&/whale watch/i.test(x.text))return['🐋 WHALE WATCH','buy'];
+  return({convergence:['🐋 WHALES PILING IN','buy'],dumping:['🐋 WHALES DUMPING','sell'],rotation:['🔄 WHALE ROTATION'],exit:['🚪 WHALE EXIT','sell'],
+    dip:['🩸 WHALES BUYING THE DIP','buy'],rewards:['♻️ WHALE REWARDS'],score:['🧱 CLOBr SCORE'],board:['📋 STONK BOARD'],top10:['🚀 STONKFUN TOP 10'],
+    milestone:['🏆 MILESTONE'],payout:['💸 HOLDER PAYOUT'],pulse:['⚡ PULSE INCOMING'],link:[sd==='down'?'🔗 $LINK DIPPING':'🔗 $LINK PUMPING'],
+    mover:[sd==='down'?'📉 BIG MOVER':'📈 BIG MOVER'],bigtrade:[sd==='sell'?'🐳 BIG SELL':'🐳 BIG BUY',sd==='sell'?'sell':'buy']})[k]||['🐋 WHALE RADAR']};
+let dbSeen=null;
+async function dbAlerts(){try{const L=((await j(BOT+'/alerts?limit=50')).signals)||[];
+  if(!dbSeen){dbSeen=new Set(L.map(x=>x.id));return}   // what's already in the history when the page opens doesn't pop
+  L.filter(x=>!dbSeen.has(x.id)).reverse().forEach(x=>{dbSeen.add(x.id);
+    // TTS and $MARINE's own payout (pulse) pop straight from their sources already
+    if(x.kind==='tts'||(CA===MARINE&&x.id.startsWith('pulse:pulse:')))return;
+    // $MARINE/$LINK buys pop from this page's own tape; one the tape missed (GeckoTerminal rate-limits a browser with
+    // several terminals open) pops from the history instead, never twice
+    if(x.kind==='buy'&&!/whale watch/i.test(x.text)){if(x.s!=='MARINE'&&x.s!=='LINK')return;   // other tokens' buys: history only
+      const tx=x.id.slice(4);if(x.s==='MARINE'&&CA===MARINE){if(alerted.has(tx))return;alerted.add(tx);   // popped by this page's tape already?
+        const m=/· ([\d,.]+) \$\w+ · wallet (\w+)/.exec(x.text)||[];bpQ.push({v:x.u||0,amt:+(m[1]||'0').replace(/,/g,''),w:m[2]||''});nextBuy();return}
+      return infoAlert(x.s==='LINK'?'🔗 $LINK BUY':'🟢 $MARINE BUY','$'+x.s+(x.u?' · '+compact(x.u):''),x.text,'buy')}
+    const [h,side]=DB_HEAD(x);infoAlert(h,(x.s?'$'+x.s:'')+(x.u?' · '+compact(x.u):''),x.text,side)})}catch(e){}}
+setTimeout(()=>{dbAlerts();setInterval(dbAlerts,20e3)},5000);
 
 // when a new version of the site goes live, reload at a quiet moment (no pop-up showing, checkout closed, not typing), so
 // every open page runs the same code and shows the same alerts. Never on the broadcast (the stream bot reloads that).
