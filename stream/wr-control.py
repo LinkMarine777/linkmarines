@@ -2,11 +2,12 @@
 """War Room stream control bot (runs on the stream VPS).
 
 A separate Telegram bot that long-polls Telegram (outbound HTTPS only, no open ports) and controls the
-wr-stream service: pick destinations, save stream keys, start/stop, screenshots, logs, music volume.
+wr-stream service: pick destinations, save stream keys, start/stop, switch the page, screenshots, logs, music volume.
+Each platform goes live or offline on its own (the others keep streaming), and /page swaps the page in place.
 Stream keys go Telegram -> this server only, and the message that carried a key is deleted right away.
 Only Telegram user ids in ADMIN_IDS (/etc/wr-control.env) are obeyed, in private chats.
 """
-import json, os, re, subprocess, threading, time, urllib.parse, urllib.request, uuid
+import base64, json, os, re, socket, subprocess, threading, time, urllib.parse, urllib.request, uuid
 
 ENV = '/etc/wr-control.env'
 CONF = '/etc/wr-stream.json'
@@ -151,49 +152,107 @@ def running():
     return sh('systemctl', 'is-active', 'wr-stream') == 'active'
 
 
-PROGRESS = '/opt/wr-stream/.run/progress'
+RUN = '/opt/wr-stream/.run'
 
 
-def sending():
-    """(True, mbps) when ffmpeg is actually pushing data right now, else (False, last error line from the log)."""
+def relays_mode():
+    """True once the stream runs the per-platform sender (after the one-time /upgrade restart)."""
+    return subprocess.run(['pgrep', '-f', 'wr-relays.py'], capture_output=True).returncode == 0
+
+
+def sending(p=None):
+    """(True, mbps) when data is actually going out to platform p right now, else (False, its last error line)."""
+    path = f'{RUN}/progress-{p}' if p and relays_mode() else f'{RUN}/progress'
     try:
-        age = time.time() - os.path.getmtime(PROGRESS)
-        tail = open(PROGRESS).read().splitlines()[-14:]
+        age = time.time() - os.path.getmtime(path)
+        tail = open(path).read().splitlines()[-14:]
         kv = dict(l.split('=', 1) for l in tail if '=' in l)
         if age < 10 and kv.get('progress') == 'continue':
             m = re.match(r'([\d.]+)kbits', kv.get('bitrate', ''))
             return True, (float(m[1]) / 1000 if m else None)
     except Exception:
         pass
-    log = sh('journalctl', '-u', 'wr-stream', '-n', '60', '--no-pager', '-o', 'cat').splitlines()
+    log = sh('journalctl', '-u', 'wr-stream', '-n', '200', '--no-pager', '-o', 'cat').splitlines()
+    if p and relays_mode(): log = [l for l in log if l.startswith(f'[{p}]') or l.startswith('[encoder]')]
     err = [l for l in log if re.search(r'error|fail|refused|denied|timed out|invalid|not found|unauthor|forbidden|reset', l, re.I)]
     return False, mask(err[-1])[:300] if err else None
 
 
 def status_text():
-    c = conf(); live = [NAMES.get(p, p) for p in c['live'] if p in c['dests']]
+    c = conf(); live = [p for p in c['live'] if p in c['dests']]
     saved = ', '.join(f"{NAMES.get(p, p)} (…{d['key'][-4:]})" for p, d in c['dests'].items()) or 'none'
     load = open('/proc/loadavg').read().split()[:3]
     vol = load_env(STREAM_ENV).get('MUSIC_VOL', '?')
     tracks = len(music_files())
-    on = running() and live
-    ok, info = sending() if on else (False, None)
-    head = ('🔴 LIVE on ' + ', '.join(live) + (f' · sending {info:.1f} Mbps' if ok and info else ' · sending') if on and ok
-            else '⚠️ NOT CONNECTED to ' + ', '.join(live) + ('\nLast error: ' + info if info else '\n(starting up or retrying; check again in 20 s)') if on
-            else '⚫ OFF')
-    return (f"{head}\n"
-            f"Keys saved: {saved}\nGo-live list: {', '.join(live) or 'none'}\n"
+    rows = []
+    for p in live:
+        ok, info = sending(p) if running() else (False, None)
+        rows.append(f"🔴 {NAMES[p]}: live" + (f', sending {info:.1f} Mbps' if info else '') if ok
+                    else f"⚠️ {NAMES[p]}: not connected" + (f'\n   last error: {info}' if info else ' (starting up or retrying; check again in 20 s)'))
+    head = '\n'.join(rows) if running() and rows else '⚫ OFF AIR' + ('' if running() else ' (page stopped too)')
+    note = '' if relays_mode() or not running() else '\n\nℹ️ Send /upgrade once (about 15 s off air) to switch platforms on and off without affecting the others.'
+    return (f"{head}\n\nPage: {load_env(STREAM_ENV).get('PAGE', '?')}\n"
+            f"Keys saved: {saved}\n"
             f"CPU load: {' '.join(load)} (of {os.cpu_count()} cores)\nMusic: {tracks} tracks at volume {vol}"
-            + (' · ▶ playing' if subprocess.run(['pgrep', '-f', 'ffmpeg.*wr-lofi'], capture_output=True).returncode == 0 else ' · ⏸ not playing' if running() and tracks else ''))
+            + (' · ▶ playing' if subprocess.run(['pgrep', '-f', 'ffmpeg.*wr-lofi'], capture_output=True).returncode == 0 else ' · ⏸ not playing' if running() and tracks else '')
+            + note)
+
+
+# ---- the stream page: switched in place through Chrome's DevTools port (127.0.0.1 only), no restart
+PAGES = {'1.0': '/terminal/?obs', '1.1': '/terminal1.1/?obs', 'classic': '/terminal/classic.html?obs'}
+
+
+def set_page(url):
+    lines = open(STREAM_ENV).read().splitlines()
+    lines = [l for l in lines if not l.startswith('PAGE=')] + [f'PAGE="{url}"']
+    tmp = STREAM_ENV + '.tmp'
+    open(tmp, 'w').write('\n'.join(lines) + '\n'); os.chmod(tmp, 0o640); subprocess.run(['chown', 'root:wrstream', tmp]); os.replace(tmp, STREAM_ENV)
+
+
+def cdp_navigate(url):
+    """Tell the running Chrome to open url in its current tab (a minimal websocket client, one message)."""
+    tabs = json.load(urllib.request.urlopen('http://127.0.0.1:9222/json/list', timeout=3))
+    tab = next(t for t in tabs if t.get('type') == 'page')
+    path = tab['webSocketDebuggerUrl'].split(':9222', 1)[1]
+    s = socket.create_connection(('127.0.0.1', 9222), timeout=10)
+    try:
+        s.sendall((f'GET {path} HTTP/1.1\r\nHost: 127.0.0.1:9222\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n'
+                   f'Sec-WebSocket-Key: {base64.b64encode(os.urandom(16)).decode()}\r\nSec-WebSocket-Version: 13\r\n\r\n').encode())
+        if b' 101 ' not in s.recv(4096).split(b'\r\n', 1)[0]: raise RuntimeError('devtools refused the connection')
+        data = json.dumps({'id': 1, 'method': 'Page.navigate', 'params': {'url': url}}).encode()
+        n, mask_key = len(data), os.urandom(4)
+        head = bytes([0x81]) + (bytes([0x80 | n]) if n < 126 else bytes([0x80 | 126]) + n.to_bytes(2, 'big'))
+        s.sendall(head + mask_key + bytes(b ^ mask_key[i % 4] for i, b in enumerate(data)))
+        reply = b''
+        while b'"id":1' not in reply: reply += s.recv(65536) or b'"id":1'
+        if b'errorText' in reply: raise RuntimeError(reply.decode('utf-8', 'replace')[-200:])
+    finally:
+        s.close()
+
+
+def switch_page(url):
+    """Point the stream at url: live in place when Chrome allows it, else relaunch only Chrome (a few seconds of
+    blank screen, the stream stays on air). Returns how it was done."""
+    set_page(url)
+    if not relays_mode(): return None   # the pre-upgrade runner only reads the page when it starts
+    try:
+        cdp_navigate(url); return 'in place'
+    except Exception as e:
+        print('page switch via devtools failed, relaunching chrome:', e)
+        subprocess.run(['pkill', '-f', 'user-data-dir=/opt/wr-stream/chrome'])
+        return 'by relaunching the browser (a few seconds blank)'
 
 
 HELP = """War Room stream control
 
 /status — live or not, where, CPU, music
-/live x kick — go live on these (any of: x kick twitch youtube custom)
-/live — go live on the saved go-live list
-/stop — stop the stream
-/restart — restart everything (page + stream)
+/live youtube — go live on a platform (others keep going)
+/off kick — take one platform offline (others keep going)
+/live — go back live where you last were
+/stop — everything off air (the page keeps running)
+/page 1.0 — switch the stream page live (also 1.1, classic, or a link)
+/reload — reload the page in place
+/restart — restart everything (page + stream, ~15 s off air)
 /key x <server url> <stream key> — save X (also kick, custom)
 /key twitch <stream key> — save Twitch (also youtube)
 /keys — which platforms have keys saved
@@ -236,8 +295,9 @@ def handle(msg):
         if p == 'kick' and not url.endswith('/app'): url += '/app'   # Kick (Amazon IVS) ingest lives under /app
         c = conf(); c['dests'][p] = {'url': url, 'key': key}; save(c)
         live_now = running() and p in c['live']
-        if live_now: sh('systemctl', 'restart', 'wr-stream')
-        return reply(f"🔑 {NAMES[p]} key saved (…{key[-4:]}) and your message deleted." + (' Restarted the stream with it.' if live_now else f' Go live with /live {p}'))
+        if live_now and not relays_mode(): sh('systemctl', 'restart', 'wr-stream')
+        return reply(f"🔑 {NAMES[p]} key saved (…{key[-4:]}) and your message deleted."
+                     + ((f' {NAMES[p]} reconnects with it; the other platforms aren\'t touched.' if relays_mode() else ' Restarted the stream with it.') if live_now else f' Go live with /live {p}'))
 
     if cmd == '/keys':
         c = conf(); return reply('\n'.join(f"{NAMES.get(p, p)}: {d['url']} (key …{d['key'][-4:]})" for p, d in c['dests'].items()) or 'No keys saved yet. /key to add one.')
@@ -245,30 +305,66 @@ def handle(msg):
     if cmd == '/remove':
         p = platform(args[0] if args else ''); c = conf()
         if not p or p not in c['dests']: return reply('Usage: /remove <platform with a saved key>')
+        was_live = p in c['live']
         del c['dests'][p]; c['live'] = [x for x in c['live'] if x != p]; save(c)
-        if running(): sh('systemctl', 'restart', 'wr-stream')
+        if running() and was_live and not relays_mode(): sh('systemctl', 'restart', 'wr-stream')
         return reply(f'{NAMES[p]} key removed.')
 
-    if cmd == '/live':
-        c = conf()
-        if args:
-            want = [platform(a) for a in args]
-            bad = [a for a, p in zip(args, want) if not p]
-            if bad: return reply('Unknown platform: ' + ', '.join(bad) + '. Use: x kick twitch youtube custom')
-            c['live'] = list(dict.fromkeys(want))
-        missing = [NAMES[p] for p in c['live'] if p not in c['dests']]
+    if cmd in ('/live', '/off'):
+        c = conf(); want = [platform(a) for a in args]
+        bad = [a for a, p in zip(args, want) if not p]
+        if bad: return reply('Unknown platform: ' + ', '.join(bad) + '. Use: x kick twitch youtube custom')
+        if cmd == '/off':
+            if not want: return reply('Usage: /off kick   (/stop takes everything off air)')
+            c['live'] = [p for p in c['live'] if p not in want]
+            if not c['live']: c['last'] = list(dict.fromkeys(c.get('last', []) + want))
+            save(c)
+            if running() and not relays_mode(): sh('systemctl', 'restart', 'wr-stream')
+            return reply(f"⚫ {', '.join(NAMES[p] for p in want)} offline." + (f" Still live on {', '.join(NAMES[p] for p in c['live'])}." if c['live'] else ' Nothing is on air now.'))
+        add = want or [p for p in c.get('last', []) if p not in c['live']]
+        missing = [NAMES[p] for p in add if p not in c['dests']]
         if missing: return reply('No key saved for ' + ', '.join(missing) + '. Add it with /key first.')
-        if not c['live']: return reply('Pick where: /live x kick twitch')
-        save(c); sh('systemctl', 'restart', 'wr-stream'); time.sleep(12)
-        time.sleep(10); ok, info = sending()
-        where = ', '.join(NAMES[p] for p in c['live'])
-        return reply(f'🔴 Live on {where}' + (f', sending {info:.1f} Mbps.' if ok and info else '.') if ok
-                     else f'⚠️ Started, but nothing is reaching {where} yet.' + (f'\nLast error: {info}' if info else '') + '\nCheck the server URL and key (/keys), then /status again.')
+        if not add and not c['live']: return reply('Pick where: /live youtube  (any of: x kick twitch youtube custom)')
+        c['live'] = list(dict.fromkeys(c['live'] + add)); c['last'] = c['live']; save(c)
+        if not running(): sh('systemctl', 'start', 'wr-stream'); time.sleep(12)
+        elif not relays_mode(): sh('systemctl', 'restart', 'wr-stream'); time.sleep(12)
+        check = add or c['live']
+        for _ in range(12):
+            time.sleep(2)
+            if all(sending(p)[0] for p in check): break
+        res = [(p,) + sending(p) for p in check]
+        lines = [f"🔴 {NAMES[p]}: live" + (f', sending {info:.1f} Mbps' if ok and info else '') if ok
+                 else f"⚠️ {NAMES[p]}: nothing reaching it yet" + (f'\n   last error: {info}' if info else '') for p, ok, info in res]
+        others = [NAMES[p] for p in c['live'] if p not in check]
+        return reply('\n'.join(lines) + (f"\n(still live on {', '.join(others)})" if others else '')
+                     + ('\nCheck the server URL and key (/keys), then /status again.' if not all(r[1] for r in res) else ''))
 
     if cmd == '/stop':
-        sh('systemctl', 'stop', 'wr-stream'); return reply('⚫ Stream stopped. /live to start again.')
+        c = conf()
+        if c['live']: c['last'] = c['live']
+        c['live'] = []; save(c)
+        if not relays_mode(): sh('systemctl', 'stop', 'wr-stream')
+        return reply('⚫ Off air everywhere. /live to go back live where you were.')
     if cmd == '/restart':
-        sh('systemctl', 'restart', 'wr-stream'); return reply('🔄 Restarting (about 20 s).')
+        sh('systemctl', 'restart', 'wr-stream'); return reply('🔄 Restarting everything (about 15 s off air).')
+    if cmd == '/upgrade':
+        if relays_mode(): return reply('✅ Already upgraded: platforms go live and offline independently, and /page switches in place.')
+        sh('systemctl', 'restart', 'wr-stream'); time.sleep(20)
+        return reply('✅ Upgraded (restarted once). From now on /live, /off, /key and /page never interrupt the other platforms.\n\n' + status_text())
+
+    if cmd in ('/page', '/reload'):
+        cur = load_env(STREAM_ENV).get('PAGE', '')
+        if cmd == '/page' and not args:
+            return reply(f'Page: {cur}\n\nSwitch it: /page 1.0  ·  /page 1.1  ·  /page classic  ·  /page <link>')
+        if cmd == '/reload': url = cur
+        elif args[0].lower() in PAGES:
+            m = re.match(r'https?://[^/]+', cur); url = (m[0] if m else 'https://linkmarines.vercel.app') + PAGES[args[0].lower()]
+        elif re.match(r'https://\S+$', args[0]): url = args[0]
+        else: return reply('Usage: /page 1.0  ·  /page 1.1  ·  /page classic  ·  /page https://…')
+        if not running(): set_page(url); return reply(f'Page set to {url} (the stream is stopped; it opens there on /live).')
+        how = switch_page(url)
+        if not how: return reply(f'🖥 Page saved: {url}\nIt goes on screen with the one-time /upgrade (about 15 s off air); after that, /page switches in place.')
+        return reply(f'🖥 Stream page → {url}\nSwitched {how}. /shot to see it.')
 
     if cmd == '/volume':
         if not args or not re.fullmatch(r'(0(\.\d+)?|1(\.0+)?)', args[0]): return reply('Usage: /volume 0.15  (0 to 1)')
@@ -311,8 +407,8 @@ def main():
         print(f'set TG_TOKEN in {ENV}'); time.sleep(60); return
     # with no ADMIN_IDS yet it still answers, telling each person their id and how to authorize it
     tg('setMyCommands', commands=[{'command': c, 'description': d} for c, d in [
-        ('status', 'live or not, where, CPU'), ('live', 'go live: /live x kick'), ('stop', 'stop the stream'),
-        ('restart', 'restart page + stream'), ('key', 'save a stream key'), ('keys', 'saved platforms'),
+        ('status', 'live or not, where, CPU'), ('live', 'go live: /live youtube'), ('off', 'one platform offline: /off kick'),
+        ('stop', 'everything off air'), ('page', 'switch the page: /page 1.0'), ('reload', 'reload the page'), ('restart', 'restart page + stream'), ('key', 'save a stream key'), ('keys', 'saved platforms'),
         ('remove', 'forget a platform key'), ('volume', 'lofi volume 0-1'), ('music', 'lofi: /music lofi'), ('shot', 'screenshot'), ('logs', 'stream log'), ('help', 'all commands')]])
     offset = None
     while True:

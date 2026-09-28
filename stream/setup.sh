@@ -2,13 +2,17 @@
 # War Room 24/7 stream: Terminal 1.1 in a headless Chrome (1920x1080) + its sounds + a quiet lofi loop -> one or more
 # RTMP destinations at once, controlled from a Telegram bot that runs here (outbound only: no open ports).
 # Ubuntu/Debian VPS, run as root:  curl -fsSL https://raw.githubusercontent.com/LinkMarine777/linkmarines/main/stream/setup.sh | sudo bash
-# Re-running is safe (it updates the scripts and keeps your config; it restarts the stream). Stream keys stay on this server only.
+# Re-running is safe: it updates the scripts, keeps your config, and never takes a running stream off air (changes to
+# the stream itself apply on the next /restart or /upgrade). Stream keys stay on this server only.
+# Just update the scripts (no packages, no questions):  curl -fsSL .../stream/setup.sh | sudo bash -s update
 set -euo pipefail
 [ "$(id -u)" = 0 ] || { echo "run as root (sudo)"; exit 1; }
 [ "$(uname -m)" = x86_64 ] || { echo "this script needs an x86_64 (amd64) VPS"; exit 1; }
 
 APP=/opt/wr-stream; ENV=/etc/wr-stream.env; CONF=/etc/wr-stream.json; CENV=/etc/wr-control.env; USERN=wrstream
 RAW=https://raw.githubusercontent.com/LinkMarine777/linkmarines/main/stream
+MODE=${1:-full}
+if [ "$MODE" = full ]; then
 echo "== installing packages (a few minutes)"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
@@ -61,13 +65,28 @@ if [ ! -f $CENV ]; then
     umask 077; printf 'TG_TOKEN="%s"\nADMIN_IDS="%s"\n' "$TGT" "$ADM" > $CENV; chmod 600 $CENV; umask 022
   fi
 fi
+fi   # end of first-time setup; everything below also runs for 'update'
+
 mkdir -p /opt/wr-control
 curl -fsSL -o /opt/wr-control/wr-control.py "$RAW/wr-control.py"; chmod 700 /opt/wr-control/wr-control.py
+curl -fsSL -o $APP/wr-relays.py.new "$RAW/wr-relays.py" && mv $APP/wr-relays.py.new $APP/wr-relays.py; chmod 755 $APP/wr-relays.py
+# the stream's Chrome: run.sh calls google-chrome and /usr/local/bin comes first in PATH. For the wrstream user this reads
+# the page from /etc/wr-stream.env at every launch and opens DevTools on 127.0.0.1 only, so /page can switch it in place.
+cat > /usr/local/bin/google-chrome <<'CHR'
+#!/usr/bin/env bash
+REAL=/usr/bin/google-chrome
+[ "$(id -un)" = wrstream ] || exec "$REAL" "$@"
+source /etc/wr-stream.env
+args=(); for a in "$@"; do case "$a" in http://*|https://*) ;; *) args+=("$a");; esac; done
+exec "$REAL" "${args[@]}" --remote-debugging-port=9222 "$PAGE"
+CHR
+chmod 755 /usr/local/bin/google-chrome
 # yt-dlp for /music <link> (the official build; it updates itself before each download)
 curl -fsSL -o /usr/local/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp; chmod 755 /usr/local/bin/yt-dlp
 
-# ---- the runner: virtual screen + audio + chrome + ffmpeg, each restarted if it dies
-cat > $APP/run.sh <<'RUN'
+# ---- the runner: virtual screen + audio + chrome + music + sender, each restarted if it dies
+# (written next to the running copy and swapped in, so a live stream never reads a half-written file)
+cat > $APP/run.sh.new <<'RUN'
 #!/usr/bin/env bash
 set -u
 source /etc/wr-stream.env
@@ -82,6 +101,7 @@ pactl set-default-sink wr
 
 # chrome: full screen on the terminal, autoplay allowed (alert sounds + TTS need no click); relaunched if it ever exits
 ( while true; do
+    source /etc/wr-stream.env
     google-chrome --kiosk --start-fullscreen --window-position=0,0 --window-size=1920,1080 --force-device-scale-factor=1 \
       --autoplay-policy=no-user-gesture-required --no-first-run --no-default-browser-check --noerrdialogs --disable-infobars \
       --disable-session-crashed-bubble --disable-features=Translate,MediaRouter --disable-dev-shm-usage --hide-scrollbars \
@@ -93,15 +113,6 @@ sleep 8
 # lofi: its own player into the same audio mix as the page. Each pass is a fresh shuffle of /opt/wr-stream/music;
 # when it ends (or is killed to pick up new tracks / volume), the loop starts the next pass. Never stops.
 mk_playlist(){ find /opt/wr-stream/music -maxdepth 1 -type f \( -iname '*.mp3' -o -iname '*.m4a' -o -iname '*.ogg' -o -iname '*.opus' -o -iname '*.flac' -o -iname '*.wav' \) | shuf | sed "s/'/'\\\\''/g; s/.*/file '&'/" > /opt/wr-stream/.playlist; }
-# the go-live list -> one ffmpeg tee target ("[f=flv:onfail=ignore]url/key|..."); empty = stay off air but keep the page up
-targets(){ python3 -c '
-import json
-c = json.load(open("/etc/wr-stream.json"))
-def url(p):
-    u = c["dests"][p]["url"].rstrip("/")
-    return u + "/app" if p == "kick" and not u.endswith("/app") else u   # Kick (Amazon IVS) ingest lives under /app
-print("|".join("[f=flv:onfail=ignore]" + url(p) + "/" + c["dests"][p]["key"] for p in c.get("live", []) if p in c.get("dests", {})))' 2>/dev/null; }
-
 ( while true; do
     source /etc/wr-stream.env; mk_playlist
     if [ -s /opt/wr-stream/.playlist ]; then
@@ -111,20 +122,10 @@ print("|".join("[f=flv:onfail=ignore]" + url(p) + "/" + c["dests"][p]["key"] for
     sleep 1
   done ) &
 
-while true; do
-  source /etc/wr-stream.env; OUT=$(targets)
-  if [ -z "$OUT" ]; then sleep 15; continue; fi
-  [ "${OUT_RES}" = 1920x1080 ] && V="[0:v]fps=${FPS}[v]" || V="[0:v]fps=${FPS},scale=${OUT_RES/x/:}:flags=bicubic[v]"
-  AF="[1:a]aresample=44100,alimiter=limit=0.95[a]"   # page sounds + lofi, already mixed by PulseAudio
-  ffmpeg -hide_banner -loglevel warning -thread_queue_size 1024 -f x11grab -video_size 1920x1080 -framerate "$FPS" -draw_mouse 0 -i :99 \
-    -thread_queue_size 1024 -f pulse -i wr.monitor \
-    -filter_complex "$V;$AF" -map "[v]" -map "[a]" \
-    -c:v libx264 -preset veryfast -tune zerolatency -b:v "$BITRATE" -maxrate "$BITRATE" -bufsize "$BITRATE" -pix_fmt yuv420p -g $((FPS*2)) \
-    -c:a aac -b:a 160k -ar 44100 -flags +global_header -progress /opt/wr-stream/.run/progress -f tee "$OUT"
-  echo "ffmpeg exited ($?), reconnecting in 5 s"; sleep 5
-done
+# the sender: one encoder, then one relay per live platform, each started and stopped on its own (see wr-relays.py)
+python3 /opt/wr-stream/wr-relays.py
 RUN
-chmod 755 $APP/run.sh; chown $USERN:$USERN $APP/run.sh
+chmod 755 $APP/run.sh.new; chown $USERN:$USERN $APP/run.sh.new; mv $APP/run.sh.new $APP/run.sh
 
 cat > /etc/systemd/system/wr-stream.service <<UNIT
 [Unit]
@@ -162,7 +163,7 @@ case "${1:-status}" in
   start|stop|restart|status) sudo systemctl "$1" wr-stream --no-pager ;;
   logs) sudo journalctl -u wr-stream -f -n 50 ;;
   volume) [ -n "${2:-}" ] || { grep MUSIC_VOL $E; exit; }; sudo sed -i "s/^MUSIC_VOL=.*/MUSIC_VOL=$2/" $E; sudo pkill -f 'ffmpeg.*wr-lofi'; echo "music volume $2 (0.0-1.0), applied now";;
-  key|live) echo "keys and destinations are set from the Telegram control bot: /key, /live, /stop (see /help there)";;
+  key|live|page) echo "keys, platforms and the page are set from the Telegram control bot: /key, /live, /off, /page (see /help there)";;
   bot) sudo systemctl status wr-control --no-pager; sudo journalctl -u wr-control -n 20 --no-pager -o cat;;
   admin) [[ "${2:-}" =~ ^[0-9]+$ ]] || { echo "usage: wr-stream admin <telegram user id>"; sudo grep ADMIN_IDS /etc/wr-control.env; exit 1; }
     C=/etc/wr-control.env; cur=$(sudo sed -n 's/^ADMIN_IDS="\(.*\)"/\1/p' $C)
@@ -180,9 +181,12 @@ systemctl disable --now wr-live >/dev/null 2>&1 || true
 rm -rf /etc/systemd/system/wr-live.service /opt/wr-live /etc/wr-live.env /etc/opt/chrome/policies/managed/wr-live.json
 systemctl daemon-reload
 systemctl enable wr-stream wr-control >/dev/null 2>&1
-systemctl restart wr-stream wr-control
+systemctl restart wr-control   # the Telegram bot only; the stream is never interrupted by setup
+if systemctl is-active --quiet wr-stream; then
+  pgrep -f wr-relays.py >/dev/null || echo "   The stream kept running. Send /upgrade to the Telegram bot when it's a good moment (about 15 s off air, once)."
+else systemctl start wr-stream; fi
 # empty music folder: fetch the public-domain lofi album in the background (the stream restarts to include it when done)
-[ -n "$(ls -A $APP/music 2>/dev/null)" ] || { nohup python3 /opt/wr-control/wr-control.py --seed >/dev/null 2>&1 & echo "downloading 52 public-domain lofi tracks in the background"; }
+[ "$MODE" = full ] && [ -z "$(ls -A $APP/music 2>/dev/null)" ] && { nohup python3 /opt/wr-control/wr-control.py --seed >/dev/null 2>&1 & echo "downloading 52 public-domain lofi tracks in the background"; }
 echo
 echo "== done. The terminal page is up; it goes on air once you pick a destination."
 echo "   In Telegram, open your control bot and send /help  (then /key ... and /live ...)"
