@@ -1,5 +1,0 @@
-# Cloudflare static assets (Vercel reads vercel.json instead). Short links for the stream page.
-/warroom      /terminal/  302
-/WarRoom      /terminal/  302
-/TheWarRoom   /terminal/  302
-/thewarroom   /terminal/  302
