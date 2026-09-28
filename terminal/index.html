@@ -711,7 +711,14 @@ function pulseTakeover(tok,usdv,holders,total){if(!alertsOn)return;$('ptN').text
 var ptTimer=null;
 function closePulse(){clearTimeout(ptTimer);const el=$('pulseTO');if(!el.classList.contains('show'))return;el.classList.remove('show');nextBuy()}
 async function loadRewards(){
-  try{rewards=CA===MARINE?await j(DATA+'rewards.json?'+Date.now()):(await j(BOT+'/token/'+CA)).rewards;}catch(e){return}
+  // $MARINE: live payout numbers through the bot (stonkfun, cached 60 s there) so the pulse lands within a minute or two
+  // of the payout; the bot's rewards.json (refreshed every 20 min) adds the 24h / 7d windows and is the fallback
+  try{if(CA===MARINE){
+      if(!loadRewards.snap||Date.now()-loadRewards.snapAt>300e3){try{loadRewards.snap=await j(DATA+'rewards.json?'+Date.now());loadRewards.snapAt=Date.now()}catch(e){}}
+      let live=null;try{live=(await j(BOT+'/token/'+CA)).rewards}catch(e){}
+      if(!live&&!loadRewards.snap)return;
+      rewards=live?{...(loadRewards.snap||{}),...live,snapshotAt:Math.floor(Date.now()/1000)}:loadRewards.snap}
+    else rewards=(await j(BOT+'/token/'+CA)).rewards}catch(e){return}
   if(!rewards){$('sDist').textContent='—';$('sDistUsd').textContent='no holder rewards for this token';$('live').classList.remove('stale');$('liveTxt').textContent='LIVE';return}
   if(!rewards.snapshotAt)rewards.snapshotAt=Math.floor(Date.now()/1000);
   const r=rewards;
@@ -990,14 +997,20 @@ let seen=new Set(),tapeLoaded=false,tapeMin=0,tapeRaw=[];
 // ---------- $LINK tape (Solana LINK, the token $MARINE pays out): LINK/USDC (Raydium) + LINK/SOL (Orca) ----------
 const LINKMINT='LinkhB3afbBKb2EQQu7s7umdZceV3wcvAUJhQAfQ23L',LINKPOOLS=['7YRKyGCHBJYAE2uyAGRDiz5WNq68FPzh2uDvDaYv1cNE','C4Nnrur8ZDVsdX4Y3vwaCFJXCHWRrS9LdRxV7wuU6Xrr'];
 const LINKMIN=1000;let linkRaw=[],linkBoot=true;const lseen=new Set();
-async function loadLink(){clearTimeout(loadLink.r);try{const all=[];
-    for(const pool of LINKPOOLS){const d=await j('https://api.geckoterminal.com/api/v2/networks/solana/pools/'+pool+'/trades');all.push(...d.data.map(t=>t.attributes))}
-    linkRaw=all.sort((a,b)=>Date.parse(b.block_timestamp)-Date.parse(a.block_timestamp));renderLink();checkLinkBuys(linkRaw);if(cmSlide==='link')renderSlide()}
-  catch(e){loadLink.r=setTimeout(loadLink,8000)}}
+// GeckoTerminal rate-limits hard, so the two $LINK pools are fetched one at a time in turn (one call every 15 s), and
+// each pool keeps its last good list: a refused call never blanks the $LINK trades
+const linkByPool={};let linkI=0;
+async function loadLink(){clearTimeout(loadLink.r);const pool=LINKPOOLS[linkI%LINKPOOLS.length];
+  let list;try{list=(await j('https://api.geckoterminal.com/api/v2/networks/solana/pools/'+pool+'/trades')).data.map(t=>t.attributes)}
+  catch(e){loadLink.r=setTimeout(loadLink,8000);return}
+  linkI++;const first=!linkByPool[pool];linkByPool[pool]=list;
+  linkRaw=Object.values(linkByPool).flat().sort((a,b)=>Date.parse(b.block_timestamp)-Date.parse(a.block_timestamp));
+  renderLink();checkLinkBuys(list,first);if(cmSlide==='link')renderSlide()}
 function renderLink(){renderTape()}   // $LINK trades share the one tape
 const lalerted=new Set();
-function checkLinkBuys(list){const fresh=[];list.forEach(a=>{if(lalerted.has(a.tx_hash))return;lalerted.add(a.tx_hash);
-    if(!linkBoot&&a.to_token_address===LINKMINT&&+a.volume_in_usd>=LINKMIN)fresh.push(a)});linkBoot=false;
+// a pool's first list is history (no alerts); after that every new $LINK buy of $1,000+ pops
+function checkLinkBuys(list,first){const fresh=[];list.forEach(a=>{if(lalerted.has(a.tx_hash))return;lalerted.add(a.tx_hash);
+    if(!first&&a.to_token_address===LINKMINT&&+a.volume_in_usd>=LINKMIN)fresh.push(a)});
   fresh.reverse().forEach(a=>bpQ.push({k:'link',v:+a.volume_in_usd,amt:+a.to_token_amount,w:(a.tx_from_address||'').slice(0,4)}));nextBuy()}
 // one tape for both: $MARINE trades (its pool) and Solana $LINK trades (LINK/USDC + LINK/SOL), newest first, each row
 // marked with its token's logo
@@ -1508,7 +1521,7 @@ addEventListener('resize',fit);
 fit();
 resolveToken().finally(()=>{loadRewards();loadMarket();loadChart();loadTrades();loadTicker();loadBoard();loadTTS();loadPay();loadAds();});
 setInterval(()=>{if(!document.hidden)loadAds()},15000);setInterval(loadPay,300000);setTimeout(()=>{renderAds();setInterval(renderAds,20000)},20000-Date.now()%20000);
-setInterval(loadTrades,20000);setTimeout(()=>{loadLink();setInterval(loadLink,30000)},10000);setInterval(loadMarket,30000);setInterval(loadRewards,60000);
+setInterval(loadTrades,20000);setTimeout(()=>{loadLink();setInterval(loadLink,15000)},6000);setInterval(loadMarket,30000);setInterval(loadRewards,30000);
 setInterval(loadChart,120000);setTimeout(loadDepth,1500);const vis=f=>()=>{if(!document.hidden)f()};setInterval(vis(loadDepth),60000);setTimeout(loadClobr,2000);setInterval(vis(loadClobr),120000);setInterval(loadTicker,300000);setInterval(loadBoard,300000);
 setInterval(()=>{if(!document.hidden)loadTTS()},10000);setInterval(tickLast,1000);
 document.fonts?.ready.then(draw);
