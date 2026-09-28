@@ -467,7 +467,6 @@ html.fit #tip{font-size:20px;padding:10px 14px}
     <span id="tkMsg" class="tkm"></span>
   </form>
   <nav>
-    <a class="btn fx" id="chartLink" href="#" target="_blank" rel="noopener">CHART</a>
     <a class="btn fx" href="https://x.com/TheMarinesX" target="_blank" rel="noopener">X</a>
     <a class="btn" href="/trending/" title="Terminal 7: any stonkfun token">TERMINAL 7</a>
     <a class="btn fx" href="/">HQ</a>
@@ -651,7 +650,7 @@ async function resolveToken(){
   document.querySelectorAll('.tkSym').forEach(e=>e.textContent=sym);document.querySelectorAll('.tkQs').forEach(e=>e.textContent=qs);
   document.querySelectorAll('.tkQ').forEach(e=>e.textContent=String(TK.quote).replace(/^\$/,''));
   document.querySelectorAll('.buyTk').forEach(a=>a.href='https://jup.ag/tokens/'+CA);
-  $('chartLink').href=POOL?'https://dexscreener.com/solana/'+POOL:'https://dexscreener.com/solana/'+CA;
+
   $('tkBadge').innerHTML=(TK.image?`<img src="${esc(TK.image)}" alt="" onerror="this.remove()">`:'')+`${esc(sym)}<span class="q">/${esc(qs)}</span>`;
   $('caIn').value=CA;
   // the bare /terminal/ link is $MARINE: show its CA in the address bar so any view can be shared as-is
@@ -931,7 +930,7 @@ function renderSlide(){const b=$('cmBody');
   if(cmSlide==='flow'){slideHead('STONKFUN <span class="am">FLOW</span>','https://www.stonkfun.xyz/','STONKFUN ▸');
     b.innerHTML=FLOW.length?listRows(FLOW,t=>`<span class="r"><b class="up">▲${t.b}</b> <b class="dn">▼${t.s}</b></span><span class="r">${t.c!=null?pct(t.c):'<span class="dim">—</span>'}</span>`)
       +'<p class="dim wrFoot">Buys ▲ and sells ▼ in the last hour, busiest first · top 10 by market cap</p>':'<p class="dim">loading stonkfun flow…</p>';return}
-  if(cmSlide==='link'){slideHead('<span style="color:#7d9bff">$LINK</span> · LAST HOUR','https://dexscreener.com/solana/'+LINKPOOLS[0],'CHART ▸');
+  if(cmSlide==='link'){slideHead('<span style="color:#7d9bff">$LINK</span> · LAST HOUR','/terminal/token?ca='+LINKMINT,'CHART ▸');
     const now=Date.now(),H=linkRaw.filter(a=>now-Date.parse(a.block_timestamp)<3600e3),buy=a=>a.to_token_address===LINKMINT;
     const bv=H.filter(buy).reduce((t,a)=>t+(+a.volume_in_usd),0),sv=H.filter(a=>!buy(a)).reduce((t,a)=>t+(+a.volume_in_usd),0),tot=Math.max(1,bv+sv);
     const big=H.filter(buy).sort((a,c)=>c.volume_in_usd-a.volume_in_usd)[0],lp=linkRaw[0]?+(buy(linkRaw[0])?linkRaw[0].price_to_in_usd:linkRaw[0].price_from_in_usd):null;
