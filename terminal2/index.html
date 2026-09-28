@@ -204,9 +204,10 @@ $('caForm').addEventListener('submit',e=>{e.preventDefault();const v=$('caIn').v
 // ---------- alerts + LP (intel job on GitHub Actions every 30 min, read from the data branch) ----------
 let TOK={};
 const INTEL='https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/whales.json';let IN=null,fk='all';
+// green = a buy, red = a sell, the site's blue for everything else
 const KIND={convergence:['🐋 WHALES PILING IN','k-up'],dumping:['🐋 WHALES DUMPING','k-dn'],rotation:['🔄 WHALE ROTATION','k-bl'],exit:['🚪 WHALE EXIT','k-dn'],
-  dip:['🩸 WHALE DIP BUY','k-am'],rewards:['♻️ WHALE REWARDS','k-up'],score:['🧱 CLOBr SCORE','k-or']};
-const kindOf=x=>x.kind==='bigtrade'?(x.side==='sell'?['🐳 BIG SELL','k-dn']:['🐳 BIG BUY','k-up']):x.kind==='mover'?(x.side==='down'?['📉 BIG MOVER','k-dn']:['📈 BIG MOVER','k-up']):KIND[x.kind]||['🐋 WHALE RADAR','k-up'];
+  dip:['🩸 WHALE DIP BUY','k-up'],rewards:['♻️ WHALE REWARDS','k-bl'],score:['🧱 CLOBr SCORE','k-bl']};
+const kindOf=x=>x.kind==='bigtrade'?(x.side==='sell'?['🐳 BIG SELL','k-dn']:['🐳 BIG BUY','k-up']):x.kind==='mover'?(x.side==='down'?['📉 BIG MOVER','k-bl']:['📈 BIG MOVER','k-bl']):KIND[x.kind]||['🐋 WHALE RADAR','k-up'];
 const group=k=>k==='score'?'score':k==='mover'?'mover':'whale';
 function renderIntel(){if(!IN)return;const icon=m=>(TOK[m]&&TOK[m].image)||'';
   const L=(IN.signals||[]).filter(x=>fk==='all'||group(x.kind)===fk);
