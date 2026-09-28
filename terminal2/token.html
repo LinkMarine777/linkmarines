@@ -977,6 +977,8 @@ function beep(big){if(!soundOn)return;try{actx=actx||new(window.AudioContext||wi
     o.connect(g).connect(actx.destination);o.start(t+i*.11);o.stop(t+i*.11+.18)})}catch(e){}}
 function checkBuys(list){const fresh=[];list.forEach(a=>{if(alerted.has(a.tx_hash))return;alerted.add(a.tx_hash);
   if(!tradesBoot&&a.to_token_address===CA&&+a.volume_in_usd>=buyMin())fresh.push(a)});tradesBoot=false;
+  // the bot records $MARINE's buys itself; for any other token, ask it to read this pool's trades into the shared history
+  if(fresh.length&&CA!==MARINE&&POOL)fetch(BOT+'/alerts/buy?pool='+POOL+'&mint='+CA).catch(()=>{});
   fresh.reverse().forEach(a=>bpQ.push({v:+a.volume_in_usd,amt:+a.to_token_amount,w:(a.tx_from_address||'').slice(0,4)}));nextBuy()}
 function nextBuy(){if(!alertsOn){bpQ.length=0;return}while(bpQ.length&&!akOn(bpQ[0].k==='link'?'link':'marine'))bpQ.shift();if(bpBusy||!bpQ.length||$('pulseTO').classList.contains('show'))return;const b=bpQ.shift();bpBusy=true;const big=b.v>=WHALE;
   $('buyPop').classList.toggle('big',big);$('bpT').textContent=big?'🚨 LARGE BUY 🚨':'🟢 NEW RECRUIT';$('bpV').textContent='+'+usd(b.v,0);
