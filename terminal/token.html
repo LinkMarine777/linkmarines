@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>WAR ROOM TERMINAL 2.0</title>
+<title>WAR ROOM TERMINAL 7</title>
 <meta name="description" content="Live terminal for any stonkfun token: holder rewards, next pulse, price, chart, tape, APY and CLOBr depth.">
-<meta property="og:title" content="WAR ROOM TERMINAL 2.0">
+<meta property="og:title" content="WAR ROOM TERMINAL 7">
 <meta property="og:description" content="Paste any stonkfun token CA: holder rewards, price, chart, tape, APY and CLOBr depth.">
 <meta property="og:image" content="https://themarines.link/banner.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
@@ -426,8 +426,8 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 <div id="stage">
 
 <header>
-  <a href="/trending/" title="Terminal 2.0 home: trending tokens"><img src="/helmet.png" alt="Marines"></a>
-  <a class="brand" href="/trending/" title="Terminal 2.0 home: trending tokens" style="text-decoration:none">THE WAR ROOM<small>TERMINAL 2.0</small></a>
+  <a href="/trending/" title="Terminal 7 home: trending tokens"><img src="/helmet.png" alt="Marines"></a>
+  <a class="brand" href="/trending/" title="Terminal 7 home: trending tokens" style="text-decoration:none">THE WAR ROOM<small>TERMINAL 7</small></a>
   <span class="live" id="live"><i></i><span id="liveTxt">LIVE</span></span>
   <button id="soundBtn" type="button" title="Sound on: click to mute TTS and alerts" aria-label="Mute sounds"></button>
   <button id="alertBtn" type="button" title="Alerts on: click to hide buy alerts, pulses and TTS popups" aria-label="Hide alerts"></button>
@@ -472,7 +472,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   <div class="stat xtra"><label>Payouts sent</label><b id="sPayouts">—</b><span class="dim" id="sHolders">&nbsp;</span><span class="dim" id="pMin" style="display:block">&nbsp;</span></div>
   <div class="stat"><label class="tkSym">$MARINE</label><b id="sPrice">—</b><span id="sChg">&nbsp;</span></div>
   <div class="stat"><label>Market cap</label><b id="sMcap">—</b><span class="dim" id="sLiq">&nbsp;</span></div>
-  <div class="stat" id="scoreStat" style="display:none" title="CLOBr score: 0-100 balance of support vs resistance liquidity. Click for more on CLOBr"><label>CLOBr ↗ <span class="dly" id="scoreDly" title="CLOBr data on 2.0 is up to 1 hour old; live with the CLOBr extension">delayed</span></label><b id="sScore">—</b><span class="dim" id="sScoreMsg">&nbsp;</span><span class="dim" id="sScoreWhy" style="display:block">&nbsp;</span></div>
+  <div class="stat" id="scoreStat" style="display:none" title="CLOBr score: 0-100 balance of support vs resistance liquidity. Click for more on CLOBr"><label>CLOBr ↗ <span class="dly" id="scoreDly" title="CLOBr data on Terminal 7 is up to 1 hour old; live with the CLOBr extension">delayed</span></label><b id="sScore">—</b><span class="dim" id="sScoreMsg">&nbsp;</span><span class="dim" id="sScoreWhy" style="display:block">&nbsp;</span></div>
   <div class="stat fx xtra"><label>24h volume</label><b id="sVol">—</b><span class="dim" id="sTx">&nbsp;</span></div>
   <div class="stat xtra"><label class="tkQs">$LINK</label><b id="sLink">—</b><span id="sLinkChg">&nbsp;</span></div>
   <button class="moreStats" id="moreStats" type="button">MORE STATS ▾</button>
@@ -606,7 +606,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 </div></div>
 
 <script>
-// ---------- Terminal 2.0: any stonk token, picked by ?ca=<mint> (default $MARINE) ----------
+// ---------- Terminal 7: any stonk token, picked by ?ca=<mint> (default $MARINE) ----------
 // Shared site data (board, tickers, ads, TTS, prices) comes from /terminal/, the same files 1.0 uses.
 const MARINE='F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK';
 const DATA='https://war-room-bot.linkmarine777.workers.dev/data/terminal/';
@@ -641,7 +641,7 @@ async function resolveToken(){
   $('menuBtn').onclick=e=>{e.stopPropagation();const m=$('menuBtn').parentNode,o=!m.classList.contains('open');m.classList.toggle('open',o);$('menuBtn').setAttribute('aria-expanded',o)};
   document.addEventListener('click',e=>{if(!e.target.closest('.menu'))$('menuBtn').parentNode.classList.remove('open')});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')$('menuBtn').parentNode.classList.remove('open')});
-  document.title=sym+' · WAR ROOM TERMINAL 2.0';
+  document.title=sym+' · WAR ROOM TERMINAL 7';
   renderLinks(pairs);
 }
 // The token's own links as DexScreener lists them (X, website, Telegram), plus a live X search for its cashtag
@@ -1031,7 +1031,7 @@ document.querySelector('.top .lbl').addEventListener('click',e=>{const b=e.targe
 setInterval(()=>{if(!document.documentElement.classList.contains('fit'))return;
   const nx=boardKey==='apy3d'?'apy24h':'apy3d';document.querySelector(`.top .lbl button[data-k="${nx}"]`).click()},240000);
 
-// ---------- Terminal 2.0 panels: CLOBr (score tile + analytics) and the Stonk Board card ----------
+// ---------- Terminal 7 panels: CLOBr (score tile + analytics) and the Stonk Board card ----------
 // Flip a flag to false to hide that data. CLOBr also needs its key on the bot, or it stays hidden.
 const FLAGS={CLOBR_ENABLED:true,STONKBOARD_ENABLED:true};
 // Stonk Board figures for this mint come only from board.json (thestonkboard.com top 100, snapshotted by the bot).
