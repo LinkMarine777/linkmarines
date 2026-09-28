@@ -16,6 +16,9 @@ Signals (each fires once):
   exit         a whale sold 30%+ of their bag in one go (flagged when they've held 30+ days)
   dip          a whale bought a top token that's down 10%+ today
   rewards      whales of a reward token compounded their payouts (bought more) vs sold them
+  dumping      3+ different whales sold the same token in 24 h
+  score        a token's CLOBr score changed verdict or moved 10+ points (hour-delayed scores via the bot)
+Also: lp = stonkfun tokens' Raydium + Meteora pools ranked by what liquidity earned in fees over 24 h (free APIs).
 """
 import json, os, sys, time, urllib.request
 
@@ -189,6 +192,15 @@ for m, L in by.items():
         tot = sum(s['buy']['u'] for s in L); groups = sorted({x['symbol'] for w in ws for x in whale.get(w, [])})
         sig_('convergence', f"{m}:{time.strftime('%Y%m%d', time.gmtime(now))}", max(s['t'] for s in L),
              f"{len(ws)} whales bought ${sym(m)} in the last 24h (${tot:,.0f}) · whales of " + ', '.join('$' + g for g in groups[:4]), m, tot)
+sold = {}
+for s in trades:
+    if s['sell']['m'] not in BASE: sold.setdefault(s['sell']['m'], []).append(s)
+for m, L in sold.items():
+    ws = {s['w'] for s in L}
+    if len(ws) >= 3:
+        tot = sum(s['sell']['u'] for s in L)
+        sig_('dumping', f"{m}:{time.strftime('%Y%m%d', time.gmtime(now))}", max(s['t'] for s in L),
+             f"{len(ws)} whales sold ${sym(m)} in the last 24h (${tot:,.0f})", m, tot)
 for s in trades:
     mine = {x['mint']: x for x in whale.get(s['w'], [])}
     sm, bm = s['sell']['m'], s['buy']['m']
@@ -211,9 +223,49 @@ for tm, q in quote.items():   # rewards: whales of a reward token swapping their
         pc = comp / (comp + sell) * 100
         sig_('rewards', f"{tm}:{time.strftime('%Y%m%d', time.gmtime(now))}", now,
              f"${sym(tm)} whales compounded {pc:.0f}% of their ${sym(q)} rewards today (${comp:,.0f} back in, ${sell:,.0f} sold)", tm, comp + sell)
+# ---------- CLOBr score changes (the hour-delayed scores the trending page already shows) ----------
+ranked = sorted(toks, key=lambda t: -(t.get('mcap') or 0))[:20]
+names = {t['mint']: t.get('symbol') for t in toks}; names[MARINE] = 'MARINE'
+try:
+    sc = get(f"{BOT}/scores?mints=" + ','.join([MARINE] + [t['mint'] for t in ranked if t['mint'] != MARINE])).get('scores') or {}
+    prev = state.setdefault('scores', {})
+    for m, x in sc.items():
+        if x.get('score') is None: continue
+        v, verdict = float(x['score']), str(x.get('msg') or '').split(':')[0].strip()
+        p = prev.get(m)
+        if p and (p['v'] != verdict or abs(v - p['s']) >= 10):
+            sig_('score', f"{m}:{int(x.get('at') or now * 1000)}", now,
+                 f"${names.get(m) or m[:4]} CLOBr score {p['s']:.0f} → {v:.0f}" + (f" · now {verdict} (was {p['v']})" if p['v'] != verdict else ''), m, 0)
+            signals[-1]['s'] = names.get(m) or signals[-1]['s']
+        prev[m] = {'s': v, 'v': verdict}
+except Exception as e: log('scores', e)
+
+# ---------- LP: which stonkfun pools earned the most fees per $ of liquidity in 24 h ----------
+lp = []
+for t in sorted(toks, key=lambda t: -(t.get('mcap') or 0))[:30]:
+    m = t['mint']
+    try:
+        for p in get(f'https://api-v3.raydium.io/pools/info/mint?mint1={m}&poolType=all&poolSortField=default&sortType=desc&pageSize=5&page=1')['data']['data']:
+            tvl, fee = p.get('tvl') or 0, (p.get('day') or {}).get('volumeFee') or 0
+            if tvl >= 5000 and fee > 0:
+                lp.append({'m': m, 's': t.get('symbol'), 'i': t.get('image'), 'pair': f"{p['mintA']['symbol']}/{p['mintB']['symbol']}".replace('WSOL', 'SOL'),
+                           'dex': 'Raydium ' + ('CLMM' if p.get('type') == 'Concentrated' else 'AMM'), 'tvl': round(tvl), 'fee': round(fee), 'd': round(fee / tvl * 100, 2),
+                           'url': f"https://raydium.io/liquidity/increase/?mode=add&pool_id={p['id']}"})
+    except Exception as e: log('raydium', t.get('symbol'), e)
+    try:
+        for p in get(f'https://dlmm.datapi.meteora.ag/pools?query={m}&page_size=5').get('data') or []:
+            tvl, fee = p.get('tvl') or 0, (p.get('fees') or {}).get('24h') or 0
+            if tvl >= 5000 and fee > 0 and not p.get('is_blacklisted'):
+                lp.append({'m': m, 's': t.get('symbol'), 'i': t.get('image'), 'pair': (p.get('name') or '').replace('-', '/'), 'dex': 'Meteora DLMM',
+                           'tvl': round(tvl), 'fee': round(fee), 'd': round(fee / tvl * 100, 2), 'url': f"https://app.meteora.ag/dlmm/{p['address']}"})
+    except Exception as e: log('meteora', t.get('symbol'), e)
+lp = sorted(lp, key=lambda x: -x['d'])[:15]
+
 old = {s['id']: s['t'] for s in load('whales.json', {}).get('signals', [])}
 for s in signals: s['t'] = old.get(s['id'], s['t'])            # a signal keeps the time it first fired
-signals = sorted(signals, key=lambda s: -s['t'])[:40]
+for s in load('whales.json', {}).get('signals', []):   # history: signals from earlier runs stay for 3 days
+    if s['id'] not in {x['id'] for x in signals} and s['t'] > now - 3 * 86400: signals.append(s)
+signals = sorted(signals, key=lambda s: -s['t'])[:120]
 
 # ---------- what whales are buying / selling (24 h) ----------
 flow = {}
@@ -231,6 +283,6 @@ save('whales.json', {
     'at': now, 'wallets': len(whale), 'tokens': ['$' + t['symbol'] for t in watch],
     'buying': sorted([r for r in rows if r['net'] > 0], key=lambda r: (-r['buyers'], -r['net']))[:15],
     'selling': sorted([r for r in rows if r['net'] < 0], key=lambda r: (-r['sellers'], r['net']))[:15],
-    'signals': signals, 'recent': recent})
+    'signals': signals, 'recent': recent, 'lp': lp})
 save('whales-state.json', state)
 log(f"done: {len(trades)} whale swaps in 24h, {len(signals)} signals, {calls} RPC calls, rpc={'helius' if KEY else 'public'}")
