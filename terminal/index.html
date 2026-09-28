@@ -771,7 +771,8 @@ async function loadMarket(){
     $('sVol').textContent=compact(p.volume?.h24);
     const t=p.txns?.h24||{};$('sTx').textContent=num(t.buys)+' buys / '+num(t.sells)+' sells';
     const linkPx=flip?+p.priceUsd:marinePx/(+p.priceNative);
-    if(isFinite(linkPx))$('sLink').textContent=px(linkPx);
+    if(isFinite(linkPx)){$('sLink').textContent=px(linkPx);QPX=linkPx}
+    if(hover==null&&CH[tf]){liveTail();setSeries()}
   }catch(e){}
 }
 
@@ -790,10 +791,14 @@ async function loadLive(k){
   const pts=m.data.attributes.ohlcv_list.slice().reverse().map(c=>{if(L.has(c[0]))last=L.get(c[0]);return[c[0],c[4],last]});
   const f=pts.find(p=>p[2]!=null)?.[2];pts.forEach(p=>{if(p[2]==null)p[2]=f});CH[k]=pts}
 async function loadChart(){
-  // 1.1 ($MARINE): the bot's chart.json first, like 1.0, so GeckoTerminal's rate limit is left for the tape; live candles only as a fallback
-  try{const d=await j(DATA+'chart.json?'+Date.now());if(d&&d['7d'])CH=d}catch(e){}
-  if(!CH[tf]){try{await loadLive(tf);loadChart.fails=0}catch(e){if((loadChart.fails=(loadChart.fails||0)+1)<4)setTimeout(loadChart,4000*loadChart.fails)}}
-  setSeries()}
+  // the bot's chart.json while it's fresh (leaves GeckoTerminal's rate limit for the tape); live candles when it's stale or missing
+  let fresh=false;try{const d=await j(DATA+'chart.json?'+Date.now());if(d&&d['7d']&&Date.now()/1000-(d.at||0)<1800){CH=d;fresh=true}}catch(e){}
+  if(!fresh||!CH[tf]){try{await loadLive(tf);loadChart.fails=0}catch(e){if((loadChart.fails=(loadChart.fails||0)+1)<4)setTimeout(loadChart,4000*loadChart.fails)}}
+  liveTail();setSeries()}
+// the chart's last point follows the live price (DexScreener, every 30 s), so the chart never trails the ticker
+let QPX=0;
+function liveTail(){const r=CH[tf];if(!r||!r.length||!marinePx)return;const B={'1d':900,'7d':3600,all:14400}[tf]||3600,t=Math.floor(Date.now()/1000/B)*B,last=r[r.length-1];
+  if(t<last[0])return;const q=QPX||last[2];if(t===last[0]){last[1]=marinePx;last[2]=q}else r.push([t,marinePx,q])}
 function nice(min,max,count=5){
   if(min===max){min*=.95;max*=1.05}
   const raw=(max-min)/count,mag=Math.pow(10,Math.floor(Math.log10(raw)));
