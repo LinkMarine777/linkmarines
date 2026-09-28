@@ -35,6 +35,11 @@
       "source": "/tts",
       "destination": "/tts/checkout?k=t",
       "permanent": false
+    },
+    {
+      "source": "/bridge",
+      "destination": "/bridge/",
+      "permanent": false
     }
   ]
 }
