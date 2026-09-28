@@ -163,6 +163,23 @@ for w in sorted(whale, key=lambda w: min(x['rank'] for x in whale[w])):
         if ch: raw.append((w, s['signature'], tx.get('blockTime') or now, ch))
 log(f'{len(raw)} new transactions, {calls} RPC calls')
 
+# ---------- the watched pools' latest trades (GeckoTerminal, free, no RPC), every pass incl. the 2-minute ones ----------
+# Whales trading straight from their own wallet show up here within ~2 min, so whale alerts don't wait for the 30-min
+# full pass (which reads each whale's own transactions over RPC and also catches trades a trading bot signed for them)
+gt = {}
+for t in watch:
+    pool = pool_of.get(t['mint'])
+    if not pool: continue
+    try:
+        time.sleep(2.5)   # GeckoTerminal allows ~30 calls a minute
+        q = '' if pool == MARINE_POOL else '?trade_volume_in_usd_greater_than=100'
+        rows = []
+        for x in get(f'https://api.geckoterminal.com/api/v2/networks/solana/pools/{pool}/trades{q}').get('data') or []:
+            a_ = x['attributes']; a_['ts'] = int(time.mktime(time.strptime(a_['block_timestamp'][:19], '%Y-%m-%dT%H:%M:%S'))) - time.timezone
+            if a_['ts'] > now - 86400: rows.append(a_)
+        gt[t['mint']] = rows
+    except Exception as e: log('trades', t['symbol'], e)
+
 # ---------- names + prices (Jupiter) ----------
 meta = {}
 mints = sorted({m for *_, ch in raw for m in ch} | {s[k]['m'] for s in state['swaps'] for k in ('buy', 'sell') if s.get(k)} | {t['mint'] for t in watch})
@@ -206,6 +223,16 @@ for w, sig, t, ch in raw:
     if s: ev['sell'] = {'m': s, 'a': -ch[s], 'u': round(-usd[s], 2)}
     else: ev['recv'] = True                    # tokens came in with nothing going out: a payout or a transfer
     state['swaps'].append(ev)
+for mint, rows in gt.items():   # whale trades seen in the pools' trade lists (the other side is booked as SOL: a plain buy or sell)
+    for a_ in rows:
+        w, sig = a_.get('tx_from_address'), a_.get('tx_hash')
+        if w not in whale or w in bots or not sig or sig in seen: continue
+        u = float(a_.get('volume_in_usd') or 0)
+        if u < MIN_USD: continue
+        buy = a_.get('to_token_address') == mint
+        amt = float((a_.get('to_token_amount') if buy else a_.get('from_token_amount')) or 0)
+        side, other = {'m': mint, 'a': amt, 'u': round(u, 2)}, {'m': SOL, 'a': 0, 'u': round(u, 2)}
+        state['swaps'].append({'sig': sig, 't': a_['ts'], 'w': w, 'buy': side if buy else other, 'sell': other if buy else side, 'gt': 1}); seen.add(sig)
 state['swaps'] = sorted([s for s in state['swaps'] if s['t'] > now - 3 * 86400], key=lambda s: -s['t'])[:3000]
 state['bots'] = sorted(bots)
 
@@ -213,7 +240,7 @@ state['bots'] = sorted(bots)
 day = [s for s in state['swaps'] if s['t'] > now - 86400]
 trades = [s for s in day if s.get('sell')]
 top_mints = {t['mint']: t for t in watch}
-label = lambda w: ' / '.join(f"#{x['rank']} ${x['symbol']}" for x in sorted(whale.get(w, []), key=lambda x: x['rank'])[:2]) or 'a whale'
+label = lambda w: ' / '.join(f"#{x['rank']} ${x['symbol']}" for x in sorted(whale.get(w, []), key=lambda x: x['rank'])[:2]) or 'a'
 signals = []
 def sig_(kind, key, t, text, mint=None, usd=0):
     signals.append({'id': f'{kind}:{key}', 'kind': kind, 't': t, 'text': text, 'm': mint, 's': sym(mint) if mint else None, 'i': (meta.get(mint) or {}).get('i'), 'u': round(usd)})
@@ -265,34 +292,31 @@ ranked = sorted(toks, key=lambda t: -(t.get('mcap') or 0))[:20]
 names = {t['mint']: t.get('symbol') for t in toks}; names[MARINE] = 'MARINE'
 try:
     sc = get(f"{BOT}/scores?mints=" + ','.join([MARINE] + [t['mint'] for t in ranked if t['mint'] != MARINE])).get('scores') or {}
-    prev = state.setdefault('scores', {})
+    prev = state.setdefault('scores', {}); ch = []
     for m, x in sc.items():
         if x.get('score') is None: continue
         v, verdict = float(x['score']), str(x.get('msg') or '').split(':')[0].strip()
         p = prev.get(m)
         if p and (p['v'] != verdict or abs(v - p['s']) >= 10):
-            sig_('score', f"{m}:{int(x.get('at') or now * 1000)}", now,
-                 f"${names.get(m) or m[:4]} CLOBr score {p['s']:.0f} → {v:.0f}" + (f" · now {verdict} (was {p['v']})" if p['v'] != verdict else ''), m, 0)
-            signals[-1]['s'] = names.get(m) or signals[-1]['s']
+            ch.append((abs(v - p['s']), m, int(x.get('at') or now * 1000), f"${names.get(m) or m[:4]} {p['s']:.0f} → {v:.0f}" + (f" (now {verdict})" if p['v'] != verdict else '')))
         prev[m] = {'s': v, 'v': verdict}
+    # CLOBr's delayed scores refresh for every token at once (hourly), so the changes come as one alert, not a burst of them
+    ch.sort(key=lambda c: -c[0])
+    if len(ch) == 1:
+        _, m, at, txt = ch[0]; sig_('score', f"{m}:{at}", now, f"{txt.split(' ', 1)[0]} CLOBr score {txt.split(' ', 1)[1]}", m, 0); signals[-1]['s'] = names.get(m) or signals[-1]['s']
+    elif ch:
+        m = ch[0][1]
+        sig_('score', f"batch:{max(c[2] for c in ch)}", now, f"CLOBr update: {len(ch)} scores moved · " + ' · '.join(c[3] for c in ch[:4]) + (f" · +{len(ch) - 4} more" if len(ch) > 4 else ''), m, 0)
+        signals[-1]['s'] = names.get(m) or signals[-1]['s']
 except Exception as e: log('scores', e)
 
 # ---------- big trades ($2,500+) on $MARINE + the top 10, and big movers (free: GeckoTerminal, stonkfun list) ----------
 for t in watch:
-    pool = pool_of.get(t['mint'])
-    if not pool: continue
-    try:
-        time.sleep(2.5)   # GeckoTerminal allows ~30 calls a minute
-        tr = get(f'https://api.geckoterminal.com/api/v2/networks/solana/pools/{pool}/trades' + ('' if pool == MARINE_POOL else '?trade_volume_in_usd_greater_than=2500')).get('data') or []
-        big = []
-        for x in tr:
-            a = x['attributes']; ts = int(time.mktime(time.strptime(a['block_timestamp'][:19], '%Y-%m-%dT%H:%M:%S'))) - time.timezone
-            if ts > now - 86400 and float(a['volume_in_usd']) >= 2500: big.append((float(a['volume_in_usd']), ts, a))
-        for u, ts, a in sorted(big, key=lambda b: -b[0])[:3]:
-            buy = a.get('to_token_address') == t['mint']
-            sig_('bigtrade', a['tx_hash'], ts, f"{'Bought' if buy else 'Sold'} ${u:,.0f} of ${t['symbol']} · wallet {a.get('tx_from_address', '')[:4]}", t['mint'], u)
-            signals[-1].update({'s': t['symbol'], 'side': 'buy' if buy else 'sell'})
-    except Exception as e: log('trades', t['symbol'], e)
+    big = sorted([(float(a['volume_in_usd']), a['ts'], a) for a in gt.get(t['mint'], []) if float(a['volume_in_usd']) >= 2500], key=lambda b: -b[0])
+    for u, ts, a in big[:3]:
+        buy = a.get('to_token_address') == t['mint']
+        sig_('bigtrade', a['tx_hash'], ts, f"{'Bought' if buy else 'Sold'} ${u:,.0f} of ${t['symbol']} · wallet {a.get('tx_from_address', '')[:4]}", t['mint'], u)
+        signals[-1].update({'s': t['symbol'], 'side': 'buy' if buy else 'sell'})
 for t in toks:
     c = t.get('chg24')
     if c is not None and abs(c) >= 20 and (t.get('vol24') or 0) >= 50000:
