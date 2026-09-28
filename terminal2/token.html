@@ -464,7 +464,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   <div class="stat xtra"><label>Payouts sent</label><b id="sPayouts">—</b><span class="dim" id="sHolders">&nbsp;</span><span class="dim" id="pMin" style="display:block">&nbsp;</span></div>
   <div class="stat"><label class="tkSym">$MARINE</label><b id="sPrice">—</b><span id="sChg">&nbsp;</span></div>
   <div class="stat"><label>Market cap</label><b id="sMcap">—</b><span class="dim" id="sLiq">&nbsp;</span></div>
-  <div class="stat" id="scoreStat" style="display:none" title="CLOBr score: 0-100 balance of support vs resistance liquidity. Click for more on CLOBr"><label>CLOBr score ↗ <span class="dly">delayed</span></label><b id="sScore">—</b><span class="dim" id="sScoreMsg">&nbsp;</span><span class="dim" id="sScoreWhy" style="display:block">&nbsp;</span></div>
+  <div class="stat" id="scoreStat" style="display:none" title="CLOBr score: 0-100 balance of support vs resistance liquidity. Click for more on CLOBr"><label>CLOBr score ↗</label><b id="sScore">—</b><span class="dim" id="sScoreMsg">&nbsp;</span><span class="dly" title="CLOBr data on 2.0 is up to 1 hour old">delayed</span><span class="dim" id="sScoreWhy" style="display:block">&nbsp;</span></div>
   <div class="stat fx xtra"><label>24h volume</label><b id="sVol">—</b><span class="dim" id="sTx">&nbsp;</span></div>
   <div class="stat xtra"><label class="tkQs">$LINK</label><b id="sLink">—</b><span id="sLinkChg">&nbsp;</span></div>
   <button class="moreStats" id="moreStats" type="button">MORE STATS ▾</button>
@@ -846,14 +846,12 @@ function renderClobr(){
     $('scoreStat').title=(sc.msg||'CLOBr score')+' · 0-100 balance of support vs resistance liquidity. Click for more on CLOBr'}
   const panels={liqP:renderLiq(),whP:renderWhales(),loP:renderLimits(),dcP:renderDca(),lpP:renderLp()};
   renderHolders();
-  let any=false;for(const k in panels){$(k).style.display=panels[k]?'':'none';any=any||panels[k]}
-  // say what CLOBr has nothing for (it only reports DCA / limit orders / DLMM pools that exist right now)
-  const names={liqP:'order-book depth',loP:'open limit orders',dcP:'active DCA orders',lpP:'DLMM LP pools'},miss=Object.keys(names).filter(k=>!panels[k]).map(k=>names[k]);
-  const shown=Object.values(panels).filter(Boolean).length,sym=esc('$'+String(TK.symbol).replace(/^\$/,''));
-  const txt=miss.length?miss.join(', ').replace(/, ([^,]*)$/,' or $1'):'';
-  $('missP').style.display=miss.length&&shown<4&&any?'':'none';
-  $('missBody').innerHTML=miss.length?`No ${txt} for <b>${sym}</b> on CLOBr right now.<br><br>These show up here as soon as someone places a DCA or limit order, or opens a Meteora DLMM pool for ${sym}.`:'';
-  $('clobrMiss').textContent=miss.length&&shown>=4?`Nothing on CLOBr for ${txt} right now.`:'';
+  // every panel always shows, in the same order; one CLOBr has nothing for right now says so inside it
+  const sym=esc('$'+String(TK.symbol).replace(/^\$/,''));
+  const none={liqP:['aBody','No order-book walls near the price'],whP:['whBody','No whale data'],loP:['loBody','No open limit orders'],
+    dcP:['dcBody','No active DCA orders'],lpP:['lpBody','No Meteora DLMM LP pools']};
+  for(const k in panels){$(k).style.display='';if(!panels[k])$(none[k][0]).innerHTML=`<div class="empty">${none[k][1]} for <b>${sym}</b> on CLOBr right now. It shows up here as soon as there is one.</div>`}
+  $('missP').style.display='none';$('clobrMiss').textContent='';const any=!!CL;
   $('clobrWrap').style.display=any||sc?'':'none';clobrCols()}
 // as many columns as fit (about 400px each), never more than there are panels
 function clobrCols(){const r=$('clobrRow'),n=[...r.children].filter(e=>e.style.display!=='none').length;
