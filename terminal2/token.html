@@ -951,7 +951,7 @@ let soundOn=true;try{soundOn=localStorage.getItem('wrSound')!=='0'}catch(e){}
 function soundSet(){const b=$('soundBtn');b.textContent=soundOn?'🔊':'🔇';b.classList.toggle('off',!soundOn);
   b.title=soundOn?'Sound on: click to mute TTS and alerts':'Muted: click to turn sound on';b.setAttribute('aria-label',soundOn?'Mute sounds':'Turn sound on');
   if(!soundOn){try{speechSynthesis.cancel()}catch(e){}if(curAudio)curAudio.pause()}}
-function beep(big){if(!soundOn)return;try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();const t=actx.currentTime;
+function beep(big){if(!soundOn)return;try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume();const t=actx.currentTime;
   (big?[523,659,784,1047]:[659,988]).forEach((f,i)=>{const o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=f;
     g.gain.setValueAtTime(.0001,t+i*.11);g.gain.exponentialRampToValueAtTime(.08,t+i*.11+.02);g.gain.exponentialRampToValueAtTime(.0001,t+i*.11+.16);
     o.connect(g).connect(actx.destination);o.start(t+i*.11);o.stop(t+i*.11+.18)})}catch(e){}}
@@ -1103,7 +1103,10 @@ function alertSet(){const b=$('alertBtn');b.textContent=alertsOn?'🔔':'🔕';b
   b.title=alertsOn?'Alerts on: click to hide buy alerts, pulses and TTS popups':'Alerts off: click to show buy alerts, pulses and TTS popups';
   if(!alertsOn){['buyPop','ttsPop','pulseTO'].forEach(id=>$(id)&&$(id).classList.remove('show'));try{speechSynthesis.cancel()}catch(e){}if(curAudio)curAudio.pause();bpQ.length=0;bpBusy=false;ttsBusy=false}}
 $('alertBtn').onclick=()=>{alertsOn=!alertsOn;try{localStorage.setItem('wrAlerts',alertsOn?'1':'0')}catch(e){}alertSet()};alertSet();
-addEventListener('pointerdown',()=>{audioOk=true;$('audioGate').style.display='none'},{once:true});
+// browsers start page audio muted until the first click or key; unmute the alert beeps then (an alert that fired
+// earlier created the audio muted, and it would otherwise stay silent)
+function unlockAudio(){audioOk=true;$('audioGate').style.display='none';try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();actx.resume()}catch(e){}}
+addEventListener('pointerdown',unlockAudio,{once:true});addEventListener('keydown',unlockAudio,{once:true});
 // ---------- self-serve checkout: TTS + billboards, paid on Solana ----------
 // The order rides in an SPL memo (WR|t|from|text or WR|a|slot|blocks|from|head|sub); the
 // listener on our side watches the treasury, verifies the amount, and puts it on screen.
