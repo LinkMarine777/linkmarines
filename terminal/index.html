@@ -1250,12 +1250,12 @@ var ttsClose=null;
 // Scanned every minute from data the page already loads. What was last seen is kept in localStorage so a reload
 // never re-fires old news, and the first scan only records a baseline. Buys / TTS / pulses always go first, and
 // info alerts are spaced at least INFO_GAP apart (a queue of up to 6 waits its turn).
-const INFO_GAP=180e3,TEST=/[?&]test\b/.test(location.search);let infoQ=[],infoAt=0,infoTimer=null;
+const INFO_GAP=60e3,TEST=/[?&]test\b/.test(location.search);let infoQ=[],infoAt=0,infoTimer=null;
 // which alerts this browser already showed (so a reload doesn't repeat them); the ?test page keeps its own list, so
 // testing never uses up an alert the real terminal (or the stream) should still show
 const IS_KEY=TEST?'wrInfoTest':'wrInfo';let IS={};try{IS=JSON.parse(localStorage.getItem(IS_KEY)||'{}')}catch(e){}
 const saveIS=()=>{try{localStorage.setItem(IS_KEY,JSON.stringify(IS))}catch(e){}};
-function infoAlert(kind,head,detail,side){if(!TEST&&(!alertsOn||!akOn(catOf(kind))))return;infoQ.push({kind,head,detail,side});if(infoQ.length>6)infoQ.shift();nextInfo()}
+function infoAlert(kind,head,detail,side){if(!TEST&&(!alertsOn||!akOn(catOf(kind))))return;infoQ.push({kind,head,detail,side});if(infoQ.length>20)infoQ.shift();nextInfo()}
 function nextInfo(){if(!infoQ.length||$('infoPop').classList.contains('show'))return;
   if(['buyPop','ttsPop','pulseTO'].some(id=>$(id).classList.contains('show'))||(!TEST&&Date.now()-infoAt<INFO_GAP)){clearTimeout(nextInfo.t);nextInfo.t=setTimeout(nextInfo,5000);return}
   const a=infoQ.shift();infoAt=Date.now();$('ipK').textContent=a.kind;$('ipH').textContent=a.head;$('ipD').textContent=a.detail||'';
@@ -1300,7 +1300,23 @@ function infoScan(){const first=!IS.init,fire=(...a)=>{if(!first)infoAlert(...a)
       .forEach(x=>infoAlert(HEAD[x.kind]||'🐋 WHALE RADAR',(x.s?'$'+x.s:'')+(x.u?' · '+compact(x.u):''),x.text,SIDE[x.kind]));
     IS.wr=[...new Set([...WR.signals.map(x=>x.id),...(IS.wr||[])])].slice(0,300)}
   IS.init=1;saveIS()}
-setTimeout(()=>{infoScan();setInterval(infoScan,60e3)},45e3);
+// Market alerts come from the shared history (the bot's database), not from this browser: every page and the stream
+// show the same ones, and every one shown is in the history. Buys, TTS and payouts still pop straight from the chain
+// here (fastest), with the same rules the bot records every minute. The old in-browser checks (infoScan) are retired.
+const DB_HEAD=x=>{const k=x.kind,sd=x.side;
+  if(k==='buy'&&/whale watch/i.test(x.text))return['🐋 WHALE WATCH','buy'];
+  return({convergence:['🐋 WHALES PILING IN','buy'],dumping:['🐋 WHALES DUMPING','sell'],rotation:['🔄 WHALE ROTATION'],exit:['🚪 WHALE EXIT','sell'],
+    dip:['🩸 WHALES BUYING THE DIP','buy'],rewards:['♻️ WHALE REWARDS'],score:['🧱 CLOBr SCORE'],board:['📋 STONK BOARD'],top10:['🚀 STONKFUN TOP 10'],
+    milestone:['🏆 MILESTONE'],pulse:['⚡ PULSE INCOMING'],link:[sd==='down'?'🔗 $LINK DIPPING':'🔗 $LINK PUMPING'],
+    mover:[sd==='down'?'📉 BIG MOVER':'📈 BIG MOVER'],bigtrade:[sd==='sell'?'🐳 BIG SELL':'🐳 BIG BUY',sd==='sell'?'sell':'buy']})[k]||['🐋 WHALE RADAR']};
+let dbSeen=null;
+async function dbAlerts(){try{const L=((await j(BOT+'/alerts?limit=50')).signals)||[];
+  if(!dbSeen){dbSeen=new Set(L.map(x=>x.id));return}   // what's already in the history when the page opens doesn't pop
+  L.filter(x=>!dbSeen.has(x.id)).reverse().forEach(x=>{dbSeen.add(x.id);
+    // popped straight from the chain already (buys, TTS, payouts fired); other tokens' holder payouts stay history-only
+    if(x.kind==='tts'||x.kind==='payout'||x.id.startsWith('pulse:pulse:')||(x.kind==='buy'&&!/whale watch/i.test(x.text)))return;
+    const [h,side]=DB_HEAD(x);infoAlert(h,(x.s?'$'+x.s:'')+(x.u?' · '+compact(x.u):''),x.text,side)})}catch(e){}}
+setTimeout(()=>{dbAlerts();setInterval(dbAlerts,20e3)},5000);
 // ---------- ?test: a panel that fires every alert type on demand (never shown on the stream) ----------
 if(TEST){const tp=$('testPanel');tp.style.display='flex';
   const T=[['$MARINE buy',()=>{bpQ.push({v:250,amt:2.5e6,w:'TEST'});nextBuy()}],['$MARINE large buy',()=>{bpQ.push({v:3200,amt:3e7,w:'TEST'});nextBuy()}],
