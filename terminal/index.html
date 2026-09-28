@@ -222,6 +222,7 @@ html.fit .cm-sc .n{font-size:80px}html.fit .cm-sc .v{font-size:21px}html.fit .cm
 .cmL .rk{color:var(--dim);text-align:right}.cmL .s{color:#fff;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.cmL .s i{font-style:normal;color:var(--dim);font-size:.8em}.cmL .r{text-align:right;white-space:nowrap}
 .cmK{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cmK>div{border:1px solid var(--line);padding:8px 10px}.cmK label{display:block;font-size:10px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}.cmK b{font-family:'VT323';font-weight:400;font-size:34px;color:#fff;line-height:1.05}
 #cmTitle{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}#cmLink{flex:none;white-space:nowrap}html.fit #tapeMeta,html.fit #holdMeta{display:none!important}
+.tapeH .hc{font-size:.55em;color:var(--dim);letter-spacing:1px;vertical-align:.25em}
 .wrSig{margin:8px 0 0;padding:6px 8px;border-left:2px solid var(--blue2);font-size:.9em}.wrFoot{font-size:.8em;margin:6px 0 0}
 .tl{width:1.15em;height:1.15em;border-radius:50%;object-fit:contain;vertical-align:-.2em;margin-right:.4em;background:#0b1a2e}
 html.fit .cmL{font-size:21px;grid-template-columns:34px 34px minmax(0,1fr) auto auto;gap:6px 14px}html.fit .cmL img{width:32px;height:32px}html.fit .cmK label{font-size:14px}html.fit .cmK b{font-size:50px}html.fit .rotbar{height:3px;bottom:-6px}
@@ -511,7 +512,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 
     <div class="lower">
       <section class="panel tapeP acc" data-acc="tape" data-def="1">
-        <div class="ph"><i class="rotbar" id="rbTape"></i><h2 class="tapeH"><button data-v="trades" class="on">TRADES</button><button data-v="holders" id="holdTab" style="display:none">HOLDERS</button></h2>
+        <div class="ph"><i class="rotbar" id="rbTape"></i><h2 class="tapeH"><button data-v="trades" class="on">TRADES</button><button data-v="holders" id="holdTab" style="display:none">HOLDERS <span class="hc" id="holdN"></span></button></h2>
           <span class="meta hide-sm fx" id="tapeMeta"><span class="tkSym">$MARINE</span> + Solana $LINK · large = $2,500+ / $1,000+ $LINK</span>
           <span class="meta hide-sm" id="holdMeta" style="display:none">top wallets · data from CLOBr</span>
           <div class="tabs" id="tapeF"><button data-min="0" class="on">ALL</button><button data-min="100">$100+</button></div>
@@ -734,6 +735,7 @@ async function loadRewards(){
   $('sDist').textContent=num(r.distributedTokens,1)+' '+TK.quote;
   $('sDistUsd').textContent='≈ '+usd(r.distributedUsd,0)+' at today\'s '+TK.quote+' price';
   $('sPayouts').textContent=num(r.payoutCount);
+  $('holdN').textContent=r.holderCount?num(r.holderCount):'';
   $('sHolders').textContent=num(r.holderCount)+' holders · '+(+(r.transferTaxBps/100).toFixed(1))+'% tax';
   const p=Math.min(1,(r.pendingUsd||0)/(r.minDistributionUsd||1));
   $('pPending').textContent=num(r.pendingTokens,2)+' '+TK.quote;
@@ -963,8 +965,8 @@ let tapeView='trades';
 // Each group advances on its own clock, freezes while an alert is on screen, and holds 3 minutes after a manual click.
 const ROT=[
   {id:'chart',bar:'rbChart',steps:[['7d',240],['1d',45],['7d',240],['all',45]],apply:k=>{const b=document.querySelector(`#tf button[data-tf="${k}"]`);if(b&&tf!==k){ROT.auto=1;b.click();ROT.auto=0}}},
-  // holders only when the tape is quiet (no $MARINE or $LINK trade in the last 5 min)
-  {id:'tape',bar:'rbTape',steps:[['trades',90],['holders',25]],apply:k=>{if(k==='holders'&&($('holdTab').style.display==='none'||Date.now()-lastTradeAt()<300e3))return false;setTapeView(k)}},
+  // the tape stays on trades (holders is a click away)
+  {id:'tape',bar:'rbTape',steps:[['trades',600]],apply:k=>{setTapeView(k)}},
   {id:'side',bar:'rbSide',steps:[['clobr',60],['whales',45],['board',40],['flow',40],['feed',35],['sfun',35],['lp',40],['link',40]],
    apply:k=>{if(k==='whales'&&!(WR&&WR.buying&&WR.buying.length)||k==='flow'&&!FLOW.length||k==='lp'&&!(WR&&WR.lp&&WR.lp.length)||k==='feed'&&!(WR&&WR.signals&&WR.signals.length))return false;showSlide(k)}}];
 ROT.forEach(g=>{g.i=0;g.t=0;g.hold=0});
@@ -1285,7 +1287,7 @@ function infoScan(){const first=!IS.init,fire=(...a)=>{if(!first)infoAlert(...a)
     if(old&&cur){const ch=(cur/pr(old)-1)*100;if(Math.abs(ch)>=5&&now-(IS.linkMove||0)>2*3600e3){IS.linkMove=now;fire(ch>0?'🔗 $LINK PUMPING':'🔗 $LINK DIPPING','$LINK '+(ch>0?'+':'')+ch.toFixed(1)+'% IN AN HOUR','Now '+px(cur)+' on Solana')}}}
   // whale radar signals: whales piling into a token, rotating, exiting, buying a dip, compounding rewards
   if(WR&&WR.signals){const SIDE={convergence:'buy',dip:'buy',dumping:'sell',exit:'sell'};const HEAD={dumping:'🐋 WHALES DUMPING',score:'🧱 CLOBr SCORE',convergence:'🐋 WHALES PILING IN',rotation:'🔄 WHALE ROTATION',exit:'🚪 WHALE EXIT',dip:'🩸 WHALES BUYING THE DIP',rewards:'♻️ WHALE REWARDS'};
-    if(IS.wr)WR.signals.filter(x=>!IS.wr.includes(x.id)&&x.kind!=='bigtrade'&&x.kind!=='mover'&&Date.now()/1000-x.t<6*3600).slice(0,3).reverse()
+    if(IS.wr)WR.signals.filter(x=>!IS.wr.includes(x.id)&&!['bigtrade','mover','board','top10','payout'].includes(x.kind)&&Date.now()/1000-x.t<6*3600).slice(0,3).reverse()
       .forEach(x=>infoAlert(HEAD[x.kind]||'🐋 WHALE RADAR',(x.s?'$'+x.s:'')+(x.u?' · '+compact(x.u):''),x.text,SIDE[x.kind]));
     IS.wr=[...new Set([...WR.signals.map(x=>x.id),...(IS.wr||[])])].slice(0,300)}
   IS.init=1;saveIS()}

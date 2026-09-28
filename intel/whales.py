@@ -17,6 +17,9 @@ Signals (each fires once):
   dip          a whale bought a top token that's down 10%+ today
   rewards      whales of a reward token compounded their payouts (bought more) vs sold them
   dumping      3+ different whales sold the same token in 24 h
+  board        a new #1 APY on the Stonk Board, or a token joining the board
+  top10        a token breaking into stonkfun's top 10 by market cap
+  payout       a stonkfun token paid its holders $2,500+ since the last run
   score        a token's CLOBr score changed verdict or moved 10+ points (hour-delayed scores via the bot)
 Also: lp = stonkfun tokens' Raydium + Meteora pools ranked by what liquidity earned in fees over 24 h (free APIs).
 """
@@ -262,6 +265,38 @@ for t in toks:
         sig_('mover', f"{t['mint']}:{time.strftime('%Y%m%d', time.gmtime(now))}", now,
              f"${t.get('symbol')} {'+' if c > 0 else ''}{c:.0f}% in 24h · volume ${t.get('vol24', 0):,.0f} · mc ${t.get('mcap') or 0:,.0f}", t['mint'], t.get('vol24') or 0)
         signals[-1].update({'s': t.get('symbol'), 'i': t.get('image'), 'side': 'up' if c > 0 else 'down'})
+
+# ---------- market: new #1 APY, new on the Stonk Board, new stonkfun top 10, big holder payouts ----------
+def pct_s(v):
+    if v is None: return '?'
+    if abs(v) >= 1e15: return '>1,000T%'
+    for d, u in ((1e12, 'T'), (1e9, 'B'), (1e6, 'M'), (1e3, 'K')):
+        if abs(v) >= d: return (f'{v / d:.1f}{u}%' if abs(v) < d * 1e3 or u != 'T' else f'{v:.1e}%')
+    return f'{v:.0f}%'
+bd = load('board.json', {}); btoks = bd.get('tokens') or {}; mk = state.setdefault('market', {})
+def mark(kind, key, text, m, usd=0, icon=None, symbol=None):
+    sig_(kind, key, now, text, m, usd); signals[-1].update({k: v for k, v in (('s', symbol), ('i', icon)) if v})
+t1 = (bd.get('apy24h') or [{}])[0]
+if t1.get('mint') and mk.get('top1') and mk['top1'] != t1['mint']:
+    mark('board', f"top1:{t1['mint']}:{now // 3600}", f"${t1.get('symbol')} takes #1 APY on the Stonk Board ({pct_s(t1.get('apy'))} 24h · mc ${t1.get('mcap') or 0:,.0f})", t1['mint'], 0, t1.get('logo'), t1.get('symbol'))
+if t1.get('mint'): mk['top1'] = t1['mint']
+if btoks:
+    if mk.get('board'):
+        for m in [m for m in btoks if m not in set(mk['board'])][:3]:
+            b = btoks[m]
+            mark('board', f"new:{m}", f"${b.get('symbol')} joins the Stonk Board at #{b.get('rank')} · {pct_s(b.get('apy24h'))} APY 24h · mc ${b.get('mcap') or 0:,.0f}", m, 0, None, b.get('symbol'))
+    mk['board'] = sorted(btoks)
+t10 = sorted(toks, key=lambda t: -(t.get('mcap') or 0))[:10]
+if mk.get('top10'):
+    for t in [t for t in t10 if t['mint'] not in set(mk['top10'])][:2]:
+        mark('top10', f"{t['mint']}:{time.strftime('%Y%m%d', time.gmtime(now))}", f"${t.get('symbol')} breaks into stonkfun's top 10 by market cap · mc ${t.get('mcap') or 0:,.0f}", t['mint'], 0, t.get('image'), t.get('symbol'))
+if t10: mk['top10'] = [t['mint'] for t in t10]
+paid = mk.get('paid') or {}
+for t in toks:
+    p0, p1 = paid.get(t['mint']), t.get('paidUsd')
+    if p0 and p1 and p1 - p0 >= 2500:
+        mark('payout', f"{t['mint']}:{now // 1800}", f"${t.get('symbol')} paid holders ${p1 - p0:,.0f} since the last check · ${p1:,.0f} all-time", t['mint'], p1 - p0, t.get('image'), t.get('symbol'))
+mk['paid'] = {t['mint']: t.get('paidUsd') for t in toks if t.get('paidUsd')}
 
 # ---------- LP: which stonkfun pools earned the most fees per $ of liquidity in 24 h ----------
 lp = []
