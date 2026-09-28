@@ -149,7 +149,7 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
 
   <div class="intel">
     <section class="panel"><div class="ph"><h2>🐋 ALERTS</h2><span class="meta hide-sm">every alert the terminals show, in order · whales · big trades · movers · Stonk Board · CLOBr</span>
-      <div class="tabs" id="fk"><button data-f="all" class="on">ALL</button><button data-f="marine">$MARINE</button><button data-f="whale">WHALES</button><button data-f="mover">MARKET</button><button data-f="score">CLOBr</button></div></div>
+      <div class="tabs" id="fk"><button data-f="all" class="on">ALL</button><button data-f="marine">$MARINE</button><button data-f="whale">WHALES</button><button data-f="mover">MARKET</button><button data-f="score">CLOBr</button><button data-f="payout">PAYOUTS</button></div></div>
       <div class="feed" id="feed"><p class="nt">loading…</p></div></section>
     <section class="panel"><div class="ph"><h2>💧 BEST LP · 24H FEES</h2><span class="meta hide-sm">fees per $ of liquidity · every stonkfun + Stonk Board token</span></div>
       <div class="tw lpw"><table><thead><tr><th>Pool</th><th class="r">Liquidity</th><th class="r hide-sm">Fees 24h</th><th class="r">Per day</th><th></th></tr></thead><tbody id="lpRows"><tr><td colspan="5" class="nt">loading…</td></tr></tbody></table></div>
@@ -238,19 +238,21 @@ const KIND={convergence:['🐋 WHALES PILING IN','k-up'],dumping:['🐋 WHALES D
   board:['📋 STONK BOARD','k-bl'],top10:['🚀 STONKFUN TOP 10','k-bl'],payout:['💸 HOLDER PAYOUT','k-bl'],
   buy:['🟢 BUY','k-up'],pulse:['⚡ PULSE','k-bl'],milestone:['🏆 MILESTONE','k-bl'],link:['🔗 $LINK','k-bl'],tts:['📢 TTS ON STREAM','k-bl']};
 const kindOf=x=>x.kind==='bigtrade'?(x.side==='sell'?['🐳 BIG SELL','k-dn']:['🐳 BIG BUY','k-up']):x.kind==='mover'?(x.side==='down'?['📉 BIG MOVER','k-bl']:['📈 BIG MOVER','k-bl']):KIND[x.kind]||['🐋 WHALE RADAR','k-up'];
-const group=k=>k==='score'?'score':['mover','board','top10','payout'].includes(k)?'mover':['buy','pulse','milestone','link','tts'].includes(k)?'marine':'whale';
+// other tokens' holder payouts land every few minutes and never pop on screen: their own tab, so they don't bury the rest
+const WRBUY=x=>x.kind==='buy'&&(x.s==='MARINE'||x.s==='LINK'||/whale watch/i.test(x.text));   // other tokens' buys (from 2.0 pages) are market alerts
+const group=(k,x)=>k==='score'?'score':k==='payout'?'payout':['mover','board','top10'].includes(k)||(k==='buy'&&x&&!WRBUY(x))?'mover':['buy','pulse','milestone','link','tts'].includes(k)?'marine':'whale';
 function renderIntel(){if(!IN)return;const icon=m=>(TOK[m]&&TOK[m].image)||'';
-  const L=(IN.signals||[]).filter(x=>fk==='all'||group(x.kind)===fk);
+  const L=(IN.signals||[]).filter(x=>fk==='all'?group(x.kind,x)!=='payout':group(x.kind,x)===fk);
   $('feed').innerHTML=L.length?L.map(x=>{const [h,c]=kindOf(x),im=x.i||icon(x.m);
     return`<a class="fi" href="${x.m?open2(x.m):'#'}"><span class="ft">${ago(x.t*1000)}</span>${im?`<img src="${esc(im)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span class="ph0"></span>'}
       <span><b class="fk ${c}">${h}</b>${esc(x.text)}</span></a>`}).join('')
-    :`<p class="nt">${{score:'No CLOBr score changes',mover:'No market alerts',whale:'No whale alerts',marine:'No $MARINE alerts'}[fk]||'No alerts'} yet.</p>`;
+    :`<p class="nt">${{score:'No CLOBr score changes',mover:'No market alerts',payout:'No holder payouts',whale:'No whale alerts',marine:'No $MARINE alerts'}[fk]||'No alerts'} yet.</p>`;
   const P=IN.lp||[];$('lpRows').innerHTML=P.length?P.map(x=>`<tr><td><div class="pp">${(x.i||icon(x.m))?`<img src="${esc(x.i||icon(x.m))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span style="width:20px;flex:none"></span>'}<span><a href="${open2(x.m)}">${esc(x.pair)}</a><span class="dx">${esc(x.dex)}</span></span></div></td>
       <td class="r">${compact(x.tvl)}</td><td class="r hide-sm">${compact(x.fee)}</td><td class="r up">${x.d.toFixed(1)}%</td><td class="r"><a class="add" href="${esc(x.url)}" target="_blank" rel="noopener">ADD ▸</a></td></tr>`).join('')
     :'<tr><td colspan="5" class="nt">No pools yet.</td></tr>'}
 // the alert history comes from the bot's database (every alert, saved in order, the same for everyone); pools and whale
 // data from the intel job's file
-async function loadIntel(){const [a,b]=await Promise.allSettled([j(BOT+'/alerts?limit=300'),j(INTEL)]);
+async function loadIntel(){const [a,b]=await Promise.allSettled([j(BOT+'/alerts?limit=500'),j(INTEL)]);
   if(b.status==='fulfilled')IN=b.value;if(!IN)IN={};
   if(a.status==='fulfilled'&&a.value&&a.value.signals)IN.signals=a.value.signals;renderIntel()}
 $('fk').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;fk=b.dataset.f;[...$('fk').children].forEach(x=>x.classList.toggle('on',x===b));renderIntel()});
@@ -291,12 +293,13 @@ function akToggle(){akBuild();const p=$('akPop'),r=$('alertBtn').getBoundingClie
   p.style.top=(r.bottom+6+scrollY)+'px';p.style.left=Math.max(8,Math.min(innerWidth-258,r.left))+'px';p.classList.toggle('open')}
 $('alertBtn').onclick=e=>{e.stopPropagation();akToggle()};
 // which setting a saved alert falls under
-const akCat=x=>x.kind==='buy'?(x.s==='LINK'?'link':'marine'):x.kind==='tts'?'tts':x.kind==='pulse'||x.kind==='milestone'?'pulse':x.kind==='score'?'clobr':x.kind==='link'?'linkmove'
+const akCat=x=>x.kind==='buy'&&WRBUY(x)?(x.s==='LINK'?'link':'marine'):x.kind==='tts'?'tts':x.kind==='pulse'||x.kind==='milestone'?'pulse':x.kind==='score'?'clobr':x.kind==='link'?'linkmove'
   :['convergence','dumping','rotation','exit','dip','rewards'].includes(x.kind)?'whales':'market';
 let apSeen=null,apQ=[],apBusy=false,apT=null;
 async function pollAlerts(){try{const L=((await j(BOT+'/alerts?limit=40')).signals)||[];
   if(!apSeen){apSeen=new Set(L.map(x=>x.id));return}   // what's already in the history when the page opens doesn't pop
-  const fresh=L.filter(x=>!apSeen.has(x.id)).reverse();fresh.forEach(x=>{apSeen.add(x.id);if(alertsOn&&akOn(akCat(x)))apQ.push(x)});
+  const fresh=L.filter(x=>!apSeen.has(x.id)).reverse();// same pop-ups as the stream and 1.0: holder payouts and other tokens' buys are history-only
+  fresh.forEach(x=>{apSeen.add(x.id);if(alertsOn&&akOn(akCat(x))&&x.kind!=='payout'&&!(x.kind==='buy'&&!WRBUY(x)))apQ.push(x)});
   if(fresh.length)loadIntel();nextAp()}catch(e){}}
 function nextAp(){if(apBusy||!apQ.length)return;const x=apQ.shift(),[h,c]=kindOf(x),p=$('infoPop');apBusy=true;
   $('ipK').textContent=h;$('ipH').textContent=(x.s?'$'+x.s:'')+(x.u?' · '+compact(x.u):'');$('ipD').textContent=x.text;
