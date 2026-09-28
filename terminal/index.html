@@ -907,7 +907,7 @@ function renderSlide(){const b=$('cmBody');
       +'<p class="dim wrFoot">Fees earned per $ of liquidity in the last 24h, before impermanent loss · Raydium + Meteora</p>':'<p class="dim">loading pools…</p>';return}
   if(cmSlide==='feed'){slideHead('🐋 LATEST <span class="up">ALERTS</span>','../terminal2/','HISTORY ▸');
     const L=(ALH||(WR&&WR.signals)||[]).slice(0,6);
-    b.innerHTML=L.length?L.map(x=>`<p class="wrSig" style="border-color:${x.side==='sell'||x.kind==='dumping'||x.kind==='exit'?'var(--red)':x.side==='buy'||x.kind==='convergence'||x.kind==='dip'?'var(--green)':'var(--blue2)'}"><span class="dim">${ago(x.t*1000)} ago · </span>${esc(x.text)}</p>`).join(''):'<p class="dim">No alerts yet.</p>';return}
+    b.innerHTML=L.length?L.map(x=>`<p class="wrSig" style="border-color:${x.side==='sell'||x.kind==='dumping'||x.kind==='exit'?'var(--red)':x.side==='buy'||x.kind==='convergence'||x.kind==='dip'?'var(--green)':'var(--blue2)'}"><span class="dim">${ago((x.at||x.t)*1000)} ago · </span>${esc(x.text)}</p>`).join(''):'<p class="dim">No alerts yet.</p>';return}
   if(cmSlide==='flow'){slideHead('STONKFUN <span class="am">FLOW</span>','https://www.stonkfun.xyz/','STONKFUN ▸');
     b.innerHTML=FLOW.length?listRows(FLOW,t=>`<span class="r"><b class="up">▲${t.b}</b> <b class="dn">▼${t.s}</b></span><span class="r">${t.c!=null?pct(t.c):'<span class="dim">—</span>'}</span>`)
       +'<p class="dim wrFoot">Buys ▲ and sells ▼ in the last hour, busiest first · top 10 by market cap</p>':'<p class="dim">loading stonkfun flow…</p>';return}
@@ -1254,13 +1254,13 @@ var ttsClose=null;
 // ---------- info alerts: Stonk Board, stonkfun, CLOBr, payouts, $LINK ----------
 // Scanned every minute from data the page already loads. What was last seen is kept in localStorage so a reload
 // never re-fires old news, and the first scan only records a baseline. Buys / TTS / pulses always go first, and
-// info alerts are spaced at least INFO_GAP apart (a queue of up to 6 waits its turn).
-const INFO_GAP=60e3,TEST=/[?&]test\b/.test(location.search);let infoQ=[],infoAt=0,infoTimer=null;
+// info alerts are spaced at least INFO_GAP apart (a queue of up to 40 waits its turn).
+const INFO_GAP=12e3,TEST=/[?&]test\b/.test(location.search);let infoQ=[],infoAt=0,infoTimer=null;
 // which alerts this browser already showed (so a reload doesn't repeat them); the ?test page keeps its own list, so
 // testing never uses up an alert the real terminal (or the stream) should still show
 const IS_KEY=TEST?'wrInfoTest':'wrInfo';let IS={};try{IS=JSON.parse(localStorage.getItem(IS_KEY)||'{}')}catch(e){}
 const saveIS=()=>{try{localStorage.setItem(IS_KEY,JSON.stringify(IS))}catch(e){}};
-function infoAlert(kind,head,detail,side){if(!TEST&&(!alertsOn||!akOn(catOf(kind))))return;infoQ.push({kind,head,detail,side});if(infoQ.length>20)infoQ.shift();nextInfo()}
+function infoAlert(kind,head,detail,side){if(!TEST&&(!alertsOn||!akOn(catOf(kind))))return;infoQ.push({kind,head,detail,side});if(infoQ.length>40)infoQ.shift();nextInfo()}
 function nextInfo(){if(!infoQ.length||$('infoPop').classList.contains('show'))return;
   if(['buyPop','ttsPop','pulseTO'].some(id=>$(id).classList.contains('show'))||(!TEST&&Date.now()-infoAt<INFO_GAP)){clearTimeout(nextInfo.t);nextInfo.t=setTimeout(nextInfo,5000);return}
   const a=infoQ.shift();infoAt=Date.now();$('ipK').textContent=a.kind;$('ipH').textContent=a.head;$('ipD').textContent=a.detail||'';
@@ -1312,14 +1312,14 @@ const DB_HEAD=x=>{const k=x.kind,sd=x.side;
   if(k==='buy'&&/whale watch/i.test(x.text))return['🐋 WHALE WATCH','buy'];
   return({convergence:['🐋 WHALES PILING IN','buy'],dumping:['🐋 WHALES DUMPING','sell'],rotation:['🔄 WHALE ROTATION'],exit:['🚪 WHALE EXIT','sell'],
     dip:['🩸 WHALES BUYING THE DIP','buy'],rewards:['♻️ WHALE REWARDS'],score:['🧱 CLOBr SCORE'],board:['📋 STONK BOARD'],top10:['🚀 STONKFUN TOP 10'],
-    milestone:['🏆 MILESTONE'],pulse:['⚡ PULSE INCOMING'],link:[sd==='down'?'🔗 $LINK DIPPING':'🔗 $LINK PUMPING'],
+    milestone:['🏆 MILESTONE'],payout:['💸 HOLDER PAYOUT'],pulse:['⚡ PULSE INCOMING'],link:[sd==='down'?'🔗 $LINK DIPPING':'🔗 $LINK PUMPING'],
     mover:[sd==='down'?'📉 BIG MOVER':'📈 BIG MOVER'],bigtrade:[sd==='sell'?'🐳 BIG SELL':'🐳 BIG BUY',sd==='sell'?'sell':'buy']})[k]||['🐋 WHALE RADAR']};
 let dbSeen=null;
 async function dbAlerts(){try{const L=((await j(BOT+'/alerts?limit=50')).signals)||[];
   if(!dbSeen){dbSeen=new Set(L.map(x=>x.id));return}   // what's already in the history when the page opens doesn't pop
   L.filter(x=>!dbSeen.has(x.id)).reverse().forEach(x=>{dbSeen.add(x.id);
-    // popped straight from the chain already (buys, TTS, payouts fired); other tokens' holder payouts stay history-only
-    if(x.kind==='tts'||x.kind==='payout'||x.id.startsWith('pulse:pulse:'))return;
+    // TTS and $MARINE's own payout (pulse) pop straight from their sources already
+    if(x.kind==='tts'||x.id.startsWith('pulse:pulse:'))return;
     // $MARINE/$LINK buys pop from this page's own tape; one the tape missed (GeckoTerminal rate-limits a browser with
     // several terminals open) pops from the history instead, never twice
     if(x.kind==='buy'&&!/whale watch/i.test(x.text)){const set=x.s==='LINK'?lalerted:x.s==='MARINE'&&CA===MARINE?alerted:null,tx=x.id.slice(4);
