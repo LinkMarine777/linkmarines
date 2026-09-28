@@ -512,7 +512,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 
     <div class="lower">
       <section class="panel tapeP acc" data-acc="tape" data-def="1">
-        <div class="ph"><i class="rotbar" id="rbTape"></i><h2 class="tapeH"><button data-v="trades" class="on">TRADES</button><button data-v="holders" id="holdTab" style="display:none">HOLDERS <span class="hc" id="holdN"></span></button></h2>
+        <div class="ph"><h2 class="tapeH"><button data-v="trades" class="on">TRADES</button><button data-v="holders" id="holdTab" style="display:none">HOLDERS <span class="hc" id="holdN"></span></button></h2>
           <span class="meta hide-sm fx" id="tapeMeta"><span class="tkSym">$MARINE</span> + Solana $LINK · large = $2,500+ / $1,000+ $LINK</span>
           <span class="meta hide-sm" id="holdMeta" style="display:none">top wallets · data from CLOBr</span>
           <div class="tabs" id="tapeF"><button data-min="0" class="on">ALL</button><button data-min="100">$100+</button></div>
@@ -710,6 +710,8 @@ async function j(u){try{const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw
 
 // ---------- rewards snapshot (same-origin) ----------
 let rewards=null,prevR=null;
+// true holders (counted on-chain by the intel job every 30 min); stonkfun's holderCount is an all-time number
+const holdersNow=r=>(CA===MARINE&&WR&&WR.marine&&WR.marine.holders)||r.holderCount,earningNow=()=>CA===MARINE&&WR&&WR.marine&&WR.marine.eligible;
 function pulseTakeover(tok,usdv,holders,total){if(!alertsOn)return;$('ptN').textContent='+'+num(tok,tok<10?2:1)+' '+TK.quote;
   $('ptS').textContent=(usdv>0?'≈ '+usd(usdv,0)+' ':'')+'paid to '+num(holders)+' $'+TK.symbol+' holders';
   $('ptD').textContent=num(total,0)+' '+TK.quote+' distributed all time · hold $'+TK.symbol+', get paid in $'+TK.quote;
@@ -730,13 +732,13 @@ async function loadRewards(){
   if(!rewards.snapshotAt)rewards.snapshotAt=Math.floor(Date.now()/1000);
   const r=rewards;
   if(prevR&&r.lastPayoutAt&&r.lastPayoutAt!==prevR.lastPayoutAt&&r.distributedTokens>prevR.distributedTokens)
-    pulseTakeover(r.distributedTokens-prevR.distributedTokens,(r.distributedUsd||0)-(prevR.distributedUsd||0),r.holderCount,r.distributedTokens);
+    pulseTakeover(r.distributedTokens-prevR.distributedTokens,(r.distributedUsd||0)-(prevR.distributedUsd||0),earningNow()||holdersNow(r),r.distributedTokens);
   prevR=r;
   $('sDist').textContent=num(r.distributedTokens,1)+' '+TK.quote;
   $('sDistUsd').textContent='≈ '+usd(r.distributedUsd,0)+' at today\'s '+TK.quote+' price';
   $('sPayouts').textContent=num(r.payoutCount);
-  $('holdN').textContent=r.holderCount?num(r.holderCount):'';
-  $('sHolders').textContent=num(r.holderCount)+' holders · '+(+(r.transferTaxBps/100).toFixed(1))+'% tax';
+  const hn=holdersNow(r),en=earningNow();$('holdN').textContent=hn?num(hn):'';
+  $('sHolders').textContent=num(hn)+' holders'+(en?' · '+num(en)+' earning':'')+' · '+(+(r.transferTaxBps/100).toFixed(1))+'% tax';
   const p=Math.min(1,(r.pendingUsd||0)/(r.minDistributionUsd||1));
   $('pPending').textContent=num(r.pendingTokens,2)+' '+TK.quote;
   $('pPendingUsd').innerHTML=usd(r.pendingUsd,0)+(r.pendingTaxUsd?'<span class="fx"> · '+usd(r.pendingTaxUsd,0)+' tax to swap</span>':'');
@@ -965,8 +967,6 @@ let tapeView='trades';
 // Each group advances on its own clock, freezes while an alert is on screen, and holds 3 minutes after a manual click.
 const ROT=[
   {id:'chart',bar:'rbChart',steps:[['7d',240],['1d',45],['7d',240],['all',45]],apply:k=>{const b=document.querySelector(`#tf button[data-tf="${k}"]`);if(b&&tf!==k){ROT.auto=1;b.click();ROT.auto=0}}},
-  // the tape stays on trades (holders is a click away)
-  {id:'tape',bar:'rbTape',steps:[['trades',600]],apply:k=>{setTapeView(k)}},
   {id:'side',bar:'rbSide',steps:[['clobr',60],['whales',45],['board',40],['flow',40],['feed',35],['sfun',35],['lp',40],['link',40]],
    apply:k=>{if(k==='whales'&&!(WR&&WR.buying&&WR.buying.length)||k==='flow'&&!FLOW.length||k==='lp'&&!(WR&&WR.lp&&WR.lp.length)||k==='feed'&&!(WR&&WR.signals&&WR.signals.length))return false;showSlide(k)}}];
 ROT.forEach(g=>{g.i=0;g.t=0;g.hold=0});
@@ -1260,7 +1260,7 @@ function infoScan(){const first=!IS.init,fire=(...a)=>{if(!first)infoAlert(...a)
     const load=(r.pendingUsd||0)/(r.minDistributionUsd||1);
     if(load>=.9&&IS.pulseWarned!==r.lastPayoutAt){IS.pulseWarned=r.lastPayoutAt;fire('⚡ PULSE INCOMING',Math.round(Math.min(load,1)*100)+'% LOADED',num(r.pendingTokens,2)+' '+TK.quote+' (≈ '+usd(r.pendingUsd,0)+') is about to hit $'+TK.symbol+' holders')}
     const ms=(k,v,step,fmt)=>{if(v==null)return;const f=Math.floor(v/step)*step;if(IS[k]!=null&&f>IS[k])fire('🏆 MILESTONE',fmt(f),'');IS[k]=Math.max(IS[k]||0,f)};
-    ms('msLink',r.distributedTokens,500,f=>num(f)+' '+TK.quote+' PAID TO HOLDERS');ms('msPay',r.payoutCount,5000,f=>num(f)+' PAYOUTS SENT');ms('msHold',r.holderCount,100,f=>num(f)+' $'+TK.symbol+' HOLDERS')}
+    ms('msLink',r.distributedTokens,500,f=>num(f)+' '+TK.quote+' PAID TO HOLDERS');ms('msPay',r.payoutCount,5000,f=>num(f)+' PAYOUTS SENT');ms('msHold',holdersNow(r),100,f=>num(f)+' $'+TK.symbol+' HOLDERS')}
   // Stonk Board: $MARINE's rank, a new #1, a new token on the board, a big APY jump
   if(board&&board.tokens){const me=boardStats(),rk=me&&me.rank||null;
     if(rk&&!IS.rank)fire('📋 STONK BOARD','$'+TK.symbol+' ENTERS THE TOP 100','Now #'+rk+' on thestonkboard.com');

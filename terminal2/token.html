@@ -707,18 +707,21 @@ function pulseTakeover(tok,usdv,holders,total){if(!alertsOn)return;$('ptN').text
   clearTimeout(ptTimer);ptTimer=setTimeout(closePulse,12000)}
 var ptTimer=null;
 function closePulse(){clearTimeout(ptTimer);const el=$('pulseTO');if(!el.classList.contains('show'))return;el.classList.remove('show');nextBuy()}
+// $MARINE's true holder count, counted on-chain by the intel job (stonkfun's holderCount is an all-time number)
+let WRM=null;if(CA===MARINE)fetch('https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/whales.json').then(r=>r.json()).then(d=>{WRM=d.marine;loadRewards()}).catch(()=>{});
 async function loadRewards(){
   try{rewards=CA===MARINE?await j(DATA+'rewards.json?'+Date.now()):(await j(BOT+'/token/'+CA)).rewards;}catch(e){return}
   if(!rewards){$('sDist').textContent='—';$('sDistUsd').textContent='no holder rewards for this token';$('live').classList.remove('stale');$('liveTxt').textContent='LIVE';return}
   if(!rewards.snapshotAt)rewards.snapshotAt=Math.floor(Date.now()/1000);
   const r=rewards;
   if(prevR&&r.lastPayoutAt&&r.lastPayoutAt!==prevR.lastPayoutAt&&r.distributedTokens>prevR.distributedTokens)
-    pulseTakeover(r.distributedTokens-prevR.distributedTokens,(r.distributedUsd||0)-(prevR.distributedUsd||0),r.holderCount,r.distributedTokens);
+    pulseTakeover(r.distributedTokens-prevR.distributedTokens,(r.distributedUsd||0)-(prevR.distributedUsd||0),(CA===MARINE&&WRM&&(WRM.eligible||WRM.holders))||r.holderCount,r.distributedTokens);
   prevR=r;
   $('sDist').textContent=num(r.distributedTokens,1)+' '+TK.quote;
   $('sDistUsd').textContent='≈ '+usd(r.distributedUsd,0)+' at today\'s '+TK.quote+' price';
   $('sPayouts').textContent=num(r.payoutCount);
-  $('sHolders').textContent=num(r.holderCount)+' holders · '+(+(r.transferTaxBps/100).toFixed(1))+'% tax';
+  const hn=(CA===MARINE&&WRM&&WRM.holders)||r.holderCount,en=CA===MARINE&&WRM&&WRM.eligible;
+  $('sHolders').textContent=num(hn)+' holders'+(en?' · '+num(en)+' earning':'')+' · '+(+(r.transferTaxBps/100).toFixed(1))+'% tax';
   const p=Math.min(1,(r.pendingUsd||0)/(r.minDistributionUsd||1));
   $('pPending').textContent=num(r.pendingTokens,2)+' '+TK.quote;
   $('pPendingUsd').innerHTML=usd(r.pendingUsd,0)+(r.pendingTaxUsd?'<span class="fx"> · '+usd(r.pendingTaxUsd,0)+' tax to swap</span>':'');
