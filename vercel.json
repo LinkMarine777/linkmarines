@@ -1,3 +1,13 @@
 {
-  "git": { "deploymentEnabled": { "data": false, "claude/*": false } }
+  "git": { "deploymentEnabled": { "data": false, "claude/*": false } },
+  "rewrites": [
+    { "source": "/terminal/token", "destination": "/terminal/token.html" }
+  ],
+  "redirects": [
+    { "source": "/trending", "destination": "/trending/", "permanent": false },
+    { "source": "/warroom", "destination": "/terminal/", "permanent": false },
+    { "source": "/WarRoom", "destination": "/terminal/", "permanent": false },
+    { "source": "/TheWarRoom", "destination": "/terminal/", "permanent": false },
+    { "source": "/thewarroom", "destination": "/terminal/", "permanent": false }
+  ]
 }

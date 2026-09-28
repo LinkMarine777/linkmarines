@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>THE WAR ROOM · $MARINE × $LINK</title>
-<meta name="description" content="Live $MARINE terminal. LINK distributed to holders, next pulse, price, tape.">
-<meta property="og:title" content="THE WAR ROOM · $MARINE × $LINK">
-<meta property="og:description" content="Live terminal: LINK distributed to $MARINE holders, next pulse, price, tape.">
+<title>WAR ROOM TERMINAL 2.0</title>
+<meta name="description" content="Live terminal for any stonkfun token: holder rewards, next pulse, price, chart, tape, APY and CLOBr depth.">
+<meta property="og:title" content="WAR ROOM TERMINAL 2.0">
+<meta property="og:description" content="Paste any stonkfun token CA: holder rewards, price, chart, tape, APY and CLOBr depth.">
 <meta property="og:image" content="https://themarines.link/banner.png">
-<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
-<link rel="icon" type="image/png" sizes="64x64" href="../favicon-64.png">
-<link rel="icon" type="image/png" sizes="192x192" href="../favicon-192.png">
-<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -41,7 +41,12 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
 .btn:hover{border-color:var(--blue2);text-decoration:none}
 .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
 .btn.tts{border-color:var(--amber);color:var(--amber)}
-header .ca .ca11{display:none}#caIn,#caForm>.btn,#homeTk{display:none!important}
+/* header: search with the icon inside, secondary links in the ☰ menu */
+.srch{position:relative;flex:1 1 150px;min-width:120px;display:flex}.srch input{flex:1;min-width:0;padding-right:34px!important}
+.srch button{position:absolute;right:1px;top:1px;bottom:1px;width:32px;border:0;background:none;color:var(--dim);cursor:pointer;display:grid;place-items:center}.srch button:hover{color:#fff}.srch svg{width:15px;height:15px;fill:currentColor}
+.menu{position:relative}#menuBtn{font-size:15px;padding:5px 11px;line-height:1}
+.mnu{display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:60;min-width:230px;background:var(--panel2);border:1px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,.5);padding:6px 0}
+.menu.open .mnu{display:block}.mnu a{display:block;padding:8px 14px;color:var(--txt);font-size:12px;text-decoration:none;white-space:nowrap}.mnu a:hover{background:rgba(74,122,255,.12);color:#fff}
 header .ca{display:flex;align-items:center;gap:6px;flex:1;min-width:0;max-width:720px;margin:0 8px;position:relative}
 header .ca input{flex:1 1 150px;min-width:120px;background:#050914;border:1px solid var(--line);color:#fff;font:inherit;font-size:12px;padding:7px 9px}
 header .ca input:focus{outline:none;border-color:var(--blue2)}
@@ -49,6 +54,7 @@ header .ca input:focus{outline:none;border-color:var(--blue2)}
 .tkb .q{color:var(--dim);font-size:11px}
 .tkl{display:flex;gap:4px}.tkl:empty{display:none}.tkl button{display:grid;place-items:center;width:26px;height:26px;border:1px solid var(--line);color:var(--dim);background:#050914;cursor:pointer;padding:0}.tkl button:hover{color:#fff;border-color:var(--blue2)}.tkl button.ok{color:var(--green);border-color:var(--green)}.homeTk{white-space:nowrap}
 .tkl a{display:grid;place-items:center;width:26px;height:26px;border:1px solid var(--line);color:var(--dim);background:#050914;text-decoration:none}.tkl a:hover{color:#fff;border-color:var(--blue2)}.tkl svg{width:13px;height:13px;fill:currentColor}.tkm{font-size:11px;color:var(--amber);white-space:nowrap;position:absolute;right:0;top:100%;margin-top:3px;background:#02030a;border:1px solid var(--line);padding:2px 7px;z-index:6}.tkm:empty{display:none}
+@media (max-width:480px){#liveTxt{display:none}.live{gap:0}}
 @media (max-width:999px){header{flex-wrap:wrap!important}header .ca{order:9;flex-basis:100%;max-width:none;margin:4px 0 0;flex-wrap:wrap;row-gap:6px}header .ca input{flex-basis:100%;order:5}header .ca .btn{order:6}.tkm{position:static;order:7}}
 @media (min-width:1000px) and (max-width:1499px){header{flex-wrap:wrap!important;row-gap:6px}header .ca{order:9;flex-basis:100%;max-width:none;margin:0}.tkm{position:static}}
 #soundBtn,#alertBtn{background:none;border:1px solid var(--line);color:var(--txt);font-size:14px;line-height:1;padding:3px 7px;cursor:pointer}
@@ -192,6 +198,8 @@ tr.whale td{background:rgba(74,122,255,.08)}
 .cHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,rgba(255,107,0,.12),transparent 60%)}
 .cMiss{display:block;font-size:10px;margin-top:2px}.cMiss:empty{display:none}
 .empty{font-size:12px;line-height:1.55;color:var(--dim);padding:6px 0}.empty b{color:#fff;font-weight:400}.empty a{color:var(--green)}
+.cDelay{display:block;font-size:11px;color:#FF6B00;margin-top:3px;text-decoration:none}.cDelay:hover{text-decoration:underline}.dly{font-size:9px;letter-spacing:.5px;color:#FF6B00;border:1px solid rgba(255,107,0,.5);padding:0 3px;margin-left:4px;vertical-align:1px}
+#scoreDly{margin-left:6px}.dly.lv,.cDelay.lv{color:var(--green)!important;border-color:rgba(57,255,106,.5)}
 .cHead b{font-family:'VT323';font-size:24px;font-weight:400;color:#FF6B00;letter-spacing:1px}.cHead .dim{font-size:11px}
 .cbtn{border-color:#FF6B00!important;color:#FF6B00!important;white-space:nowrap}.cbtn:hover{background:rgba(255,107,0,.12)}
 /* masonry: panels stack into balanced columns (count set in JS), so uneven heights never leave holes */
@@ -204,29 +212,7 @@ tr.whale td{background:rgba(74,122,255,.08)}
 .dr{display:grid;grid-template-columns:62px 1fr auto auto;gap:8px;font-size:11px;padding:4px 0;border-bottom:1px solid rgba(26,36,68,.6);white-space:nowrap}
 .lp{border-bottom:1px solid rgba(26,36,68,.6);padding:7px 0}.lpt{font-size:12px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}.lpt .dim{font-size:10px}
 .lps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:4px;font-size:12px;color:#fff}.lps label{display:block;font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
-html.fit #clobrWrap{display:none!important}
-#scoreStat{display:none!important}
-#cmP{display:flex;flex-direction:column;gap:10px}.cml{color:#FF6B00!important;text-decoration:none}.cml:hover{text-decoration:underline}
-.cm-apy{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.cm-apy>div,.cm-w>div{border:1px solid var(--line);padding:7px 10px;min-width:0}
-.cm-apy label,.cm-w label,.cm-sc label,.cm-lq label{display:block;font-size:10px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
-.cm-apy b{display:block;font-family:'VT323';font-weight:400;font-size:30px;color:var(--green);line-height:1.05;white-space:nowrap}
-.cm-sc{display:flex;align-items:center;gap:14px}.cm-sc .n{font-family:'VT323';font-size:64px;line-height:.9}.cm-sc .v{font-size:14px;color:#fff}.cm-sc .why{font-size:11px;color:var(--dim)}
-.cm-w{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.cm-w b{font-family:'VT323';font-weight:400;font-size:30px;color:#fff}.cm-w small{font-size:10px;color:var(--dim)}.cm-w .f{font-size:11px;margin-top:2px}
-.cm-sp{width:100%;height:56px;display:block}.cm-sx{display:flex;justify-content:space-between;font-size:10px;color:var(--dim)}
-.cm-lq{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:13px}.cm-lq .cbar{grid-column:1/-1;margin:0}
-html.fit #cmP{flex:1;min-height:0;overflow:hidden;gap:10px}html.fit #cmP .ph{margin-bottom:0}html.fit .cm-apy label,html.fit .cm-w label,html.fit .cm-sc label,html.fit .cm-lq label{font-size:14px}html.fit .cm-apy b{font-size:44px}
-html.fit .cm-sc .n{font-size:80px}html.fit .cm-sc .v{font-size:21px}html.fit .cm-sc .why{font-size:15px}html.fit .cm-w b{font-size:40px}html.fit .cm-w small{font-size:14px}html.fit .cm-w .f{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}html.fit .cm-w .f .dim{display:none}
-/* rotation: a thin countdown bar under each rotating header */
-.ph{position:relative}.rotbar{position:absolute;left:0;bottom:-4px;height:2px;width:0;background:var(--blue2);opacity:.55;transition:width 1s linear;pointer-events:none}
-.cmL{display:grid;grid-template-columns:22px 26px minmax(0,1fr) auto auto;gap:4px 10px;align-items:center;font-size:12px}.cmL img{width:22px;height:22px;border-radius:50%;background:#111;object-fit:cover}
-.cmL .rk{color:var(--dim);text-align:right}.cmL .s{color:#fff;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.cmL .s i{font-style:normal;color:var(--dim);font-size:.8em}.cmL .r{text-align:right;white-space:nowrap}
-.cmK{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cmK>div{border:1px solid var(--line);padding:8px 10px}.cmK label{display:block;font-size:10px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}.cmK b{font-family:'VT323';font-weight:400;font-size:34px;color:#fff;line-height:1.05}
-#cmTitle{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}#cmLink{flex:none;white-space:nowrap}html.fit #tapeMeta,html.fit #holdMeta{display:none!important}
-.tapeH .hc{font-size:.55em;color:var(--dim);letter-spacing:1px;vertical-align:.25em}
-.wrSig{margin:8px 0 0;padding:6px 8px;border-left:2px solid var(--blue2);font-size:.9em}.wrFoot{font-size:.8em;margin:6px 0 0}
-.tl{width:1.15em;height:1.15em;border-radius:50%;object-fit:contain;vertical-align:-.2em;margin-right:.4em;background:#0b1a2e}
-html.fit .cmL{font-size:21px;grid-template-columns:34px 34px minmax(0,1fr) auto auto;gap:6px 14px}html.fit .cmL img{width:32px;height:32px}html.fit .cmK label{font-size:14px}html.fit .cmK b{font-size:50px}html.fit .rotbar{height:3px;bottom:-6px}
-html.fit .cm-sp{height:62px}html.fit .cm-spl{font-size:14px!important}html.fit .cm-sx{font-size:14px}html.fit .cm-lq{font-size:20px}html.fit .cml{font-size:16px}#scoreStat:hover label{color:#FF6B00}#scoreStat #sScoreMsg,#scoreStat #sScoreWhy{font-size:10px;line-height:1.35}#scoreStat #sScoreWhy{white-space:normal;overflow:visible}
+#scoreStat{cursor:pointer}#scoreStat:hover label{color:#FF6B00}#scoreStat #sScoreMsg,#scoreStat #sScoreWhy{font-size:10px;line-height:1.35}#scoreStat #sScoreWhy{white-space:normal;overflow:visible}
 .clobrRow .panel{min-width:0;overflow:hidden}.clobrRow .lq label{white-space:nowrap}.clobrRow table{font-size:11px}.clobrRow td,.clobrRow th{padding:3px 5px}
 
 .clobrRow .r{text-align:right}.clobrRow .sub{font-size:10px;color:var(--dim);letter-spacing:1px;margin:10px 0 4px;text-transform:uppercase}
@@ -279,23 +265,13 @@ html.fit .board.house{padding:0}html.fit .board.house .htag{font-size:13px;paddi
 #buyPop{position:fixed;left:50%;bottom:16%;transform:translate(-50%,30px);opacity:0;pointer-events:none;z-index:55;transition:all .35s cubic-bezier(.2,1.4,.4,1);
   background:linear-gradient(135deg,#06240f,#0a0f1f);border:3px solid var(--green);box-shadow:0 0 50px rgba(57,255,106,.4);padding:18px 44px;text-align:center;min-width:600px}
 #buyPop.show{opacity:1;transform:translate(-50%,0)}
-/* info alerts (board / stonkfun / CLOBr / milestones): a card that drops in from the top, below buy alerts in priority */
-#infoPop{position:fixed;left:50%;top:36%;transform:translate(-50%,-30px);opacity:0;pointer-events:none;z-index:54;min-width:520px;max-width:78vw;text-align:center;
-  background:linear-gradient(180deg,rgba(13,20,40,.97),rgba(4,6,15,.97));border:1px solid var(--blue2);box-shadow:0 0 40px rgba(74,122,255,.35);padding:14px 26px;transition:all .35s cubic-bezier(.2,1.4,.4,1)}
-/* alert colors: green = a buy, red = a sell, the site's blue for everything else */
-#infoPop.buy{border-color:var(--green);box-shadow:0 0 40px rgba(57,255,106,.3)}#infoPop.sell{border-color:var(--red);box-shadow:0 0 40px rgba(255,51,85,.3)}#infoPop.buy .k{color:var(--green)}#infoPop.sell .k{color:var(--red)}
-#infoPop.show{opacity:1;transform:translate(-50%,0);pointer-events:auto;cursor:pointer}
-#infoPop .k{font-size:12px;letter-spacing:2px;color:var(--blue2);text-transform:uppercase}#infoPop .h{font-family:'VT323';font-size:44px;color:#fff;line-height:1.05;margin:4px 0}#infoPop .d{font-size:13px;color:var(--txt)}
-html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #infoPop .k{font-size:20px}html.fit #infoPop .h{font-size:64px}html.fit #infoPop .d{font-size:22px}
-#testPanel{position:fixed;left:10px;bottom:10px;z-index:80;background:#000e;border:1px solid var(--amber);padding:8px;display:flex;flex-wrap:wrap;gap:4px;max-width:520px;font-size:11px}
-#testPanel b{width:100%;color:var(--amber);letter-spacing:1px}#testPanel button{background:#111a;border:1px solid var(--line);color:#fff;font:inherit;padding:4px 7px;cursor:pointer}#testPanel button:hover{border-color:var(--amber)}#buyPop.lnk{border-color:var(--green)}
 /* click an alert to close it; the rest of the screen never closes it */
 #ttsPop.show,#buyPop.show{pointer-events:auto;cursor:pointer}#pulseTO.show>*{pointer-events:auto;cursor:pointer}
 #buyPop .t{font-size:20px;letter-spacing:4px;color:var(--green)}
 #buyPop .v{font-family:'VT323';font-size:104px;line-height:1;color:#fff}
 #buyPop .w{font-size:18px;color:var(--dim);letter-spacing:1px}
-#buyPop.big{border-color:var(--green);box-shadow:0 0 60px rgba(57,255,106,.5);background:linear-gradient(135deg,#06240f,#0a0f1f)}
-#buyPop.big .t{color:var(--green)}
+#buyPop.big{border-color:var(--amber);box-shadow:0 0 60px rgba(255,210,63,.5);background:linear-gradient(135deg,#2a2106,#0a0f1f)}
+#buyPop.big .t{color:var(--amber)}
 #pulseTO{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;
   background:radial-gradient(circle at center,rgba(42,90,218,.55),rgba(4,6,15,.96) 65%);pointer-events:none}
 #pulseTO.show{display:flex;animation:pto 12s ease forwards}
@@ -333,7 +309,6 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
 #myOrders .o .w{color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#myOrders .o .d{color:var(--dim)}
 #myOrders .o .st{grid-column:2/4;color:var(--dim)}#myOrders .o .st.ok{color:var(--green)}#myOrders .o .st.bad{color:var(--red)}#myOrders .o .st.wait{color:var(--amber)}
 #payMsg.err{color:var(--red)}#payMsg.ok{color:var(--green)}
-html.obs #audioGate{display:none!important}html.obs,html.obs *{cursor:none!important}
 #audioGate{position:fixed;right:12px;bottom:40px;z-index:40;font-size:11px;background:#000c;border:1px solid var(--amber);color:var(--amber);padding:5px 9px;cursor:pointer;display:none}
 
 /* ---------- 16:9 stage (desktop + OBS) ----------
@@ -352,10 +327,10 @@ html.fit .tape-bar .lbl{font-size:25px;padding:0 16px;gap:10px}
 html.fit .tape-bar .lbl button{font-size:20px;padding:0 9px}
 html.fit .track{padding:5px 0}
 html.fit .tk{font-size:21px;gap:9px;margin-right:50px}html.fit .tk img{width:26px;height:26px}
-html.fit .col.comms::after{display:none}html.fit #sbP .sbl{font-size:14px;white-space:nowrap}html.fit #scoreStat #sScoreMsg{font-size:15px}html.fit #scoreStat #sScoreWhy{display:none}html.fit #caForm{display:none}html.fit #alertBtn{font-size:24px;padding:4px 10px}
+html.fit .stats{grid-template-columns:1.35fr 1.55fr 1fr 1.15fr 1fr 1fr}
 html.fit .stat{padding:8px 20px}
 html.fit .stat label{font-size:16px;letter-spacing:1.5px}
-html.fit .stat b{font-size:52px;line-height:1}html.fit .stat:has(#sPrice){flex:1.3 1 0}
+html.fit .stat b{font-size:52px;line-height:1}
 html.fit .stat.hero b{font-size:58px}
 html.fit #pPending{font-size:52px!important}
 html.fit .stat span{font-size:17px}
@@ -394,7 +369,7 @@ html.fit .post img{width:48px;height:48px}
 html.fit .post .who{font-size:19px;gap:10px}
 html.fit .post .txt{font-size:22px;line-height:1.35;-webkit-line-clamp:3}
 html.fit .post.m{border-left-width:4px;padding-left:12px;margin-left:-16px}
-html.fit .bill{flex:none;height:270px;display:flex;flex-direction:column}html.fit #sbP{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+html.fit .bill{flex:none;height:270px;display:flex;flex-direction:column}
 html.fit .bill .board{flex:1}
 html.fit .bill .board.sold .head{font-size:62px}
 html.fit .src{font-size:16px;padding:6px 24px}
@@ -409,11 +384,11 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.stat{border-bottom:1px solid var(--line)}.stat:nth-child(2n){border-right:0}
   .stat.hero,.stat.pulse{grid-column:span 2;border-right:0}
   main{grid-template-columns:minmax(0,1fr)}.lower{grid-template-columns:minmax(0,1fr)}.ph{flex-wrap:wrap}.legend{display:none}header nav{margin-left:0}
-  header nav .btn:not(.primary):not(.tts){display:none}#chartWrap{height:260px}.brand{font-size:24px}.brand small{font-size:14px}header{gap:10px;flex-wrap:wrap}
+  header nav .btn:not(.primary):not(.tts):not(#menuBtn){display:none}#chartWrap{height:260px}.brand{font-size:24px}.brand small{font-size:14px}header{gap:10px;flex-wrap:wrap}
   .hide-sm{display:none}#ttsPop{min-width:0;width:92%}#ttsPop .msg{font-size:30px}
   /* ---- mobile: collapsible sections, fewer things fighting for space ---- */
   #stage{padding-bottom:64px}
-  header{padding:8px 12px;flex-wrap:nowrap}header img{width:28px;height:28px}header nav{display:none}
+  header{padding:8px 12px;flex-wrap:nowrap}header img{width:28px;height:28px}header nav{margin-left:auto}header nav>.btn{display:none!important}#menuBtn{padding:4px 9px}header{gap:8px!important}.live{padding:2px 6px}
   .brand{font-size:22px}.brand small{font-size:12px}.live{margin-left:auto;font-size:10px}
   .tape-bar .lg{display:none}.tape-bar .lbl{font-size:15px;padding:0 8px;gap:5px}.tape-bar .lbl button{font-size:13px;padding:0 5px}
   .track{padding:5px 0}.tk{font-size:11px;margin-right:22px}.tk img{width:15px;height:15px}
@@ -435,9 +410,10 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .post .txt{-webkit-line-clamp:3}
   .board{min-height:90px}#slot1{aspect-ratio:1112/358;min-height:0}.slots .board.house,.slots .board.img{aspect-ratio:912/176;min-height:0}.bill .board.sold .head,.board.sold .head{font-size:30px}
   .src .fx{display:none}.src{padding:6px 12px}
-  #mbar{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:6px;position:fixed;left:0;right:0;bottom:0;z-index:45;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(4,6,15,.96);border-top:1px solid var(--line);backdrop-filter:blur(6px)}
+  #mbar{display:grid;grid-template-columns:1.2fr .8fr 1.2fr 1fr;gap:6px;position:fixed;left:0;right:0;bottom:0;z-index:45;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(4,6,15,.96);border-top:1px solid var(--line);backdrop-filter:blur(6px)}
   #mbar .btn{text-align:center;padding:11px 6px;font-size:12px;text-decoration:none}
 }
+.tkl .buyJ{width:auto!important;min-width:0;display:inline-flex;align-items:center;height:26px;padding:0 9px;border:1px solid var(--green);color:var(--green);font-size:11px;letter-spacing:1px;text-decoration:none;white-space:nowrap}.tkl .buyJ:hover{background:rgba(57,255,106,.1)}
 /* scrollbars: slim and dark to match the site (not the default white bar) */
 *{scrollbar-width:thin;scrollbar-color:#24345e transparent}*::-webkit-scrollbar{width:6px;height:6px}*::-webkit-scrollbar-track{background:transparent}
 *::-webkit-scrollbar-thumb{background:#24345e;border-radius:3px}*::-webkit-scrollbar-thumb:hover{background:#34508f}*::-webkit-scrollbar-button{display:none}*::-webkit-scrollbar-corner{background:transparent}
@@ -450,35 +426,38 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 <div id="stage">
 
 <header>
-  <a href="../"><img src="../helmet.png" alt="Marines"></a>
-  <a class="brand" href="../" style="text-decoration:none">THE WAR ROOM<small>$1000 LINK WAITING ROOM</small></a>
+  <a href="/trending/" title="Terminal 2.0 home: trending tokens"><img src="/helmet.png" alt="Marines"></a>
+  <a class="brand" href="/trending/" title="Terminal 2.0 home: trending tokens" style="text-decoration:none">THE WAR ROOM<small>TERMINAL 2.0</small></a>
   <span class="live" id="live"><i></i><span id="liveTxt">LIVE</span></span>
   <button id="soundBtn" type="button" title="Sound on: click to mute TTS and alerts" aria-label="Mute sounds"></button>
   <button id="alertBtn" type="button" title="Alerts on: click to hide buy alerts, pulses and TTS popups" aria-label="Hide alerts"></button>
   <form id="caForm" class="ca" autocomplete="off">
     <span id="tkBadge" class="tkb"></span><span id="tkLinks" class="tkl"></span>
-    <input id="caIn" placeholder="Paste a stonk token CA…" spellcheck="false" aria-label="Token contract address">
-    <button class="btn" type="submit">GO</button>
-    <a class="btn homeTk" id="homeTk" href="?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" title="Back to $MARINE" style="display:none">$MARINE</a>
+    <span class="srch"><input id="caIn" placeholder="Paste any stonk token CA…" spellcheck="false" aria-label="Token contract address"><button type="submit" title="Open this token" aria-label="Open token"><svg viewBox="0 0 24 24"><path d="M10 2a8 8 0 016.3 12.9l5.4 5.4-1.4 1.4-5.4-5.4A8 8 0 1110 2zm0 2a6 6 0 100 12 6 6 0 000-12z"/></svg></button></span>
     <span id="tkMsg" class="tkm"></span>
   </form>
   <nav>
-    <a class="btn fx" id="chartLink" href="#" target="_blank" rel="noopener">CHART</a>
-    <a class="btn fx" href="https://x.com/TheMarinesX" target="_blank" rel="noopener">X</a>
-    <a class="btn" href="/trending/" title="Terminal 2.0: any stonkfun token">2.0</a>
-    <a class="btn fx" href="../">HQ</a>
-    <a class="btn chat" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ WAR ROOM CHAT</a>
     <button class="btn tts" id="ttsBtn">BUY TTS</button>
     <a class="btn primary buyTk" href="#" target="_blank" rel="noopener">BUY <span class="tkSym">$MARINE</span></a>
+    <div class="menu"><button class="btn" id="menuBtn" type="button" aria-haspopup="true" aria-expanded="false" title="More">☰</button>
+      <div class="mnu" id="mnu" role="menu">
+        <a href="/trending/">🔥 Trending tokens</a>
+        <a id="homeTk" href="?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">⚓ $MARINE terminal</a>
+        <a href="/terminal/">📺 The War Room (stream view)</a>
+        <a id="chartLink" href="#" target="_blank" rel="noopener">📈 Chart on DexScreener</a>
+        <a href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ War Room chat</a>
+        <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener">𝕏 @TheMarinesX</a>
+        <a href="/">🏠 HQ</a>
+      </div></div>
   </nav>
 </header>
 
 <div class="tape-bar top">
-  <div class="lbl">STONK<span class="lg">&nbsp;BOARD TOP 10</span>&nbsp;APY 24H</div>
+  <div class="lbl">STONK<span class="lg">&nbsp;BOARD TOP 10</span>&nbsp;APY <button data-k="apy3d" class="on">3D</button><button data-k="apy24h">24H</button></div>
   <div class="track" id="boardTicker"><span class="tk dim">loading…</span></div>
 </div>
 <div class="tape-bar vol">
-  <div class="lbl">STONKFUN<span class="lg">&nbsp;TOP 10</span>&nbsp;MCAP</div>
+  <div class="lbl">STONKFUN<span class="lg">&nbsp;TOP 10 · 24H</span>&nbsp;VOL</div>
   <div class="track" id="ticker"><span class="tk dim">loading…</span></div>
 </div>
 
@@ -493,7 +472,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   <div class="stat xtra"><label>Payouts sent</label><b id="sPayouts">—</b><span class="dim" id="sHolders">&nbsp;</span><span class="dim" id="pMin" style="display:block">&nbsp;</span></div>
   <div class="stat"><label class="tkSym">$MARINE</label><b id="sPrice">—</b><span id="sChg">&nbsp;</span></div>
   <div class="stat"><label>Market cap</label><b id="sMcap">—</b><span class="dim" id="sLiq">&nbsp;</span></div>
-  <div class="stat" id="scoreStat" style="display:none" title="CLOBr score: 0-100 balance of support vs resistance liquidity. Click for more on CLOBr"><label>CLOBr score ↗</label><b id="sScore">—</b><span class="dim" id="sScoreMsg">&nbsp;</span><span class="dim" id="sScoreWhy" style="display:block">&nbsp;</span></div>
+  <div class="stat" id="scoreStat" style="display:none" title="CLOBr score: 0-100 balance of support vs resistance liquidity. Click for more on CLOBr"><label>CLOBr ↗ <span class="dly" id="scoreDly" title="CLOBr data on 2.0 is up to 1 hour old; live with the CLOBr extension">delayed</span></label><b id="sScore">—</b><span class="dim" id="sScoreMsg">&nbsp;</span><span class="dim" id="sScoreWhy" style="display:block">&nbsp;</span></div>
   <div class="stat fx xtra"><label>24h volume</label><b id="sVol">—</b><span class="dim" id="sTx">&nbsp;</span></div>
   <div class="stat xtra"><label class="tkQs">$LINK</label><b id="sLink">—</b><span id="sLinkChg">&nbsp;</span></div>
   <button class="moreStats" id="moreStats" type="button">MORE STATS ▾</button>
@@ -504,9 +483,9 @@ html.fit #tip{font-size:20px;padding:10px 14px}
     <section class="panel chartP acc" data-acc="chart" data-def="1">
       <div class="ph">
         <h2><span class="tkSym">$MARINE</span> × <span class="tkQs">$LINK</span></h2>
-        <div class="legend" style="margin:0"><span><i style="background:var(--blue2)"></i><span class="tkSym">$MARINE</span> (right)</span><span><i style="background:var(--amber)"></i><span class="tkQs">$LINK</span> (left)</span><a id="depthLeg" style="display:none" target="_blank" rel="noopener" title="Market depth data from CLOBr: view more on CLOBr"><i style="background:linear-gradient(90deg,var(--green) 50%,var(--red) 50%)"></i>CLOBr depth</a></div>
+        <div class="legend" style="margin:0"><span><i style="background:var(--blue2)"></i><span class="tkSym">$MARINE</span> (right)</span><span><i style="background:var(--amber)"></i><span class="tkQs">$LINK</span> (left)</span><a id="depthLeg" style="display:none" target="_blank" rel="noopener" title="CLOBr market depth, delayed up to 1h. Real-time on CLOBr Pro"><i style="background:linear-gradient(90deg,var(--green) 50%,var(--red) 50%)"></i>CLOBr depth <span class="dly">delayed</span></a></div>
         <div class="tabs" id="dtab" style="display:none"><button id="depthBtn" class="on" type="button" title="CLOBr market depth for the token: support (green) and resistance (red) liquidity by price">DEPTH</button></div>
-        <i class="rotbar" id="rbChart"></i><div class="tabs" id="tf">
+        <div class="tabs" id="tf">
           <button data-tf="1d">24H</button><button data-tf="7d" class="on">7D</button><button data-tf="all">ALL</button>
         </div>
       </div>
@@ -515,14 +494,14 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 
     <div class="lower">
       <section class="panel tapeP acc" data-acc="tape" data-def="1">
-        <div class="ph"><h2 class="tapeH"><button data-v="trades" class="on">TRADES</button><button data-v="holders" id="holdTab" style="display:none">HOLDERS <span class="hc" id="holdN"></span></button></h2>
-          <span class="meta hide-sm fx" id="tapeMeta"><span class="tkSym">$MARINE</span> + Solana $LINK · large = $2,500+ / $1,000+ $LINK</span>
+        <div class="ph"><h2 class="tapeH"><button data-v="trades" class="on">THE TAPE</button><button data-v="holders" id="holdTab" style="display:none">HOLDERS</button></h2>
+          <span class="meta hide-sm fx" id="tapeMeta"><span class="tkSym">$MARINE</span>/<span class="tkQ">LINK</span> pool · large = $2,500+</span>
           <span class="meta hide-sm" id="holdMeta" style="display:none">top wallets · data from CLOBr</span>
           <div class="tabs" id="tapeF"><button data-min="0" class="on">ALL</button><button data-min="100">$100+</button></div>
         </div>
         <div class="tw" style="overflow-x:auto">
         <table id="trades">
-          <thead><tr><th>Time</th><th>Side</th><th class="r">USD</th><th class="r">Amount</th><th class="r fx">Price</th><th class="r hide-sm">Wallet</th></tr></thead>
+          <thead><tr><th>Time</th><th>Side</th><th class="r">USD</th><th class="r tkSym">$MARINE</th><th class="r fx">Price</th><th class="r hide-sm">Wallet</th></tr></thead>
           <tbody><tr><td colspan="6" class="dim">loading tape…</td></tr></tbody>
         </table>
         <table id="holders" style="display:none">
@@ -547,16 +526,24 @@ html.fit #tip{font-size:20px;padding:10px 14px}
       <div class="ph"><h2>BILLBOARD</h2><span class="meta">slot 01 · prime</span></div>
       <div class="board" data-slot="1" id="slot1"></div>
     </section>
-    <section class="panel acc" id="cmP" data-acc="clobr" data-def="1">
-      <div class="ph"><i class="rotbar" id="rbSide"></i><h2 id="cmTitle"><span class="tkSym">$MARINE</span> · <span style="color:#FF6B00">CLOBr</span></h2><a class="meta cml" id="cmLink" target="_blank" rel="noopener">VIEW ON CLOBr ▸</a></div>
-      <div id="cmBody"><p class="dim">loading CLOBr…</p></div>
+    <section class="panel acc" id="sbP" data-acc="apy" data-def="1" style="display:none">
+      <div class="ph"><h2><span class="tkSym">$MARINE</span> STONK BOARD</h2><a class="meta sbl" id="sbLink" target="_blank" rel="noopener">VIEW ON STONK BOARD ▸</a></div>
+      <div id="mb">
+        <div class="mbg">
+          <div><label>BOARD RANK</label><b id="mbRank">—</b></div>
+          <div class="hi"><label id="mbAL">APY 3D</label><b id="mbA3">—</b></div>
+          <div class="hi"><label id="mbBL">APY 24H</label><b id="mbA24">—</b></div>
+        </div>
+        <div id="mbX"></div>
+        <p class="dim" id="mbNote"></p>
+      </div>
+      <div id="mbNo" class="empty" style="display:none"></div>
     </section>
-    <div id="sbHold" style="display:none"><div id="sbP"><h2 id="sbTitle"></h2><a id="sbLink"></a><div id="mb"><b id="mbRank"></b><b id="mbA3"></b><b id="mbA24"></b><div id="mbX"></div><p id="mbNote"></p></div><div id="mbNo"></div><div id="mbList"></div></div></div>
   </div>
 </main>
 
 <section class="clobrWrap" id="clobrWrap" style="display:none">
-  <div class="cHead"><div><b>CLOBr ANALYTICS</b><span class="dim"> · <span class="tkSym">$MARINE</span> · liquidity, whale and order-flow data from CLOBr</span><span class="dim cMiss" id="clobrMiss"></span></div>
+  <div class="cHead"><div><b>CLOBr ANALYTICS</b><span class="dim"> · <span class="tkSym">$MARINE</span> · liquidity, whale and order-flow data from CLOBr</span><a class="cDelay" id="clobrDelay" target="_blank" rel="noopener">⏱ Delayed up to 1h · real-time on CLOBr Pro ▸</a><span class="dim cMiss" id="clobrMiss"></span></div>
     <a class="btn cbtn" id="clobrLink" href="https://clobr.io/?ref=DF92VC53" target="_blank" rel="noopener">VIEW MORE ON CLOBr ▸</a></div>
   <div class="clobrRow" id="clobrRow">
   <section class="panel" id="liqP"><div class="ph"><h2>LIQUIDITY &amp; WALLS</h2><span class="meta">depth near price</span></div><div id="aBody"></div></section>
@@ -572,7 +559,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 
 </div>
 
-<nav id="mbar"><a class="btn primary buyTk" href="#" target="_blank" rel="noopener">BUY <span class="tkSym">$MARINE</span></a><button class="btn tts" data-buy="t">TTS</button><a class="btn" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ CHAT</a></nav>
+<nav id="mbar"><a class="btn primary buyTk" href="#" target="_blank" rel="noopener">BUY <span class="tkSym">$MARINE</span></a><button class="btn tts" data-buy="t">TTS</button><a class="btn trend" href="/trending/">🔥 TRENDING</a><a class="btn" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ CHAT</a></nav>
 <div id="wModal"><div class="box">
   <h3>CHOOSE A WALLET</h3>
   <div class="sb">Your call. We don't default you into anything.</div>
@@ -583,8 +570,6 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 <div id="ttsPop" title="Click to close"><div class="from" id="ttsFrom"></div><div class="msg" id="ttsMsg"></div></div>
 <div id="buyPop" title="Click to close"><div class="t" id="bpT">NEW RECRUIT</div><div class="v" id="bpV"></div><div class="w" id="bpW"></div></div>
 <div id="pulseTO" title="Click the message to close"><div class="k">⚡ PULSE FIRED ⚡</div><div class="n" id="ptN"></div><div class="s" id="ptS"></div><div class="d" id="ptD"></div></div>
-<div id="infoPop" title="Click to close"><div class="k" id="ipK"></div><div class="h" id="ipH"></div><div class="d" id="ipD"></div></div>
-<div id="testPanel" style="display:none"></div>
 <div id="audioGate">🔊 click anywhere to turn on sound</div>
 <div id="ttsModal"><div class="box">
   <button class="x" id="ttsClose" type="button" aria-label="Close">✕</button>
@@ -622,11 +607,11 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 
 <script>
 // ---------- Terminal 2.0: any stonk token, picked by ?ca=<mint> (default $MARINE) ----------
-// Shared site data (board, tickers, ads, TTS, prices) comes from ../terminal/, the same files 1.0 uses.
+// Shared site data (board, tickers, ads, TTS, prices) comes from /terminal/, the same files 1.0 uses.
 const MARINE='F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK';
 const DATA='https://war-room-bot.linkmarine777.workers.dev/data/terminal/';
 const BOT='https://war-room-bot.linkmarine777.workers.dev';
-const CA=MARINE;   // 1.1 is the $MARINE stream terminal
+const CA=((new URLSearchParams(location.search).get('ca')||'').trim().match(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/)||[MARINE])[0];
 let TK={mint:CA,symbol:'…',quote:'…',quoteMint:null,image:null},TKR=null,POOL='',GT='',PAIR=null;
 const WHALE=2500;
 const $=id=>document.getElementById(id);
@@ -650,8 +635,12 @@ async function resolveToken(){
   $('chartLink').href=POOL?'https://dexscreener.com/solana/'+POOL:'https://dexscreener.com/solana/'+CA;
   $('tkBadge').innerHTML=(TK.image?`<img src="${esc(TK.image)}" alt="" onerror="this.remove()">`:'')+`${esc(sym)}<span class="q">/${esc(qs)}</span>`;
   $('caIn').value=CA;
-  // the bare /terminal/ link is $MARINE: show its CA in the address bar so any view can be shared as-is
+  // the bare /terminal/token link is $MARINE: show its CA in the address bar so any view can be shared as-is
+  if(new URLSearchParams(location.search).get('ca')!==CA)try{history.replaceState(null,'','?ca='+CA+location.hash)}catch(e){}
   $('homeTk').style.display=CA===MARINE?'none':'';
+  $('menuBtn').onclick=e=>{e.stopPropagation();const m=$('menuBtn').parentNode,o=!m.classList.contains('open');m.classList.toggle('open',o);$('menuBtn').setAttribute('aria-expanded',o)};
+  document.addEventListener('click',e=>{if(!e.target.closest('.menu'))$('menuBtn').parentNode.classList.remove('open')});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')$('menuBtn').parentNode.classList.remove('open')});
   document.title=sym+' · WAR ROOM TERMINAL 2.0';
   renderLinks(pairs);
 }
@@ -660,11 +649,13 @@ const ICO={x:'<path d="M18.9 2H22l-7.6 8.7L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8.1-9.
   web:'<path d="M12 2a10 10 0 100 20 10 10 0 000-20zm6.9 6h-2.9a15.7 15.7 0 00-1.4-3.6A8 8 0 0118.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8 8 0 010-4h3.4a16.6 16.6 0 000 4zm.8 2h2.9c.3 1.3.8 2.5 1.4 3.6A8 8 0 015.1 16zM8 8H5.1a8 8 0 014.3-3.6C8.8 5.5 8.4 6.7 8 8zm4 12c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.3-6H9.7a14.7 14.7 0 010-4h4.6a14.7 14.7 0 010 4zm.3 5.6c.6-1.1 1.1-2.3 1.4-3.6h2.9a8 8 0 01-4.3 3.6zm1.7-5.6a16.6 16.6 0 000-4h3.4a8 8 0 010 4z"/>',
   tg:'<path d="M21.9 4.3l-3.3 15.5c-.2 1.1-.9 1.4-1.8.9l-5-3.7-2.4 2.3c-.3.3-.5.5-1 .5l.4-5.1 9.3-8.4c.4-.4-.1-.6-.6-.2L5.9 13.3l-4.9-1.5c-1.1-.3-1.1-1.1.2-1.6L20.5 2.8c.9-.3 1.7.2 1.4 1.5z"/>',
   copy:'<path d="M8 3h11a2 2 0 012 2v11h-2V5H8zM4 7h11a2 2 0 012 2v11a2 2 0 01-2 2H4a2 2 0 01-2-2V9a2 2 0 012-2zm0 2v11h11V9z"/>',ok:'<path d="M9 16.2l-3.5-3.5L4 14.2l5 5 11-11-1.4-1.4z"/>',
+  chart:'<path d="M3 3h2v16h16v2H3zm4 12l4-5 3 3 5-7 1.6 1.2-6.4 9-3-3-2.6 3.3z"/>',
   search:'<path d="M10 2a8 8 0 016.3 12.9l5.4 5.4-1.4 1.4-5.4-5.4A8 8 0 1110 2zm0 2a6 6 0 100 12 6 6 0 000-12z"/>'};
 function renderLinks(pairs){const info=(pairs||[]).map(p=>p.info).find(i=>i&&((i.socials||[]).length||(i.websites||[]).length))||{};
   const safe=u=>/^https?:\/\//i.test(u||'')?u:null,soc=t=>safe(((info.socials||[]).find(s=>s.type===t)||{}).url);
   const sym=String(TK.symbol||'').replace(/^\$/,''),L=[];
   const a=(href,ico,title)=>href&&L.push(`<a href="${esc(href)}" target="_blank" rel="noopener" title="${esc(title)}" aria-label="${esc(title)}"><svg viewBox="0 0 24 24">${ICO[ico]}</svg></a>`);
+  a(POOL?'https://dexscreener.com/solana/'+POOL:'https://dexscreener.com/solana/'+CA,'chart','$'+sym+' chart on DexScreener');
   a(soc('twitter'),'x','$'+sym+' on X');a(safe((info.websites||[])[0]?.url),'web','$'+sym+' website');a(soc('telegram'),'tg','$'+sym+' Telegram');
   if(sym&&/^[A-Za-z0-9_]{1,15}$/.test(sym))a('https://x.com/search?q='+encodeURIComponent('$'+sym)+'&f=live','search','Search $'+sym+' on X');
   L.push(`<button type="button" id="copyCa" title="Copy ${esc('$'+sym)} contract address" aria-label="Copy contract address"><svg viewBox="0 0 24 24">${ICO.copy}</svg></button>`);
@@ -675,7 +666,7 @@ $('caForm').addEventListener('submit',e=>{e.preventDefault();const v=$('caIn').v
   if(!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(v)){$('tkMsg').textContent='that is not a Solana token address';return}
   location.search='?ca='+v});
 // tokens on the tickers and the board open in 2.0
-function tokLink(m){return m?'/terminal/token?ca='+encodeURIComponent(m):'#'}   // 1.1 is $MARINE only: other tokens open in 2.0
+function tokLink(m){return m?'?ca='+encodeURIComponent(m):'#'}
 document.addEventListener('click',e=>{const a=e.target.closest('a[href^="?ca="]');if(!a)return;e.preventDefault();location.search=a.getAttribute('href')});
 
 // ---------- 16:9 stage ----------
@@ -683,7 +674,7 @@ document.addEventListener('click',e=>{const a=e.target.closest('a[href^="?ca="]'
 // to the window, so the stream layout is identical everywhere. Phones get the flowing layout.
 let S=1;
 function fit(){
-  const on=innerWidth>=1000&&!/[?&]flow\b/.test(location.search);   // 1.1: locked 16:9 stage like 1.0; ?flow for a normal page
+  const on=false;   // 2.0 fills the page; the locked 16:9 stage is 1.0 (the stream)
   document.documentElement.classList.toggle('fit',on);
   const st=$('stage');
   if(on){S=Math.min(innerWidth/1920,innerHeight/1080);st.style.transform=`scale(${S})`;
@@ -709,12 +700,10 @@ const short=a=>a?a.slice(0,4)+'…'+a.slice(-4):'';
 // site data (stats, board, receipts...) comes through the bot, which reads the repo's data branch; the copy Vercel
 // deployed is the fallback
 async function j(u){try{const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw new Error(r.status);return await r.json()}
-  catch(e){if(u.startsWith(DATA))return j('../terminal/'+u.slice(DATA.length));throw e}}
+  catch(e){if(u.startsWith(DATA))return j('/terminal/'+u.slice(DATA.length));throw e}}
 
 // ---------- rewards snapshot (same-origin) ----------
 let rewards=null,prevR=null;
-// true holders (counted on-chain by the intel job every 30 min); stonkfun's holderCount is an all-time number
-const holdersNow=r=>(CA===MARINE&&WR&&WR.marine&&WR.marine.holders)||r.holderCount,earningNow=()=>CA===MARINE&&WR&&WR.marine&&WR.marine.eligible;
 function pulseTakeover(tok,usdv,holders,total){if(!alertsOn||!akOn('pulse'))return;$('ptN').textContent='+'+num(tok,tok<10?2:1)+' '+TK.quote;
   $('ptS').textContent=(usdv>0?'≈ '+usd(usdv,0)+' ':'')+'paid to '+num(holders)+' $'+TK.symbol+' holders';
   $('ptD').textContent=num(total,0)+' '+TK.quote+' distributed all time · hold $'+TK.symbol+', get paid in $'+TK.quote;
@@ -722,25 +711,20 @@ function pulseTakeover(tok,usdv,holders,total){if(!alertsOn||!akOn('pulse'))retu
   clearTimeout(ptTimer);ptTimer=setTimeout(closePulse,12000)}
 var ptTimer=null;
 function closePulse(){clearTimeout(ptTimer);const el=$('pulseTO');if(!el.classList.contains('show'))return;el.classList.remove('show');nextBuy()}
+// $MARINE's true holder count, counted on-chain by the intel job (stonkfun's holderCount is an all-time number)
+let WRM=null;if(CA===MARINE)fetch('https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/whales.json').then(r=>r.json()).then(d=>{WRM=d.marine;loadRewards()}).catch(()=>{});
 async function loadRewards(){
-  // $MARINE: live payout numbers through the bot (stonkfun, cached 60 s there) so the pulse lands within a minute or two
-  // of the payout; the bot's rewards.json (refreshed every 20 min) adds the 24h / 7d windows and is the fallback
-  try{if(CA===MARINE){
-      if(!loadRewards.snap||Date.now()-loadRewards.snapAt>300e3){try{loadRewards.snap=await j(DATA+'rewards.json?'+Date.now());loadRewards.snapAt=Date.now()}catch(e){}}
-      let live=null;try{live=(await j(BOT+'/token/'+CA)).rewards}catch(e){}
-      if(!live&&!loadRewards.snap)return;
-      rewards=live?{...(loadRewards.snap||{}),...live,snapshotAt:Math.floor(Date.now()/1000)}:loadRewards.snap}
-    else rewards=(await j(BOT+'/token/'+CA)).rewards}catch(e){return}
+  try{rewards=CA===MARINE?await j(DATA+'rewards.json?'+Date.now()):(await j(BOT+'/token/'+CA)).rewards;}catch(e){return}
   if(!rewards){$('sDist').textContent='—';$('sDistUsd').textContent='no holder rewards for this token';$('live').classList.remove('stale');$('liveTxt').textContent='LIVE';return}
   if(!rewards.snapshotAt)rewards.snapshotAt=Math.floor(Date.now()/1000);
   const r=rewards;
   if(prevR&&r.lastPayoutAt&&r.lastPayoutAt!==prevR.lastPayoutAt&&r.distributedTokens>prevR.distributedTokens)
-    pulseTakeover(r.distributedTokens-prevR.distributedTokens,(r.distributedUsd||0)-(prevR.distributedUsd||0),earningNow()||holdersNow(r),r.distributedTokens);
+    pulseTakeover(r.distributedTokens-prevR.distributedTokens,(r.distributedUsd||0)-(prevR.distributedUsd||0),(CA===MARINE&&WRM&&(WRM.eligible||WRM.holders))||r.holderCount,r.distributedTokens);
   prevR=r;
   $('sDist').textContent=num(r.distributedTokens,1)+' '+TK.quote;
   $('sDistUsd').textContent='≈ '+usd(r.distributedUsd,0)+' at today\'s '+TK.quote+' price';
   $('sPayouts').textContent=num(r.payoutCount);
-  const hn=holdersNow(r),en=earningNow();$('holdN').textContent=hn?num(hn):'';
+  const hn=(CA===MARINE&&WRM&&WRM.holders)||r.holderCount,en=CA===MARINE&&WRM&&WRM.eligible;
   $('sHolders').textContent=num(hn)+' holders'+(en?' · '+num(en)+' earning':'')+' · '+(+(r.transferTaxBps/100).toFixed(1))+'% tax';
   const p=Math.min(1,(r.pendingUsd||0)/(r.minDistributionUsd||1));
   $('pPending').textContent=num(r.pendingTokens,2)+' '+TK.quote;
@@ -790,15 +774,17 @@ async function loadLive(k){
   const L=new Map(l.data.attributes.ohlcv_list.map(c=>[c[0],c[4]]));let last=null;
   const pts=m.data.attributes.ohlcv_list.slice().reverse().map(c=>{if(L.has(c[0]))last=L.get(c[0]);return[c[0],c[4],last]});
   const f=pts.find(p=>p[2]!=null)?.[2];pts.forEach(p=>{if(p[2]==null)p[2]=f});CH[k]=pts}
-async function loadChart(){
-  // the bot's chart.json while it's fresh (leaves GeckoTerminal's rate limit for the tape); live candles when it's stale or missing
-  let fresh=false;try{const d=await j(DATA+'chart.json?'+Date.now());if(d&&d['7d']&&Date.now()/1000-(d.at||0)<1800){CH=d;fresh=true}}catch(e){}
-  if(!fresh||!CH[tf]){try{await loadLive(tf);loadChart.fails=0}catch(e){if((loadChart.fails=(loadChart.fails||0)+1)<4)setTimeout(loadChart,4000*loadChart.fails)}}
-  liveTail();setSeries()}
 // the chart's last point follows the live price (DexScreener, every 30 s), so the chart never trails the ticker
 let QPX=0;
 function liveTail(){const r=CH[tf];if(!r||!r.length||!marinePx)return;const B={'1d':900,'7d':3600,all:14400}[tf]||3600,t=Math.floor(Date.now()/1000/B)*B,last=r[r.length-1];
   if(t<last[0])return;const q=QPX||last[2];if(t===last[0]){last[1]=marinePx;last[2]=q}else r.push([t,marinePx,q])}
+async function loadChart(){
+  // $MARINE: the bot's saved candles first (all three timeframes, like 1.0), which leaves GeckoTerminal's rate limit for
+  // the tape; every other token (and $MARINE as a fallback) comes live from GeckoTerminal, retried a few times
+  // (only while the saved file is fresh: re-read every 2 min, live candles once it's over 30 min old)
+  if(CA===MARINE){try{const d=await j(DATA+'chart.json?'+Date.now());if(d&&d['7d']&&Date.now()/1000-(d.at||0)<1800){Object.assign(CH,d);liveTail();return setSeries()}}catch(e){}}
+  try{await loadLive(tf);loadChart.fails=0}catch(e){if((loadChart.fails=(loadChart.fails||0)+1)<4)setTimeout(loadChart,4000*loadChart.fails)}
+  liveTail();setSeries()}
 function nice(min,max,count=5){
   if(min===max){min*=.95;max*=1.05}
   const raw=(max-min)/count,mag=Math.pow(10,Math.floor(Math.log10(raw)));
@@ -867,78 +853,18 @@ const clobrUrl=()=>'https://clobr.io/token/'+encodeURIComponent(CA)+'?ref='+CLOB
 const every=s=>!s?'—':s<60?Math.round(s)+'s':s<3600?Math.floor(s/60)+'m'+(s%60?' '+Math.round(s%60)+'s':''):s<86400?Math.round(s/3600)+'h':Math.round(s/86400)+'d';
 const dshort=d=>{const t=Date.parse(d);return isNaN(t)?String(d||''):new Date(t).toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'})};
 const tokAmt=n=>n==null?'—':(n>=0?'▲ ':'▼ ')+compact(Math.abs(n),'');
-async function loadClobr(){if(!FLAGS.CLOBR_ENABLED)return;try{const d=await j(BOT+'/clobr?mint='+CA);CL=d&&!d.error?d:null}catch(e){}renderClobr();draw()}
-// ---------- 1.1 right panel: $MARINE on CLOBr (real-time), plus its Stonk Board APY when it ranks ----------
-// ---------- 1.0/1.1 right panel slides (rotate on the stream): CLOBr · Stonk Board top 10 · stonkfun top 10 · $LINK last hour ----------
-let cmSlide='clobr';
-function showSlide(k){cmSlide=k;renderCm()}
-function slideHead(t,link,label){$('cmTitle').innerHTML=t;$('cmLink').href=link;$('cmLink').textContent=label}
-function listRows(L,cols){return`<div class="cmL">${L.map((t,i)=>`<span class="rk">${i+1}</span>${t.logo?`<img src="${esc(t.logo)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span></span>'}
-  <span class="s">$${esc(String(t.symbol||'?').replace(/^\$/,''))} <i>/${esc(t.quote||'')}</i></span>${cols(t)}`).join('')}</div>`}
-// whale radar (intel job on GitHub Actions, every 30 min): what the top holders of $MARINE and stonkfun's top 10 buy
-const WR_URL='https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/whales.json';let WR=null;
-async function loadWhales(){try{WR=await j(WR_URL);if(cmSlide==='whales')renderSlide()}catch(e){}}
-// the shared alert history (the bot's database: every alert, in order) for the Latest Alerts slide
-let ALH=null;async function loadAlh(){try{const d=await j(BOT+'/alerts?limit=20');if(d&&d.signals)ALH=d.signals;if(cmSlide==='feed')renderSlide()}catch(e){}}
-setTimeout(()=>{loadAlh();setInterval(loadAlh,60e3)},9000);
-// stonkfun live flow: buys vs sells in the last hour on the top 10 by market cap (one free DexScreener call a minute)
-let FLOW=[];
-async function loadFlow(){const top=(TOKS||[]).filter(t=>t.mint!==MARINE).sort((a,b)=>(b.mcap||0)-(a.mcap||0)).slice(0,10);if(!top.length)return;
-  try{const d=await j('https://api.dexscreener.com/tokens/v1/solana/'+top.map(t=>t.mint).join(',')),best={};
-    (d||[]).forEach(p=>{const m=p.baseToken&&p.baseToken.address,l=(p.liquidity||{}).usd||0;if(m&&(!best[m]||l>best[m].l))best[m]={l,p}});
-    FLOW=top.map(t=>{const x=best[t.mint];if(!x)return null;const h=(x.p.txns||{}).h1||{};
-      return{symbol:t.symbol,logo:t.image,quote:'1h',b:h.buys||0,s:h.sells||0,v:(x.p.volume||{}).h1||0,c:(x.p.priceChange||{}).h1}}).filter(Boolean).sort((a,b)=>b.v-a.v);
-    if(cmSlide==='flow')renderSlide()}catch(e){}}
-setTimeout(()=>{loadWhales();setInterval(loadWhales,300e3);loadFlow();setInterval(loadFlow,60e3)},8000);
-function renderSlide(){const b=$('cmBody');
-  if(cmSlide==='board'){slideHead('STONK BOARD · <span class="up">APY 24H</span>','https://thestonkboard.com/','BOARD ▸');
-    const L=(board&&board.apy24h||[]).slice(0,10);b.innerHTML=L.length?listRows(L,t=>`<span class="r up">${apyFmt(t.apy)}</span><span class="r dim">mc ${compact(t.mcap)}</span>`):'<p class="dim">loading board…</p>';return}
-  if(cmSlide==='sfun'){slideHead('STONKFUN · <span class="am">MCAP</span>','https://www.stonkfun.xyz/','STONKFUN ▸');
-    const L=(TOKS||[]).slice().sort((a,b)=>(b.mcap||0)-(a.mcap||0)).slice(0,10).map(t=>({...t,logo:t.image}));
-    b.innerHTML=L.length?listRows(L,t=>`<span class="r">${compact(t.mcap)}</span><span class="r">${t.chg24!=null?pct(t.chg24):''}</span>`):'<p class="dim">loading stonkfun…</p>';return}
-  if(cmSlide==='whales'){slideHead('🐋 WHALE <span class="up">RADAR</span>','/trending/','TRENDING ▸');
-    const L=((WR&&WR.buying)||[]).slice(0,8).map(t=>({symbol:t.s,logo:t.i,quote:'24h',...t})),sg=WR&&WR.signals&&WR.signals[0];
-    b.innerHTML=L.length?listRows(L,t=>`<span class="r up">${t.buyers} whale${t.buyers>1?'s':''}</span><span class="r">+${compact(t.net)}</span>`)
-      +(sg?`<p class="wrSig">${esc(sg.text)}</p>`:'')+`<p class="dim wrFoot">Top 20 holders of ${esc((WR.tokens||[]).slice(0,4).join(' '))}… · ${WR.wallets} wallets · updated ${ago(WR.at*1000)} ago</p>`
-      :'<p class="dim">Whale radar is warming up: no whale buys in the last 24h yet.</p>';return}
-  if(cmSlide==='lp'){slideHead('💧 BEST <span class="up">LP</span> · 24H','/trending/','ALL ▸');
-    const L=((WR&&WR.lp)||[]).slice(0,8).map(x=>({symbol:x.s,logo:x.i||((TOKS||[]).find(t=>t.mint===x.m)||{}).image,quote:x.pair.split('/').find(q=>q!==x.s)||'',...x}));
-    b.innerHTML=L.length?listRows(L,t=>`<span class="r up">${t.d.toFixed(1)}%/day</span><span class="r dim">${compact(t.tvl)} liq</span>`)
-      +'<p class="dim wrFoot">Fees earned per $ of liquidity in the last 24h, before impermanent loss · Raydium + Meteora</p>':'<p class="dim">loading pools…</p>';return}
-  if(cmSlide==='feed'){slideHead('🐋 LATEST <span class="up">ALERTS</span>','/trending/','HISTORY ▸');
-    const L=(ALH||(WR&&WR.signals)||[]).slice(0,6);
-    b.innerHTML=L.length?L.map(x=>`<p class="wrSig" style="border-color:${x.side==='sell'||x.kind==='dumping'||x.kind==='exit'?'var(--red)':x.side==='buy'||x.kind==='convergence'||x.kind==='dip'?'var(--green)':'var(--blue2)'}"><span class="dim">${ago((x.at||x.t)*1000)} ago · </span>${esc(x.text)}</p>`).join(''):'<p class="dim">No alerts yet.</p>';return}
-  if(cmSlide==='flow'){slideHead('STONKFUN <span class="am">FLOW</span>','https://www.stonkfun.xyz/','STONKFUN ▸');
-    b.innerHTML=FLOW.length?listRows(FLOW,t=>`<span class="r"><b class="up">▲${t.b}</b> <b class="dn">▼${t.s}</b></span><span class="r">${t.c!=null?pct(t.c):'<span class="dim">—</span>'}</span>`)
-      +'<p class="dim wrFoot">Buys ▲ and sells ▼ in the last hour, busiest first · top 10 by market cap</p>':'<p class="dim">loading stonkfun flow…</p>';return}
-  if(cmSlide==='link'){slideHead('<span style="color:#7d9bff">$LINK</span> · LAST HOUR','https://dexscreener.com/solana/'+LINKPOOLS[0],'CHART ▸');
-    const now=Date.now(),H=linkRaw.filter(a=>now-Date.parse(a.block_timestamp)<3600e3),buy=a=>a.to_token_address===LINKMINT;
-    const bv=H.filter(buy).reduce((t,a)=>t+(+a.volume_in_usd),0),sv=H.filter(a=>!buy(a)).reduce((t,a)=>t+(+a.volume_in_usd),0),tot=Math.max(1,bv+sv);
-    const big=H.filter(buy).sort((a,c)=>c.volume_in_usd-a.volume_in_usd)[0],lp=linkRaw[0]?+(buy(linkRaw[0])?linkRaw[0].price_to_in_usd:linkRaw[0].price_from_in_usd):null;
-    b.innerHTML=linkRaw.length?`<div class="cmK"><div><label>$LINK price</label><b>${px(lp)}</b></div><div><label>Trades · last hour</label><b>${H.length}</b></div>
-      <div><label>Bought</label><b class="up">${compact(bv)}</b></div><div><label>Sold</label><b class="dn">${compact(sv)}</b></div></div>
-      <div class="cbar tall"><i style="width:${(bv/tot*100).toFixed(1)}%;background:var(--green)"></i><i style="width:${(sv/tot*100).toFixed(1)}%;background:var(--red)"></i></div>
-      <p class="dim">${big?`Biggest buy: <b class="up">${usd(+big.volume_in_usd,0)}</b> · ${compact(+big.to_token_amount,'')} LINK · ${ago(Date.parse(big.block_timestamp))} ago`:'No LINK buys in the last hour.'} Buys of $1,000+ pop up on screen.</p>`
-      :'<p class="dim">loading $LINK trades…</p>';return}}
-function renderCm(){if(!$('cmBody'))return;if(cmSlide!=='clobr')return renderSlide();
-  slideHead('<span class="tkSym">$'+esc(TK.symbol)+'</span> · <span style="color:#FF6B00">CLOBr</span>',clobrUrl(),'VIEW ON CLOBr ▸');$('cmLink').href=clobrUrl();
-  const m=board?boardStats():null,sc=CL&&CL.score,W=CL&&CL.whales&&!CL.whales.none&&CL.whales.summary?CL.whales:null,S=W&&W.summary,w='7d';let h='';
-  if(m&&m.rank)h+=`<div class="cm-apy"><div><label>Stonk Board</label><b style="color:#fff">#${m.rank}</b></div><div><label>APY 24H</label><b>${apyFmt(m.apy24h)}</b></div><div><label>APY 3D</label><b>${apyFmt(m.apy3d)}</b></div></div>`;
-  if(sc&&sc.score!=null){const v=+sc.score,c=v>=60?'var(--green)':v<=40?'var(--red)':'var(--amber)',[vd,...why]=String(sc.msg||'').split(':');
-    h+=`<div class="cm-sc"><span class="n" style="color:${c}">${v.toFixed(1)}</span><div><label>CLOBr score · 0-100</label><div class="v">${esc(vd.trim())}</div><div class="why">${esc(why.join(':').trim())}</div></div></div>`}
-  if(S){h+=`<div class="cm-w">${['top20','top50','top100'].map(t=>{const n=+t.slice(3),acc=S.accumulating?.[t]?.[w],net=S.net_flow?.[t]?.[w]?.net,u=net!=null&&marinePx?net*marinePx:null;
-      return `<div><label>Top ${n} · 7d</label><b>${acc??'—'}</b><small>/${n} buying</small><div class="cbar"><i style="width:${acc==null?0:Math.min(100,acc/n*100).toFixed(0)}%;background:var(--green)"></i></div>
-        <div class="f ${net>=0?'up':'dn'}">${net==null?'':(net>=0?'▲ ':'▼ ')+compact(Math.abs(net),'')}${u!=null?` <span class="dim">≈ ${compact(Math.abs(u))}</span>`:''}</div></div>`}).join('')}</div>`;
-    const sp=W.spark||[];if(sp.length){const mx=Math.max(1,...sp.map(d=>Math.abs(d.net||0))),bw=100/sp.length;
-      h+=`<div><label class="dim cm-spl" style="font-size:11px">Top 100 · net ${esc(TK.symbol)} bought / sold per day</label><svg class="cm-sp" viewBox="0 0 100 40" preserveAspectRatio="none"><line x1="0" y1="20" x2="100" y2="20" stroke="#1a2444" stroke-width=".4"/>${sp.map((d,i)=>{const hh=Math.abs(d.net||0)/mx*19;return`<rect x="${(i*bw+bw*.15).toFixed(2)}" y="${(d.net>=0?20-hh:20).toFixed(2)}" width="${(bw*.7).toFixed(2)}" height="${Math.max(.3,hh).toFixed(2)}" fill="${d.net>=0?'#39ff6a':'#ff3355'}"/>`}).join('')}</svg>
-        <div class="cm-sx"><span>${esc(dshort(sp[0].day))}</span><span>last ${sp.length} days</span><span>${esc(dshort(sp[sp.length-1].day))}</span></div></div>`}}
-  const lv=DEPTH&&DEPTH.levels&&DEPTH.levels.length?DEPTH.levels:null,p=DEPTH&&DEPTH.price;
-  if(lv&&p){let su=0,re=0;lv.forEach(([x,a,b])=>{if(x>=p*.9&&x<=p*1.1){su+=a||0;re+=b||0}});const t=Math.max(1,su+re);
-    h+=`<div class="cm-lq"><div><label>Support within 10%</label><b class="up">${compact(su)}</b></div><div><label>Resistance within 10%</label><b class="dn">${compact(re)}</b></div>
-      <div class="cbar"><i style="width:${(su/t*100).toFixed(1)}%;background:var(--green)"></i><i style="width:${(re/t*100).toFixed(1)}%;background:var(--red)"></i></div></div>`}
-  $('cmBody').innerHTML=h||'<p class="dim">CLOBr data isn\'t available right now.</p>'}
-function renderClobr(){renderCm();
-  $('clobrLink').href=clobrUrl();$('scoreStat').onclick=()=>open(clobrUrl(),'_blank','noopener');
+async function loadClobr(){if(!FLAGS.CLOBR_ENABLED)return;try{const d=await j(BOT+'/clobr?mint='+CA+'&d=1');CL=d&&!d.error?d:null}catch(e){}renderClobr();draw()}
+// live vs delayed: live when the data came live (the CLOBr extension serves a visitor's own key, or marks our tag live);
+// otherwise our hour-delayed copy. The score tag and the analytics header always agree.
+function clobrLive(){const t=$('scoreDly'),live=!!(CL&&CL.delayed===false)||/^\s*live\s*$/i.test(t.textContent);
+  if(t.textContent.trim().toLowerCase()!==(live?'live':'delayed'))t.textContent=live?'live':'delayed';t.classList.toggle('lv',live);
+  const d=$('clobrDelay');d.classList.toggle('lv',live);
+  d.textContent=live?'● Live · real-time CLOBr data via your CLOBr extension ▸':'⏱ Delayed'+(CL&&CL.fetchedAt?' · updated '+ago(CL.fetchedAt).split(' ')[0]+' ago':' up to 1h')+' · real-time on CLOBr Pro ▸'}
+try{new MutationObserver(()=>clobrLive()).observe(document.getElementById('scoreDly'),{childList:true,characterData:true,subtree:true})}catch(e){}
+function renderClobr(){
+  $('clobrLink').href=clobrUrl();$('clobrDelay').href=clobrUrl();
+  // delayed like CLOBr's free tier: say how old the numbers are and where to get them live
+  clobrLive();$('scoreStat').onclick=()=>open(clobrUrl(),'_blank','noopener');
   const sc=CL&&CL.score;$('scoreStat').style.display=sc?'':'none';
   if(sc){$('sScore').textContent=sc.score!=null?(+sc.score).toFixed(1):'—';$('sScore').style.color=sc.score>=60?'var(--green)':sc.score<=40?'var(--red)':'var(--amber)';
     // CLOBr's message is "verdict: reason"; the tile shows both lines so the score explains itself
@@ -946,14 +872,12 @@ function renderClobr(){renderCm();
     $('scoreStat').title=(sc.msg||'CLOBr score')+' · 0-100 balance of support vs resistance liquidity. Click for more on CLOBr'}
   const panels={liqP:renderLiq(),whP:renderWhales(),loP:renderLimits(),dcP:renderDca(),lpP:renderLp()};
   renderHolders();
-  let any=false;for(const k in panels){$(k).style.display=panels[k]?'':'none';any=any||panels[k]}
-  // say what CLOBr has nothing for (it only reports DCA / limit orders / DLMM pools that exist right now)
-  const names={liqP:'order-book depth',loP:'open limit orders',dcP:'active DCA orders',lpP:'DLMM LP pools'},miss=Object.keys(names).filter(k=>!panels[k]).map(k=>names[k]);
-  const shown=Object.values(panels).filter(Boolean).length,sym=esc('$'+String(TK.symbol).replace(/^\$/,''));
-  const txt=miss.length?miss.join(', ').replace(/, ([^,]*)$/,' or $1'):'';
-  $('missP').style.display=miss.length&&shown<4&&any?'':'none';
-  $('missBody').innerHTML=miss.length?`No ${txt} for <b>${sym}</b> on CLOBr right now.<br><br>These show up here as soon as someone places a DCA or limit order, or opens a Meteora DLMM pool for ${sym}.`:'';
-  $('clobrMiss').textContent=miss.length&&shown>=4?`Nothing on CLOBr for ${txt} right now.`:'';
+  // every panel always shows, in the same order; one CLOBr has nothing for right now says so inside it
+  const sym=esc('$'+String(TK.symbol).replace(/^\$/,''));
+  const none={liqP:['aBody','No order-book walls near the price'],whP:['whBody','No whale data'],loP:['loBody','No open limit orders'],
+    dcP:['dcBody','No active DCA orders'],lpP:['lpBody','No Meteora DLMM LP pools']};
+  for(const k in panels){$(k).style.display='';if(!panels[k])$(none[k][0]).innerHTML=`<div class="empty">${none[k][1]} for <b>${sym}</b> on CLOBr right now. It shows up here as soon as there is one.</div>`}
+  $('missP').style.display='none';$('clobrMiss').textContent='';const any=!!CL;
   $('clobrWrap').style.display=any||sc?'':'none';clobrCols()}
 // as many columns as fit (about 400px each), never more than there are panels
 function clobrCols(){const r=$('clobrRow'),n=[...r.children].filter(e=>e.style.display!=='none').length;
@@ -974,28 +898,13 @@ function renderWhales(){const W=CL&&CL.whales;if(!W||W.none||!W.summary)return f
   renderHolders();return true}
 // Biggest holders (CLOBr) share the tape's panel: THE TAPE | HOLDERS
 let tapeView='trades';
-// ---------- stream rotation (16:9 stage only): chart timeframe, tape tabs, right panel ----------
-// Each group advances on its own clock, freezes while an alert is on screen, and holds 3 minutes after a manual click.
-const ROT=[
-  {id:'chart',bar:'rbChart',steps:[['7d',240],['1d',45],['7d',240],['all',45]],apply:k=>{const b=document.querySelector(`#tf button[data-tf="${k}"]`);if(b&&tf!==k){ROT.auto=1;b.click();ROT.auto=0}}},
-  {id:'side',bar:'rbSide',steps:[['clobr',60],['whales',45],['board',40],['flow',40],['feed',35],['sfun',35],['lp',40],['link',40]],
-   apply:k=>{if(k==='whales'&&!(WR&&WR.buying&&WR.buying.length)||k==='flow'&&!FLOW.length||k==='lp'&&!(WR&&WR.lp&&WR.lp.length)||k==='feed'&&!((ALH&&ALH.length)||(WR&&WR.signals&&WR.signals.length)))return false;showSlide(k)}}];
-ROT.forEach(g=>{g.i=0;g.t=0;g.hold=0});
-const alertUp=()=>['buyPop','ttsPop','pulseTO','infoPop'].some(id=>$(id)&&$(id).classList.contains('show'));
-setInterval(()=>{if(!document.documentElement.classList.contains('fit')||/[?&]norotate\b/.test(location.search))return;
-  ROT.forEach(g=>{const bar=$(g.bar);if(Date.now()<g.hold){bar&&(bar.style.width='0');return}if(alertUp())return;
-    g.t++;const [k,sec]=g.steps[g.i];bar&&(bar.style.width=Math.min(100,g.t/sec*100)+'%');
-    if(g.t>=sec){g.t=0;for(let n=0;n<g.steps.length;n++){g.i=(g.i+1)%g.steps.length;if(g.steps[g.i][1]&&g.apply(g.steps[g.i][0])!==false)break}}})},1000);
-const holdRot=id=>{const g=ROT.find(x=>x.id===id);if(g&&!ROT.auto){g.hold=Date.now()+180e3;g.t=0}};
-document.getElementById('tf').addEventListener('click',()=>holdRot('chart'),true);
-document.querySelector('.tapeH').addEventListener('click',()=>holdRot('tape'),true);
 function renderHolders(){const wl=(CL&&CL.whales&&!CL.whales.none&&CL.whales.wallets)||[];
   $('holdTab').style.display=wl.length?'':'none';if(!wl.length&&tapeView==='holders')setTapeView('trades');
   $('holders').tBodies[0].innerHTML=wl.map(x=>`<tr><td class="dim">${x.rank}</td><td><a href="https://solscan.io/account/${esc(x.owner)}" target="_blank" rel="noopener">${esc(short(x.owner))}</a></td>
     <td class="r">${compact(x.balance,'')}</td><td class="r dim fx">${marinePx?compact(x.balance*marinePx):'—'}</td><td class="r">${x.d7==null?'<span class="dim">—</span>':x.d7===0?'<span class="dim">no change</span>':pct(x.d7)}</td></tr>`).join('');
   if(tapeView==='holders')fitTape()}
 function setTapeView(v){tapeView=v;[...document.querySelectorAll('.tapeH button')].forEach(b=>b.classList.toggle('on',b.dataset.v===v));
-  $('trades').style.display=v==='trades'?'':'none';$('holders').style.display=v==='holders'?'':'none';$('tapeF').style.visibility=v==='holders'?'hidden':'';
+  $('trades').style.display=v==='trades'?'':'none';$('holders').style.display=v==='holders'?'':'none';$('tapeF').style.visibility=v==='trades'?'':'hidden';
   $('tapeMeta').style.display=v==='trades'?'':'none';$('holdMeta').style.display=v==='holders'?'':'none';fitTape()}
 document.querySelector('.tapeH').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();setTapeView(b.dataset.v)});
 function renderLimits(){const L=CL&&CL.limits;if(!L||!L.orders||!L.orders.length)return false;const O=L.orders;
@@ -1029,7 +938,7 @@ $('whWin').addEventListener('click',e=>{const b=e.target.closest('button');if(!b
 
 // ---------- CLOBr market depth (from the approval bot, which holds the API key) ----------
 let DEPTH=null,depthOn=true;try{depthOn=localStorage.getItem('wrDepth')!=='0'}catch(e){}
-async function loadDepth(){if(!FLAGS.CLOBR_ENABLED)return;try{const d=await j(BOT+'/depth?mint='+CA);
+async function loadDepth(){if(!FLAGS.CLOBR_ENABLED)return;try{const d=await j(BOT+'/depth?mint='+CA+'&d=1');
   DEPTH=d&&d.levels&&d.levels.length?d:null}catch(e){}
   $('dtab').style.display=DEPTH?'':'none';depthLeg();renderClobr();draw()}
 function depthLeg(){const l=$('depthLeg');l.style.display=DEPTH?'':'none';l.classList.toggle('off',!depthOn);l.href=clobrUrl()}
@@ -1037,45 +946,21 @@ $('depthBtn').onclick=()=>{depthOn=!depthOn;$('depthBtn').classList.toggle('on',
   try{localStorage.setItem('wrDepth',depthOn?'1':'0')}catch(e){}draw()};
 $('depthBtn').classList.toggle('on',depthOn);
 $('tf').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
-  [...$('tf').children].forEach(x=>x.classList.toggle('on',x===b));tf=b.dataset.tf;if(!setSeries())loadChart()});   // all three timeframes are already loaded: switch instantly
+  [...$('tf').children].forEach(x=>x.classList.toggle('on',x===b));tf=b.dataset.tf;loadChart()});
 
 // ---------- tape ----------
 let seen=new Set(),tapeLoaded=false,tapeMin=0,tapeRaw=[];
-// ---------- $LINK tape (Solana LINK, the token $MARINE pays out): LINK/USDC (Raydium) + LINK/SOL (Orca) ----------
-const LINKMINT='LinkhB3afbBKb2EQQu7s7umdZceV3wcvAUJhQAfQ23L',LINKPOOLS=['7YRKyGCHBJYAE2uyAGRDiz5WNq68FPzh2uDvDaYv1cNE','C4Nnrur8ZDVsdX4Y3vwaCFJXCHWRrS9LdRxV7wuU6Xrr'];
-const LINKMIN=1000;let linkRaw=[],linkBoot=true;const lseen=new Set();
-// GeckoTerminal rate-limits hard, so the two $LINK pools are fetched one at a time in turn (one call every 15 s), and
-// each pool keeps its last good list: a refused call never blanks the $LINK trades
-const linkByPool={};let linkI=0;
-async function loadLink(){clearTimeout(loadLink.r);const pool=LINKPOOLS[linkI%LINKPOOLS.length];
-  let list;try{list=(await j('https://api.geckoterminal.com/api/v2/networks/solana/pools/'+pool+'/trades')).data.map(t=>t.attributes)}
-  catch(e){loadLink.r=setTimeout(loadLink,8000);return}
-  linkI++;const first=!linkByPool[pool];linkByPool[pool]=list;
-  linkRaw=Object.values(linkByPool).flat().sort((a,b)=>Date.parse(b.block_timestamp)-Date.parse(a.block_timestamp));
-  renderLink();checkLinkBuys(list,first);if(cmSlide==='link')renderSlide()}
-function renderLink(){renderTape()}   // $LINK trades share the one tape
-const lalerted=new Set();
-// a pool's first list is history (no alerts); after that every new $LINK buy of $1,000+ pops
-function checkLinkBuys(list,first){const fresh=[];list.forEach(a=>{if(lalerted.has(a.tx_hash))return;lalerted.add(a.tx_hash);
-    if(!first&&a.to_token_address===LINKMINT&&+a.volume_in_usd>=LINKMIN)fresh.push(a)});
-  fresh.reverse().forEach(a=>bpQ.push({k:'link',v:+a.volume_in_usd,amt:+a.to_token_amount,w:(a.tx_from_address||'').slice(0,4)}));nextBuy()}
-// one tape for both: $MARINE trades (its pool) and Solana $LINK trades (LINK/USDC + LINK/SOL), newest first, each row
-// marked with its token's logo
-const TLOGO={m:()=>CA===MARINE?'../terminal/img/marine.webp':(TK.image||''),l:()=>'../terminal/img/link.svg'};   // works at /terminal and /terminal/
-const lastTradeAt=()=>Math.max(0,...[tapeRaw[0],linkRaw[0]].filter(Boolean).map(a=>Date.parse(a.block_timestamp)));
 function renderTape(){
   const wide=innerWidth>=1000&&!document.documentElement.classList.contains('fit'),rows=document.documentElement.classList.contains('fit')?5:wide?24:8;
-  const all=tapeRaw.map(a=>({a,k:'m'})).concat(linkRaw.map(a=>({a,k:'l'}))).filter(r=>+r.a.volume_in_usd>=tapeMin)
-    .sort((x,y)=>Date.parse(y.a.block_timestamp)-Date.parse(x.a.block_timestamp));
-  const list=all.slice(0,rows).map(({a,k})=>{
-    const mint=k==='l'?LINKMINT:CA,buy=a.to_token_address===mint,big=k==='l'?LINKMIN:WHALE,sym=k==='l'?'$LINK':'$'+TK.symbol;
+  const list=tapeRaw.filter(a=>+a.volume_in_usd>=tapeMin).slice(0,rows).map(a=>{
+    const buy=a.to_token_address===CA;
     const amt=+(buy?a.to_token_amount:a.from_token_amount),price=+(buy?a.price_to_in_usd:a.price_from_in_usd),v=+a.volume_in_usd;
-    const id=k+a.tx_hash,fresh=!seen.has(id);seen.add(id);const logo=TLOGO[k]();
-    return`<tr class="${v>=big?'whale':''}"${fresh&&tapeLoaded?'':' style="animation:none"'}><td class="dim">${ago(Date.parse(a.block_timestamp))}</td>
-      <td class="${buy?'up':'dn'}">${logo?`<img class="tl" src="${esc(logo)}" alt="" title="${esc(sym)}" onerror="this.style.display='none'">`:''}${buy?'BUY':'SELL'}${v>=big?'<span class="tag">LARGE</span>':''}</td>
+    const fresh=!seen.has(a.tx_hash);seen.add(a.tx_hash);
+    return`<tr class="${v>=WHALE?'whale':''}"${fresh&&tapeLoaded?'':' style="animation:none"'}><td class="dim">${ago(Date.parse(a.block_timestamp))}</td>
+      <td class="${buy?'up':'dn'}">${buy?'BUY':'SELL'}${v>=WHALE?'<span class="tag">LARGE</span>':''}</td>
       <td class="r">${usd(v)}</td><td class="r">${compact(amt,'')}</td><td class="r dim fx">${px(price)}</td>
       <td class="r hide-sm"><a href="https://solscan.io/tx/${a.tx_hash}" target="_blank" rel="noopener">${(a.tx_from_address||'').slice(0,4)}</a></td></tr>`});
-  tapeLoaded=true;$('trades').tBodies[0].innerHTML=list.join('')||`<tr><td colspan="6" class="dim">quiet on the line${tapeMin?' (no $'+tapeMin+'+ trades lately)':''}</td></tr>`;
+  tapeLoaded=true;$('trades').tBodies[0].innerHTML=list.join('')||`<tr><td colspan="6" class="dim">quiet on the line${tapeMin?' (no $'+tapeMin+'+ trades in the last 300)':''}</td></tr>`;
   if(wide)fitTape()}
 // on desktop the tape shows as many whole rows as its panel has room for (it never grows the panel)
 function fitTape(){const tw=document.querySelector('.tapeP .tw');if(!tw||innerWidth<1000)return;const H=tw.clientHeight;
@@ -1087,9 +972,7 @@ addEventListener('resize',()=>{clearTimeout(fitTape.t);fitTape.t=setTimeout(()=>
 // buy alerts: $100+, or $1,000+ once the token's market cap is over $1M (so a bigger token doesn't spam small buys)
 let MCAP=0;const buyMin=()=>MCAP>1e6?1000:100;const alerted=new Set();let tradesBoot=true,bpQ=[],bpBusy=false,actx=null;
 // sound: on by default, one toggle for TTS and every notification beep (remembered per browser)
-// ?obs: the 24/7 stream browser (VPS): sound + alerts always on, no click-to-enable notice, no cursor, fresh reload every 6 h
-const OBS=/[?&]obs\b/.test(location.search);if(OBS){document.documentElement.classList.add('obs');setTimeout(()=>location.reload(),6*3600e3)}
-let soundOn=true;try{soundOn=OBS||localStorage.getItem('wrSound')!=='0'}catch(e){}
+let soundOn=true;try{soundOn=localStorage.getItem('wrSound')!=='0'}catch(e){}
 function soundSet(){const b=$('soundBtn');b.textContent=soundOn?'🔊':'🔇';b.classList.toggle('off',!soundOn);
   b.title=soundOn?'Sound on: click to mute TTS and alerts':'Muted: click to turn sound on';b.setAttribute('aria-label',soundOn?'Mute sounds':'Turn sound on');
   if(!soundOn){try{speechSynthesis.cancel()}catch(e){}if(curAudio)curAudio.pause()}}
@@ -1099,29 +982,28 @@ function beep(big){if(!soundOn)return;try{actx=actx||new(window.AudioContext||wi
     o.connect(g).connect(actx.destination);o.start(t+i*.11);o.stop(t+i*.11+.18)})}catch(e){}}
 function checkBuys(list){const fresh=[];list.forEach(a=>{if(alerted.has(a.tx_hash))return;alerted.add(a.tx_hash);
   if(!tradesBoot&&a.to_token_address===CA&&+a.volume_in_usd>=buyMin())fresh.push(a)});tradesBoot=false;
+  // the bot records $MARINE's buys itself; for any other token, ask it to read this pool's trades into the shared history
+  if(fresh.length&&CA!==MARINE&&POOL)fetch(BOT+'/alerts/buy?pool='+POOL+'&mint='+CA).catch(()=>{});
   fresh.reverse().forEach(a=>bpQ.push({v:+a.volume_in_usd,amt:+a.to_token_amount,w:(a.tx_from_address||'').slice(0,4)}));nextBuy()}
 function nextBuy(){if(!alertsOn){bpQ.length=0;return}while(bpQ.length&&!akOn(bpQ[0].k==='link'?'link':'marine'))bpQ.shift();if(bpBusy||!bpQ.length||$('pulseTO').classList.contains('show'))return;const b=bpQ.shift();bpBusy=true;const big=b.v>=WHALE;
-  const lk=b.k==='link';$('buyPop').classList.toggle('big',big);$('buyPop').classList.toggle('lnk',lk);
-  $('bpT').textContent=lk?'🔗 $LINK BUY':big?'🚨 LARGE BUY 🚨':'🟢 NEW RECRUIT';$('bpV').textContent='+'+usd(b.v,0);
-  $('bpW').textContent=compact(b.amt,'')+(lk?' $LINK':' $'+TK.symbol)+' · '+b.w;$('buyPop').classList.add('show');beep(big||lk);
+  $('buyPop').classList.toggle('big',big);$('bpT').textContent=big?'🚨 LARGE BUY 🚨':'🟢 NEW RECRUIT';$('bpV').textContent='+'+usd(b.v,0);
+  $('bpW').textContent=compact(b.amt,'')+' $'+TK.symbol+' · '+b.w;$('buyPop').classList.add('show');beep(big);
   bpTimer=setTimeout(closeBuy,bpQ.length>3?2500:5000)}
 var bpTimer=null;
 function closeBuy(){clearTimeout(bpTimer);if(!$('buyPop').classList.contains('show'))return;$('buyPop').classList.remove('show');setTimeout(()=>{bpBusy=false;nextBuy()},500)}
 // a rate-limited call (GeckoTerminal 429) retries in 5 s instead of waiting for the next 20 s round
 async function loadTrades(){if(!GT)return;clearTimeout(loadTrades.r);try{const d=await j(GT+'/trades');tapeRaw=d.data.map(t=>t.attributes);renderTape();checkBuys(tapeRaw)}catch(e){loadTrades.r=setTimeout(loadTrades,5000)}}
 $('tapeF').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
-  [...$('tapeF').children].forEach(x=>x.classList.toggle('on',x===b));tapeMin=+b.dataset.min;renderTape();renderLink()});
+  [...$('tapeF').children].forEach(x=>x.classList.toggle('on',x===b));tapeMin=+b.dataset.min;renderTape()});
 
 // ---------- bottom ticker: stonkfun top 10 by volume ----------
 async function loadTicker(){
   try{
     const d=await j(DATA+'tokens.json?'+Date.now());TOKS=d.tokens||[];renderApy();
-    // top 10 by market cap (stonkfun's platform list is already its top 30 by market cap; tokens.json is that list sorted by volume)
-    const L=d.tokens.slice().sort((a,b)=>(b.mcap||0)-(a.mcap||0)).slice(0,10);
-    const html=L.map((t,i)=>`<a class="tk" href="${esc(tokLink(t.mint))}" target="_blank" rel="noopener">
+    const html=d.tokens.map((t,i)=>`<a class="tk" href="${esc(tokLink(t.mint))}" target="_blank" rel="noopener">
       <span class="dim">#${i+1}</span>${t.image?`<img src="${esc(t.image)}" alt="" loading="lazy" onerror="this.remove()">`:''}
       <b>$${esc(t.symbol)}</b><span class="q">/${esc(t.quote)}</span>
-      <span>mc ${compact(t.mcap)}</span>${t.chg24!=null?pct(t.chg24):''}<span class="dim">vol ${compact(t.vol24)}</span>
+      <span>vol ${compact(t.vol24)}</span>${t.chg24!=null?pct(t.chg24):''}
       ${t.paidUsd?`<span class="dim">· ${compact(t.paidUsd)} paid out</span>`:''}</a>`).join('');
     setTrack('ticker',html,130);
   }catch(e){}
@@ -1131,7 +1013,7 @@ function setTrack(id,html,base){const el=$(id);el.innerHTML=html+html;
   requestAnimationFrame(()=>{const w=el.scrollWidth/2;el.style.animationDuration=Math.max(base,w/45)+'s'})}
 
 // ---------- top ticker: thestonkboard.com top 10 by APY ----------
-let board=null,boardKey='apy24h';   // 1.1: the board ticker is 24H only
+let board=null,boardKey='apy3d';
 function renderBoard(){if(!board)return;const L=board[boardKey]||[],lab=boardKey==='apy3d'?'3d':'24h';
   let html=L.map((t,i)=>`<a class="tk" href="${esc(tokLink(t.mint))}" target="_blank" rel="noopener">
     <span class="dim">#${i+1}</span>${t.logo?`<img src="${esc(t.logo)}" alt="" loading="lazy" onerror="this.remove()">`:''}
@@ -1143,7 +1025,11 @@ function renderBoard(){if(!board)return;const L=board[boardKey]||[],lab=boardKey
 let boardX=null;
 async function loadBoard(){try{board=await j(DATA+'board.json?'+Date.now());renderBoard();renderApy()}catch(e){}
   try{boardX=await j(DATA+'board-x.json?'+Date.now());renderApy()}catch(e){}}
-// 1.1: no 3D/24H switch (24H only)
+document.querySelector('.top .lbl').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  document.querySelectorAll('.top .lbl button').forEach(x=>x.classList.toggle('on',x===b));boardKey=b.dataset.k;renderBoard();renderApy()});
+// on stream nobody clicks, so alternate 3D / 24H every few minutes
+setInterval(()=>{if(!document.documentElement.classList.contains('fit'))return;
+  const nx=boardKey==='apy3d'?'apy24h':'apy3d';document.querySelector(`.top .lbl button[data-k="${nx}"]`).click()},240000);
 
 // ---------- Terminal 2.0 panels: CLOBr (score tile + analytics) and the Stonk Board card ----------
 // Flip a flag to false to hide that data. CLOBr also needs its key on the bot, or it stays hidden.
@@ -1156,28 +1042,11 @@ function boardStats(mint=TK.mint){if(!board)return null;
   return a||b?{rank:(a||b).rank,apy3d:a?.apy,apy24h:b?.apy}:null}
 // Stonk Board card: only what the header doesn't already show (holders, payouts sent, min hold, amount paid out
 // and last payout live up top). Hidden when the mint isn't on the board; figures come only from board.json.
-// 1.1 (from 1.0): while $MARINE isn't ranked, the card shows the board's top 10 instead of a note
-let TOKS=[],dsVol={},dsAt=0;
-async function fillVol(list){const miss=list.map(t=>t.mint).filter(m=>m&&!TOKS.some(t=>t.mint===m));
-  if(!miss.length||Date.now()-dsAt<240000)return;dsAt=Date.now();
-  try{const d=await j('https://api.dexscreener.com/tokens/v1/solana/'+miss.join(','));
-    (Array.isArray(d)?d:[]).forEach(p=>{const m=p.baseToken?.address;if(m)dsVol[m]=(dsVol[m]||0)+(+p.volume?.h24||0)});renderApy()}catch(e){}}
-function renderList(){const by={};TOKS.forEach(t=>by[t.mint]=t);const L=(board[boardKey]||[]).slice(0,10),lab=boardKey==='apy3d'?'3D':'24H';
-  $('mbList').innerHTML=`<div class="bh"><span></span><span></span><span>TOKEN</span><span>VOL 24H</span><span>MCAP</span><span>APY ${lab}</span></div>`
-    +L.map((t,i)=>{const s=by[t.mint]||{},v=s.vol24??board.tokens?.[t.mint]?.vol24??dsVol[t.mint];
-      return `<a class="br" href="${esc(tokLink(t.mint))}" target="_blank" rel="noopener"><span class="rk">${i+1}</span>`
-      +(t.logo?`<img src="${esc(t.logo)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span></span>')
-      +`<span class="sym">$${esc(String(t.symbol||'?').replace(/^\$/,''))}<span class="q">/${esc(t.quote||'')}</span></span>`
-      +`<span>${v!=null?compact(v):'—'}</span><span>${compact(t.mcap??s.mcap)}</span><span class="apy">${apyFmt(t.apy)}</span></a>`}).join('')
-    +`<div class="nt">$${TK.symbol} isn't in the thestonkboard.com top 100 right now. Showing the board's top 10 until it ranks.</div>`;
-  fillVol(L)}
-function renderApy(){renderCm();if(!board)return;const m=FLAGS.STONKBOARD_ENABLED&&board?boardStats():null,ranked=!!(m&&m.rank);
+function renderApy(){const m=FLAGS.STONKBOARD_ENABLED&&board?boardStats():null,ranked=!!(m&&m.rank);
   // stonkfun tokens that aren't ranked yet get a one-line note instead of an empty column; other tokens hide it
-  $('sbP').style.display=FLAGS.STONKBOARD_ENABLED&&board?'':'none';$('mb').style.display=ranked?'':'none';$('mbNo').style.display=ranked?'none':'';
+  $('sbP').style.display=ranked||(FLAGS.STONKBOARD_ENABLED&&board&&TKR)?'':'none';$('mb').style.display=ranked?'':'none';$('mbNo').style.display=ranked?'none':'';
   $('sbLink').href=ranked?'https://thestonkboard.com/coin/'+encodeURIComponent(CA):'https://thestonkboard.com/';$('sbLink').textContent=ranked?'VIEW ON STONK BOARD ▸':'SEE THE BOARD ▸';
-  $('mbList').style.display=ranked?'none':'';$('mbNo').style.display='none';
-  $('sbTitle').innerHTML=ranked?`<span class="tkSym">$${esc(TK.symbol)}</span> STONK BOARD`:'STONK BOARD TOP 10';
-  if(!ranked){renderList();return}
+  if(!ranked){const sym=esc('$'+String(TK.symbol).replace(/^\$/,''));$('mbNo').innerHTML=`<b>${sym}</b> isn't in the Stonk Board top 100 right now.<br>Its modeled APY, what $100 held earns, and holder stats show here as soon as it ranks.`;return}
   $('mbRank').textContent='#'+m.rank;$('mbA3').textContent=apyFmt(m.apy3d);$('mbA24').textContent=apyFmt(m.apy24h);
   const apr=m.apr3d??m.apr24h??m.apr7d,basis=m.apr3d!=null?'3D':m.apr24h!=null?'24H':'7D';
   const per=d=>{if(apr==null)return'—';const v=100*apr/100*d/365;return'$'+v.toFixed(v<10?2:0)};
@@ -1222,7 +1091,7 @@ function renderLiq(){
 
 // ---------- TTS: queue in tts.json, popped + read on screen ----------
 const played=new Set(JSON.parse(localStorage.getItem('ttsPlayed')||'[]'));const bootAt=Date.now()/1000-120;
-let ttsQ=[],ttsBusy=false,audioOk=OBS,curAudio=null;
+let ttsQ=[],ttsBusy=false,audioOk=false,curAudio=null;
 // With pay.json "bot" set, TTS and ads come straight from the approval bot's live feed
 // (seconds after payment); the committed tts.json / ads.json stay as the fallback.
 let FEED=null,feedAt=0;
@@ -1251,105 +1120,12 @@ function nextTTS(){if(!alertsOn||!akOn('tts')){ttsQ.forEach(i=>played.add(i.id))
   a.onended=end;a.onerror=synth;
   a.play().catch(()=>{$('audioGate').style.display='block';hold(readMs)})}
 var ttsClose=null;
-// ---------- info alerts: Stonk Board, stonkfun, CLOBr, payouts, $LINK ----------
-// Scanned every minute from data the page already loads. What was last seen is kept in localStorage so a reload
-// never re-fires old news, and the first scan only records a baseline. Buys / TTS / pulses always go first, and
-// info alerts are spaced at least INFO_GAP apart (a queue of up to 40 waits its turn).
-const INFO_GAP=12e3,TEST=/[?&]test\b/.test(location.search);let infoQ=[],infoAt=0,infoTimer=null;
-// which alerts this browser already showed (so a reload doesn't repeat them); the ?test page keeps its own list, so
-// testing never uses up an alert the real terminal (or the stream) should still show
-const IS_KEY=TEST?'wrInfoTest':'wrInfo';let IS={};try{IS=JSON.parse(localStorage.getItem(IS_KEY)||'{}')}catch(e){}
-const saveIS=()=>{try{localStorage.setItem(IS_KEY,JSON.stringify(IS))}catch(e){}};
-function infoAlert(kind,head,detail,side){if(!TEST&&(!alertsOn||!akOn(catOf(kind))))return;infoQ.push({kind,head,detail,side});if(infoQ.length>40)infoQ.shift();nextInfo()}
-function nextInfo(){if(!infoQ.length||$('infoPop').classList.contains('show'))return;
-  if(['buyPop','ttsPop','pulseTO'].some(id=>$(id).classList.contains('show'))||(!TEST&&Date.now()-infoAt<INFO_GAP)){clearTimeout(nextInfo.t);nextInfo.t=setTimeout(nextInfo,5000);return}
-  const a=infoQ.shift();infoAt=Date.now();$('ipK').textContent=a.kind;$('ipH').textContent=a.head;$('ipD').textContent=a.detail||'';
-  $('infoPop').classList.toggle('buy',a.side==='buy');$('infoPop').classList.toggle('sell',a.side==='sell');$('infoPop').classList.add('show');beep(false);infoTimer=setTimeout(closeInfo,9000)}
-function closeInfo(){clearTimeout(infoTimer);$('infoPop').classList.remove('show');setTimeout(nextInfo,800)}
-$('infoPop').addEventListener('click',closeInfo);
-const sym=t=>'$'+String(t&&t.symbol||'?').replace(/^\$/,'');
-function infoScan(){const first=!IS.init,fire=(...a)=>{if(!first)infoAlert(...a)};
-  // payouts: pulse loading up, and round-number milestones
-  const r=rewards;if(r&&CA===MARINE){
-    const load=(r.pendingUsd||0)/(r.minDistributionUsd||1);
-    if(load>=.9&&IS.pulseWarned!==r.lastPayoutAt){IS.pulseWarned=r.lastPayoutAt;fire('⚡ PULSE INCOMING',Math.round(Math.min(load,1)*100)+'% LOADED',num(r.pendingTokens,2)+' '+TK.quote+' (≈ '+usd(r.pendingUsd,0)+') is about to hit $'+TK.symbol+' holders')}
-    const ms=(k,v,step,fmt)=>{if(v==null)return;const f=Math.floor(v/step)*step;if(IS[k]!=null&&f>IS[k])fire('🏆 MILESTONE',fmt(f),'');IS[k]=Math.max(IS[k]||0,f)};
-    ms('msLink',r.distributedTokens,500,f=>num(f)+' '+TK.quote+' PAID TO HOLDERS');ms('msPay',r.payoutCount,5000,f=>num(f)+' PAYOUTS SENT');ms('msHold',holdersNow(r),100,f=>num(f)+' $'+TK.symbol+' HOLDERS')}
-  // Stonk Board: $MARINE's rank, a new #1, a new token on the board, a big APY jump
-  if(board&&board.tokens){const me=boardStats(),rk=me&&me.rank||null;
-    if(rk&&!IS.rank)fire('📋 STONK BOARD','$'+TK.symbol+' ENTERS THE TOP 100','Now #'+rk+' on thestonkboard.com');
-    else if(rk&&IS.rank&&rk<=IS.rank-5)fire('📋 STONK BOARD','$'+TK.symbol+' CLIMBS TO #'+rk,'Up '+(IS.rank-rk)+' spots on thestonkboard.com');
-    if(me&&me.apy24h&&IS.apy&&me.apy24h>=IS.apy*1.5&&me.apy24h-IS.apy>100)fire('📈 APY JUMP','$'+TK.symbol+' APY '+apyFmt(me.apy24h),'Up from '+apyFmt(IS.apy)+' (24H, modeled)');
-    IS.rank=rk;IS.apy=me&&me.apy24h||null;
-    const top=(board.apy24h||[])[0];if(top){if(IS.top1&&IS.top1!==top.mint)fire('👑 NEW #1 APY',sym(top)+' TAKES THE TOP SPOT',apyFmt(top.apy)+' APY 24H · mc '+compact(top.mcap));IS.top1=top.mint}
-    const mints=Object.keys(board.tokens);if(IS.boardSet){const nw=mints.filter(m=>!IS.boardSet.includes(m));
-      if(nw.length&&nw.length<=5)nw.slice(0,2).forEach(m=>{const t=board.tokens[m];fire('🆕 NEW ON THE BOARD',sym(t)+' JOINS AT #'+t.rank,(t.apy24h?apyFmt(t.apy24h)+' APY 24H · ':'')+'mc '+compact(t.mcap))})}
-    IS.boardSet=mints}
-  // stonkfun: a new name in the top 10 by market cap, and big movers among them
-  if(TOKS&&TOKS.length){const T=TOKS.slice().sort((a,b)=>(b.mcap||0)-(a.mcap||0)).slice(0,10),ids=T.map(t=>t.mint);
-    if(IS.sfTop){ids.filter(m=>!IS.sfTop.includes(m)).slice(0,2).forEach(m=>{const t=T.find(x=>x.mint===m);fire('🚀 STONKFUN TOP 10',sym(t)+' BREAKS INTO THE TOP 10','mc '+compact(t.mcap)+(t.chg24!=null?' · '+(t.chg24>=0?'+':'')+t.chg24.toFixed(1)+'% 24h':''))})}
-    IS.sfTop=ids;const day=new Date().toISOString().slice(0,10);IS.moved=IS.moved&&IS.moved.day===day?IS.moved:{day,m:[]};
-    T.filter(t=>Math.abs(t.chg24||0)>=20&&!IS.moved.m.includes(t.mint)).slice(0,1).forEach(t=>{IS.moved.m.push(t.mint);
-      fire(t.chg24>0?'📈 BIG MOVER':'📉 BIG MOVER',sym(t)+' '+(t.chg24>0?'+':'')+t.chg24.toFixed(0)+'% IN 24H','#'+(ids.indexOf(t.mint)+1)+' on stonkfun by market cap · mc '+compact(t.mcap))})}
-  // CLOBr: the score's verdict flips, more top-20 wallets buying
-  if(CL&&CL.score&&CL.score.msg){const v=String(CL.score.msg).split(':')[0].trim();if(IS.verdict&&IS.verdict!==v)fire('🧱 CLOBr SCORE',v.toUpperCase(),'$'+TK.symbol+' now '+(+CL.score.score).toFixed(1)+'/100 · was '+IS.verdict);IS.verdict=v}
-  const acc=CL&&CL.whales&&CL.whales.summary&&CL.whales.summary.accumulating&&CL.whales.summary.accumulating.top20&&CL.whales.summary.accumulating.top20['7d'];
-  if(acc!=null){if(IS.acc20!=null&&acc>IS.acc20)fire('🐋 WHALE WATCH',(acc-IS.acc20)+' MORE TOP-20 WALLET'+(acc-IS.acc20>1?'S':'')+' BUYING',acc+' of the top 20 $'+TK.symbol+' holders are buying this week (CLOBr)','buy');IS.acc20=acc}
-  // $LINK: a 5% move within the hour (at most once every 2 hours)
-  if(linkRaw.length){const pr=a=>+(a.to_token_address===LINKMINT?a.price_to_in_usd:a.price_from_in_usd),now=Date.now();
-    const old=linkRaw.find(a=>now-Date.parse(a.block_timestamp)>=3600e3),cur=pr(linkRaw[0]);
-    if(old&&cur){const ch=(cur/pr(old)-1)*100;if(Math.abs(ch)>=5&&now-(IS.linkMove||0)>2*3600e3){IS.linkMove=now;fire(ch>0?'🔗 $LINK PUMPING':'🔗 $LINK DIPPING','$LINK '+(ch>0?'+':'')+ch.toFixed(1)+'% IN AN HOUR','Now '+px(cur)+' on Solana')}}}
-  // whale radar signals: whales piling into a token, rotating, exiting, buying a dip, compounding rewards
-  if(WR&&WR.signals){const SIDE={convergence:'buy',dip:'buy',dumping:'sell',exit:'sell'};const HEAD={dumping:'🐋 WHALES DUMPING',score:'🧱 CLOBr SCORE',convergence:'🐋 WHALES PILING IN',rotation:'🔄 WHALE ROTATION',exit:'🚪 WHALE EXIT',dip:'🩸 WHALES BUYING THE DIP',rewards:'♻️ WHALE REWARDS'};
-    if(IS.wr)WR.signals.filter(x=>!IS.wr.includes(x.id)&&!['bigtrade','mover','board','top10','payout','buy','pulse','milestone','link','tts'].includes(x.kind)&&Date.now()/1000-x.t<6*3600).slice(0,3).reverse()
-      .forEach(x=>infoAlert(HEAD[x.kind]||'🐋 WHALE RADAR',(x.s?'$'+x.s:'')+(x.u?' · '+compact(x.u):''),x.text,SIDE[x.kind]));
-    IS.wr=[...new Set([...WR.signals.map(x=>x.id),...(IS.wr||[])])].slice(0,300)}
-  IS.init=1;saveIS()}
-// Market alerts come from the shared history (the bot's database), not from this browser: every page and the stream
-// show the same ones, and every one shown is in the history. Buys, TTS and payouts still pop straight from the chain
-// here (fastest), with the same rules the bot records every minute. The old in-browser checks (infoScan) are retired.
-const DB_HEAD=x=>{const k=x.kind,sd=x.side;
-  if(k==='buy'&&/whale watch/i.test(x.text))return['🐋 WHALE WATCH','buy'];
-  return({convergence:['🐋 WHALES PILING IN','buy'],dumping:['🐋 WHALES DUMPING','sell'],rotation:['🔄 WHALE ROTATION'],exit:['🚪 WHALE EXIT','sell'],
-    dip:['🩸 WHALES BUYING THE DIP','buy'],rewards:['♻️ WHALE REWARDS'],score:['🧱 CLOBr SCORE'],board:['📋 STONK BOARD'],top10:['🚀 STONKFUN TOP 10'],
-    milestone:['🏆 MILESTONE'],payout:['💸 HOLDER PAYOUT'],pulse:['⚡ PULSE INCOMING'],link:[sd==='down'?'🔗 $LINK DIPPING':'🔗 $LINK PUMPING'],
-    mover:[sd==='down'?'📉 BIG MOVER':'📈 BIG MOVER'],bigtrade:[sd==='sell'?'🐳 BIG SELL':'🐳 BIG BUY',sd==='sell'?'sell':'buy']})[k]||['🐋 WHALE RADAR']};
-let dbSeen=null;
-async function dbAlerts(){try{const L=((await j(BOT+'/alerts?limit=50')).signals)||[];
-  if(!dbSeen){dbSeen=new Set(L.map(x=>x.id));return}   // what's already in the history when the page opens doesn't pop
-  L.filter(x=>!dbSeen.has(x.id)).reverse().forEach(x=>{dbSeen.add(x.id);
-    // TTS and $MARINE's own payout (pulse) pop straight from their sources already
-    if(x.kind==='tts'||x.id.startsWith('pulse:pulse:'))return;
-    // $MARINE/$LINK buys pop from this page's own tape; one the tape missed (GeckoTerminal rate-limits a browser with
-    // several terminals open) pops from the history instead, never twice
-    if(x.kind==='buy'&&!/whale watch/i.test(x.text)){const set=x.s==='LINK'?lalerted:x.s==='MARINE'&&CA===MARINE?alerted:null,tx=x.id.slice(4);
-      if(!set||set.has(tx))return;set.add(tx);const m=/· ([\d,.]+) \$\w+ · wallet (\w+)/.exec(x.text)||[];
-      bpQ.push({k:x.s==='LINK'?'link':undefined,v:x.u||0,amt:+(m[1]||'0').replace(/,/g,''),w:m[2]||''});nextBuy();return}
-    const [h,side]=DB_HEAD(x);infoAlert(h,(x.s?'$'+x.s:'')+(x.u?' · '+compact(x.u):''),x.text,side)})}catch(e){}}
-setTimeout(()=>{dbAlerts();setInterval(dbAlerts,20e3)},5000);
-// ---------- ?test: a panel that fires every alert type on demand (never shown on the stream) ----------
-if(TEST){const tp=$('testPanel');tp.style.display='flex';
-  const T=[['$MARINE buy',()=>{bpQ.push({v:250,amt:2.5e6,w:'TEST'});nextBuy()}],['$MARINE large buy',()=>{bpQ.push({v:3200,amt:3e7,w:'TEST'});nextBuy()}],
-    ['$LINK buy',()=>{bpQ.push({k:'link',v:1850,amt:132,w:'TEST'});nextBuy()}],['TTS',()=>{ttsQ.push({id:'test'+Date.now(),from:'@tester',text:'this is a test of the war room text to speech',at:Date.now()/1000});nextTTS()}],
-    ['Pulse fired',()=>pulseTakeover(12.5,175,2626,7100)],['Pulse incoming',()=>infoAlert('⚡ PULSE INCOMING','93% LOADED','8.12 LINK (≈ $113) is about to hit $MARINE holders')],
-    ['Milestone',()=>infoAlert('🏆 MILESTONE','7,500 LINK PAID TO HOLDERS','')],['Board entry',()=>infoAlert('📋 STONK BOARD','$MARINE ENTERS THE TOP 100','Now #87 on thestonkboard.com')],
-    ['New #1 APY',()=>infoAlert('👑 NEW #1 APY','$GP TAKES THE TOP SPOT','609.8M% APY 24H · mc $3.82M')],['New on board',()=>infoAlert('🆕 NEW ON THE BOARD','$POKE JOINS AT #64','2.7M% APY 24H · mc $163.2K')],
-    ['APY jump',()=>infoAlert('📈 APY JUMP','$MARINE APY 1,240%','Up from 610% (24H, modeled)')],['Stonkfun top 10',()=>infoAlert('🚀 STONKFUN TOP 10','$SNDK BREAKS INTO THE TOP 10','mc $5.66M · +116.2% 24h')],
-    ['Big mover',()=>infoAlert('📈 BIG MOVER','$SI +34% IN 24H','#2 on stonkfun by market cap · mc $18.38M')],['CLOBr flip',()=>infoAlert('🧱 CLOBr SCORE','STRONG BUYING PRESSURE','$MARINE now 71.2/100 · was Balanced')],
-    ['Whale watch',()=>infoAlert('🐋 WHALE WATCH','2 MORE TOP-20 WALLETS BUYING','15 of the top 20 $MARINE holders are buying this week (CLOBr)','buy')],['$LINK move',()=>infoAlert('🔗 $LINK PUMPING','$LINK +5.4% IN AN HOUR','Now $14.71 on Solana')],
-    ['Whales piling in',()=>infoAlert('🐋 WHALES PILING IN','$SI · $14.2K','4 whales bought $SI in the last 24h ($14,200) · whales of $ZCAT, $MASK','buy')],
-    ['Whale rotation',()=>infoAlert('🔄 WHALE ROTATION','$GP · $3.1K','#4 $ZCAT whale rotated $3,100 of $ZCAT into $GP')],
-    ['Whale exit',()=>infoAlert('🚪 WHALE EXIT','$MASK · $8.2K','#2 $MASK whale sold 45% of their bag ($8,200) · held 30+ days','sell')],
-    ['Whale dip buy',()=>infoAlert('🩸 WHALES BUYING THE DIP','$NEARKAT · $1.9K','#6 $NEARKAT whale bought the dip on $NEARKAT (-14% today) · $1,900','buy')],
-    ['Whale rewards',()=>infoAlert('♻️ WHALE REWARDS','$NEARKAT · $2.4K','$NEARKAT whales compounded 72% of their $NEAR rewards today ($1,730 back in, $670 sold)')]];
-  tp.innerHTML='<b>TEST ALERTS (only with ?test)</b>'+T.map((t,i)=>`<button data-i="${i}">${t[0]}</button>`).join('');
-  tp.addEventListener('click',e=>{const b=e.target.closest('button');if(b)T[+b.dataset.i][1]()})}
 $('ttsPop').addEventListener('click',()=>ttsClose&&ttsClose());$('buyPop').addEventListener('click',closeBuy);
 $('pulseTO').addEventListener('click',e=>{if(e.target!==$('pulseTO'))closePulse()});
 $('audioGate').onclick=()=>{try{speechSynthesis.speak(new SpeechSynthesisUtterance(' '))}catch(e){}$('audioGate').style.display='none'};
 $('soundBtn').onclick=()=>{soundOn=!soundOn;try{localStorage.setItem('wrSound',soundOn?'1':'0')}catch(e){}soundSet()};soundSet();
 // alerts: on by default; off hides buy alerts, pulse takeovers and TTS popups (sound is its own toggle)
-let alertsOn=true;try{alertsOn=OBS||localStorage.getItem('wrAlerts')!=='0'}catch(e){}
+let alertsOn=true;try{alertsOn=localStorage.getItem('wrAlerts')!=='0'}catch(e){}
 function alertSet(){const b=$('alertBtn');b.textContent=alertsOn?'🔔':'🔕';b.classList.toggle('off',!alertsOn);
   b.title=alertsOn?'Alerts on: click to choose which alerts you see':'Alerts off: click to turn alerts back on';
   if(!alertsOn){['buyPop','ttsPop','pulseTO'].forEach(id=>$(id)&&$(id).classList.remove('show'));try{speechSynthesis.cancel()}catch(e){}if(curAudio)curAudio.pause();bpQ.length=0;bpBusy=false;ttsBusy=false}}
@@ -1404,16 +1180,16 @@ function renderAds(){['1','2','3'].forEach(k=>{const el=$('slot'+k);if(!el)retur
 // traffic actually attributes. House cards still open the checkout.
 const HOUSE={'1':['s1-better-call-sergey','s1-holding-alone','s1-plaid-motors'],'2':['s2-paper-hands','s2-youre-reading-this'],'3':['s3-bankers-hate','s3-sergey-associates']};
 const SPONSOR={
-  '1':[{img:'../terminal/house/s1-jtx.png',href:'https://app.jtx.com/ref/TheMarines',tag:'JTX · JOIN ▸'},
-       {img:'../terminal/house/s1-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}],
-  '2':[{img:'../terminal/house/s2-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}],
-  '3':[{img:'../terminal/house/s2-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}]
+  '1':[{img:'/terminal/house/s1-jtx.png',href:'https://app.jtx.com/ref/TheMarines',tag:'JTX · JOIN ▸'},
+       {img:'/terminal/house/s1-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}],
+  '2':[{img:'/terminal/house/s2-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}],
+  '3':[{img:'/terminal/house/s2-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}]
 };
 function fillers(k){return [...(HOUSE[k]||[]).map(n=>({house:n})),...(SPONSOR[k]||[])]}
 function houseAd(k,pr){
   const L=fillers(k);if(!L.length)return'';
   const f=L[Math.floor(Date.now()/20000+ +k)%L.length];
-  if(f.house)return `<img src="../terminal/house/${f.house}.png" alt="ad space open"><span class="htag">${PAY?'$'+PAY.prices.slots[k]+'/'+PAY.blockMinutes+'M · ':''}BUY ▸</span>`;
+  if(f.house)return `<img src="/terminal/house/${f.house}.png" alt="ad space open"><span class="htag">${PAY?'$'+PAY.prices.slots[k]+'/'+PAY.blockMinutes+'M · ':''}BUY ▸</span>`;
   return `<a class="sp" href="${esc(f.href)}" target="_blank" rel="noopener sponsored"><img src="${esc(f.img)}" alt=""><span class="htag">${esc(f.tag)}</span></a>`}
 function fillSlotSel(){if(!PAY)return;$('fSlot').innerHTML=['1','2','3'].map(k=>`<option value="${k}">${SLOTN[k]} · $${PAY.prices.slots[k]}/${PAY.blockMinutes}m</option>`).join('');
   $('fBlocks').innerHTML=Array.from({length:PAY.maxBlocks},(_,i)=>`<option value="${i+1}">${(i+1)*PAY.blockMinutes} min</option>`).join('')}
@@ -1453,6 +1229,7 @@ $('fImg').addEventListener('change',async()=>{const f=$('fImg').files[0];imgId=n
   catch(e){say('Upload failed: '+esc(e.message||e),'err')}imgBusy=false;refresh()});
 $('ttsText').addEventListener('input',()=>$('ttsCount').textContent=$('ttsText').value.length+'/200');
 $('ttsBtn').onclick=()=>openBuy('t');
+if(/[?&]buy=tts\b/.test(location.search))setTimeout(()=>openBuy('t'),800);   // BUY TTS from the trending page
 document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>openBuy(b.dataset.buy));
 ['1','2','3'].forEach(k=>$('slot'+k).onclick=e=>{if(e.target.closest('a'))return;if(!curAd(k))openBuy('a',k)});
 $('wBtn').onclick=()=>connectWallet(true);
@@ -1621,8 +1398,8 @@ addEventListener('resize',fit);
 fit();
 resolveToken().finally(()=>{loadRewards();loadMarket();loadChart();loadTrades();loadTicker();loadBoard();loadTTS();loadPay();loadAds();});
 setInterval(()=>{if(!document.hidden)loadAds()},15000);setInterval(loadPay,300000);setTimeout(()=>{renderAds();setInterval(renderAds,20000)},20000-Date.now()%20000);
-setInterval(loadTrades,20000);setTimeout(()=>{loadLink();setInterval(loadLink,15000)},6000);setInterval(loadMarket,30000);setInterval(loadRewards,30000);
-setInterval(loadChart,120000);setTimeout(loadDepth,1500);const vis=f=>()=>{if(!document.hidden)f()};setInterval(vis(loadDepth),60000);setTimeout(loadClobr,2000);setInterval(vis(loadClobr),120000);setInterval(loadTicker,300000);setInterval(loadBoard,300000);
+setInterval(loadTrades,20000);setInterval(loadMarket,30000);setInterval(loadRewards,60000);
+setInterval(loadChart,120000);setTimeout(loadDepth,1500);const vis=f=>()=>{if(!document.hidden)f()};setInterval(vis(loadDepth),600000);setTimeout(loadClobr,2000);setInterval(vis(loadClobr),600000);setInterval(loadTicker,300000);setInterval(loadBoard,300000);
 setInterval(()=>{if(!document.hidden)loadTTS()},10000);setInterval(tickLast,1000);
 document.fonts?.ready.then(draw);
 {const dm=new URLSearchParams(location.search).get('demo');if(dm)setTimeout(()=>{
