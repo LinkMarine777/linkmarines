@@ -222,6 +222,7 @@ html.fit .cm-sc .n{font-size:80px}html.fit .cm-sc .v{font-size:21px}html.fit .cm
 .cmL .rk{color:var(--dim);text-align:right}.cmL .s{color:#fff;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.cmL .s i{font-style:normal;color:var(--dim);font-size:.8em}.cmL .r{text-align:right;white-space:nowrap}
 .cmK{display:grid;grid-template-columns:1fr 1fr;gap:10px}.cmK>div{border:1px solid var(--line);padding:8px 10px}.cmK label{display:block;font-size:10px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}.cmK b{font-family:'VT323';font-weight:400;font-size:34px;color:#fff;line-height:1.05}
 #cmTitle{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}#cmLink{flex:none;white-space:nowrap}html.fit #tapeMeta,html.fit #holdMeta{display:none!important}
+.wrSig{margin:8px 0 0;padding:6px 8px;border-left:2px solid var(--green);font-size:.9em}.wrFoot{font-size:.8em;margin:6px 0 0}
 .tl{width:1.15em;height:1.15em;border-radius:50%;object-fit:contain;vertical-align:-.2em;margin-right:.4em;background:#0b1a2e}
 html.fit .cmL{font-size:21px;grid-template-columns:34px 34px minmax(0,1fr) auto auto;gap:6px 14px}html.fit .cmL img{width:32px;height:32px}html.fit .cmK label{font-size:14px}html.fit .cmK b{font-size:50px}html.fit .rotbar{height:3px;bottom:-6px}
 html.fit .cm-sp{height:62px}html.fit .cm-spl{font-size:14px!important}html.fit .cm-sx{font-size:14px}html.fit .cm-lq{font-size:20px}html.fit .cml{font-size:16px}#scoreStat:hover label{color:#FF6B00}#scoreStat #sScoreMsg,#scoreStat #sScoreWhy{font-size:10px;line-height:1.35}#scoreStat #sScoreWhy{white-space:normal;overflow:visible}
@@ -857,12 +858,32 @@ function showSlide(k){cmSlide=k;renderCm()}
 function slideHead(t,link,label){$('cmTitle').innerHTML=t;$('cmLink').href=link;$('cmLink').textContent=label}
 function listRows(L,cols){return`<div class="cmL">${L.map((t,i)=>`<span class="rk">${i+1}</span>${t.logo?`<img src="${esc(t.logo)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span></span>'}
   <span class="s">$${esc(String(t.symbol||'?').replace(/^\$/,''))} <i>/${esc(t.quote||'')}</i></span>${cols(t)}`).join('')}</div>`}
+// whale radar (intel job on GitHub Actions, every 30 min): what the top holders of $MARINE and stonkfun's top 10 buy
+const WR_URL='https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/whales.json';let WR=null;
+async function loadWhales(){try{WR=await j(WR_URL);if(cmSlide==='whales')renderSlide()}catch(e){}}
+// stonkfun live flow: buys vs sells in the last hour on the top 10 by market cap (one free DexScreener call a minute)
+let FLOW=[];
+async function loadFlow(){const top=(TOKS||[]).filter(t=>t.mint!==MARINE).sort((a,b)=>(b.mcap||0)-(a.mcap||0)).slice(0,10);if(!top.length)return;
+  try{const d=await j('https://api.dexscreener.com/tokens/v1/solana/'+top.map(t=>t.mint).join(',')),best={};
+    (d||[]).forEach(p=>{const m=p.baseToken&&p.baseToken.address,l=(p.liquidity||{}).usd||0;if(m&&(!best[m]||l>best[m].l))best[m]={l,p}});
+    FLOW=top.map(t=>{const x=best[t.mint];if(!x)return null;const h=(x.p.txns||{}).h1||{};
+      return{symbol:t.symbol,logo:t.image,quote:'1h',b:h.buys||0,s:h.sells||0,v:(x.p.volume||{}).h1||0,c:(x.p.priceChange||{}).h1}}).filter(Boolean).sort((a,b)=>b.v-a.v);
+    if(cmSlide==='flow')renderSlide()}catch(e){}}
+setTimeout(()=>{loadWhales();setInterval(loadWhales,300e3);loadFlow();setInterval(loadFlow,60e3)},8000);
 function renderSlide(){const b=$('cmBody');
   if(cmSlide==='board'){slideHead('STONK BOARD · <span class="up">APY 24H</span>','https://thestonkboard.com/','BOARD ▸');
     const L=(board&&board.apy24h||[]).slice(0,10);b.innerHTML=L.length?listRows(L,t=>`<span class="r up">${apyFmt(t.apy)}</span><span class="r dim">mc ${compact(t.mcap)}</span>`):'<p class="dim">loading board…</p>';return}
   if(cmSlide==='sfun'){slideHead('STONKFUN · <span class="am">MCAP</span>','https://www.stonkfun.xyz/','STONKFUN ▸');
     const L=(TOKS||[]).slice().sort((a,b)=>(b.mcap||0)-(a.mcap||0)).slice(0,10).map(t=>({...t,logo:t.image}));
     b.innerHTML=L.length?listRows(L,t=>`<span class="r">${compact(t.mcap)}</span><span class="r">${t.chg24!=null?pct(t.chg24):''}</span>`):'<p class="dim">loading stonkfun…</p>';return}
+  if(cmSlide==='whales'){slideHead('🐋 WHALE RADAR · <span class="up">WHAT WHALES BUY</span>','../terminal2/','TRENDING ▸');
+    const L=((WR&&WR.buying)||[]).slice(0,8).map(t=>({symbol:t.s,logo:t.i,quote:'24h',...t})),sg=WR&&WR.signals&&WR.signals[0];
+    b.innerHTML=L.length?listRows(L,t=>`<span class="r up">${t.buyers} whale${t.buyers>1?'s':''}</span><span class="r">+${compact(t.net)}</span>`)
+      +(sg?`<p class="wrSig">${esc(sg.text)}</p>`:'')+`<p class="dim wrFoot">Top 20 holders of ${esc((WR.tokens||[]).slice(0,4).join(' '))}… · ${WR.wallets} wallets · updated ${ago(WR.at*1000)} ago</p>`
+      :'<p class="dim">Whale radar is warming up: no whale buys in the last 24h yet.</p>';return}
+  if(cmSlide==='flow'){slideHead('STONKFUN · <span class="am">LIVE FLOW</span>','https://www.stonkfun.xyz/','STONKFUN ▸');
+    b.innerHTML=FLOW.length?listRows(FLOW,t=>`<span class="r"><b class="up">▲${t.b}</b> <b class="dn">▼${t.s}</b></span><span class="r">${t.c!=null?pct(t.c):'<span class="dim">—</span>'}</span>`)
+      +'<p class="dim wrFoot">Buys ▲ and sells ▼ in the last hour, busiest first · top 10 by market cap</p>':'<p class="dim">loading stonkfun flow…</p>';return}
   if(cmSlide==='link'){slideHead('<span style="color:#7d9bff">$LINK</span> · LAST HOUR','https://dexscreener.com/solana/'+LINKPOOLS[0],'CHART ▸');
     const now=Date.now(),H=linkRaw.filter(a=>now-Date.parse(a.block_timestamp)<3600e3),buy=a=>a.to_token_address===LINKMINT;
     const bv=H.filter(buy).reduce((t,a)=>t+(+a.volume_in_usd),0),sv=H.filter(a=>!buy(a)).reduce((t,a)=>t+(+a.volume_in_usd),0),tot=Math.max(1,bv+sv);
@@ -932,7 +953,8 @@ const ROT=[
   {id:'chart',bar:'rbChart',steps:[['7d',240],['1d',45],['7d',240],['all',45]],apply:k=>{const b=document.querySelector(`#tf button[data-tf="${k}"]`);if(b&&tf!==k){ROT.auto=1;b.click();ROT.auto=0}}},
   // holders only when the tape is quiet (no $MARINE or $LINK trade in the last 5 min)
   {id:'tape',bar:'rbTape',steps:[['trades',90],['holders',25]],apply:k=>{if(k==='holders'&&($('holdTab').style.display==='none'||Date.now()-lastTradeAt()<300e3))return false;setTapeView(k)}},
-  {id:'side',bar:'rbSide',steps:[['clobr',60],['board',45],['sfun',45],['link',45]],apply:k=>showSlide(k)}];
+  {id:'side',bar:'rbSide',steps:[['clobr',60],['whales',45],['board',40],['flow',40],['sfun',35],['link',40]],
+   apply:k=>{if(k==='whales'&&!(WR&&WR.buying&&WR.buying.length)||k==='flow'&&!FLOW.length)return false;showSlide(k)}}];
 ROT.forEach(g=>{g.i=0;g.t=0;g.hold=0});
 const alertUp=()=>['buyPop','ttsPop','pulseTO','infoPop'].some(id=>$(id)&&$(id).classList.contains('show'));
 setInterval(()=>{if(!document.documentElement.classList.contains('fit')||/[?&]norotate\b/.test(location.search))return;
@@ -1249,6 +1271,11 @@ function infoScan(){const first=!IS.init,fire=(...a)=>{if(!first)infoAlert(...a)
   if(linkRaw.length){const pr=a=>+(a.to_token_address===LINKMINT?a.price_to_in_usd:a.price_from_in_usd),now=Date.now();
     const old=linkRaw.find(a=>now-Date.parse(a.block_timestamp)>=3600e3),cur=pr(linkRaw[0]);
     if(old&&cur){const ch=(cur/pr(old)-1)*100;if(Math.abs(ch)>=5&&now-(IS.linkMove||0)>2*3600e3){IS.linkMove=now;fire(ch>0?'🔗 $LINK PUMPING':'🔗 $LINK DIPPING','$LINK '+(ch>0?'+':'')+ch.toFixed(1)+'% IN AN HOUR','Now '+px(cur)+' on Solana')}}}
+  // whale radar signals: whales piling into a token, rotating, exiting, buying a dip, compounding rewards
+  if(WR&&WR.signals){const HEAD={convergence:'🐋 WHALES PILING IN',rotation:'🔄 WHALE ROTATION',exit:'🚪 WHALE EXIT',dip:'🩸 WHALES BUYING THE DIP',rewards:'♻️ WHALE REWARDS'};
+    if(IS.wr)WR.signals.filter(x=>!IS.wr.includes(x.id)&&Date.now()/1000-x.t<6*3600).slice(0,3).reverse()
+      .forEach(x=>infoAlert(HEAD[x.kind]||'🐋 WHALE RADAR',(x.s?'$'+x.s:'')+(x.u?' · '+compact(x.u):''),x.text));
+    IS.wr=[...new Set([...WR.signals.map(x=>x.id),...(IS.wr||[])])].slice(0,300)}
   IS.init=1;saveIS()}
 setTimeout(()=>{infoScan();setInterval(infoScan,60e3)},45e3);
 // ---------- ?test: a panel that fires every alert type on demand (never shown on the stream) ----------
@@ -1260,7 +1287,12 @@ if(TEST){const tp=$('testPanel');tp.style.display='flex';
     ['New #1 APY',()=>infoAlert('👑 NEW #1 APY','$GP TAKES THE TOP SPOT','609.8M% APY 24H · mc $3.82M')],['New on board',()=>infoAlert('🆕 NEW ON THE BOARD','$POKE JOINS AT #64','2.7M% APY 24H · mc $163.2K')],
     ['APY jump',()=>infoAlert('📈 APY JUMP','$MARINE APY 1,240%','Up from 610% (24H, modeled)')],['Stonkfun top 10',()=>infoAlert('🚀 STONKFUN TOP 10','$SNDK BREAKS INTO THE TOP 10','mc $5.66M · +116.2% 24h')],
     ['Big mover',()=>infoAlert('📈 BIG MOVER','$SI +34% IN 24H','#2 on stonkfun by market cap · mc $18.38M')],['CLOBr flip',()=>infoAlert('🧱 CLOBr SCORE','STRONG BUYING PRESSURE','$MARINE now 71.2/100 · was Balanced')],
-    ['Whale watch',()=>infoAlert('🐋 WHALE WATCH','2 MORE TOP-20 WALLETS BUYING','15 of the top 20 $MARINE holders are buying this week (CLOBr)')],['$LINK move',()=>infoAlert('🔗 $LINK PUMPING','$LINK +5.4% IN AN HOUR','Now $14.71 on Solana')]];
+    ['Whale watch',()=>infoAlert('🐋 WHALE WATCH','2 MORE TOP-20 WALLETS BUYING','15 of the top 20 $MARINE holders are buying this week (CLOBr)')],['$LINK move',()=>infoAlert('🔗 $LINK PUMPING','$LINK +5.4% IN AN HOUR','Now $14.71 on Solana')],
+    ['Whales piling in',()=>infoAlert('🐋 WHALES PILING IN','$SI · $14.2K','4 whales bought $SI in the last 24h ($14,200) · whales of $ZCAT, $MASK')],
+    ['Whale rotation',()=>infoAlert('🔄 WHALE ROTATION','$GP · $3.1K','#4 $ZCAT whale rotated $3,100 of $ZCAT into $GP')],
+    ['Whale exit',()=>infoAlert('🚪 WHALE EXIT','$MASK · $8.2K','#2 $MASK whale sold 45% of their bag ($8,200) · held 30+ days')],
+    ['Whale dip buy',()=>infoAlert('🩸 WHALES BUYING THE DIP','$NEARKAT · $1.9K','#6 $NEARKAT whale bought the dip on $NEARKAT (-14% today) · $1,900')],
+    ['Whale rewards',()=>infoAlert('♻️ WHALE REWARDS','$NEARKAT · $2.4K','$NEARKAT whales compounded 72% of their $NEAR rewards today ($1,730 back in, $670 sold)')]];
   tp.innerHTML='<b>TEST ALERTS (only with ?test)</b>'+T.map((t,i)=>`<button data-i="${i}">${t[0]}</button>`).join('');
   tp.addEventListener('click',e=>{const b=e.target.closest('button');if(b)T[+b.dataset.i][1]()})}
 $('ttsPop').addEventListener('click',()=>ttsClose&&ttsClose());$('buyPop').addEventListener('click',closeBuy);
