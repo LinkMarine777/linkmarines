@@ -29,7 +29,7 @@ mkdir -p $APP/music $APP/chrome; chown -R $USERN:$USERN $APP
 if [ ! -f $ENV ]; then
   CORES=$(nproc); RES=1920x1080; BITRATE=4500k
   [ "$CORES" -lt 4 ] && { RES=1280x720; BITRATE=3000k; }
-  printf 'PAGE="https://linkmarines.vercel.app/terminal/?obs"\nOUT_RES=%s\nBITRATE=%s\nFPS=30\nMUSIC_VOL=0.15\n' "$RES" "$BITRATE" > $ENV
+  printf 'PAGE="https://linkmarines.vercel.app/stream/?obs"\nOUT_RES=%s\nBITRATE=%s\nFPS=30\nMUSIC_VOL=0.15\n' "$RES" "$BITRATE" > $ENV
   echo "stream output: $RES @ $BITRATE ($CORES vCPU)"
 fi
 chown root:$USERN $ENV; chmod 640 $ENV

@@ -16,6 +16,11 @@
       "source": "/trending",
       "destination": "/trending/",
       "permanent": false
+    },
+    {
+      "source": "/stream",
+      "destination": "/stream/",
+      "permanent": false
     }
   ]
 }

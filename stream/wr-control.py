@@ -199,7 +199,7 @@ def status_text():
 
 
 # ---- the stream page: switched in place through Chrome's DevTools port (127.0.0.1 only), no restart
-PAGES = {'1.0': '/terminal/?obs', '1.1': '/terminal1.1/?obs', 'classic': '/terminal/classic.html?obs'}
+PAGES = {'1.0': '/stream/?obs', 'stream': '/stream/?obs', '1.1': '/terminal1.1/?obs', 'classic': '/terminal/classic.html?obs'}
 
 
 def set_page(url):
