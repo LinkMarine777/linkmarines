@@ -47,6 +47,9 @@ NOT_WALLETS = {'5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1', 'GpMZbSM2GgvTKHJi
                'WLHv2UAZm6z4KyaaELi5pjdbJh6RESMva1Rnn8pJVVh', 'HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC'}
 WHALES_PER_TOKEN, NEW_SIGS_MAX, TX_BUDGET, MIN_USD = 20, 12, 450, 25
 now = int(time.time())
+# FAST=1: the 2-minute pass between full runs: no RPC (holders, whale wallets, $MARINE holder count) and no LP scan; big
+# trades, CLOBr scores, the board and the stream's alerts come out within minutes instead of batched every 30 min
+FAST = os.environ.get('FAST') == '1'
 
 
 def log(*a):
@@ -104,7 +107,7 @@ for t in watch:
 H = state.setdefault('holders', {})
 for t in watch:   # top holders straight from the chain, refreshed every 6 h
     h = H.get(t['mint'])
-    if h and now - h['at'] < 6 * 3600: continue
+    if FAST or (h and now - h['at'] < 6 * 3600): continue
     try:
         accs = rpc('getTokenLargestAccounts', [t['mint']], RPC_IDX, tries=5 if KEY else 2)['value']
         info = rpc('getMultipleAccounts', [[a['address'] for a in accs], {'encoding': 'jsonParsed'}])['value']
@@ -133,7 +136,7 @@ bots = set(state.get('bots', []))
 raw = []        # (wallet, sig, time, {mint: delta})
 budget = TX_BUDGET
 for w in sorted(whale, key=lambda w: min(x['rank'] for x in whale[w])):
-    if w in bots or budget <= 0: continue
+    if FAST or w in bots or budget <= 0: continue
     last = state['last'].get(w)
     try: sigs = rpc('getSignaturesForAddress', [w, {'limit': NEW_SIGS_MAX, **({'until': last} if last else {})}])
     except Exception as e: log('sigs', w[:6], e); continue
@@ -174,6 +177,7 @@ sym = lambda m: (meta.get(m) or {}).get('s') or m[:4]
 # number: most of those wallets sold and left an empty token account behind) ----------
 marine = load('whales.json', {}).get('marine')
 try:
+    assert not FAST, 'kept from the last full pass'
     prog = rpc('getAccountInfo', [MARINE, {'encoding': 'base64'}], RPC_IDX)['value']['owner']
     dec = rpc('getTokenSupply', [MARINE], RPC_IDX)['value']['decimals']
     accs = rpc('getProgramAccounts', [prog, {'encoding': 'base64', 'dataSlice': {'offset': 32, 'length': 40},
@@ -395,7 +399,7 @@ lp = []
 board = load('board.json', {}).get('tokens', {})
 every = {t['mint']: t for t in toks}
 for m, b in board.items(): every.setdefault(m, {'mint': m, 'symbol': b.get('symbol'), 'image': b.get('image')})
-for t in every.values():
+for t in ([] if FAST else every.values()):
     m = t['mint']
     time.sleep(0.3)
     try:
@@ -413,7 +417,7 @@ for t in every.values():
                 lp.append({'m': m, 's': t.get('symbol'), 'i': t.get('image'), 'pair': (p.get('name') or '').replace('-', '/'), 'dex': 'Meteora DLMM',
                            'tvl': round(tvl), 'fee': round(fee), 'd': round(fee / tvl * 100, 2), 'url': f"https://app.meteora.ag/dlmm/{p['address']}"})
     except Exception as e: log('meteora', t.get('symbol'), e)
-lp = sorted(lp, key=lambda x: -x['d'])[:20]
+lp = sorted(lp, key=lambda x: -x['d'])[:20] if not FAST else load('whales.json', {}).get('lp', [])
 
 old = {s['id']: s['t'] for s in load('whales.json', {}).get('signals', [])}
 for s in signals: s['t'] = old.get(s['id'], s['t'])            # a signal keeps the time it first fired
@@ -460,6 +464,7 @@ def series(tf, agg):
     o = {r[0]: r[4] for r in other['data']['attributes']['ohlcv_list']}
     return sorted([r[0], r[4], o[r[0]]] for r in tok['data']['attributes']['ohlcv_list'] if r[0] in o)
 try:
+    assert not FAST or now // 120 % 5 == 0, 'chart every ~10 min in the fast passes'
     m15, h4 = series('minute', 15), series('hour', 4)
     if m15:
         hourly = {}
@@ -467,4 +472,4 @@ try:
         save('chart.json', {'1d': m15[-96:], '7d': list(hourly.values())[-168:], 'all': h4, 'at': int(time.time())})
         log(f'chart: {len(m15)} 15m, {len(h4)} 4h candles')
 except Exception as e: log('chart', e)
-log(f"done: {len(trades)} whale swaps in 24h, {len(signals)} signals, {calls} RPC calls, rpc={'helius' if KEY else 'public'}")
+log(f"done{' (fast pass)' if FAST else ''}: {len(trades)} whale swaps in 24h, {len(signals)} signals, {calls} RPC calls, rpc={'helius' if KEY else 'public'}")
