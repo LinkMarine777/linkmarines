@@ -1473,6 +1473,10 @@ setTimeout(()=>{dbAlerts();setInterval(dbAlerts,20e3)},5000);
   if(ctx)ctx.onstatechange=show;addEventListener('pointerdown',()=>setTimeout(show,300));addEventListener('keydown',()=>setTimeout(show,300));
   g.addEventListener('click',()=>{try{ctx&&ctx.resume()}catch(e){}g.style.display='none'})})();
 
+// coming back to the tab (browsers slow or pause timers while it's hidden): catch up on price, trades, chart and payouts at once
+(()=>{let away=0;document.addEventListener('visibilitychange',()=>{if(document.hidden){away=Date.now();return}
+  if(!away||Date.now()-away<20e3)return;try{loadMarket();loadTrades();loadRewards();loadChart()}catch(e){}})})();
+
 // when a new version of the site goes live, reload at a quiet moment (no pop-up showing, checkout closed, not typing), so
 // every open page runs the same code and shows the same alerts. Never on the broadcast (the stream bot reloads that).
 (()=>{if(typeof OBS!=='undefined'&&OBS)return;let tag=null;

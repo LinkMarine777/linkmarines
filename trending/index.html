@@ -207,6 +207,17 @@ const open2=m=>'/terminal/token?ca='+encodeURIComponent(m);
 
 // One row per token: stonkfun's top 30 by volume merged with thestonkboard's top 100 (both snapshotted by the bot)
 let ROWS=[],sortK='vol',showAll=false,SC={};
+
+// live quotes: the saved token list refreshes every 20 min, so price, 24h change, volume and market cap come straight from
+// DexScreener every minute for the busiest tokens (and $MARINE): the most liquid pair's price and market cap, volume summed
+// over all of a token's pairs. Laid over the saved list, so a reload of the list never shows older numbers.
+let LIVE={},liveAt=0;
+function applyLive(){ROWS.forEach(r=>{const q=LIVE[r.mint];if(!q)return;r.price=q.price;if(q.chg!=null)r.chg=q.chg;if(q.vol)r.vol=q.vol;if(q.mcap)r.mcap=q.mcap})}
+async function loadQuotes(){const ms=[...new Set([MARINE,...ROWS.slice().sort((a,b)=>(b.vol||0)-(a.vol||0)).slice(0,59).map(r=>r.mint)])],next={};
+  for(let i=0;i<ms.length;i+=30){try{const d=await j('https://api.dexscreener.com/tokens/v1/solana/'+ms.slice(i,i+30).join(','));
+    (Array.isArray(d)?d:[]).forEach(p=>{const m=p.baseToken&&p.baseToken.address;if(!m||!ms.includes(m))return;const l=(p.liquidity||{}).usd||0,q=next[m]||(next[m]={l:-1,vol:0});
+      q.vol+=(p.volume||{}).h24||0;if(l>q.l){q.l=l;q.price=+p.priceUsd;q.chg=(p.priceChange||{}).h24;q.mcap=p.marketCap||p.fdv}})}catch(e){}}
+  if(!Object.keys(next).length)return;Object.assign(LIVE,next);liveAt=Date.now();applyLive();render()}
 async function load(){
   const [tk,bd]=await Promise.allSettled([j(DATA+'tokens.json?'+Date.now()),j(DATA+'board.json?'+Date.now())]);
   const T=tk.status==='fulfilled'?tk.value.tokens||[]:[],B=bd.status==='fulfilled'?bd.value.tokens||{}:{},by={};
@@ -216,6 +227,7 @@ async function load(){
     Object.assign(r,{rank:b.rank,apy:b.apy3d??b.apy24h,apr:b.apr3d??b.apr24h,holders:b.holders,h24:b.hold24h,bonded:b.bondedAt?Date.parse(b.bondedAt):null});
     r.price=r.price??b.price;r.chg=r.chg??b.chg24;r.vol=r.vol??b.vol24;r.mcap=r.mcap??b.mcap;r.paid=r.paid??b.paidUsd;r.quote=r.quote||b.quote}
   ROWS=Object.values(by);
+  applyLive();
   if(bd.status==='fulfilled'){APY=(bd.value.apy24h||[]).slice(0,10);renderApy()}if(!FLOW)loadFlow();
   const tv=T.reduce((s,t)=>s+(+t.vol24||0),0),paid=Object.values(B).reduce((s,b)=>s+(+b.paidUsd||0),0),ap=Object.values(B).map(b=>b.apy3d).filter(v=>v!=null).sort((a,b)=>a-b);
   $('kVol').textContent=T.length?compact(tv):'—';$('kPaid').textContent=paid?compact(paid):'—';$('kApy').textContent=ap.length?apyFmt(ap[Math.floor(ap.length/2)]):'—';
@@ -368,8 +380,11 @@ $('pinCopy').onclick=async()=>{const b=$('pinCopy');try{await navigator.clipboar
 async function loadPin(){try{const d=await j('https://api.dexscreener.com/tokens/v1/solana/'+MARINE);const p=(Array.isArray(d)?d:[]).sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0))[0];if(!p)return;
   if(p.info?.imageUrl)$('pinImg').src=p.info.imageUrl;const c=+p.priceChange?.h24;
   $('pinSub').innerHTML='<span style="color:#fff">'+px(+p.priceUsd)+'</span> '+(isFinite(c)?`<span class="${c>=0?'up':'dn'}">${c>=0?'▲':'▼'} ${Math.abs(c).toFixed(2)}%</span> · `:'')+'mcap '+compact(p.marketCap||p.fdv)+' · vol '+compact(p.volume?.h24)}catch(e){}}
-load();loadPin();
-setInterval(()=>{if(!document.hidden){load();loadPin()}},300000);
+load().then(loadQuotes);loadPin();
+setInterval(()=>{if(!document.hidden)load()},300000);setInterval(()=>{if(!document.hidden)loadPin()},30e3);setInterval(()=>{if(!document.hidden)loadQuotes()},60e3);
+// coming back to the tab (timers pause while it's hidden): catch up on everything at once
+let seenAt=Date.now();document.addEventListener('visibilitychange',()=>{if(document.hidden){seenAt=Date.now();return}
+  if(Date.now()-seenAt<20e3)return;load().then(loadQuotes);loadPin();loadIntel();loadFlow()});
 
 // browsers keep a page silent until it's clicked once: check right away and, while sound is blocked, say so until the
 // first click (alert beeps used to fail silently). The broadcast's browser is allowed to play sound, so it never shows there.
