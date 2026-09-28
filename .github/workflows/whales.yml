@@ -14,7 +14,7 @@ concurrency:
 jobs:
   radar:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,9 +38,9 @@ jobs:
         env:
           FAST: '1'
         run: |
-          end=$(( $(date +%s) + 22 * 60 ))
+          end=$(( $(date +%s) + 26 * 60 ))
           while [ $(date +%s) -lt $end ]; do
-            sleep 30
+            sleep 5
             python3 main/intel/whales.py data/terminal || echo "fast pass failed"
             (cd data && bash ../main/intel/push-data.sh "whale radar (fast)") || echo "save failed"
           done
