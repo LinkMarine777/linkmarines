@@ -199,6 +199,7 @@ tr.whale td{background:rgba(74,122,255,.08)}
 .cMiss{display:block;font-size:10px;margin-top:2px}.cMiss:empty{display:none}
 .empty{font-size:12px;line-height:1.55;color:var(--dim);padding:6px 0}.empty b{color:#fff;font-weight:400}.empty a{color:var(--green)}
 .cDelay{display:block;font-size:11px;color:#FF6B00;margin-top:3px;text-decoration:none}.cDelay:hover{text-decoration:underline}.dly{font-size:9px;letter-spacing:.5px;color:#FF6B00;border:1px solid rgba(255,107,0,.5);padding:0 3px;margin-left:4px;vertical-align:1px}
+#scoreDly{margin-left:6px}.dly.lv,.cDelay.lv{color:var(--green)!important;border-color:rgba(57,255,106,.5)}
 .cHead b{font-family:'VT323';font-size:24px;font-weight:400;color:#FF6B00;letter-spacing:1px}.cHead .dim{font-size:11px}
 .cbtn{border-color:#FF6B00!important;color:#FF6B00!important;white-space:nowrap}.cbtn:hover{background:rgba(255,107,0,.12)}
 /* masonry: panels stack into balanced columns (count set in JS), so uneven heights never leave holes */
@@ -471,7 +472,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   <div class="stat xtra"><label>Payouts sent</label><b id="sPayouts">—</b><span class="dim" id="sHolders">&nbsp;</span><span class="dim" id="pMin" style="display:block">&nbsp;</span></div>
   <div class="stat"><label class="tkSym">$MARINE</label><b id="sPrice">—</b><span id="sChg">&nbsp;</span></div>
   <div class="stat"><label>Market cap</label><b id="sMcap">—</b><span class="dim" id="sLiq">&nbsp;</span></div>
-  <div class="stat" id="scoreStat" style="display:none" title="CLOBr score: 0-100 balance of support vs resistance liquidity. Click for more on CLOBr"><label>CLOBr score ↗</label><b id="sScore">—</b><span class="dim" id="sScoreMsg">&nbsp;</span><span class="dly" title="CLOBr data on 2.0 is up to 1 hour old">delayed</span><span class="dim" id="sScoreWhy" style="display:block">&nbsp;</span></div>
+  <div class="stat" id="scoreStat" style="display:none" title="CLOBr score: 0-100 balance of support vs resistance liquidity. Click for more on CLOBr"><label>CLOBr ↗ <span class="dly" id="scoreDly" title="CLOBr data on 2.0 is up to 1 hour old; live with the CLOBr extension">delayed</span></label><b id="sScore">—</b><span class="dim" id="sScoreMsg">&nbsp;</span><span class="dim" id="sScoreWhy" style="display:block">&nbsp;</span></div>
   <div class="stat fx xtra"><label>24h volume</label><b id="sVol">—</b><span class="dim" id="sTx">&nbsp;</span></div>
   <div class="stat xtra"><label class="tkQs">$LINK</label><b id="sLink">—</b><span id="sLinkChg">&nbsp;</span></div>
   <button class="moreStats" id="moreStats" type="button">MORE STATS ▾</button>
@@ -848,10 +849,17 @@ const every=s=>!s?'—':s<60?Math.round(s)+'s':s<3600?Math.floor(s/60)+'m'+(s%60
 const dshort=d=>{const t=Date.parse(d);return isNaN(t)?String(d||''):new Date(t).toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'})};
 const tokAmt=n=>n==null?'—':(n>=0?'▲ ':'▼ ')+compact(Math.abs(n),'');
 async function loadClobr(){if(!FLAGS.CLOBR_ENABLED)return;try{const d=await j(BOT+'/clobr?mint='+CA+'&d=1');CL=d&&!d.error?d:null}catch(e){}renderClobr();draw()}
+// live vs delayed: live when the data came live (the CLOBr extension serves a visitor's own key, or marks our tag live);
+// otherwise our hour-delayed copy. The score tag and the analytics header always agree.
+function clobrLive(){const t=$('scoreDly'),live=!!(CL&&CL.delayed===false)||/^\s*live\s*$/i.test(t.textContent);
+  if(t.textContent.trim().toLowerCase()!==(live?'live':'delayed'))t.textContent=live?'live':'delayed';t.classList.toggle('lv',live);
+  const d=$('clobrDelay');d.classList.toggle('lv',live);
+  d.textContent=live?'● Live · real-time CLOBr data via your CLOBr extension ▸':'⏱ Delayed'+(CL&&CL.fetchedAt?' · updated '+ago(CL.fetchedAt).split(' ')[0]+' ago':' up to 1h')+' · real-time on CLOBr Pro ▸'}
+try{new MutationObserver(()=>clobrLive()).observe(document.getElementById('scoreDly'),{childList:true,characterData:true,subtree:true})}catch(e){}
 function renderClobr(){
   $('clobrLink').href=clobrUrl();$('clobrDelay').href=clobrUrl();
   // delayed like CLOBr's free tier: say how old the numbers are and where to get them live
-  $('clobrDelay').textContent='⏱ Delayed'+(CL&&CL.fetchedAt?' · updated '+ago(CL.fetchedAt).split(' ')[0]+' ago':' up to 1h')+' · real-time on CLOBr Pro ▸';$('scoreStat').onclick=()=>open(clobrUrl(),'_blank','noopener');
+  clobrLive();$('scoreStat').onclick=()=>open(clobrUrl(),'_blank','noopener');
   const sc=CL&&CL.score;$('scoreStat').style.display=sc?'':'none';
   if(sc){$('sScore').textContent=sc.score!=null?(+sc.score).toFixed(1):'—';$('sScore').style.color=sc.score>=60?'var(--green)':sc.score<=40?'var(--red)':'var(--amber)';
     // CLOBr's message is "verdict: reason"; the tile shows both lines so the score explains itself
