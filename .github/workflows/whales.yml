@@ -24,6 +24,13 @@ jobs:
         with:
           ref: data
           path: data
+      # a quick pass first, so the alerts don't pause for the few minutes the full scan below takes
+      - name: quick pass before the full scan
+        env:
+          FAST: '1'
+        run: |
+          python3 main/intel/whales.py data/terminal || echo "fast pass failed"
+          (cd data && bash ../main/intel/push-data.sh "whale radar (fast)") || echo "save failed"
       - name: scan whales
         env:
           HELIUS_KEY: ${{ secrets.HELIUS_KEY }}
