@@ -30,7 +30,9 @@ import base64, json, os, struct, sys, time, urllib.request
 OUT = sys.argv[1] if len(sys.argv) > 1 else 'terminal'
 BOT = 'https://war-room-bot.linkmarine777.workers.dev'
 KEY = os.environ.get('HELIUS_KEY', '').strip()
-RPC = f'https://mainnet.helius-rpc.com/?api-key={KEY}' if KEY else 'https://solana-rpc.publicnode.com'
+URL = os.environ.get('SOLANA_RPC', '').strip()   # the same full RPC URL the bot uses (its Cloudflare secret), if copied here
+RPC = URL or (f'https://mainnet.helius-rpc.com/?api-key={KEY}' if KEY else 'https://solana-rpc.publicnode.com')
+KEY = KEY or URL   # below, KEY only means "a personal RPC is set"
 RPC_IDX = RPC if KEY else 'https://api.mainnet-beta.solana.com'   # publicnode won't list a token's largest holders
 SF = 'https://www.stonkfun.xyz/api/public/v1/tokens/'
 MARINE = 'F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK'
@@ -47,7 +49,10 @@ WHALES_PER_TOKEN, NEW_SIGS_MAX, TX_BUDGET, MIN_USD = 20, 12, 450, 25
 now = int(time.time())
 
 
-def log(*a): print(*[str(x).replace(KEY, '***') if KEY else x for x in a], flush=True)
+def log(*a):
+    out = [str(x) for x in a]
+    for k in (KEY, URL): out = [x.replace(k, '***') for x in out] if k else out
+    print(*out, flush=True)
 
 
 def get(url, body=None, tries=4):
@@ -121,7 +126,7 @@ for t in watch:
         whale.setdefault(w, []).append({'mint': t['mint'], 'symbol': t['symbol'], 'rank': rank, 'balance': b,
                                         'veteran': now - first[f"{w}:{t['mint']}"] >= 30 * 86400})
 log(f'watching {len(whale)} wallets across {len(watch)} tokens')
-if not whale and not KEY: log('no holder lists: public nodes refuse getTokenLargestAccounts. Add the HELIUS_KEY repository secret (Settings -> Secrets and variables -> Actions).')
+if not whale and not KEY: log('no holder lists: public nodes refuse getTokenLargestAccounts. Add the SOLANA_RPC (or HELIUS_KEY) repository secret (Settings -> Secrets and variables -> Actions).')
 
 # ---------- new transactions per whale ----------
 bots = set(state.get('bots', []))
