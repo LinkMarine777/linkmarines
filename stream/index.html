@@ -85,7 +85,7 @@ html.fit #soundBtn{font-size:24px;padding:4px 10px}
 .stat.pulse{background:rgba(42,90,218,.07)}
 .stat.pulse .row{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
 .stat.pulse .st{font-size:10px;letter-spacing:1.5px;border:1px solid var(--blue2);color:var(--blue2);padding:0 5px}
-.stat.pulse .st.armed{border-color:var(--green);color:var(--green);animation:blink 1.2s infinite}
+.stat.pulse .st.paid{border-color:var(--green);color:var(--green)}.stat.pulse .st.armed{border-color:var(--green);color:var(--green);animation:blink 1.2s infinite}
 .bar{height:10px;border:1px solid var(--line);background:#050914;position:relative;overflow:hidden;margin:5px 0 3px}
 .bar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--blue),var(--blue2));transition:width .6s}
 .bar.ready i{background:linear-gradient(90deg,#1c9c42,var(--green));animation:blink 1.2s infinite}
@@ -446,6 +446,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 #akPop .dis{opacity:.45;cursor:default}#akPop input{accent-color:var(--blue2)}#akPop small{display:block;color:var(--dim);margin-top:6px;font-size:10px}
 #soundBtn,#alertBtn{display:inline-flex;align-items:center;justify-content:center;color:var(--blue2)!important;padding:4px 6px!important;font-size:0!important}#soundBtn svg,#alertBtn svg{width:16px;height:16px}#soundBtn.off,#alertBtn.off{color:var(--dim)!important;opacity:1!important}#soundBtn svg,#alertBtn svg{display:block}
 .soc{display:inline-flex;gap:8px}.soc{gap:6px!important}.soc a{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);color:var(--blue2);padding:4px 6px;line-height:0}.soc svg{width:16px;height:16px}.soc a:hover{border-color:var(--blue2);color:#fff;text-decoration:none}
+#audioGate{display:none!important}
 </style>
 </head>
 <body>
@@ -488,7 +489,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 <section class="stats">
   <div class="stat hero"><label><span class="tkQ">LINK</span> distributed to holders</label><b id="sDist">—</b><span class="dim" id="sDistUsd">&nbsp;</span><span id="s24" style="display:block">&nbsp;</span></div>
   <div class="stat pulse">
-    <div class="row"><label>Next pulse · pending</label><span class="st" id="pState">—</span></div>
+    <div class="row"><label>Next pulse · filling</label><span class="st" id="pState">—</span></div>
     <div class="row"><b id="pPending" style="font-size:30px">—</b><span class="dim" id="pPendingUsd"></span></div>
     <div class="bar" id="pBar"><i style="width:0"></i></div>
     <div class="pmeta"><span id="pPct">0%</span><span id="pLast">last —</span><span id="pThr">min —</span></div>
@@ -757,7 +758,7 @@ async function loadRewards(){
   $('pBar').classList.toggle('ready',p>=1);
   $('pPct').textContent=(p*100).toFixed(0)+'% loaded';
   $('pThr').textContent='min '+usd(r.minDistributionUsd,0);
-  $('pState').textContent=p>=1?'ARMED':'LOADING';$('pState').classList.toggle('armed',p>=1);
+  pulseBadge();
   $('pMin').textContent='hold '+usd(r.minHoldingUsd,0)+'+ to receive';
   const w=r.window24h,w7=r.window7d;
   $('s24').innerHTML=w&&w.coveredSec>=3600&&w.tokens>=0.05?'<span class="up">+'+num(Math.max(0,w.tokens),1)+' '+TK.quote+'</span> <span class="dim">'+(w.complete?'last 24h':'in '+ago(Date.now()-w.coveredSec*1000))+(w7&&w7.complete?' · '+num(w7.tokens,0)+' last 7d':'')+'</span>':(w?'<span class="dim">24h total: tracking…</span>':'&nbsp;');
@@ -765,7 +766,11 @@ async function loadRewards(){
   const stale=Date.now()/1000-r.snapshotAt>1800;
   $('live').classList.toggle('stale',stale);$('liveTxt').textContent=stale?'DELAYED':'LIVE';
 }
-function tickLast(){if(rewards&&rewards.lastPayoutAt)$('pLast').textContent='last '+ago(Date.parse(rewards.lastPayoutAt))+' ago'}
+// the badge: ✓ JUST PAID for 10 min after a payout (the bar has just emptied), then LOADING until it's full, then ARMED
+function pulseBadge(){const r=rewards;if(!r)return;const el=$('pState'),since=r.lastPayoutAt?(Date.now()-Date.parse(r.lastPayoutAt))/1000:1e9,
+  p=Math.min(1,(r.pendingUsd||0)/(r.minDistributionUsd||1)),just=since<600&&p<1;
+  el.textContent=just?'✓ JUST PAID · '+Math.max(1,Math.round(since/60))+'m ago':p>=1?'ARMED':'LOADING';el.classList.toggle('armed',!just&&p>=1);el.classList.toggle('paid',just)}
+function tickLast(){if(rewards&&rewards.lastPayoutAt)$('pLast').textContent='last '+ago(Date.parse(rewards.lastPayoutAt))+' ago';pulseBadge()}
 
 // ---------- market (DexScreener) ----------
 let marinePx=null;
@@ -1425,8 +1430,9 @@ const HOUSE={'1':['s1-better-call-sergey','s1-holding-alone','s1-plaid-motors'],
 const SPONSOR={
   '1':[{img:'/terminal/house/s1-jtx.png',href:'https://app.jtx.com/ref/TheMarines',tag:'JTX · JOIN ▸'},
        {img:'/terminal/house/s1-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'},
-       {img:'/terminal/house/s1-clobr-pro.png',href:'https://clobr.io/premium?ref=DF92VC53',tag:'CLOBr PRO · 7 DAYS FREE ▸'}],
-  '2':[{img:'/terminal/house/s2-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}],
+       {img:'/terminal/house/s1-clobr-pro.png',href:'https://clobr.io/premium?ref=DF92VC53',tag:'CLOBr PRO · 7 DAYS FREE ▸'},
+       {img:'/terminal/house/s1-bridge.png',href:'/bridge/',tag:'NEW TO SOLANA? ▸'}],
+  '2':[{img:'/terminal/house/s2-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'},{img:'/terminal/house/s2-bridge.png',href:'/bridge/',tag:'NEW TO SOLANA? ▸'}],
   '3':[{img:'/terminal/house/s2-clobr-pro.png',href:'https://clobr.io/premium?ref=DF92VC53',tag:'CLOBr PRO · 7 DAYS FREE ▸'}]
 };
 function fillers(k){return [...(HOUSE[k]||[]).map(n=>({house:n})),...(SPONSOR[k]||[])]}
@@ -1652,22 +1658,19 @@ document.fonts?.ready.then(draw);
   if(dm==='pulse')pulseTakeover(29.4,391,2439,6555.2);
   else{bpQ.push({v:dm==='bigbuy'?3120:240,amt:dm==='bigbuy'?2.1e6:162000,w:'Dem0'});nextBuy()}},2500)}
 
-// browsers keep a page silent until it's clicked once: check right away and, while sound is blocked, say so until the
-// first click (alert beeps used to fail silently). The broadcast's browser is allowed to play sound, so it never shows there.
-(()=>{const g=$('audioGate');if(!g||(typeof OBS!=='undefined'&&OBS))return;let ctx=null;
-  try{ctx=actx=actx||new(window.AudioContext||window.webkitAudioContext)()}catch(e){}
-  const show=()=>{g.style.display=soundOn&&ctx&&ctx.state!=='running'?'block':'none'};show();
-  if(ctx)ctx.onstatechange=show;addEventListener('pointerdown',()=>setTimeout(show,300));addEventListener('keydown',()=>setTimeout(show,300));
-  g.addEventListener('click',()=>{try{ctx&&ctx.resume()}catch(e){}g.style.display='none'})})();
+// sound is on by default; browsers only allow it after the visitor's first click, tap or key press anywhere, which
+// switches it on silently (no prompt). The broadcast's browser is allowed to play sound from the start.
+addEventListener('touchend',()=>{try{unlockAudio()}catch(e){}},{once:true});
 
 // coming back to the tab (browsers slow or pause timers while it's hidden): catch up on price, trades, chart and payouts at once
 (()=>{let away=0;document.addEventListener('visibilitychange',()=>{if(document.hidden){away=Date.now();return}
   if(!away||Date.now()-away<20e3)return;try{loadMarket();loadTrades();loadRewards();loadChart()}catch(e){}})})();
 
 // when a new version of the site goes live, reload at a quiet moment (no pop-up showing, checkout closed, not typing), so
-// every open page runs the same code and shows the same alerts. Never on the broadcast (the stream bot reloads that).
-(()=>{if(typeof OBS!=='undefined'&&OBS)return;let tag=null;
-  const busy=()=>document.hidden||document.querySelector('#infoPop.show,#buyPop.show,#ttsPop.show,#pulseTO.show,#ttsModal.show,#akPop.open,.mnu.open')||['INPUT','TEXTAREA','SELECT'].includes((document.activeElement||{}).tagName);
+// every open page runs the same code and shows the same alerts. The broadcast too, so it never needs a manual /reload: it
+// waits the same way, so the refresh (a second or two) never cuts off an alert, a TTS or a pulse.
+(()=>{let tag=null;
+  const busy=()=>document.hidden||document.querySelector('#infoPop.show,#buyPop.show,#ttsPop.show,#pulseTO.show,#ttsModal.show,#akPop.open,.mnu.open')||['infoQ','bpQ','ttsQ','apQ','pulseQ'].some(q=>{try{return eval(q).length>0}catch(e){return false}})||['INPUT','TEXTAREA','SELECT'].includes((document.activeElement||{}).tagName);
   const chk=async()=>{try{const r=await fetch(location.pathname,{method:'HEAD',cache:'no-store'});const t=r.ok&&(r.headers.get('etag')||r.headers.get('last-modified'));if(!t)return;
     if(tag===null){tag=t;return}if(t!==tag){const go=()=>busy()?setTimeout(go,5000):location.reload();go()}}catch(e){}};
   chk();setInterval(chk,300e3)})();
