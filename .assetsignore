@@ -8,5 +8,8 @@ wrangler.jsonc
 vercel.json
 CNAME
 intel
-stream
+# the stream PC's scripts (the stream page itself, stream/index.html, is part of the site)
+stream/*.sh
+stream/*.py
+stream/__pycache__
 *.md
