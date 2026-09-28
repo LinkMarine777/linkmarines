@@ -111,6 +111,7 @@
   .cta-row a.warroom{border-color:var(--amber);color:var(--amber)}
   .cta-row a.warroom:hover{background:var(--amber);border-color:var(--amber);color:#0a0f1f;box-shadow:0 0 24px rgba(255,210,63,.5)}
   .cta-row a.terminal{border-color:#3ddc84;color:#3ddc84}
+  .tts-link{display:inline-block;margin-top:16px;color:#ffd23f;font-size:13px;letter-spacing:1px;text-decoration:none;border-bottom:1px dashed rgba(255,210,63,.5)}.tts-link:hover{color:#fff}
   .cta-row a.terminal:hover{background:#3ddc84;border-color:#3ddc84;color:#0a0f1f;box-shadow:0 0 24px rgba(61,220,132,.5)}
 
   /* propaganda wall — scrolling meme marquee */
@@ -342,11 +343,13 @@
   </div>
   <div class="cta-row">
     <a class="primary" href="https://jup.ag/tokens/F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">Enlist (Buy)</a>
-    <a class="terminal" href="/terminal/">▶ Live Terminal</a>
+    <a class="terminal" href="/terminal/">▶ War Room Terminal</a>
+    <a href="/terminal2/">🔥 Trending</a>
     <a href="https://dexscreener.com/solana/F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">Chart</a>
     <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener">X</a>
-    <a class="warroom" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ Join the War Room</a>
+    <a class="warroom" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ War Room Chat</a>
   </div>
+  <a class="tts-link" href="/terminal2/checkout.html?k=t" onclick="return wrCheckout('t')">📢 Put your message on The War Room stream (TTS)</a>
 </div>
 
 <div class="wall">
@@ -825,6 +828,10 @@ function copyCA(btn){
     const t=btn.textContent;btn.textContent='COPIED ✓';setTimeout(()=>btn.textContent=t,1500);
   });
 }
+</script>
+<script>
+// the TTS / billboard checkout opens as its own window (wallet extensions connect normally there); falls back to the page
+function wrCheckout(k){const w=window.open('/terminal2/checkout.html?k='+k,'wrCheckout','width=540,height=860');return !w}
 </script>
 </body>
 </html>
