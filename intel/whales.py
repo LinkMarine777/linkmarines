@@ -23,7 +23,7 @@ Signals (each fires once):
   score        a token's CLOBr score changed verdict or moved 10+ points (hour-delayed scores via the bot)
 Also: lp = stonkfun tokens' Raydium + Meteora pools ranked by what liquidity earned in fees over 24 h (free APIs).
 """
-import json, os, sys, time, urllib.request
+import base64, json, os, struct, sys, time, urllib.request
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else 'terminal'
 BOT = 'https://war-room-bot.linkmarine777.workers.dev'
@@ -159,6 +159,26 @@ for i in range(0, len(mints), 50):
             meta[t['id']] = {'s': t.get('symbol'), 'i': t.get('icon'), 'p': t.get('usdPrice') or 0}
     except Exception as e: log('jupiter', e)
 sym = lambda m: (meta.get(m) or {}).get('s') or m[:4]
+
+# ---------- $MARINE's real holder count: wallets holding a balance right now (stonkfun's holderCount is an all-time
+# number: most of those wallets sold and left an empty token account behind) ----------
+marine = load('whales.json', {}).get('marine')
+try:
+    prog = rpc('getAccountInfo', [MARINE, {'encoding': 'base64'}], RPC_IDX)['value']['owner']
+    dec = rpc('getTokenSupply', [MARINE], RPC_IDX)['value']['decimals']
+    accs = rpc('getProgramAccounts', [prog, {'encoding': 'base64', 'dataSlice': {'offset': 32, 'length': 40},
+                                              'filters': [{'memcmp': {'offset': 0, 'bytes': MARINE}}]}], RPC_IDX)
+    own = {}
+    for a in accs:
+        rb = base64.b64decode(a['account']['data'][0]); own[rb[:32]] = own.get(rb[:32], 0) + struct.unpack('<Q', rb[32:40])[0]
+    held = [v / 10 ** dec for v in own.values() if v > 0]
+    px = (meta.get(MARINE) or {}).get('p') or 0
+    try: minusd = float(get(f'https://www.stonkfun.xyz/api/rewards?mint={MARINE}').get('minHoldingUsd') or 20)
+    except Exception: minusd = 20
+    marine = {'holders': len(held), 'eligible': sum(1 for v in held if v * px >= minusd) if px else None,
+              'accounts': len(own), 'minUsd': minusd, 'at': now}
+    log(f"$MARINE: {len(held)} holders, {marine['eligible']} with ${minusd:.0f}+, {len(own)} token accounts")
+except Exception as e: log('marine holders', e)
 
 # ---------- swaps ----------
 seen = {s['sig'] for s in state['swaps']}
@@ -345,6 +365,6 @@ save('whales.json', {
     'at': now, 'wallets': len(whale), 'tokens': ['$' + t['symbol'] for t in watch],
     'buying': sorted([r for r in rows if r['net'] > 0], key=lambda r: (-r['buyers'], -r['net']))[:15],
     'selling': sorted([r for r in rows if r['net'] < 0], key=lambda r: (-r['sellers'], r['net']))[:15],
-    'signals': signals, 'recent': recent, 'lp': lp})
+    'signals': signals, 'recent': recent, 'lp': lp, 'marine': marine})
 save('whales-state.json', state)
 log(f"done: {len(trades)} whale swaps in 24h, {len(signals)} signals, {calls} RPC calls, rpc={'helius' if KEY else 'public'}")
