@@ -112,6 +112,7 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
 .lr{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--line);color:inherit;text-decoration:none;font-size:12px}.lr:hover{background:rgba(74,122,255,.06);text-decoration:none}
 .lr img,.lr .ph0{width:22px;height:22px;border-radius:50%;object-fit:cover;background:#0b1a2e;flex:none}.lr .ln{flex:1;min-width:0;overflow:hidden}.lr .ln b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lr small{display:block;color:var(--dim);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lr .r{text-align:right;flex:none}.lr .r b{display:block}.lr .rk2{color:var(--dim);width:22px;text-align:right;flex:none}
+#audioGate{position:fixed;right:12px;bottom:40px;z-index:40;font-size:11px;background:#000c;border:1px solid var(--amber,#ffb000);color:var(--amber,#ffb000);padding:5px 9px;cursor:pointer;display:none}
 </style>
 </head>
 <body>
@@ -142,6 +143,7 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
       </div></div>
   </nav>
 </header>
+<div id="audioGate">🔊 click anywhere to turn on sound</div>
 <div id="infoPop" title="Click to close"><div class="k" id="ipK"></div><div class="h" id="ipH"></div><div class="d" id="ipD"></div></div>
 </header>
 
@@ -368,6 +370,14 @@ async function loadPin(){try{const d=await j('https://api.dexscreener.com/tokens
   $('pinSub').innerHTML='<span style="color:#fff">'+px(+p.priceUsd)+'</span> '+(isFinite(c)?`<span class="${c>=0?'up':'dn'}">${c>=0?'▲':'▼'} ${Math.abs(c).toFixed(2)}%</span> · `:'')+'mcap '+compact(p.marketCap||p.fdv)+' · vol '+compact(p.volume?.h24)}catch(e){}}
 load();loadPin();
 setInterval(()=>{if(!document.hidden){load();loadPin()}},300000);
+
+// browsers keep a page silent until it's clicked once: check right away and, while sound is blocked, say so until the
+// first click (alert beeps used to fail silently). The broadcast's browser is allowed to play sound, so it never shows there.
+(()=>{const g=$('audioGate');if(!g||(typeof OBS!=='undefined'&&OBS))return;let ctx=null;
+  try{ctx=actx=actx||new(window.AudioContext||window.webkitAudioContext)()}catch(e){}
+  const show=()=>{g.style.display=soundOn&&ctx&&ctx.state!=='running'?'block':'none'};show();
+  if(ctx)ctx.onstatechange=show;addEventListener('pointerdown',()=>setTimeout(show,300));addEventListener('keydown',()=>setTimeout(show,300));
+  g.addEventListener('click',()=>{try{ctx&&ctx.resume()}catch(e){}g.style.display='none'})})();
 
 // when a new version of the site goes live, reload at a quiet moment (no pop-up showing, checkout closed, not typing), so
 // every open page runs the same code and shows the same alerts. Never on the broadcast (the stream bot reloads that).

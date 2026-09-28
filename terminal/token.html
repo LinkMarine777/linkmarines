@@ -1465,6 +1465,14 @@ async function dbAlerts(){try{const L=((await j(BOT+'/alerts?limit=50')).signals
     const [h,side]=DB_HEAD(x);infoAlert(h,(x.s?'$'+x.s:'')+(x.u?' · '+compact(x.u):''),x.text,side)})}catch(e){}}
 setTimeout(()=>{dbAlerts();setInterval(dbAlerts,20e3)},5000);
 
+// browsers keep a page silent until it's clicked once: check right away and, while sound is blocked, say so until the
+// first click (alert beeps used to fail silently). The broadcast's browser is allowed to play sound, so it never shows there.
+(()=>{const g=$('audioGate');if(!g||(typeof OBS!=='undefined'&&OBS))return;let ctx=null;
+  try{ctx=actx=actx||new(window.AudioContext||window.webkitAudioContext)()}catch(e){}
+  const show=()=>{g.style.display=soundOn&&ctx&&ctx.state!=='running'?'block':'none'};show();
+  if(ctx)ctx.onstatechange=show;addEventListener('pointerdown',()=>setTimeout(show,300));addEventListener('keydown',()=>setTimeout(show,300));
+  g.addEventListener('click',()=>{try{ctx&&ctx.resume()}catch(e){}g.style.display='none'})})();
+
 // when a new version of the site goes live, reload at a quiet moment (no pop-up showing, checkout closed, not typing), so
 // every open page runs the same code and shows the same alerts. Never on the broadcast (the stream bot reloads that).
 (()=>{if(typeof OBS!=='undefined'&&OBS)return;let tag=null;
