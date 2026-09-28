@@ -120,7 +120,7 @@ tr.me{background:rgba(42,90,218,.1)}
   </section>
 
   <div class="intel">
-    <section class="panel"><div class="ph"><h2>🐋 ALERTS</h2><span class="meta hide-sm">everything the stream alerts + whales · big trades · movers · Stonk Board · CLOBr · last 3 days</span>
+    <section class="panel"><div class="ph"><h2>🐋 ALERTS</h2><span class="meta hide-sm">every alert the terminals show, in order · whales · big trades · movers · Stonk Board · CLOBr</span>
       <div class="tabs" id="fk"><button data-f="all" class="on">ALL</button><button data-f="marine">$MARINE</button><button data-f="whale">WHALES</button><button data-f="mover">MARKET</button><button data-f="score">CLOBr</button></div></div>
       <div class="feed" id="feed"><p class="nt">loading…</p></div></section>
     <section class="panel"><div class="ph"><h2>💧 BEST LP · 24H FEES</h2><span class="meta hide-sm">fees per $ of liquidity · every stonkfun + Stonk Board token</span></div>
@@ -216,13 +216,17 @@ function renderIntel(){if(!IN)return;const icon=m=>(TOK[m]&&TOK[m].image)||'';
   $('feed').innerHTML=L.length?L.map(x=>{const [h,c]=kindOf(x),im=x.i||icon(x.m);
     return`<a class="fi" href="${x.m?open2(x.m):'#'}"><span class="ft">${ago(x.t*1000)}</span>${im?`<img src="${esc(im)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span class="ph0"></span>'}
       <span><b class="fk ${c}">${h}</b>${esc(x.text)}</span></a>`}).join('')
-    :`<p class="nt">${{score:'No CLOBr score changes',mover:'No market alerts',whale:'No whale alerts',marine:'No $MARINE alerts'}[fk]||'No alerts'} in the last 3 days yet. Checked every 30 minutes.</p>`;
+    :`<p class="nt">${{score:'No CLOBr score changes',mover:'No market alerts',whale:'No whale alerts',marine:'No $MARINE alerts'}[fk]||'No alerts'} yet.</p>`;
   const P=IN.lp||[];$('lpRows').innerHTML=P.length?P.map(x=>`<tr><td><div class="pp">${(x.i||icon(x.m))?`<img src="${esc(x.i||icon(x.m))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span style="width:20px;flex:none"></span>'}<span><a href="${open2(x.m)}">${esc(x.pair)}</a><span class="dx">${esc(x.dex)}</span></span></div></td>
       <td class="r">${compact(x.tvl)}</td><td class="r hide-sm">${compact(x.fee)}</td><td class="r up">${x.d.toFixed(1)}%</td><td class="r"><a class="add" href="${esc(x.url)}" target="_blank" rel="noopener">ADD ▸</a></td></tr>`).join('')
     :'<tr><td colspan="5" class="nt">No pools yet.</td></tr>'}
-async function loadIntel(){try{IN=await j(INTEL);renderIntel()}catch(e){}}
+// the alert history comes from the bot's database (every alert, saved in order, the same for everyone); pools and whale
+// data from the intel job's file
+async function loadIntel(){const [a,b]=await Promise.allSettled([j(BOT+'/alerts?limit=300'),j(INTEL)]);
+  if(b.status==='fulfilled')IN=b.value;if(!IN)IN={};
+  if(a.status==='fulfilled'&&a.value&&a.value.signals)IN.signals=a.value.signals;renderIntel()}
 $('fk').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;fk=b.dataset.f;[...$('fk').children].forEach(x=>x.classList.toggle('on',x===b));renderIntel()});
-loadIntel();setInterval(loadIntel,300e3);
+loadIntel();setInterval(loadIntel,60e3);
 $('pinCopy').onclick=async()=>{const b=$('pinCopy');try{await navigator.clipboard.writeText('F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK');b.textContent='COPIED ✓';b.classList.add('ok')}catch(e){b.textContent='F8Sc…TNK'}
   setTimeout(()=>{b.textContent='COPY CA';b.classList.remove('ok')},1500)};
 
