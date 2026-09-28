@@ -1006,7 +1006,10 @@ setInterval(()=>{if(!document.documentElement.classList.contains('fit'))return;
 
 // ---------- Terminal 2.0 panels: CLOBr (score tile + analytics) and the Stonk Board card ----------
 // Flip a flag to false to hide that data. CLOBr also needs its key on the bot, or it stays hidden.
-const FLAGS={CLOBR_ENABLED:true,STONKBOARD_ENABLED:true};
+// CLOBr's data on 2.0 would run on our Premium key, which is only for the $MARINE stream: 2.0 links to CLOBr instead
+const FLAGS={CLOBR_ENABLED:false,STONKBOARD_ENABLED:true};
+if(!FLAGS.CLOBR_ENABLED){$('clobrWrap').style.display='';$('clobrRow').style.display='none';$('clobrLink').href=clobrUrl();
+  const d=$('clobrDelay');d.href=clobrUrl();d.textContent='Order walls, whale flow, limit orders and the CLOBr score for this token, live on CLOBr ▸'}
 // Stonk Board figures for this mint come only from board.json (thestonkboard.com top 100, snapshotted by the bot).
 function boardStats(mint=TK.mint){if(!board)return null;
   if(board.tokens&&board.tokens[mint])return {...board.tokens[mint],...(boardX&&boardX.tokens&&boardX.tokens[mint]||{})};

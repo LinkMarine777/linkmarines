@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>WAR ROOM TERMINAL 2.0 · trending on stonkfun</title>
-<meta name="description" content="Trending stonkfun tokens: 24h volume, Stonk Board APY, holder payouts and CLOBr score in one list.">
+<meta name="description" content="Trending stonkfun tokens: 24h volume, Stonk Board APY and holder payouts in one list.">
 <meta property="og:title" content="Trending on stonkfun · WAR ROOM TERMINAL 2.0">
-<meta property="og:description" content="Stonkfun volume, Stonk Board APY and CLOBr score in one list. Click any token to open it in the terminal.">
+<meta property="og:description" content="Stonkfun volume, Stonk Board APY and holder payouts in one list. Click any token to open it in the terminal.">
 <meta property="og:image" content="https://themarines.link/banner.png">
 <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
 <link rel="icon" type="image/png" sizes="64x64" href="../favicon-64.png">
@@ -110,11 +110,11 @@ tr.me{background:rgba(42,90,218,.1)}
       <div class="tabs" id="sort"><button data-k="vol" class="on">VOLUME</button><button data-k="apy">APY</button><button data-k="paid">PAID OUT</button><button data-k="new">NEWEST</button></div></div>
     <div class="tw"><table>
       <thead><tr><th class="rk">#</th><th>Token</th><th class="r hide-sm">Price<small>24h</small></th><th class="r">Volume<small>24h</small></th><th class="r hide-sm">Market cap</th>
-        <th class="r">APY 3D<small>modeled</small></th><th class="r hide-sm">$100 held<small>per day</small></th><th class="r hide-sm">Holders<small>24h</small></th><th class="r hide-sm">Paid out</th><th class="r">CLOBr<small>score · delayed</small></th><th class="r hide-sm">Bonded</th></tr></thead>
+        <th class="r">APY 3D<small>modeled</small></th><th class="r hide-sm">$100 held<small>per day</small></th><th class="r hide-sm">Holders<small>24h</small></th><th class="r hide-sm">Paid out</th><th class="r">CLOBr<small>walls · whales</small></th><th class="r hide-sm">Bonded</th></tr></thead>
       <tbody id="rows"><tr><td colspan="11" class="nt">loading…</td></tr></tbody>
     </table></div>
     <button class="more" id="more" type="button" style="display:none"></button>
-    <div class="src">Click a token to open it in the terminal. Volume and price: stonkfun. APY, holders and payouts: <a href="https://thestonkboard.com/" target="_blank" rel="noopener">thestonkboard.com</a> (modeled from recent payouts; not a forecast). Score: CLOBr (0-100, support vs resistance), delayed up to 1h; <a href="https://clobr.io/premium?ref=DF92VC53" target="_blank" rel="noopener" style="color:#FF6B00">real-time on CLOBr Pro ▸</a>. Nothing here is financial advice.</div>
+    <div class="src">Click a token to open it in the terminal. Volume and price: stonkfun. APY, holders and payouts: <a href="https://thestonkboard.com/" target="_blank" rel="noopener">thestonkboard.com</a> (modeled from recent payouts; not a forecast). Order walls, whale flow and score for any token: <a href="https://clobr.io/?ref=DF92VC53" target="_blank" rel="noopener" style="color:#FF6B00">CLOBr ▸</a>. Nothing here is financial advice.</div>
   </section>
 </main>
 
@@ -161,11 +161,11 @@ function render(){
       <td class="r apy">${r.apy!=null?apyFmt(r.apy):'<span class="dim" title="not in the Stonk Board top 100">—</span>'}</td>
       <td class="r hide-sm">${day!=null?'$'+day.toFixed(day<10?2:0):'<span class="dim">—</span>'}</td>
       <td class="r hide-sm">${r.holders!=null?num(r.holders):'<span class="dim">—</span>'}${r.h24?`<br><span class="${r.h24>=0?'up':'dn'}" style="font-size:10px">${r.h24>=0?'+':''}${num(r.h24)}</span>`:''}</td>
-      <td class="r hide-sm">${compact(r.paid)}</td><td class="r">${scoreCell(SC[r.mint])}</td>
+      <td class="r hide-sm">${compact(r.paid)}</td><td class="r"><a class="clb" href="https://clobr.io/token/${encodeURIComponent(r.mint)}?ref=DF92VC53" target="_blank" rel="noopener" style="color:#FF6B00">CHECK ▸</a></td>
       <td class="r hide-sm dim">${r.bonded?ago(r.bonded)+' ago':'—'}</td></tr>`}).join('')
     :'<tr><td colspan="11" class="nt">No data yet. The bot refreshes these lists every 10 minutes.</td></tr>';
   $('more').style.display=list.length>25?'':'none';$('more').textContent=showAll?'SHOW TOP 25 ▴':`SHOW ALL ${list.length} ▾`;
-  loadScores(shown.slice(0,20).map(r=>r.mint))}
+}
 // CLOBr scores for the visible top 20 (the bot caches each for 10 minutes)
 let scAsked=new Set();
 async function loadScores(mints){const need=mints.filter(m=>!scAsked.has(m));if(!need.length)return;need.forEach(m=>scAsked.add(m));
