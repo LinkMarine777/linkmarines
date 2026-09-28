@@ -455,7 +455,6 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
         <a id="homeTk" href="?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">⚓ $MARINE terminal</a>
         <a href="/stream/">📺 The War Room (stream)</a>
         <a href="/bridge/">🌉 New to Solana? Bridge &amp; buy</a>
-        <a id="chartLink" href="#" target="_blank" rel="noopener">📈 Chart on DexScreener</a>
         <a href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ War Room chat</a>
         <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener">𝕏 @TheMarinesX</a>
         <a href="/">🏠 HQ</a>
@@ -644,7 +643,7 @@ async function resolveToken(){
   document.querySelectorAll('.tkSym').forEach(e=>e.textContent=sym);document.querySelectorAll('.tkQs').forEach(e=>e.textContent=qs);
   document.querySelectorAll('.tkQ').forEach(e=>e.textContent=String(TK.quote).replace(/^\$/,''));
   document.querySelectorAll('.buyTk').forEach(a=>a.href='https://jup.ag/tokens/'+CA);
-  $('chartLink').href=POOL?'https://dexscreener.com/solana/'+POOL:'https://dexscreener.com/solana/'+CA;
+
   $('tkBadge').innerHTML=(TK.image?`<img src="${esc(TK.image)}" alt="" onerror="this.remove()">`:'')+`${esc(sym)}<span class="q">/${esc(qs)}</span>`;
   $('caIn').value=CA;
   // the bare /terminal/token link is $MARINE: show its CA in the address bar so any view can be shared as-is
@@ -667,7 +666,6 @@ function renderLinks(pairs){const info=(pairs||[]).map(p=>p.info).find(i=>i&&((i
   const safe=u=>/^https?:\/\//i.test(u||'')?u:null,soc=t=>safe(((info.socials||[]).find(s=>s.type===t)||{}).url);
   const sym=String(TK.symbol||'').replace(/^\$/,''),L=[];
   const a=(href,ico,title)=>href&&L.push(`<a href="${esc(href)}" target="_blank" rel="noopener" title="${esc(title)}" aria-label="${esc(title)}"><svg viewBox="0 0 24 24">${ICO[ico]}</svg></a>`);
-  a(POOL?'https://dexscreener.com/solana/'+POOL:'https://dexscreener.com/solana/'+CA,'chart','$'+sym+' chart on DexScreener');
   a(soc('twitter'),'x','$'+sym+' on X');a(safe((info.websites||[])[0]?.url),'web','$'+sym+' website');a(soc('telegram'),'tg','$'+sym+' Telegram');
   if(sym&&/^[A-Za-z0-9_]{1,15}$/.test(sym))a('https://x.com/search?q='+encodeURIComponent('$'+sym)+'&f=live','search','Search $'+sym+' on X');
   L.push(`<button type="button" id="copyCa" title="Copy ${esc('$'+sym)} contract address" aria-label="Copy contract address"><svg viewBox="0 0 24 24">${ICO.copy}</svg></button>`);
