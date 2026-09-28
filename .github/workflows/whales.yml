@@ -1,0 +1,41 @@
+# Whale radar: every 30 min, read what the top holders of $MARINE and stonkfun's top 10 bought and sold, and write
+# terminal/whales.json to the data branch (Vercel doesn't deploy that branch; the terminals read the file from GitHub).
+# Free: public repo Actions minutes, Solana RPC (Helius when the HELIUS_KEY repository secret is set), Jupiter.
+name: whale radar
+on:
+  schedule:
+    - cron: '7,37 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: whales
+  cancel-in-progress: false
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: main
+          sparse-checkout: intel
+      - uses: actions/checkout@v4
+        with:
+          ref: data
+          path: data
+      - name: scan whales
+        env:
+          HELIUS_KEY: ${{ secrets.HELIUS_KEY }}
+        run: python3 main/intel/whales.py data/terminal
+      - name: save to the data branch
+        working-directory: data
+        run: |
+          git config user.name "war-room-radar"
+          git config user.email "radar@users.noreply.github.com"
+          git add terminal/whales.json terminal/whales-state.json
+          git diff --cached --quiet && exit 0
+          git commit -q -m "whale radar"
+          # the bot commits here too; take its latest and retry if it moved underneath us
+          for i in 1 2 3 4; do git push -q origin HEAD:data && exit 0; sleep $((i * 5)); git pull -q --rebase origin data; done
+          exit 1
