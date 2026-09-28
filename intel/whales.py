@@ -447,6 +447,15 @@ for s in signals: s['t'] = old.get(s['id'], s['t'])            # a signal keeps 
 for s in load('whales.json', {}).get('signals', []):   # history: signals from earlier runs stay for 3 days
     if s['id'] not in {x['id'] for x in signals} and s['t'] > now - 3 * 86400: signals.append(s)
 signals = sorted(signals, key=lambda s: -s['t'])[:250]
+# one-time backfill: past alerts rebuilt from the data history (intel/alerts-backfill.json) ride along in this run's file
+# so the bot copies them into the database; later runs go back to the normal 3 days / 250
+bf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'alerts-backfill.json')
+if os.path.exists(bf_path):
+    bf = json.load(open(bf_path)); tag = f"{len(bf)}:{bf[0]['id'] if bf else ''}"
+    if state.get('backfilled') != tag:
+        have = {x['id'] for x in signals}
+        signals = sorted(signals + [x for x in bf if x['id'] not in have], key=lambda s: -s['t'])
+        state['backfilled'] = tag; log(f'backfill: {len(bf)} past alerts included for the database')
 
 # ---------- what whales are buying / selling (24 h) ----------
 flow = {}
