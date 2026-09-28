@@ -1,4 +1,4 @@
-# Whale radar: every 30 min, read what the top holders of $MARINE and stonkfun's top 10 bought and sold, and write
+# Whale radar (and the $MARINE chart, chart.json): every 30 min, read what the top holders of $MARINE and stonkfun's top 10 bought and sold, and write
 # terminal/whales.json to the data branch (Vercel doesn't deploy that branch; the terminals read the file from GitHub).
 # Free: public repo Actions minutes, Solana RPC (Helius when the SOLANA_RPC or HELIUS_KEY repository secret is set), Jupiter.
 name: whale radar
@@ -35,12 +35,12 @@ jobs:
           set +e
           git config user.name "war-room-radar"
           git config user.email "radar@users.noreply.github.com"
-          cp terminal/whales.json terminal/whales-state.json "$RUNNER_TEMP/"
+          cp terminal/whales.json terminal/whales-state.json "$RUNNER_TEMP/"; cp terminal/chart.json "$RUNNER_TEMP/" 2>/dev/null
           # the bot commits to this branch too: start from its latest each try, lay our two files on top, push
           for i in 1 2 3 4 5; do
             git fetch -q origin data && git reset -q --hard origin/data
-            cp "$RUNNER_TEMP/whales.json" "$RUNNER_TEMP/whales-state.json" terminal/
-            git add terminal/whales.json terminal/whales-state.json
+            cp "$RUNNER_TEMP/whales.json" "$RUNNER_TEMP/whales-state.json" terminal/; [ -f "$RUNNER_TEMP/chart.json" ] && cp "$RUNNER_TEMP/chart.json" terminal/
+            git add terminal/whales.json terminal/whales-state.json terminal/chart.json
             git diff --cached --quiet && exit 0
             git commit -q -m "whale radar" && git push -q origin HEAD:data && exit 0
             sleep $((i * 5))
