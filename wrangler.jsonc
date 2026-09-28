@@ -1,0 +1,11 @@
+// Cloudflare (Workers static assets): serves this repo as the site, no build step, no Worker code.
+// The Cloudflare project's name must match "name" below.
+{
+  "name": "linkmarines",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none"
+  }
+}

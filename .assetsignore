@@ -1,0 +1,12 @@
+# not part of the website
+.git/
+.git
+.github
+.gitignore
+.assetsignore
+wrangler.jsonc
+vercel.json
+CNAME
+intel
+stream
+*.md
