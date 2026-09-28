@@ -202,6 +202,7 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
 </main>
 
 <script>
+const MLOGO='/terminal/img/marine.webp';   // $MARINE's current logo (stonkfun keeps the launch image)
 const MARINE='F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK',BOT='https://war-room-bot.linkmarine777.workers.dev',DATA=BOT+'/data/terminal/';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -234,7 +235,7 @@ async function load(){
   const [tk,bd]=await Promise.allSettled([j(DATA+'tokens.json?'+Date.now()),j(DATA+'board.json?'+Date.now())]);
   const T=tk.status==='fulfilled'?tk.value.tokens||[]:[],B=bd.status==='fulfilled'?bd.value.tokens||{}:{},by={};
   TOK=by;setTimeout(renderIntel,0);   // token logos for the alerts feed
-  T.forEach(t=>by[t.mint]={mint:t.mint,symbol:t.symbol,quote:t.quote,image:t.image,price:t.price,chg:t.chg24,vol:t.vol24,mcap:t.mcap,paid:t.paidUsd,sf:true});
+  T.forEach(t=>by[t.mint]={mint:t.mint,symbol:t.symbol,quote:t.quote,image:t.mint===MARINE?MLOGO:t.image,price:t.price,chg:t.chg24,vol:t.vol24,mcap:t.mcap,paid:t.paidUsd,sf:true});
   for(const m in B){const b=B[m],r=by[m]||(by[m]={mint:m,symbol:b.symbol,quote:b.quote});
     Object.assign(r,{rank:b.rank,apy:b.apy3d??b.apy24h,apr:b.apr3d??b.apr24h,holders:b.holders,h24:b.hold24h,bonded:b.bondedAt?Date.parse(b.bondedAt):null});
     r.price=r.price??b.price;r.chg=r.chg??b.chg24;r.vol=r.vol??b.vol24;r.mcap=r.mcap??b.mcap;r.paid=r.paid??b.paidUsd;r.quote=r.quote||b.quote}
@@ -286,9 +287,9 @@ const kindOf=x=>x.kind==='bigtrade'?(x.side==='sell'?['🐳 BIG SELL','k-dn']:['
 // holder payouts also get their own tab
 const WRBUY=x=>x.kind==='buy'&&(x.s==='MARINE'||x.s==='LINK'||/whale watch/i.test(x.text));   // other tokens' buys (from 2.0 pages) are market alerts
 const group=(k,x)=>k==='score'?'score':k==='payout'?'payout':['mover','board','top10'].includes(k)||(k==='buy'&&x&&!WRBUY(x))?'mover':['buy','pulse','milestone','link','tts'].includes(k)?'marine':'whale';
-function renderIntel(){if(!IN)return;const icon=m=>(TOK[m]&&TOK[m].image)||'';
+function renderIntel(){if(!IN)return;const icon=m=>m===MARINE?MLOGO:(TOK[m]&&TOK[m].image)||'';
   const L=(IN.signals||[]).filter(x=>fk==='all'||group(x.kind,x)===fk);
-  $('feed').innerHTML=L.length?L.map(x=>{const [h,c]=kindOf(x),im=x.i||icon(x.m);
+  $('feed').innerHTML=L.length?L.map(x=>{const [h,c]=kindOf(x),im=x.m===MARINE?MLOGO:x.i||icon(x.m);
     return`<a class="fi" href="${x.m?open2(x.m):'#'}"><span class="ft">${ago((x.at||x.t)*1000)}</span>${im?`<img src="${esc(im)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span class="ph0"></span>'}
       <span><b class="fk ${c}">${h}</b>${esc(x.text)}</span></a>`}).join('')
     :`<p class="nt">${{score:'No CLOBr score changes',mover:'No market alerts',payout:'No holder payouts',whale:'No whale alerts',marine:'No $MARINE alerts'}[fk]||'No alerts'} yet.</p>`;
@@ -304,7 +305,7 @@ $('fk').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)re
 loadIntel();setInterval(loadIntel,60e3);
 // ---------- from the stream's rotation: whale radar, last-hour flow, Stonk Board top APY ----------
 let wk='buying',FLOW=null,APY=null;
-const tokImg=m=>(TOK[m]&&TOK[m].image)||'';
+const tokImg=m=>m===MARINE?MLOGO:(TOK[m]&&TOK[m].image)||'';
 const lrow=(href,img,name,sub,right,lead='')=>`<a class="lr" href="${href}"${/^https?:/.test(href)?' target="_blank" rel="noopener"':''}>${lead}${img?`<img src="${esc(img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span class="ph0"></span>'}<span class="ln"><b>${name}</b>${sub?`<small>${sub}</small>`:''}</span>${right}</a>`;
 const whales=n=>n+' whale'+(n===1?'':'s');
 function renderWhales(){const b=$('whaleRows');if(!IN)return;

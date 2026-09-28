@@ -104,6 +104,7 @@ html.fit #soundBtn{font-size:24px;padding:4px 10px}
 /* main grid */
 main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:1px;background:var(--line);min-height:0}
 .col{display:flex;flex-direction:column;gap:1px;min-height:0}
+.tapeH .hc{font-size:.55em;color:var(--dim);letter-spacing:1px;vertical-align:.25em}
 .tapeH{display:flex;gap:14px;align-items:baseline}.tapeH button{background:none;border:0;padding:0;font:inherit;color:var(--dim);cursor:pointer;letter-spacing:inherit}.tapeH button.on{color:#fff}.tapeH button:hover{color:#fff}
 .col.comms::after{content:'';flex:1;background:var(--panel)}
 @media (min-width:1000px){.col.left>.lower{flex:1}.tapeP{display:flex;flex-direction:column}.tapeP .tw{position:relative;flex:1;min-height:250px;overflow:hidden}.tapeP .tw>table{position:absolute;top:0;left:0;right:0}}
@@ -508,7 +509,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
 
     <div class="lower">
       <section class="panel tapeP acc" data-acc="tape" data-def="1">
-        <div class="ph"><h2 class="tapeH"><button data-v="trades" class="on">THE TAPE</button><button data-v="holders" id="holdTab" style="display:none">HOLDERS</button></h2>
+        <div class="ph"><h2 class="tapeH"><button data-v="trades" class="on">THE TAPE</button><button data-v="holders" id="holdTab" style="display:none">HOLDERS <span class="hc" id="holdN"></span></button></h2>
           <span class="meta hide-sm fx" id="tapeMeta"><span class="tkSym">$MARINE</span>/<span class="tkQ">LINK</span> pool · large = $2,500+</span>
           <span class="meta hide-sm" id="holdMeta" style="display:none">top wallets · data from CLOBr</span>
           <div class="tabs" id="tapeF"><button data-min="0" class="on">ALL</button><button data-min="100">$100+</button></div>
@@ -642,6 +643,7 @@ async function resolveToken(){
   PAIR=(TK.quoteMint&&pairs.find(p=>other(p).address===TK.quoteMint))||pairs[0]||null;
   if(PAIR){POOL=PAIR.pairAddress;GT='https://api.geckoterminal.com/api/v2/networks/solana/pools/'+POOL;
     if(!t||t.error){const me=PAIR.baseToken.address===CA?PAIR.baseToken:PAIR.quoteToken,o=other(PAIR);TK={mint:CA,symbol:me.symbol,quote:o.symbol,quoteMint:o.address,image:PAIR.info?.imageUrl||null}}}
+  if(CA===MARINE)TK.image='/terminal/img/marine.webp';   // the current logo (stonkfun keeps the launch image)
   $('tkMsg').textContent=t&&!t.error?'':PAIR?'not a stonkfun token: market data only':'no market found for that address';
   const sym='$'+String(TK.symbol).replace(/^\$/,''),qs='$'+String(TK.quote).replace(/^\$/,'');
   document.querySelectorAll('.tkSym').forEach(e=>e.textContent=sym);document.querySelectorAll('.tkQs').forEach(e=>e.textContent=qs);
@@ -730,21 +732,30 @@ function pulseTakeover(tok,usdv,holders,total){if(!alertsOn||!akOn('pulse'))retu
   clearTimeout(ptTimer);ptTimer=setTimeout(closePulse,12000)}
 var ptTimer=null;
 function closePulse(){clearTimeout(ptTimer);const el=$('pulseTO');if(!el.classList.contains('show'))return;el.classList.remove('show');nextBuy()}
-// $MARINE's true holder count, counted on-chain by the intel job (stonkfun's holderCount is an all-time number)
+// fallback until the live count arrives: $MARINE's holders counted by the intel job
 let WRM=null;if(CA===MARINE)fetch('https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/whales.json').then(r=>r.json()).then(d=>{WRM=d.marine;loadRewards()}).catch(()=>{});
+// true holder count, live from the chain through the bot (/holders: wallets with a balance right now, cached 2 min there
+// for everyone); "earning" = holding at least the payout minimum. stonkfun's holderCount is an all-time number, never shown
+let HOLD=null;
+async function loadHolders(){try{const r=rewards,min=r&&r.minHoldingUsd&&marinePx?r.minHoldingUsd/marinePx:0;
+  const d=await j(BOT+'/holders?mint='+CA+(min?'&min='+min:''));if(d&&d.holders){HOLD=d;showHolders()}
+  if(!min&&(loadHolders.n=(loadHolders.n||0)+1)<6)setTimeout(loadHolders,8e3)}catch(e){}}   // ask again once the price and payout minimum are in
+setTimeout(()=>{loadHolders();setInterval(loadHolders,120e3)},1500);
+function showHolders(){const r=rewards,hn=(HOLD&&HOLD.holders)||(CA===MARINE&&WRM&&WRM.holders)||null,en=(HOLD&&HOLD.over)||(CA===MARINE&&WRM&&WRM.eligible)||null;
+  $('holdN').textContent=hn?num(hn):'';if(!r)return;
+  $('sHolders').textContent=(hn?num(hn):'—')+' holders'+(en?' · '+num(en)+' earning':'')+' · '+(+(r.transferTaxBps/100).toFixed(1))+'% tax'}
 async function loadRewards(){
   try{rewards=CA===MARINE?await j(DATA+'rewards.json?'+Date.now()):(await j(BOT+'/token/'+CA)).rewards;}catch(e){return}
   if(!rewards){$('sDist').textContent='—';$('sDistUsd').textContent='no holder rewards for this token';$('live').classList.remove('stale');$('liveTxt').textContent='LIVE';return}
   if(!rewards.snapshotAt)rewards.snapshotAt=Math.floor(Date.now()/1000);
   const r=rewards;
   if(prevR&&r.lastPayoutAt&&r.lastPayoutAt!==prevR.lastPayoutAt&&r.distributedTokens>prevR.distributedTokens)
-    pulseTakeover(r.distributedTokens-prevR.distributedTokens,(r.distributedUsd||0)-(prevR.distributedUsd||0),(CA===MARINE&&WRM&&(WRM.eligible||WRM.holders))||r.holderCount,r.distributedTokens);
+    pulseTakeover(r.distributedTokens-prevR.distributedTokens,(r.distributedUsd||0)-(prevR.distributedUsd||0),(HOLD&&(HOLD.over||HOLD.holders))||(CA===MARINE&&WRM&&(WRM.eligible||WRM.holders))||r.holderCount,r.distributedTokens);
   prevR=r;
   $('sDist').textContent=num(r.distributedTokens,1)+' '+TK.quote;
   $('sDistUsd').textContent='≈ '+usd(r.distributedUsd,0)+' at today\'s '+TK.quote+' price';
   $('sPayouts').textContent=num(r.payoutCount);
-  const hn=(CA===MARINE&&WRM&&WRM.holders)||r.holderCount,en=CA===MARINE&&WRM&&WRM.eligible;
-  $('sHolders').textContent=num(hn)+' holders'+(en?' · '+num(en)+' earning':'')+' · '+(+(r.transferTaxBps/100).toFixed(1))+'% tax';
+  showHolders();
   const p=Math.min(1,(r.pendingUsd||0)/(r.minDistributionUsd||1));
   $('pPending').textContent=num(r.pendingTokens,2)+' '+TK.quote;
   $('pPendingUsd').innerHTML=usd(r.pendingUsd,0)+(r.pendingTaxUsd?'<span class="fx"> · '+usd(r.pendingTaxUsd,0)+' tax to swap</span>':'');

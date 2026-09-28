@@ -649,6 +649,7 @@ async function resolveToken(){
   PAIR=(TK.quoteMint&&pairs.find(p=>other(p).address===TK.quoteMint))||pairs[0]||null;
   if(PAIR){POOL=PAIR.pairAddress;GT='https://api.geckoterminal.com/api/v2/networks/solana/pools/'+POOL;
     if(!t||t.error){const me=PAIR.baseToken.address===CA?PAIR.baseToken:PAIR.quoteToken,o=other(PAIR);TK={mint:CA,symbol:me.symbol,quote:o.symbol,quoteMint:o.address,image:PAIR.info?.imageUrl||null}}}
+  if(CA===MARINE)TK.image='/terminal/img/marine.webp';   // the current logo (stonkfun keeps the launch image)
   $('tkMsg').textContent=t&&!t.error?'':PAIR?'not a stonkfun token: market data only':'no market found for that address';
   const sym='$'+String(TK.symbol).replace(/^\$/,''),qs='$'+String(TK.quote).replace(/^\$/,'');
   document.querySelectorAll('.tkSym').forEach(e=>e.textContent=sym);document.querySelectorAll('.tkQs').forEach(e=>e.textContent=qs);
@@ -720,8 +721,7 @@ async function j(u){try{const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw
 
 // ---------- rewards snapshot (same-origin) ----------
 let rewards=null,prevR=null;
-// true holders (counted on-chain by the intel job every 30 min); stonkfun's holderCount is an all-time number
-const holdersNow=r=>(CA===MARINE&&WR&&WR.marine&&WR.marine.holders)||r.holderCount,earningNow=()=>CA===MARINE&&WR&&WR.marine&&WR.marine.eligible;
+const holdersNow=r=>(HOLD&&HOLD.holders)||(CA===MARINE&&WR&&WR.marine&&WR.marine.holders)||null,earningNow=()=>(HOLD&&HOLD.over)||(CA===MARINE&&WR&&WR.marine&&WR.marine.eligible)||null;
 // one pop-up on screen at a time: every kind waits for whatever is showing, then they play in order (pulse, TTS, buy, info)
 const onScreen=except=>['buyPop','ttsPop','pulseTO','infoPop'].some(id=>id!==except&&$(id)&&$(id).classList.contains('show'));
 let pulseQ=[];
@@ -734,6 +734,15 @@ function pulseTakeover(tok,usdv,holders,total){if(!alertsOn||!akOn('pulse'))retu
   clearTimeout(ptTimer);ptTimer=setTimeout(closePulse,12000)}
 var ptTimer=null;
 function closePulse(){clearTimeout(ptTimer);const el=$('pulseTO');if(!el.classList.contains('show'))return;el.classList.remove('show');nextBuy()}
+// true holder count, live from the chain through the bot (/holders: wallets with a balance right now, cached 2 min there
+// for everyone); "earning" = holding at least the payout minimum. stonkfun's holderCount is an all-time number, never shown
+let HOLD=null;
+async function loadHolders(){try{const r=rewards,min=r&&r.minHoldingUsd&&marinePx?r.minHoldingUsd/marinePx:0;
+  const d=await j(BOT+'/holders?mint='+CA+(min?'&min='+min:''));if(d&&d.holders){HOLD=d;showHolders()}
+  if(!min&&(loadHolders.n=(loadHolders.n||0)+1)<6)setTimeout(loadHolders,8e3)}catch(e){}}   // ask again once the price and payout minimum are in
+setTimeout(()=>{loadHolders();setInterval(loadHolders,120e3)},1500);
+function showHolders(){const r=rewards,hn=holdersNow(r||{}),en=earningNow();$('holdN').textContent=hn?num(hn):'';
+  if(r)$('sHolders').textContent=(hn?num(hn):'—')+' holders'+(en?' · '+num(en)+' earning':'')+' · '+(+(r.transferTaxBps/100).toFixed(1))+'% tax'}
 async function loadRewards(){
   // $MARINE: live payout numbers through the bot (stonkfun, cached 60 s there) so the pulse lands within a minute or two
   // of the payout; the bot's rewards.json (refreshed every 20 min) adds the 24h / 7d windows and is the fallback
@@ -752,8 +761,7 @@ async function loadRewards(){
   $('sDist').textContent=num(r.distributedTokens,1)+' '+TK.quote;
   $('sDistUsd').textContent='≈ '+usd(r.distributedUsd,0)+' at today\'s '+TK.quote+' price';
   $('sPayouts').textContent=num(r.payoutCount);
-  const hn=holdersNow(r),en=earningNow();$('holdN').textContent=hn?num(hn):'';
-  $('sHolders').textContent=num(hn)+' holders'+(en?' · '+num(en)+' earning':'')+' · '+(+(r.transferTaxBps/100).toFixed(1))+'% tax';
+  showHolders();
   const p=Math.min(1,(r.pendingUsd||0)/(r.minDistributionUsd||1));
   $('pPending').textContent=num(r.pendingTokens,2)+' '+TK.quote;
   $('pPendingUsd').innerHTML=usd(r.pendingUsd,0)+(r.pendingTaxUsd?'<span class="fx"> · '+usd(r.pendingTaxUsd,0)+' tax to swap</span>':'');
