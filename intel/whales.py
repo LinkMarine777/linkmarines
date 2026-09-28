@@ -175,7 +175,7 @@ top_mints = {t['mint']: t for t in watch}
 label = lambda w: ' / '.join(f"#{x['rank']} ${x['symbol']}" for x in sorted(whale.get(w, []), key=lambda x: x['rank'])[:2]) or 'a whale'
 signals = []
 def sig_(kind, key, t, text, mint=None, usd=0):
-    signals.append({'id': f'{kind}:{key}', 'kind': kind, 't': t, 'text': text, 'm': mint, 'i': (meta.get(mint) or {}).get('i'), 'u': round(usd)})
+    signals.append({'id': f'{kind}:{key}', 'kind': kind, 't': t, 'text': text, 'm': mint, 's': sym(mint) if mint else None, 'i': (meta.get(mint) or {}).get('i'), 'u': round(usd)})
 
 by = {}
 for s in trades:
