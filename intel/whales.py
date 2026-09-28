@@ -316,8 +316,10 @@ except Exception as e: log('scores', e)
 
 # ---------- big trades ($2,500+) on $MARINE + the top 10, and big movers (free: GeckoTerminal, stonkfun list) ----------
 for t in watch:
-    big = sorted([(float(a['volume_in_usd']), a['ts'], a) for a in gt.get(t['mint'], []) if float(a['volume_in_usd']) >= 2500], key=lambda b: -b[0])
-    for u, ts, a in big[:3]:
+    # every $2,500+ trade from the last 30 min, as it happens (the old 'top 3 of the day' re-announced trades hours late
+    # whenever a bigger one aged out of the 24h window)
+    big = [(float(a['volume_in_usd']), a['ts'], a) for a in gt.get(t['mint'], []) if float(a['volume_in_usd']) >= 2500 and a['ts'] > now - 1800]
+    for u, ts, a in big:
         buy = a.get('to_token_address') == t['mint']
         sig_('bigtrade', a['tx_hash'], ts, f"{'Bought' if buy else 'Sold'} ${u:,.0f} of ${t['symbol']} · wallet {a.get('tx_from_address', '')[:4]}", t['mint'], u)
         signals[-1].update({'s': t['symbol'], 'side': 'buy' if buy else 'sell'})
