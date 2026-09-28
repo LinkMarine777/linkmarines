@@ -21,6 +21,11 @@
       "source": "/stream",
       "destination": "/stream/",
       "permanent": false
+    },
+    {
+      "source": "/stream/tts",
+      "destination": "/stream/?buy=tts",
+      "permanent": false
     }
   ]
 }

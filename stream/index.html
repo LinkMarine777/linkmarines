@@ -1467,6 +1467,7 @@ $('fImg').addEventListener('change',async()=>{const f=$('fImg').files[0];imgId=n
   catch(e){say('Upload failed: '+esc(e.message||e),'err')}imgBusy=false;refresh()});
 $('ttsText').addEventListener('input',()=>$('ttsCount').textContent=$('ttsText').value.length+'/200');
 $('ttsBtn').onclick=()=>openBuy('t');
+if(!OBS&&/[?&]buy=tts\b/.test(location.search))(function tryOpen(n){try{openBuy('t')}catch(e){if(n<20)setTimeout(()=>tryOpen(n+1),500)}})(0);   // retried until the prices (pay.json) have loaded   // the shareable /stream/tts link (never on the broadcast itself)
 document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>openBuy(b.dataset.buy));
 ['1','2','3'].forEach(k=>$('slot'+k).onclick=e=>{if(e.target.closest('a'))return;if(!curAd(k))openBuy('a',k)});
 $('wBtn').onclick=()=>connectWallet(true);

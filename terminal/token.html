@@ -438,6 +438,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
     <span id="tkMsg" class="tkm"></span>
   </form>
   <nav>
+    <a class="btn" href="/trending/" title="Trending on stonkfun">🔥 TRENDING</a>
     <button class="btn tts" id="ttsBtn">BUY TTS</button>
     <a class="btn primary buyTk" href="#" target="_blank" rel="noopener">BUY <span class="tkSym">$MARINE</span></a>
     <div class="menu"><button class="btn" id="menuBtn" type="button" aria-haspopup="true" aria-expanded="false" title="More">☰</button>
@@ -1239,7 +1240,7 @@ $('fImg').addEventListener('change',async()=>{const f=$('fImg').files[0];imgId=n
   catch(e){say('Upload failed: '+esc(e.message||e),'err')}imgBusy=false;refresh()});
 $('ttsText').addEventListener('input',()=>$('ttsCount').textContent=$('ttsText').value.length+'/200');
 $('ttsBtn').onclick=()=>openBuy('t');
-if(/[?&]buy=tts\b/.test(location.search))setTimeout(()=>openBuy('t'),800);   // BUY TTS from the trending page
+if(/[?&]buy=tts\b/.test(location.search))(function tryOpen(n){try{openBuy('t')}catch(e){if(n<20)setTimeout(()=>tryOpen(n+1),500)}})(0);   // retried until the prices (pay.json) have loaded   // BUY TTS from the trending page
 document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>openBuy(b.dataset.buy));
 ['1','2','3'].forEach(k=>$('slot'+k).onclick=e=>{if(e.target.closest('a'))return;if(!curAd(k))openBuy('a',k)});
 $('wBtn').onclick=()=>connectWallet(true);
