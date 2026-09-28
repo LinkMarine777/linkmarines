@@ -31,11 +31,17 @@ jobs:
       - name: save to the data branch
         working-directory: data
         run: |
+          set +e
           git config user.name "war-room-radar"
           git config user.email "radar@users.noreply.github.com"
-          git add terminal/whales.json terminal/whales-state.json
-          git diff --cached --quiet && exit 0
-          git commit -q -m "whale radar"
-          # the bot commits here too; take its latest and retry if it moved underneath us
-          for i in 1 2 3 4; do git push -q origin HEAD:data && exit 0; sleep $((i * 5)); git pull -q --rebase origin data; done
+          cp terminal/whales.json terminal/whales-state.json "$RUNNER_TEMP/"
+          # the bot commits to this branch too: start from its latest each try, lay our two files on top, push
+          for i in 1 2 3 4 5; do
+            git fetch -q origin data && git reset -q --hard origin/data
+            cp "$RUNNER_TEMP/whales.json" "$RUNNER_TEMP/whales-state.json" terminal/
+            git add terminal/whales.json terminal/whales-state.json
+            git diff --cached --quiet && exit 0
+            git commit -q -m "whale radar" && git push -q origin HEAD:data && exit 0
+            sleep $((i * 5))
+          done
           exit 1
