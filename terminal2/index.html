@@ -38,7 +38,10 @@ header nav{margin-left:auto;display:flex;gap:10px}
 .btn:hover{border-color:var(--blue2);text-decoration:none}.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
 main{max-width:1500px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:14px}
 .intel{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px}.intel .panel{display:flex;flex-direction:column;min-width:0}
-.feed{max-height:330px;overflow-y:auto}.fi{display:grid;grid-template-columns:auto 22px minmax(0,1fr);gap:8px;align-items:start;padding:8px 14px;border-bottom:1px solid var(--line);font-size:12px;color:inherit;text-decoration:none}
+.feed{max-height:330px;overflow-y:auto}
+.feed,.lpw{scrollbar-width:thin;scrollbar-color:#24345e transparent}.feed::-webkit-scrollbar,.lpw::-webkit-scrollbar{width:6px}
+.feed::-webkit-scrollbar-track,.lpw::-webkit-scrollbar-track{background:transparent}.feed::-webkit-scrollbar-thumb,.lpw::-webkit-scrollbar-thumb{background:#24345e;border-radius:3px}
+.feed::-webkit-scrollbar-thumb:hover,.lpw::-webkit-scrollbar-thumb:hover{background:#34508f}.feed::-webkit-scrollbar-button,.lpw::-webkit-scrollbar-button{display:none}.fi{display:grid;grid-template-columns:auto 22px minmax(0,1fr);gap:8px;align-items:start;padding:8px 14px;border-bottom:1px solid var(--line);font-size:12px;color:inherit;text-decoration:none}
 .fi:hover{background:rgba(255,255,255,.03)}.fi .ft{color:var(--dim);font-size:11px;min-width:30px}.fi img,.fi .ph0{width:22px;height:22px;border-radius:50%;object-fit:cover;background:#0b1a2e}
 .fi .fk{display:block;font-size:10px;letter-spacing:1.5px;margin-bottom:2px}.k-up{color:var(--green)}.k-dn{color:var(--red)}.k-am{color:var(--amber)}.k-bl{color:#7d9bff}.k-or{color:#FF6B00}
 .lpw{max-height:330px;overflow-y:auto}.lpw td .pp{display:flex;align-items:center;gap:8px}.lpw td img{width:20px;height:20px;border-radius:50%}.lpw .dx{display:block;font-size:10px;color:var(--dim)}
@@ -87,6 +90,9 @@ tr.me{background:rgba(42,90,218,.1)}
   .tabs{margin-left:0;width:100%}.tabs button{flex:1}
 }
 .pin .acts{margin-left:auto;display:grid;grid-template-columns:auto auto;gap:6px;flex:none}.pin .acts .btn{margin:0;text-align:center}.pin .acts .primary{grid-column:1/-1}.pin .t{min-width:0;flex:1}.pin .buyJ{border-color:var(--green);color:var(--green)}.pin .cpy{font:inherit;font-size:11px;cursor:pointer;background:none}.pin .cpy.ok{color:var(--green)}
+/* scrollbars: slim and dark to match the site (not the default white bar) */
+*{scrollbar-width:thin;scrollbar-color:#24345e transparent}*::-webkit-scrollbar{width:6px;height:6px}*::-webkit-scrollbar-track{background:transparent}
+*::-webkit-scrollbar-thumb{background:#24345e;border-radius:3px}*::-webkit-scrollbar-thumb:hover{background:#34508f}*::-webkit-scrollbar-button{display:none}*::-webkit-scrollbar-corner{background:transparent}
 </style>
 </head>
 <body>
@@ -107,19 +113,19 @@ tr.me{background:rgba(42,90,218,.1)}
 
 <main>
   <section class="hero">
-    <div class="pin" id="pin"><img id="pinImg" alt="" src="../helmet.png"><div class="t"><label>Home of the terminal</label><b>$MARINE</b><span class="s" id="pinSub">&nbsp;</span></div><div class="acts"><a class="btn primary" href="token.html?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">OPEN ▸</a><a class="btn buyJ" href="https://jup.ag/swap/SOL-F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">BUY ON JUP ▸</a><button class="btn cpy" id="pinCopy" type="button" title="Copy the $MARINE contract address">COPY CA</button></div></div>
+    <div class="pin" id="pin"><img id="pinImg" alt="" src="../helmet.png"><div class="t"><label>Home of the terminal</label><b>$MARINE</b><span class="s" id="pinSub">&nbsp;</span></div><div class="acts"><a class="btn primary" href="token.html?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">OPEN ▸</a><a class="btn buyJ" href="https://jup.ag/tokens/F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">BUY ON JUP ▸</a><button class="btn cpy" id="pinCopy" type="button" title="Copy the $MARINE contract address">COPY CA</button></div></div>
     <div><label>24h volume · top 30</label><b id="kVol">—</b><span class="s">stonkfun tokens by volume</span></div>
     <div><label>Paid to holders</label><b id="kPaid">—</b><span class="s">all-time, Stonk Board top 100</span></div>
     <div><label>Median APY 3D</label><b id="kApy" class="apy">—</b><span class="s">Stonk Board top 100, modeled</span></div>
   </section>
 
   <div class="intel">
-    <section class="panel"><div class="ph"><h2>🐋 ALERTS</h2><span class="meta hide-sm">whales of $MARINE + stonkfun top 10 · CLOBr score changes · last 3 days</span>
-      <div class="tabs" id="fk"><button data-f="all" class="on">ALL</button><button data-f="whale">WHALES</button><button data-f="score">CLOBr</button></div></div>
+    <section class="panel"><div class="ph"><h2>🐋 ALERTS</h2><span class="meta hide-sm">whales · big trades · big movers · CLOBr score changes · last 3 days</span>
+      <div class="tabs" id="fk"><button data-f="all" class="on">ALL</button><button data-f="whale">WHALES</button><button data-f="mover">MOVERS</button><button data-f="score">CLOBr</button></div></div>
       <div class="feed" id="feed"><p class="nt">loading…</p></div></section>
-    <section class="panel"><div class="ph"><h2>💧 BEST LP · 24H FEES</h2><span class="meta hide-sm">fees earned per $ of liquidity</span></div>
+    <section class="panel"><div class="ph"><h2>💧 BEST LP · 24H FEES</h2><span class="meta hide-sm">fees per $ of liquidity · every stonkfun + Stonk Board token</span></div>
       <div class="tw lpw"><table><thead><tr><th>Pool</th><th class="r">Liquidity</th><th class="r hide-sm">Fees 24h</th><th class="r">Per day</th><th></th></tr></thead><tbody id="lpRows"><tr><td colspan="5" class="nt">loading…</td></tr></tbody></table></div>
-      <div class="src">Fees only, before impermanent loss, and yesterday's fees aren't tomorrow's. Raydium + Meteora pools of the top 30 stonkfun tokens with $5K+ liquidity.</div></section>
+      <div class="src">Fees only, before impermanent loss, and yesterday's fees aren't tomorrow's. Raydium + Meteora pools of every stonkfun and Stonk Board token with $5K+ liquidity.</div></section>
   </div>
 
   <section class="panel">
@@ -200,13 +206,15 @@ let TOK={};
 const INTEL='https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/whales.json';let IN=null,fk='all';
 const KIND={convergence:['🐋 WHALES PILING IN','k-up'],dumping:['🐋 WHALES DUMPING','k-dn'],rotation:['🔄 WHALE ROTATION','k-bl'],exit:['🚪 WHALE EXIT','k-dn'],
   dip:['🩸 WHALE DIP BUY','k-am'],rewards:['♻️ WHALE REWARDS','k-up'],score:['🧱 CLOBr SCORE','k-or']};
+const kindOf=x=>x.kind==='bigtrade'?(x.side==='sell'?['🐳 BIG SELL','k-dn']:['🐳 BIG BUY','k-up']):x.kind==='mover'?(x.side==='down'?['📉 BIG MOVER','k-dn']:['📈 BIG MOVER','k-up']):KIND[x.kind]||['🐋 WHALE RADAR','k-up'];
+const group=k=>k==='score'?'score':k==='mover'?'mover':'whale';
 function renderIntel(){if(!IN)return;const icon=m=>(TOK[m]&&TOK[m].image)||'';
-  const L=(IN.signals||[]).filter(x=>fk==='all'||(fk==='score')===(x.kind==='score'));
-  $('feed').innerHTML=L.length?L.map(x=>{const [h,c]=KIND[x.kind]||['🐋 WHALE RADAR','k-up'],im=x.i||icon(x.m);
+  const L=(IN.signals||[]).filter(x=>fk==='all'||group(x.kind)===fk);
+  $('feed').innerHTML=L.length?L.map(x=>{const [h,c]=kindOf(x),im=x.i||icon(x.m);
     return`<a class="fi" href="${x.m?open2(x.m):'#'}"><span class="ft">${ago(x.t*1000)}</span>${im?`<img src="${esc(im)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span class="ph0"></span>'}
       <span><b class="fk ${c}">${h}</b>${esc(x.text)}</span></a>`}).join('')
-    :`<p class="nt">${fk==='score'?'No CLOBr score changes':'No alerts'} in the last 3 days yet. The radar checks every 30 minutes.</p>`;
-  const P=IN.lp||[];$('lpRows').innerHTML=P.length?P.map(x=>`<tr><td><div class="pp">${x.i?`<img src="${esc(x.i)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:''}<span><a href="${open2(x.m)}">${esc(x.pair)}</a><span class="dx">${esc(x.dex)}</span></span></div></td>
+    :`<p class="nt">${{score:'No CLOBr score changes',mover:'No big movers',whale:'No whale alerts'}[fk]||'No alerts'} in the last 3 days yet. Checked every 30 minutes.</p>`;
+  const P=IN.lp||[];$('lpRows').innerHTML=P.length?P.map(x=>`<tr><td><div class="pp">${(x.i||icon(x.m))?`<img src="${esc(x.i||icon(x.m))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span style="width:20px;flex:none"></span>'}<span><a href="${open2(x.m)}">${esc(x.pair)}</a><span class="dx">${esc(x.dex)}</span></span></div></td>
       <td class="r">${compact(x.tvl)}</td><td class="r hide-sm">${compact(x.fee)}</td><td class="r up">${x.d.toFixed(1)}%</td><td class="r"><a class="add" href="${esc(x.url)}" target="_blank" rel="noopener">ADD ▸</a></td></tr>`).join('')
     :'<tr><td colspan="5" class="nt">No pools yet.</td></tr>'}
 async function loadIntel(){try{IN=await j(INTEL);renderIntel()}catch(e){}}
