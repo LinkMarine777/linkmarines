@@ -650,7 +650,7 @@ async function resolveToken(){
   if(PAIR){POOL=PAIR.pairAddress;GT='https://api.geckoterminal.com/api/v2/networks/solana/pools/'+POOL;
     if(!t||t.error){const me=PAIR.baseToken.address===CA?PAIR.baseToken:PAIR.quoteToken,o=other(PAIR);TK={mint:CA,symbol:me.symbol,quote:o.symbol,quoteMint:o.address,image:PAIR.info?.imageUrl||null}}}
   if(CA===MARINE)TK.image='/terminal/img/marine.webp';   // the current logo (stonkfun keeps the launch image)
-  $('tkMsg').textContent=t&&!t.error?'':PAIR?'not a stonkfun token: market data only':'no market found for that address';
+  $('tkMsg').textContent=t&&!t.error?'':t&&t.temporary?'stonkfun is down right now: market data only until it\'s back':PAIR?'not a stonkfun token: market data only':'no market found for that address';
   const sym='$'+String(TK.symbol).replace(/^\$/,''),qs='$'+String(TK.quote).replace(/^\$/,'');
   document.querySelectorAll('.tkSym').forEach(e=>e.textContent=sym);document.querySelectorAll('.tkQs').forEach(e=>e.textContent=qs);
   document.querySelectorAll('.tkQ').forEach(e=>e.textContent=String(TK.quote).replace(/^\$/,''));
