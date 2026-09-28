@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Flywheel · How $MARINE pays you in $LINK</title>
+<meta name="description" content="Every $MARINE trade pays a 3% tax. It's swapped into $LINK and airdropped to everyone holding $20+ of $MARINE. No claiming, no staking.">
+<meta property="og:title" content="The Flywheel: hold $MARINE, get paid in $LINK">
+<meta property="og:description" content="Every trade pays a 3% tax, swapped into $LINK and airdropped to every wallet holding $20+ of $MARINE. Automatically.">
+<meta property="og:image" content="https://terminal7.xyz/share-marines.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://terminal7.xyz/share-marines.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#04060f;--panel:#0a0f1f;--line:#1a2444;--dim:#7482a8;--txt:#c9d3ee;--blue:#2A5ADA;--blue2:#4a7aff;--green:#39ff6a;--amber:#ffd23f;--red:#ff3355}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.6 'IBM Plex Mono',monospace}
+a{color:var(--blue2)}
+header{display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+header img{width:40px;height:40px}
+header .brand{font-family:'VT323',monospace;font-size:30px;color:#fff;text-decoration:none;line-height:1}
+header .brand small{display:block;font-size:15px;color:var(--blue2);letter-spacing:1px}
+header nav{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.btn{display:inline-block;border:1px solid var(--line);background:var(--panel);color:var(--txt);padding:8px 12px;font:inherit;font-size:12px;letter-spacing:1px;text-decoration:none;cursor:pointer;text-transform:uppercase}
+.btn:hover{border-color:var(--blue2)}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.go{border-color:var(--green);color:var(--green)}
+main{max-width:900px;margin:0 auto;padding:28px 16px 60px}
+h1{font-family:'VT323',monospace;font-size:56px;line-height:1;color:#fff;margin:0 0 8px;font-weight:400}
+h1 b{color:var(--blue2);font-weight:400}
+.lead{font-size:16px;margin:0 0 22px}.lead b{color:#fff}
+.live{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin:0 0 26px}
+.live>div{background:var(--panel);padding:12px 14px;min-width:0}
+.live label{display:block;font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase}
+.live b{display:block;font-family:'VT323',monospace;font-size:34px;font-weight:400;color:#fff;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.live span{font-size:11px;color:var(--dim)}
+.pot{grid-column:1/-1}.bar{height:8px;background:#000;border:1px solid var(--line);margin:8px 0 4px}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .6s}
+/* the wheel */
+.wheel{position:relative;width:min(560px,100%);aspect-ratio:1;margin:8px auto 30px}
+.wheel svg{position:absolute;inset:0;width:100%;height:100%}
+.wheel .hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:22%}.wheel .hub img{width:100%;border-radius:50%;display:block;box-shadow:0 0 40px rgba(74,122,255,.35)}
+.wheel .hub b{display:block;font-family:'VT323',monospace;font-weight:400;font-size:clamp(26px,6vw,40px);line-height:.95;color:#fff}
+.wheel .hub b.l{color:var(--blue2)}
+.node{position:absolute;width:34%;transform:translate(-50%,-50%);background:var(--panel);border:1px solid var(--blue2);padding:10px 12px;text-align:center;box-shadow:0 0 24px rgba(74,122,255,.18)}
+.node .n{display:block;font-family:'VT323',monospace;font-size:clamp(20px,4.4vw,28px);color:#fff;line-height:1}
+.node .n em{font-style:normal;color:var(--green)}
+.node small{display:block;font-size:clamp(10px,2.4vw,12px);color:var(--dim);line-height:1.35;margin-top:4px}
+.n1{left:50%;top:10%}.n2{left:83%;top:50%}.n3{left:50%;top:90%}.n4{left:17%;top:50%}
+.step{background:var(--panel);border:1px solid var(--line);padding:18px 22px;margin:0 0 12px;position:relative}
+.step .k{position:absolute;left:-1px;top:-1px;background:var(--blue);color:#fff;font-weight:700;padding:2px 10px;font-size:12px}
+.step h2{font-family:'VT323',monospace;font-weight:400;font-size:30px;color:#fff;margin:12px 0 4px;line-height:1.1}
+.step p{margin:6px 0}
+.tip{border-left:3px solid var(--amber);padding:8px 12px;background:rgba(255,210,63,.06);margin:10px 0;font-size:13.5px}
+.faq h2{font-family:'VT323',monospace;font-weight:400;font-size:34px;color:#fff;margin:28px 0 8px}
+.faq details{border:1px solid var(--line);background:var(--panel);padding:10px 14px;margin:0 0 8px}
+.faq summary{cursor:pointer;color:#fff;font-weight:600}
+.faq details p{margin:8px 0 2px}
+.acts{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 0;justify-content:center}
+footer{text-align:center;color:var(--dim);font-size:12px;padding:0 16px 30px}
+@media (max-width:640px){h1{font-size:42px}.live{grid-template-columns:repeat(2,minmax(0,1fr))}header nav{margin-left:0}
+  .wheel{aspect-ratio:auto;display:grid;grid-template-columns:1fr 1fr;gap:8px}.wheel svg,.wheel .hub{display:none}.node{position:static;transform:none;width:auto}
+  .wheel .n4{order:3}.wheel .n3{order:4}}   /* phones: the four steps as a 2x2 grid, in reading order */
+</style>
+</head>
+<body>
+<header>
+  <a href="/" title="The Marines HQ"><img src="/helmet.png" alt="The Marines"></a>
+  <a class="brand" href="/trending/">THE WAR ROOM<small>THE FLYWHEEL</small></a>
+  <nav><a class="btn" href="/">HQ</a><a class="btn" href="/stream/">The War Room</a><a class="btn" href="/trending/">Terminal 7</a></nav>
+</header>
+
+<main>
+  <h1>Hold $MARINE. <b>Get paid in $LINK.</b></h1>
+  <p class="lead">Every $MARINE trade feeds a pot of <b>$LINK</b>. When the pot fills, it's airdropped to everyone holding <b>$20+ of $MARINE</b>. No claiming, no staking, nothing to sign. Here's how it works.</p>
+
+  <section class="live" aria-label="Live numbers">
+    <div><label>$LINK paid out</label><b id="lDist">—</b><span id="lDistUsd">&nbsp;</span></div>
+    <div><label>Payouts sent</label><b id="lPays">—</b><span>to holders' wallets</span></div>
+    <div><label>Holders</label><b id="lHold">—</b><span id="lEarn">&nbsp;</span></div>
+    <div><label>Last payout</label><b id="lLast">—</b><span>ago</span></div>
+    <div class="pot"><label>Next payout · the pot</label><div class="bar"><i id="lBar"></i></div><span id="lPot">loading…</span></div>
+  </section>
+
+  <div class="wheel" aria-hidden="true">
+    <svg viewBox="0 0 100 100"><defs><marker id="ah" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" fill="#4a7aff"/></marker></defs>
+      <g fill="none" stroke="#4a7aff" stroke-width=".9" marker-end="url(#ah)">
+        <path d="M62 14 A40 40 0 0 1 86 38"/><path d="M86 62 A40 40 0 0 1 62 86"/><path d="M38 86 A40 40 0 0 1 14 62"/><path d="M14 38 A40 40 0 0 1 38 14"/></g></svg>
+    <div class="hub"><img src="/terminal/img/marine.webp" alt=""></div>
+    <div class="node n1"><span class="n">1 · HOLD <em>$20+</em></span><small>of $MARINE in your wallet</small></div>
+    <div class="node n2"><span class="n">2 · 3% TAX</span><small>on every buy &amp; sell</small></div>
+    <div class="node n3"><span class="n">3 · SWAPPED</span><small>into $LINK, into the pot</small></div>
+    <div class="node n4"><span class="n">4 · PAID OUT</span><small>at $<span class="potMin">250</span>, straight to holders</small></div>
+  </div>
+
+  <section class="step"><span class="k">1</span><h2>Hold $20+ of $MARINE</h2>
+    <p>That's the only requirement. Any wallet holding at least <b>$<span class="minHold">20</span></b> of $MARINE is in. Nothing to register, stake or lock.</p></section>
+  <section class="step"><span class="k">2</span><h2>Every trade pays a 3% tax</h2>
+    <p>A 3% tax comes out of every buy and every sell of $MARINE. On top of that, the pool's trading fees are taken in $LINK. More trading means a faster-filling pot.</p></section>
+  <section class="step"><span class="k">3</span><h2>The tax is swapped into $LINK</h2>
+    <p>Stonkfun, the platform $MARINE launched on, swaps the collected tax into $LINK and adds it to the pot. You can watch it fill live on the stream.</p></section>
+  <section class="step"><span class="k">4</span><h2>At $<span class="potMin">250</span>, it's airdropped</h2>
+    <p>When the pot reaches <b>$<span class="potMin">250</span></b>, stonkfun sends it out as $LINK straight to every eligible holder's wallet. We call it a <b>pulse</b>. Then the pot starts filling again, and the wheel keeps turning.</p>
+    <div class="tip">Payouts land on their own. If you don't see $LINK in your wallet app, add the $LINK token to your token list.</div></section>
+
+  <section class="faq">
+    <h2>Questions</h2>
+    <details><summary>Do I need to claim anything?</summary><p>No. $LINK is sent to your wallet automatically. There's nothing to click or sign.</p></details>
+    <details><summary>How often are payouts?</summary><p>Whenever the pot hits $<span class="potMin">250</span>. Busy trading days fill it faster, so payouts come more often. Check the countdown on the stream.</p></details>
+    <details><summary>Does the 3% apply when I buy and when I sell?</summary><p>Yes, both. That tax is what pays holders. If a swap fails, raise slippage a little.</p></details>
+    <details><summary>Where do I watch it happen?</summary><p>On <a href="/stream/">The War Room</a>: every payout, buy and whale move shows up live, 24/7.</p></details>
+    <details><summary>New to Solana?</summary><p>The <a href="/bridge/">bridge guide</a> walks you through getting a wallet, bridging in and buying $MARINE.</p></details>
+  </section>
+
+  <div class="acts">
+    <a class="btn primary" href="https://jup.ag/tokens/F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">Buy $MARINE on Jupiter ▸</a>
+    <a class="btn go" href="/stream/">Watch The War Room ▸</a>
+    <a class="btn" href="/bridge/">New to Solana? ▸</a>
+  </div>
+</main>
+<footer>Payouts are run by stonkfun. Amounts depend on trading volume and aren't guaranteed. Nothing here is financial advice.</footer>
+<script>
+const BOT='https://war-room-bot.linkmarine777.workers.dev',MARINE='F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK',$=id=>document.getElementById(id);
+const n=(v,d=0)=>(+v||0).toLocaleString('en-US',{maximumFractionDigits:d,minimumFractionDigits:d}),usd=v=>'$'+n(v,0);
+const ago=t=>{const s=Math.max(0,(Date.now()-t)/1000);return s<90?Math.round(s)+'s':s<5400?Math.round(s/60)+'m':s<172800?(s/3600).toFixed(1)+'h':Math.round(s/86400)+'d'};
+let R=null;
+async function load(){
+  try{const d=await(await fetch(BOT+'/token/'+MARINE,{cache:'no-store'})).json();R=d.rewards||R}catch(e){}
+  if(R){$('lDist').textContent=n(R.distributedTokens,0)+' LINK';$('lDistUsd').textContent='≈ '+usd(R.distributedUsd)+' at today\'s price';
+    $('lPays').textContent=n(R.payoutCount);
+    const p=Math.min(1,(R.pendingUsd||0)/(R.minDistributionUsd||250));$('lBar').style.width=(p*100).toFixed(1)+'%';
+    $('lPot').textContent=usd(R.pendingUsd)+' of '+usd(R.minDistributionUsd||250)+' · '+Math.round(p*100)+'% full';
+    document.querySelectorAll('.potMin').forEach(e=>e.textContent=n(R.minDistributionUsd||250));
+    document.querySelectorAll('.minHold').forEach(e=>e.textContent=n(R.minHoldingUsd||20));}
+  try{let min=0;if(R&&R.minHoldingUsd){const q=await(await fetch('https://lite-api.jup.ag/price/v3?ids='+MARINE)).json();const px=q&&q[MARINE]&&q[MARINE].usdPrice;if(px)min=R.minHoldingUsd/px}
+    const h=await(await fetch(BOT+'/holders?mint='+MARINE+(min?'&min='+min:''))).json();
+    if(h&&h.holders){$('lHold').textContent=n(h.holders);$('lEarn').textContent=h.over?n(h.over)+' earning $LINK':'wallets holding now'}}catch(e){}
+  tick()}
+function tick(){if(R&&R.lastPayoutAt)$('lLast').textContent=ago(Date.parse(R.lastPayoutAt))}
+load();setInterval(load,60e3);setInterval(tick,1e3);
+</script>
+</body>
+</html>
