@@ -123,13 +123,13 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
   <nav>
     <a class="btn" href="/">HQ</a>
     <a class="btn" href="/terminal/token?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">$MARINE TERMINAL</a>
-    <a class="btn tts" href="/terminal2/checkout.html?k=t" onclick="return wrCheckout('t')">BUY TTS</a>
+    <a class="btn tts" href="/tts/checkout?k=t" onclick="return wrCheckout('t')">BUY TTS</a>
     <div class="menu"><button class="btn" id="menuBtn" type="button" aria-haspopup="true" aria-expanded="false" title="More">☰</button>
       <div class="mnu" id="mnu" role="menu">
         <a href="/trending/">🔥 Trending tokens</a>
         <a href="/terminal/token?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">⚓ $MARINE terminal</a>
         <a href="https://jup.ag/tokens/F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">🟢 Buy $MARINE on Jupiter</a>
-        <a href="/terminal2/checkout.html?k=t" onclick="return wrCheckout('t')">📢 Buy TTS on the stream</a>
+        <a href="/tts/checkout?k=t" onclick="return wrCheckout('t')">📢 Buy TTS on the stream</a>
         <a href="/stream/">📺 The War Room (stream)</a>
         <a href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ War Room chat</a>
         <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener">𝕏 @TheMarinesX</a>
@@ -259,7 +259,7 @@ async function loadIntel(){const [a,b]=await Promise.allSettled([j(BOT+'/alerts?
 $('fk').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;fk=b.dataset.f;[...$('fk').children].forEach(x=>x.classList.toggle('on',x===b));renderIntel()});
 loadIntel();setInterval(loadIntel,60e3);
 // the TTS / billboard checkout opens as its own window (wallet extensions connect normally there); falls back to the page
-function wrCheckout(k){const w=window.open('/terminal2/checkout.html?k='+k,'wrCheckout','width=540,height=860');return !w}
+function wrCheckout(k){const w=window.open('/tts/checkout?k='+k,'wrCheckout','width=540,height=860');return !w}
 
 // ---------- sound + alerts: the same controls as the terminals; new alerts from the shared history pop up here too ----------
 let soundOn=true,alertsOn=true,actx=null;try{soundOn=localStorage.getItem('wrSound')!=='0';alertsOn=localStorage.getItem('wrAlerts')!=='0'}catch(e){}

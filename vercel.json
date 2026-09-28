@@ -9,6 +9,10 @@
     {
       "source": "/terminal/token",
       "destination": "/terminal/token.html"
+    },
+    {
+      "source": "/tts/checkout",
+      "destination": "/tts/checkout.html"
     }
   ],
   "redirects": [
@@ -25,6 +29,11 @@
     {
       "source": "/stream/tts",
       "destination": "/stream/?buy=tts",
+      "permanent": false
+    },
+    {
+      "source": "/tts",
+      "destination": "/tts/checkout?k=t",
       "permanent": false
     }
   ]

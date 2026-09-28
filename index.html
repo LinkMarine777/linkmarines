@@ -351,7 +351,7 @@ if(/(^|\.)terminal7\.xyz$/.test(location.hostname)&&!document.referrer.startsWit
     <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener">X</a>
     <a class="warroom" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ War Room Chat</a>
   </div>
-  <a class="tts-link" href="/terminal2/checkout.html?k=t" onclick="return wrCheckout('t')">📢 Put your message on The War Room stream (TTS)</a>
+  <a class="tts-link" href="/tts/checkout?k=t" onclick="return wrCheckout('t')">📢 Put your message on The War Room stream (TTS)</a>
 </div>
 
 <div class="wall">
@@ -833,7 +833,7 @@ function copyCA(btn){
 </script>
 <script>
 // the TTS / billboard checkout opens as its own window (wallet extensions connect normally there); falls back to the page
-function wrCheckout(k){const w=window.open('/terminal2/checkout.html?k='+k,'wrCheckout','width=540,height=860');return !w}
+function wrCheckout(k){const w=window.open('/tts/checkout?k='+k,'wrCheckout','width=540,height=860');return !w}
 </script>
 </body>
 </html>
