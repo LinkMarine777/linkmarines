@@ -1,11 +1,15 @@
-// Cloudflare (Workers static assets): serves this repo as the site, no build step, no Worker code.
+// Cloudflare (Workers static assets): serves this repo as the site. The only code is worker/site.js, and it runs only for
+// /terminal/token pages (their link previews show the token's own share card); everything else is served straight from the files.
 // The Cloudflare project's name must match "name" below.
 {
   "name": "linkmarines",
   "compatibility_date": "2026-09-01",
+  "main": "worker/site.js",
   "assets": {
     "directory": "./",
+    "binding": "ASSETS",
     "html_handling": "auto-trailing-slash",
-    "not_found_handling": "none"
+    "not_found_handling": "none",
+    "run_worker_first": ["/terminal/token", "/terminal/token/*", "/terminal/token.html"]
   }
 }

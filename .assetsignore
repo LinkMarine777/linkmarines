@@ -13,3 +13,4 @@ stream/*.sh
 stream/*.py
 stream/__pycache__
 *.md
+worker/
