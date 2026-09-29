@@ -92,7 +92,9 @@ tr.me{background:rgba(42,90,218,.1)}
   .hero{grid-template-columns:repeat(3,minmax(0,1fr))}.pin{grid-column:1/-1;flex-wrap:wrap}.pin .acts{width:100%;margin:0}.hero>div:not(.pin){padding:9px 10px}.hero b{font-size:24px}.hero .s{display:none}.hero label{font-size:9px;letter-spacing:.5px}
   .hide-sm{display:none}main{padding:10px}
   .rk{display:none}.tok{min-width:0;gap:7px}.tok img{width:22px;height:22px}td,th{padding:8px 6px}.ph h1{font-size:22px}.ph{padding:10px 12px}
-  .tabs{margin-left:0;width:100%}.tabs button{flex:1}
+  .tabs{margin-left:0;width:100%;flex-wrap:wrap}.tabs button{flex:1 1 0;min-width:0;padding:6px 2px;letter-spacing:.5px}
+  #fk button{flex-basis:calc(33.33% - 3px)}   /* six alert filters: two rows of three instead of running off the screen */
+  .hero .pin .s{display:block;margin-top:2px}   /* keep the $MARINE price / 24h / mcap / vol line on phones */
 }
 .pin .acts{margin-left:auto;display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:none}.pin .acts .btn{margin:0;text-align:center;white-space:nowrap}.pin .t{min-width:0;flex:1}.pin .buyJ{border-color:var(--green);color:var(--green)}.pin .cpy{font:inherit;font-size:11px;cursor:pointer;background:none}.pin .cpy.ok{color:var(--green)}
 /* scrollbars: slim and dark to match the site (not the default white bar) */
