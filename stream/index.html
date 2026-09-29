@@ -1353,7 +1353,7 @@ let dbSeen=null;
 async function dbAlerts(){try{const L=((await j(BOT+'/alerts?limit=50')).signals)||[];
   if(!dbSeen){dbSeen=new Set(L.map(x=>x.id));return}   // what's already in the history when the page opens doesn't pop
   L.filter(x=>!dbSeen.has(x.id)).sort((a,b)=>a.t-b.t).forEach(x=>{dbSeen.add(x.id);   // in the order they happened
-    if(Date.now()/1000-x.t>900)return;   // news only: an event from 15+ min ago (the whale job's batches) goes to the history, not the screen
+    if(Date.now()/1000-x.t>(['dip','exit','rotation','convergence','dumping','rewards'].includes(x.kind)?300:900))return;   // news only: older events go to the history, not the screen (whale trades the 30-min scan finds late: after 5 min)
     // TTS and $MARINE's own payout (pulse) pop straight from their sources already
     if(x.kind==='tts'||x.id.startsWith('pulse:pulse:'))return;
     // $MARINE/$LINK buys pop from this page's own tape; one the tape missed (GeckoTerminal rate-limits a browser with
