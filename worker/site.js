@@ -15,7 +15,8 @@ export default {
       const img = `${BOT}/card/${ca}.png`;
       let title = null, desc = null;
       if (CRAWLER.test(req.headers.get('user-agent') || '')) {
-        const t = await fetch(`${BOT}/token/${ca}`, { cf: { cacheTtl: 300 }, signal: AbortSignal.timeout(4000) }).then(r => r.json()).catch(() => null);
+        const ask = env.BOT ? env.BOT.fetch(`${BOT}/token/${ca}`) : fetch(`${BOT}/token/${ca}`, { cf: { cacheTtl: 300 } });
+        const t = await Promise.race([ask, new Promise((_, no) => setTimeout(() => no(new Error('slow')), 4000))]).then(r => r.json()).catch(() => null);
         if (t && t.symbol) {
           const sym = String(t.symbol).replace(/^\$/, ''), q = t.quote?.symbol ? String(t.quote.symbol).replace(/^\$/, '') : null;
           title = `$${sym}${t.name ? ' · ' + t.name : ''} on Terminal 7`;

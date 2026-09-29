@@ -5,6 +5,8 @@
   "name": "linkmarines",
   "compatibility_date": "2026-09-01",
   "main": "worker/site.js",
+  // the bot, called directly (one Worker can't fetch another over its public workers.dev address)
+  "services": [{ "binding": "BOT", "service": "war-room-bot" }],
   "assets": {
     "directory": "./",
     "binding": "ASSETS",
