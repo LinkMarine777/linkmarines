@@ -51,3 +51,16 @@ jobs:
             python3 main/intel/whales.py data/terminal || echo "fast pass failed"
             (cd data && bash ../main/intel/push-data.sh "whale radar (fast)") || echo "save failed"
           done
+  # stonkfun refuses the bot's scheduled calls (403) but answers its web requests: call the bot's /kick once a minute so
+  # the holder-payout alerts and the payouts snapshot keep running. /kick ignores calls closer than 45 s apart.
+  kick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 32
+    steps:
+      - name: kick the bot every minute until the next run
+        run: |
+          end=$(( $(date +%s) + 29 * 60 ))
+          while [ $(date +%s) -lt $end ]; do
+            curl -s -m 50 https://war-room-bot.linkmarine777.workers.dev/kick | tr '\n' ' '; echo
+            sleep 60
+          done
