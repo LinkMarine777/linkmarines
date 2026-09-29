@@ -242,7 +242,15 @@ trades = [s for s in day if s.get('sell')]
 top_mints = {t['mint']: t for t in watch}
 label = lambda w: ' / '.join(f"#{x['rank']} ${x['symbol']}" for x in sorted(whale.get(w, []), key=lambda x: x['rank'])[:2]) or 'a'
 signals = []
+# once-a-day alerts fire at most once per rolling 24 h per token: they keep the id (and time) of their first firing, so
+# the date changing at midnight UTC doesn't make every one of them look new and re-fire in one burst
+DAILY = {'convergence', 'dumping', 'rewards', 'mover'}
+fired = {k: v for k, v in state.setdefault('fired', {}).items() if now - v['at'] < 2 * 86400}; state['fired'] = fired
 def sig_(kind, key, t, text, mint=None, usd=0):
+    if kind in DAILY:
+        base = f"{kind}:{key.rsplit(':', 1)[0]}"; rec = fired.get(base)
+        if rec and now - rec['at'] < 86400: key, t = rec['key'], rec['t']
+        else: fired[base] = {'at': now, 'key': key, 't': t}
     signals.append({'id': f'{kind}:{key}', 'kind': kind, 't': t, 'text': text, 'm': mint, 's': sym(mint) if mint else None, 'i': (meta.get(mint) or {}).get('i'), 'u': round(usd)})
 
 by = {}
@@ -267,6 +275,7 @@ for m, L in sold.items():
         sig_('dumping', f"{m}:{time.strftime('%Y%m%d', time.gmtime(now))}", max(s['t'] for s in L),
              f"{len(ws)} whales sold ${sym(m)} today (${tot:,.0f})", m, tot)
 for s in trades:
+    if s['t'] < now - 3600: continue   # per-trade alerts only for the last hour (a token turning 'down today' later doesn't re-announce old buys)
     mine = {x['mint']: x for x in whale.get(s['w'], [])}
     sm, bm = s['sell']['m'], s['buy']['m']
     if sm in mine and bm not in BASE and bm != sm and s['sell']['u'] >= 500:
