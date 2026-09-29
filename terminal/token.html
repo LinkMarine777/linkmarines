@@ -754,11 +754,11 @@ setTimeout(()=>{loadHolders();setInterval(loadHolders,120e3)},1500);
 function showHolders(){const r=rewards,hn=(HOLD&&HOLD.holders)||(CA===MARINE&&WRM&&WRM.holders)||null,en=(HOLD&&HOLD.over)||(CA===MARINE&&WRM&&WRM.eligible)||null;
   $('holdN').textContent=hn?num(hn):'';if(!r)return;
   $('sHolders').textContent=(hn?num(hn):'—')+' holders'+(en?' · '+num(en)+' earning':'')+' · '+(+(r.transferTaxBps/100).toFixed(1))+'% tax'}
-// $MARINE: the saved snapshot (it has the 24h / 7d totals), topped up with the live numbers whenever they're ahead of it
-// (the snapshot refresh stalled once and the page said "last payout 5h ago")
+// $MARINE: the live payout numbers (through the bot, 60 s cache: the pulse bar moves within a minute, like the stream's) over
+// the saved snapshot, which adds the 24h / 7d totals and is the fallback
 async function marineRewards(){const[a,b]=await Promise.allSettled([j(DATA+'rewards.json?'+Date.now()),j(BOT+'/token/'+CA)]);
   const s=a.status==='fulfilled'?a.value:null,l=b.status==='fulfilled'&&b.value&&b.value.rewards;
-  if(l&&l.distributedTokens>(s&&s.distributedTokens||0))return Object.assign({},s,l,{snapshotAt:Math.floor(Date.now()/1000)});
+  if(l&&l.distributedTokens>=(s&&s.distributedTokens||0))return Object.assign({},s,l,{snapshotAt:Math.floor(Date.now()/1000)});
   if(!s)throw new Error('no rewards');return s}
 async function loadRewards(){
   try{rewards=CA===MARINE?await marineRewards():(await j(BOT+'/token/'+CA)).rewards;}catch(e){return}
