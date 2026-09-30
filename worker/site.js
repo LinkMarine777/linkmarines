@@ -20,6 +20,10 @@ function domains(req) {
     let from = ''; try { from = new URL(req.headers.get('referer') || '').hostname.replace(/^www\./, ''); } catch (e) {}
     return Response.redirect(from === T7 ? `https://${HQ}/` : `https://${u.hostname}/trending/${u.search}`, 302);
   }
+  // the old /terminal/ and /terminal2/ addresses: a real redirect (the pages only moved in the browser, so link previews of
+  // old shared links came out blank): a token link to its token page, anything else to the stream / trending
+  const old = /^\/(terminal2?)\/?(index\.html)?$/.exec(u.pathname);
+  if (old) return Response.redirect(`https://${u.hostname}${u.searchParams.get('ca') ? '/terminal/token' : old[1] === 'terminal' ? '/stream/' : '/trending/'}${u.search}`, 301);
   return null;
 }
 
@@ -44,7 +48,7 @@ export default {
       }
       const set = v => ({ element(e) { e.setAttribute('content', v); } });
       let rw = new HTMLRewriter().on('meta[property="og:image"]', set(img)).on('meta[name="twitter:image"]', set(img));
-      if (title) rw = rw.on('meta[property="og:title"]', set(esc(title).replace(/&amp;/g, '&'))).on('meta[property="og:description"]', set(desc)).on('meta[name="description"]', set(desc));
+      if (title) rw = rw.on('title', { element(e) { e.setInnerContent(title); } }).on('meta[property="og:title"]', set(esc(title).replace(/&amp;/g, '&'))).on('meta[property="og:description"]', set(desc)).on('meta[name="description"]', set(desc));
       return rw.transform(res);
     } catch (e) { return res; }
   },
