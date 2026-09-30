@@ -1,4 +1,4 @@
-// The site is static files. This only runs for /terminal/token pages (see run_worker_first in wrangler.jsonc): it points
+// The site is static files. For /terminal/token pages this points
 // the link preview (og:image) at the token's own share card, and for link-preview crawlers (X, Discord, Telegram...)
 // also puts the token's name in the title. Anything unexpected: the page is served exactly as it is.
 const BOT = 'https://war-room-bot.linkmarine777.workers.dev';
@@ -6,9 +6,28 @@ const MINT = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 const CRAWLER = /bot|crawler|spider|facebookexternalhit|embedly|preview|slack|telegram|whatsapp|discord|twitter|linkedin|skype|vkshare|pinterest|redditbot|applebot/i;
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+// Two domains, one site: themarines.link is HQ (the homepage, bridge, memes...), terminal7.xyz is the terminal. Terminal pages
+// opened on themarines.link go to terminal7.xyz; the terminal's HQ links (href="/") go to themarines.link. The stream is served
+// on both as is (nothing pointing at it may break). Every other host (workers.dev, previews) is served unchanged.
+const HQ = 'themarines.link', T7 = 'terminal7.xyz';
+const TERMINAL = /^\/(trending|terminal|terminal2|terminal1\.1|flywheel)(\/|\.html|$)/;
+function domains(req) {
+  const u = new URL(req.url), host = u.hostname.replace(/^www\./, '');
+  if (u.hostname === 'www.' + HQ) return Response.redirect(`https://${HQ}${u.pathname}${u.search}`, 301);
+  if (host === HQ && TERMINAL.test(u.pathname)) return Response.redirect(`https://${T7}${u.pathname}${u.search}`, 302);
+  if (host === T7 && (u.pathname === '/' || u.pathname === '/index.html')) {
+    // typed in / shared: the terminal (trending); clicked from inside the terminal (its HQ links): HQ
+    let from = ''; try { from = new URL(req.headers.get('referer') || '').hostname.replace(/^www\./, ''); } catch (e) {}
+    return Response.redirect(from === T7 ? `https://${HQ}/` : `https://${u.hostname}/trending/${u.search}`, 302);
+  }
+  return null;
+}
+
 export default {
   async fetch(req, env) {
+    try { const r = domains(req); if (r) return r; } catch (e) {}
     const res = await env.ASSETS.fetch(req);
+    if (!new URL(req.url).pathname.startsWith('/terminal/token')) return res;
     try {
       const ca = new URL(req.url).searchParams.get('ca');
       if (!MINT.test(ca || '') || !(res.headers.get('content-type') || '').includes('text/html')) return res;
