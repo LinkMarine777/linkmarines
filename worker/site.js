@@ -13,7 +13,7 @@ const HQ = 'themarines.link', T7 = 'terminal7.xyz';
 const TERMINAL = /^\/(trending|terminal|terminal2|terminal1\.1|flywheel)(\/|\.html|$)/;
 function domains(req) {
   const u = new URL(req.url), host = u.hostname.replace(/^www\./, '');
-  if (u.hostname === 'www.' + HQ) return Response.redirect(`https://${HQ}${u.pathname}${u.search}`, 301);
+  if (u.hostname === 'www.' + HQ || u.hostname === 'www.' + T7) return Response.redirect(`https://${host}${u.pathname}${u.search}`, 301);   // www -> the bare domain
   if (host === HQ && TERMINAL.test(u.pathname)) return Response.redirect(`https://${T7}${u.pathname}${u.search}`, 302);
   if (host === T7 && (u.pathname === '/' || u.pathname === '/index.html')) {
     // typed in / shared: the terminal (trending); clicked from inside the terminal (its HQ links): HQ
