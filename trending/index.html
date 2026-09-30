@@ -291,11 +291,11 @@ const kindOf=x=>x.kind==='bigtrade'?(x.side==='sell'?['🐳 BIG SELL','k-dn']:['
 // holder payouts also get their own tab
 const WRBUY=x=>x.kind==='buy'&&(x.s==='MARINE'||x.s==='LINK'||/whale watch/i.test(x.text));   // other tokens' buys (from 2.0 pages) are market alerts
 const group=(k,x)=>k==='score'?'score':k==='payout'?'payout':['mover','board','top10'].includes(k)||(k==='buy'&&x&&!WRBUY(x))?'mover':['buy','pulse','milestone','link','tts'].includes(k)?'marine':'whale';
-// CLOBr score alerts: CLOBr's logo, then each token with its own logo, each one opening that token's terminal
+// CLOBr score alerts: CLOBr's logo, then one line per token (no token logos), each one opening that token's terminal
 function scoreRow(x,h,c,icon){const ms=String(x.i||'').startsWith('mints:')?x.i.slice(6).split(','):null;
   const bySym=s=>{s=s.toUpperCase();const t=Object.values(TOK).find(t=>String(t.symbol||'').toUpperCase()===s);return t&&t.mint};
   const parts=String(x.text).replace(/^CLOBr( update)?:\s*(\d+ scores moved · )?/,'').split(' · ');
-  const chips=parts.map((p,k)=>{const sm=/^\$(\S+)/.exec(p),mint=ms?ms[k]:(sm&&bySym(sm[1]))||(parts.length===1?x.m:null),img=mint?icon(mint):'',
+  const chips=parts.map((p,k)=>{const sm=/^\$(\S+)/.exec(p),mint=ms?ms[k]:(sm&&bySym(sm[1]))||(parts.length===1?x.m:null),img='',
       txt=p.replace(' CLOBr score ',' ').replace(' CLOBr ',' ').replace(/ \(now [^)]*\)/,'');
     return mint?`<a class="fsc" href="${open2(mint)}">${img?`<img src="${esc(img)}" alt="" loading="lazy" onerror="this.remove()">`:''}${esc(txt)}</a>`:`<span class="fsc">${esc(txt)}</span>`}).join('');
   return`<div class="fi"><span class="ft">${ago(x.t*1000)}</span><img src="/terminal/img/clobr.svg" alt="CLOBr" class="clg"><span><b class="fk ${c}">${h}</b><span class="scs">${chips}</span></span></div>`}

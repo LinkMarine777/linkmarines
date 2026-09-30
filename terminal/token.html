@@ -656,7 +656,7 @@ async function resolveToken(){
   document.querySelectorAll('.buyTk').forEach(a=>a.href='https://jup.ag/tokens/'+CA);
 
   $('tkBadge').innerHTML=(TK.image?`<img src="${esc(TK.image)}" alt="" onerror="this.remove()">`:'')+`${esc(sym)}<span class="q">/${esc(qs)}</span>`;
-  $('caIn').value=CA;
+  $('caIn').value='';   // the box stays empty, ready for the next search (the token's CA is on the copy button)
   // the bare /terminal/token link is $MARINE: show its CA in the address bar so any view can be shared as-is
   if(new URLSearchParams(location.search).get('ca')!==CA)try{history.replaceState(null,'','?ca='+CA+location.hash)}catch(e){}
   $('homeTk').style.display=CA===MARINE?'none':'';
@@ -686,7 +686,7 @@ function renderLinks(pairs){const info=(pairs||[]).map(p=>p.info).find(i=>i&&((i
     const r=TKR||{},q='$'+String(TK.quote||'').replace(/^\$/,''),tax=TK.tax!=null?+(TK.tax/100).toFixed(1)+'%':'a';
     if(r.minDistributionUsd||r.minHoldingUsd)L.splice(1,0,`<a class="fwl" href="/flywheel/" aria-label="How the $${esc(sym)} flywheel works"><svg viewBox="0 0 24 24">${ICO.fw}</svg><span class="fwtip"><b>THE FLYWHEEL</b>Every $${esc(sym)} buy and sell pays ${esc(tax)} tax. It's swapped into ${esc(q)} and pooled; when the pot hits $${num(r.minDistributionUsd||0)}, it's airdropped to every wallet holding $${num(r.minHoldingUsd||0)}+ of $${esc(sym)}. No claiming.${r.distributedUsd?`<i>${esc(usd(r.distributedUsd,0))} paid to holders so far</i>`:''}<u>Click for how it works ▸</u></span></a>`)}
   $('tkLinks').innerHTML=L.join('');
-  $('copyCa').onclick=async()=>{try{await navigator.clipboard.writeText(CA)}catch(e){$('caIn').select();document.execCommand('copy')}
+  $('copyCa').onclick=async()=>{try{await navigator.clipboard.writeText(CA)}catch(e){const t=document.createElement('textarea');t.value=CA;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove()}
     const b=$('copyCa');b.classList.add('ok');b.innerHTML='<svg viewBox="0 0 24 24">'+ICO.ok+'</svg>';setTimeout(()=>{b.classList.remove('ok');b.innerHTML='<svg viewBox="0 0 24 24">'+ICO.copy+'</svg>'},1400)}}
 $('caForm').addEventListener('submit',e=>{e.preventDefault();const v=$('caIn').value.trim();
   if(!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(v)){$('tkMsg').textContent='that is not a Solana token address';return}

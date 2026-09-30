@@ -11,12 +11,25 @@
 #t7s.open{display:block}#t7s a{display:flex;align-items:center;gap:9px;padding:7px 10px;color:var(--txt,#c9d3ee);text-decoration:none;font-size:12px;border-bottom:1px solid rgba(26,36,68,.6)}
 #t7s a:last-child{border-bottom:0}#t7s a.on,#t7s a:hover{background:rgba(74,122,255,.14);color:#fff}#t7s img{width:22px;height:22px;border-radius:50%;background:#111;flex:none;object-fit:cover}
 #t7s b{color:#fff;font-weight:600}#t7s .n{color:var(--dim,#5d6a8f);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1}#t7s .v{color:var(--green,#39ff6a);font-size:11px}
-#t7s .m{color:var(--txt,#c9d3ee);font-size:11px;flex:none}#t7s .x{padding:9px 10px;color:var(--dim,#5d6a8f);font-size:12px}`;
+#t7s .m{color:var(--txt,#c9d3ee);font-size:11px;flex:none}
+.t7w{position:relative;flex:1;min-width:120px;display:flex}.t7w input{flex:1;min-width:0}
+#caForm .t7p{position:absolute;top:50%;bottom:auto;left:auto;width:auto;height:auto;display:block;transform:translateY(-50%);z-index:2;border:1px solid var(--line,#1a2444);background:#0a0f1f;color:var(--blue2,#4a7aff);font:inherit;font-size:10px;line-height:1.4;letter-spacing:1px;padding:3px 7px;cursor:pointer}#caForm .t7p:hover{color:#fff;border-color:var(--blue2,#4a7aff)}#t7s .x{padding:9px 10px;color:var(--dim,#5d6a8f);font-size:12px}`;
   document.head.appendChild(st);
   const box = document.createElement('div'); box.id = 't7s'; box.setAttribute('role', 'listbox');
-  (inp.parentElement.classList.contains('srch') ? inp.parentElement : form).appendChild(box);
-  if (getComputedStyle(box.parentElement).position === 'static') box.parentElement.style.position = 'relative';
   if (/Paste/.test(inp.placeholder)) inp.placeholder = 'Search $TICKER, name or paste CA…';
+  // PASTE: a CA opens straight away, anything else is searched. The box starts empty (and again on Back) for the next search
+  const wrap = inp.parentElement.classList.contains('srch') ? inp.parentElement : (() => {
+    const w = document.createElement('span'); w.className = 't7w'; inp.parentNode.insertBefore(w, inp); w.appendChild(inp); return w; })();
+  const pb = document.createElement('button'); pb.type = 'button'; pb.className = 't7p'; pb.textContent = 'PASTE'; pb.title = 'Paste a CA or ticker';
+  pb.style.right = wrap.querySelector('button[type="submit"]') ? '34px' : '4px'; inp.style.setProperty('padding-right', (parseInt(pb.style.right) + 56) + 'px', 'important');
+  wrap.appendChild(pb); wrap.appendChild(box);
+  pb.addEventListener('click', async () => {
+    let v = ''; try { v = (await navigator.clipboard.readText() || '').trim(); } catch (e) {}
+    if (!v) { inp.focus(); const m = document.getElementById('tkMsg'); if (m) m.textContent = 'long-press the box and paste'; return; }
+    if (CA.test(v)) return open(v);
+    inp.value = v.slice(0, 60); inp.focus(); inp.dispatchEvent(new Event('input'));
+  });
+  window.addEventListener('pageshow', () => { inp.value = ''; list = []; show(''); });
   let list = [], sel = 0, seq = 0, timer = null;
   const show = html => { box.innerHTML = html; box.classList.toggle('open', !!html); };
   const draw = () => show(list.length ? list.map((t, i) => `<a href="/terminal/token?ca=${encodeURIComponent(t.id)}" data-i="${i}" class="${i === sel ? 'on' : ''}" role="option">` +
