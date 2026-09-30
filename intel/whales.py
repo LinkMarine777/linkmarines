@@ -245,12 +245,15 @@ signals = []
 # once-a-day alerts fire at most once per rolling 24 h per token: they keep the id (and time) of their first firing, so
 # the date changing at midnight UTC doesn't make every one of them look new and re-fire in one burst
 DAILY = {'convergence', 'dumping', 'rewards', 'mover'}
-fired = {k: v for k, v in state.setdefault('fired', {}).items() if now - v['at'] < 2 * 86400}; state['fired'] = fired
+fired = {k: v for k, v in state.setdefault('fired', {}).items() if now - v.get('seen', v['at']) < 2 * 86400}; state['fired'] = fired   # forgotten 2 days after it last qualified
 def sig_(kind, key, t, text, mint=None, usd=0):
     if kind in DAILY:
         base = f"{kind}:{key.rsplit(':', 1)[0]}"; rec = fired.get(base)
-        if rec and now - rec['at'] < 86400: key, t = rec['key'], rec['t']
-        else: fired[base] = {'at': now, 'key': key, 't': t}
+        if rec: rec['seen'] = now
+        # after 24 h it fires again only if the amount has at least doubled (real news): a plain 24 h expiry re-fired
+        # everything from one burst together a day later (2026-09-30 00:40 UTC, ~30 at once)
+        if rec and (now - rec['at'] < 86400 or usd < 2 * rec.setdefault('u', usd)): key, t = rec['key'], rec['t']
+        else: fired[base] = {'at': now, 'key': key, 't': t, 'u': usd}
     signals.append({'id': f'{kind}:{key}', 'kind': kind, 't': t, 'text': text, 'm': mint, 's': sym(mint) if mint else None, 'i': (meta.get(mint) or {}).get('i'), 'u': round(usd)})
 
 by = {}
