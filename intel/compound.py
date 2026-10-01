@@ -74,10 +74,11 @@ def rpc(m, p, tries=6):
                                        {'Content-Type': 'application/json', 'User-Agent': 'war-room-compound'})
             d = json.load(urllib.request.urlopen(r, timeout=120))
         except Exception as e:
-            if i == tries - 1: raise RuntimeError(f'{m}: {type(e).__name__}')
-            time.sleep(2 * (i + 1)); continue
+            code = getattr(e, 'code', None)
+            if i == tries - 1: raise RuntimeError(f"{m}: {type(e).__name__} {code or ''}".strip())
+            time.sleep(5 * (i + 1) if code == 429 else 2 * (i + 1)); continue
         if 'error' in d:
-            if d['error'].get('code') == 429 and i < tries - 1: time.sleep(2 * (i + 1)); continue
+            if d['error'].get('code') == 429 and i < tries - 1: time.sleep(5 * (i + 1)); continue
             raise RuntimeError(f"{m}: {d['error'].get('message')}")
         return d['result']
 
@@ -154,10 +155,16 @@ def series(mint, since):
 GTFA = [bool(KEY or 'helius' in URL)]   # Helius' batch history; else (or if it's refused) one transaction at a time
 
 
+FAILS = [0]
+
+
 def history(addr, since):
     if not GTFA[0]: return history_slow(addr, since)
     try: return history_fast(addr, since)
-    except RuntimeError as e: log('getTransactionsForAddress refused, reading one by one:', e); GTFA[0] = False; return history_slow(addr, since)
+    except RuntimeError as e:   # this address only (the free plan rate-limits bursts); 10 refusals in a run = stop using it
+        FAILS[0] += 1; log('getTransactionsForAddress refused, reading this one one by one:', e)
+        if FAILS[0] >= 10: GTFA[0] = False
+        return history_slow(addr, since)
 
 
 def history_slow(addr, since):
@@ -177,7 +184,7 @@ def history_fast(addr, since):
         opts = {'transactionDetails': 'full', 'encoding': 'jsonParsed', 'maxSupportedTransactionVersion': 1, 'sortOrder': 'desc',
                 'limit': 100, 'filters': {'blockTime': {'gte': since}}}
         if tok: opts['paginationToken'] = tok
-        r = rpc('getTransactionsForAddress', [addr, opts], tries=4)
+        r = rpc('getTransactionsForAddress', [addr, opts], tries=8)
         rows = r.get('data') or []; out += rows; CREDITS[0] += max(10, -(-len(rows) // 100) * 10)
         tok = r.get('paginationToken')
         if not tok or not rows: return out
@@ -203,7 +210,7 @@ def backfill(mint, quote, T, people, wallets, since):
                 ch = {k: v for k, v in ch.items() if abs(v) > 1e-9}
                 if ch: txs.append({'t': tx.get('blockTime') or now, 'ch': ch, 'signer': keys[0] == w})
         return w, sorted(txs, key=lambda x: x['t'])
-    with ThreadPoolExecutor(6) as ex: hist = dict(ex.map(one, wallets))
+    with ThreadPoolExecutor(2) as ex: hist = dict(ex.map(one, wallets))   # 2 at a time: Helius' free plan refuses bursts
 
     px = {m: series(m, since) for m in (mint, quote, SOL)}; pt = {m: [t for t, _ in s] for m, s in px.items()}
     def usd(m, a, t):
@@ -320,6 +327,7 @@ for mint in watch:
         index['tokens'][mint] = {'sym': sym, 'at': now, 'since': T['since'], 'wallets': len(wallets), 'holders': len(people),
                                  'score': {k_: summ[k_]['score'] for k_ in WINDOWS}}
         log(f"  score 7d {summ['7d']['score']} · 30d {summ['30d']['score']} · credits so far {CREDITS[0]}")
+        if BACKFILL: save('compound/index.json', index); save('compound-state.json', state)   # a run cut short keeps what it did
     except Exception as e: log(mint[:6], 'failed:', e)
 # tokens the site no longer lists: off the index now, their saved numbers dropped after 7 days
 index['tokens'] = {m: v for m, v in index['tokens'].items() if m in watch}

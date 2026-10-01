@@ -19,7 +19,7 @@ concurrency:
 jobs:
   compound:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,11 +33,14 @@ jobs:
         env:
           HELIUS_KEY: ${{ secrets.HELIUS_KEY }}
           SOLANA_RPC: ${{ secrets.SOLANA_RPC }}
+        timeout-minutes: 140
         run: python3 main/intel/compound.py data/terminal ${{ inputs.backfill && '--backfill' || '' }}
       - name: save to the data branch
+        if: always()   # also when the run was cut short: compound.py saves after every token
         working-directory: data
         run: |
           # the bot and the whale job commit to this branch too: start from its latest each try, lay our files on top, push
+          [ -f terminal/compound-state.json ] || exit 0
           git config user.name "war-room-compound"; git config user.email "compound@users.noreply.github.com"
           mkdir -p "$RUNNER_TEMP/c"; cp -r terminal/compound terminal/compound-state.json "$RUNNER_TEMP/c/"
           for i in 1 2 3 4 5; do
