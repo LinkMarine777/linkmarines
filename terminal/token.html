@@ -408,6 +408,16 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 @media (min-width:1000px) and (max-width:1299px){.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.stat{border-bottom:1px solid var(--line)}.stat:nth-child(3n){border-right:0}}
 .moreStats,#mbar{display:none}
 .mtok{display:none}.pchips{display:none}.tkb .nm small{display:none}.tkb .nm b{font-weight:inherit}.mca{display:none}
+/* desktop: name under the ticker, short copyable address, bigger price, rounded search, price-change chips in the market tile */
+@media (min-width:1000px){
+  header .ca input{border-radius:17px;height:34px;padding-left:14px}
+  .tkb .nm{display:flex;flex-direction:column;line-height:1.1}.tkb .nm small{display:block;font-size:9.5px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mca{display:inline-flex;align-items:center;gap:4px;flex:none;background:none;border:0;color:var(--dim);font:inherit;font-size:11px;padding:0 2px;cursor:pointer}.mca svg{width:11px;height:11px;fill:currentColor}.mca:hover{color:#fff}.mca.ok{color:var(--green)}
+  .stat.mkt .mrow b{font-size:38px}
+  .pchips:not(:empty){display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:7px;border:1px solid var(--line);border-radius:6px;overflow:hidden;max-width:330px}
+  .pchips span{display:flex;justify-content:center;align-items:baseline;gap:3px;padding:3px 0;font-size:9.5px;white-space:nowrap;letter-spacing:-.2px}.pchips span+span{border-left:1px solid var(--line)}
+  .pchips i{font-style:normal;color:var(--dim)}.pchips b{font-family:inherit;font-size:9.5px;font-weight:400;display:inline;line-height:1.3}.pchips .up{color:var(--green)}.pchips .dn{color:var(--red)}
+}
 .ph .chev{display:none}
 @media (max-width:999px){
   html,body,#stage{max-width:100vw;overflow-x:hidden}main>*,.lower>*,.col>*,.stats>*{min-width:0}.tape-bar{max-width:100vw}.tape-bar .track{max-width:none}
@@ -749,8 +759,8 @@ function renderLinks(pairs){const info=(pairs||[]).map(p=>p.info).find(i=>i&&((i
 const phone=matchMedia('(max-width:999px)');
 function placeTok(){const f=$('caForm'),srch=f.querySelector('.srch');
   const hm=document.querySelector('header>a');if(hm){hm.href=phone.matches?'/trending/':'/';hm.title=phone.matches?'Trending tokens':'The Marines HQ'}
-  if(phone.matches){$('mtok').insertBefore($('tkBadge'),$('mtl'));$('mtl').appendChild($('tkLinks'));$('mtok').appendChild($('tkMsg'))}
-  else{f.insertBefore($('tkBadge'),srch);f.insertBefore($('tkLinks'),srch);f.appendChild($('tkMsg'))}}
+  if(phone.matches){$('mtok').insertBefore($('tkBadge'),$('mtl'));$('mtl').insertBefore($('mCa'),$('mtl').firstChild);$('mtl').appendChild($('tkLinks'));$('mtok').appendChild($('tkMsg'))}
+  else{f.insertBefore($('tkBadge'),srch);f.insertBefore($('mCa'),srch);f.insertBefore($('tkLinks'),srch);f.appendChild($('tkMsg'))}}
 placeTok();phone.addEventListener?phone.addEventListener('change',placeTok):phone.addListener(placeTok);
 $('mCa').onclick=()=>{const b=$('copyCa');if(b)b.click();$('mCa').classList.add('ok');setTimeout(()=>$('mCa').classList.remove('ok'),1400)};
 $('caForm').addEventListener('submit',e=>{e.preventDefault();const v=$('caIn').value.trim();
