@@ -31,7 +31,7 @@ Score per wallet over a window, counting from its first reward (the buy that got
 Token score: the wallets' scores weighted by how much they hold.
 Never prints the RPC URL.
 """
-import base64, bisect, calendar, json, math, os, struct, sys, time, urllib.request
+import base64, bisect, calendar, json, math, os, re, struct, sys, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from statistics import median
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -153,7 +153,7 @@ def holders(mint, T):
                 if len(raw) < 40: continue
                 o = b58e(raw[:32]); own[o] = own.get(o, 0) + struct.unpack('<Q', raw[32:40])[0] / 10 ** T['dec']
         except RuntimeError as e:
-            if 'Too many accounts' not in str(e) or not (KEY or 'helius' in URL): raise
+            if not re.search(r'Too many accounts|deprioritized|getProgramAccountsV2', str(e)) or not (KEY or 'helius' in URL): raise   # Helius' wording varies
             T['big'] = True; log('  too many accounts for one call: holder lookup by mint from now on (every 24 h)')
     if T.get('big'):   # Helius' token-holder lookup by mint: 1,000 accounts a page, 10 credits a page
         cur, pages, done = None, 0, False
