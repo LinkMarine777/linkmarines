@@ -221,7 +221,7 @@ tr.whale td{background:rgba(74,122,255,.08)}
 .cmpT td{padding:7px 6px;border-bottom:1px solid rgba(26,36,68,.6);white-space:nowrap}.cmpT .r{text-align:right}
 .cmpR{display:flex;align-items:center;gap:6px}.cmpR s{display:block;height:6px;background:var(--line);width:60px;position:relative;text-decoration:none}.cmpR s i{position:absolute;inset:0 auto 0 0;background:var(--green)}
 .cmpSc{display:inline-block;min-width:34px;text-align:center;font-family:'VT323';font-size:18px;border:1px solid;padding:0 4px;line-height:1.2}
-.cmpTg{font-size:10.5px;letter-spacing:.5px}.cmpMore{margin:8px 0 0}.cmpSrc{font-size:10.5px;color:var(--dim);margin-top:10px;line-height:1.5}
+.cmpTg{font-size:10.5px;letter-spacing:.5px}.cmpRow{cursor:pointer}.cmpRow:hover td{background:rgba(42,90,218,.06)}.cmpDet td{font-size:11px;color:var(--dim);white-space:normal;line-height:1.5;padding-top:0;background:rgba(42,90,218,.06)}.cmpDet b{color:#fff;font-weight:500}.cmpMore{margin:8px 0 0}.cmpSrc{font-size:10.5px;color:var(--dim);margin-top:10px;line-height:1.5}
 @media (max-width:640px){.cmpT .hs{display:none}.cmpT td,.cmpT th{padding:7px 4px}}
 .cHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,rgba(255,107,0,.12),transparent 60%)}
 .cMiss{display:block;font-size:10px;margin-top:2px}.cMiss:empty{display:none}
@@ -1065,13 +1065,18 @@ function renderCompound(){if(!CMP)return;const W=CMP.win[cmpW]||{},sc=W.score,sy
       <div><b>${Math.round(tg.Compounder[1])}%</b><span>of supply held by compounders</span></div></div>
     <div class="cmpBar">${Object.entries(tg).filter(([k,v])=>v[1]>0).map(([k,v])=>`<span style="flex:${v[1]};background:${CMPC[k]}"></span>`).join('')}</div>
     <div class="cmpLg">${Object.entries(tg).map(([k,v])=>`<span><i style="background:${CMPC[k]}"></i>${k} ${v[0]} · ${v[1].toFixed(1)}%</span>`).join('')}</div>`}
-  $('cmpBody').innerHTML=top+`<table class="cmpT"><thead><tr><th>#</th><th>Wallet</th><th class="r">Holds</th><th class="r hs">7d</th><th class="r hs">Rewards</th><th class="r">Net bought</th><th class="r">Score</th></tr></thead><tbody>
-    ${shown.map((r,i)=>{const v=r[cmpW],x=d7[r.w];const [R,N,c,k,s_,t]=v||[];return`<tr><td class="dim">${i+1}</td><td><a href="https://solscan.io/account/${esc(r.w)}" target="_blank" rel="noopener">${esc(r.w.slice(0,4))}…${esc(r.w.slice(-4))}</a></td>
+  $('cmpBody').innerHTML=top+`<table class="cmpT"><thead><tr><th>#</th><th>Wallet</th><th class="r">Holds</th><th class="r hs">7d</th><th class="r hs">Rewards</th><th class="r" title="bought minus sold since the wallet's first reward">Net bought</th><th class="r">Score</th></tr></thead><tbody>
+    ${shown.map((r,i)=>{const v=r[cmpW],x=d7[r.w];const [R,N,c,k,s_,t,B,S]=v||[];
+      const why=v?`${t} · score ${s_} = 70% × ${Math.round(c*100)}% of rewards bought back in + 30% × bought after ${Math.round(k*100)}% of payout days`:'';
+      const det=v?`<tr class="cmpDet" style="display:none"><td></td><td colspan="6">Rewards <b>${cmpUsd(R)}</b> · bought <b>${B!=null?cmpUsd(B):'—'}</b> · sold <b>${S!=null?cmpUsd(S):'—'}</b> · net <b>${N>0?'+':''}${cmpUsd(N)}</b><br>
+        ${Math.round(c*100)}% of rewards bought back in · bought after ${Math.round(k*100)}% of payout days · score ${s_} (${t})</td></tr>`:'';
+      return`<tr class="${v?'cmpRow':''}" title="${v?'tap for details':''}"><td class="dim">${i+1}</td><td><a href="https://solscan.io/account/${esc(r.w)}" target="_blank" rel="noopener">${esc(r.w.slice(0,4))}…${esc(r.w.slice(-4))}</a></td>
       <td class="r">${r.p.toFixed(2)}%</td><td class="r hs">${x==null?dash:x===0?'<span class="dim">0</span>':pct(x)}</td>
       ${v?`<td class="r hs">${cmpUsd(R)}</td><td class="r" style="color:${N>0?'var(--green)':N<0?'var(--red)':'var(--dim)'}">${N>0?'+':''}${cmpUsd(N)}</td>
-      <td class="r"><span class="cmpSc" title="${t}: ${Math.round(c*100)}% of rewards bought back in" style="color:${CMPC[t]};border-color:${CMPC[t]}">${s_}</span></td>`:`<td class="r hs">${dash}</td><td class="r">${dash}</td><td class="r">${dash}</td>`}</tr>`}).join('')}</tbody></table>
+      <td class="r"><span class="cmpSc" title="${why}" style="color:${CMPC[t]};border-color:${CMPC[t]}">${s_}</span></td>`:`<td class="r hs">${dash}</td><td class="r">${dash}</td><td class="r">${dash}</td>`}</tr>${det}`}).join('')}</tbody></table>
     ${CMP.rows.length>20?`<button class="btn cmpMore" id="cmpMore">${cmpAll?'SHOW TOP 20':'SHOW ALL '+CMP.rows.length}</button>`:''}`;
-  const m=$('cmpMore');if(m)m.onclick=()=>{cmpAll=!cmpAll;renderCompound()}}
+  const m=$('cmpMore');if(m)m.onclick=()=>{cmpAll=!cmpAll;renderCompound()};
+  $('cmpBody').querySelectorAll('tr.cmpRow').forEach(tr=>tr.onclick=e=>{if(e.target.closest('a'))return;const d=tr.nextElementSibling;if(d&&d.classList.contains('cmpDet'))d.style.display=d.style.display==='none'?'':'none'})}
 function syncScores(){const a=$('scoreStat').style.display!=='none',b=$('cmpStat').style.display!=='none';$('scoresStat').style.display=a||b?'':'none';$('scoresStat').classList.toggle('both',a&&b)}
 $('cmpStat').onclick=()=>{setTapeView('holders');document.querySelector('.tapeP').scrollIntoView({behavior:'smooth',block:'start'})};
 $('cmpWin').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();cmpW=b.dataset.w;[...$('cmpWin').children].forEach(x=>x.classList.toggle('on',x===b));renderCompound()});
