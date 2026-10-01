@@ -7,7 +7,7 @@ stonkfun's top 30 and the Stonk Board's top 100, ~100 tokens) and writes into th
   terminal/compound/index.json    every tracked token's summary (scores for 7d / 30d / all)
   terminal/compound-state.json    memory between runs: last balances, payout total and daily numbers per wallet
 
-Wallets: the fewest that together own 80% of the token's supply held by people (pools / program accounts excluded),
+Wallets: the fewest that together own 80% of the token's supply held by people (pools, lockers, token / program accounts excluded),
 at least 20 and at most 600 ($MARINE ~85, $ZCAT ~460).
 
 Every run: stonkfun's payout totals for all tokens (one call) and prices (Jupiter, 50 tokens a call); per token a few
@@ -120,6 +120,22 @@ for i in range(0, len(mints), 50):
     time.sleep(1)
 state = load('compound-state.json', {'tokens': {}})
 ST = state['tokens']
+KINDS = state.setdefault('kinds', {})   # owner → 0 a person (System-owned, or no account), 1 not (a token or program account)
+SYSTEM = '11111111111111111111111111111111'
+
+
+def people_only(people):
+    """Drop owners that are a program's accounts with an ordinary key, which the PDA check can't see (a token account holding
+    tokens, a program-held vault): a person's wallet is owned by the System program, or holds no SOL at all. Only the wallets
+    that could make the tracked set are looked up, once each (getMultipleAccounts, 100 a call)."""
+    for _ in range(5):
+        ask = [w for w in sorted(people, key=lambda w: -people[w])[:MAX_W + 100] if w not in KINDS]
+        if not ask: break
+        for i in range(0, len(ask), 100):
+            v = rpc('getMultipleAccounts', [ask[i:i + 100], {'encoding': 'base64', 'dataSlice': {'offset': 0, 'length': 0}}])['value']; CREDITS[0] += 1
+            for w, a in zip(ask[i:i + 100], v): KINDS[w] = 0 if a is None or a['owner'] == SYSTEM else 1
+        people = {w: b for w, b in people.items() if not KINDS.get(w)}
+    return {w: b for w, b in people.items() if not KINDS.get(w)}
 
 
 def holders(mint, T):
@@ -149,8 +165,8 @@ def holders(mint, T):
             if not L or not cur or len(L) < 1000: done = True; break
         if not done: raise RuntimeError(f'holder list incomplete after {pages} pages')   # never save a partial snapshot
     out = {o: b for o, b in own.items() if b > 0 and o not in NOT_WALLETS and on_curve(b58d(o))}
-    if not out: raise RuntimeError(f'no holders returned ({len(accs)} accounts)')
-    return out
+    if not out: raise RuntimeError('no holders returned')
+    return people_only(out)
 
 
 def top_set(people):
@@ -426,11 +442,14 @@ if '--rescore' in sys.argv:   # the score formula changed: rebuild every token's
     for mint, it in index['tokens'].items():
         page, T = load(f'compound/{mint}.json', None), ST.get(mint)
         if not page or not T: continue
+        people_only({r['w']: r['p'] for r in page['rows']})
+        page['rows'] = [r for r in page['rows'] if not KINDS.get(r['w'])]; page['wallets'] = len(page['rows'])
         for r in page['rows']:
             for k_, n in WINDOWS.items(): r[k_] = score((T.get('days') or {}).get(r['w']) or {}, today - n + 1)
         page['win'] = summ = summarize(page['rows']); save(f'compound/{mint}.json', page)
-        it.update({'score': {k_: summ[k_]['score'] for k_ in WINDOWS}, 'c7': summ['7d']['compounded'], 'r7': summ['7d']['rewards']})
-    save('compound/index.json', index); log(f"rescored {len(index['tokens'])} tokens"); sys.exit(0)
+        it.update({'score': {k_: summ[k_]['score'] for k_ in WINDOWS}, 'c7': summ['7d']['compounded'], 'r7': summ['7d']['rewards'],
+                   'ca': summ['all']['compounded'], 'ra': summ['all']['rewards'], 'wallets': page['wallets']})
+    save('compound/index.json', index); save('compound-state.json', state); log(f"rescored {len(index['tokens'])} tokens"); sys.exit(0)
 for mint in watch:
     T = ST.setdefault(mint, {})
     if not T.get('v2') and len(T.get('bal') or {}) < MIN_W and not T.get('backfilled'):   # one-off: partial snapshots an earlier run saved
@@ -487,7 +506,8 @@ for mint in watch:
         save(f'compound/{mint}.json', page)
         index['tokens'][mint] = {'sym': sym, 'at': now, 'since': T['since'], 'wallets': len(wallets), 'holders': len(people),
                                  'score': {k_: summ[k_]['score'] for k_ in WINDOWS},
-                                 'c7': summ['7d']['compounded'], 'r7': summ['7d']['rewards']}   # trending: % put back, $ rewards (7 days)
+                                 'c7': summ['7d']['compounded'], 'r7': summ['7d']['rewards'],    # % put back, $ rewards: 7 days
+                                 'ca': summ['all']['compounded'], 'ra': summ['all']['rewards']}  # ... and since launch (what the site shows)
         log(f"  score 7d {summ['7d']['score']} · 30d {summ['30d']['score']} · credits so far {CREDITS[0]}")
         if BACKFILL or HISTORY: save('compound/index.json', index); save('compound-state.json', state)   # a run cut short keeps what it did
     except Exception as e: log(mint[:6], 'failed:', e)

@@ -330,25 +330,25 @@ try:
         signals[-1]['i'] = 'mints:' + ','.join(c[1] for c in ch[:3])
 except Exception as e: log('scores', e)
 
-# ---------- compound score changes (intel/compound.py's 7-day scores, every 6 h) ----------
+# ---------- compound score changes (intel/compound.py's all-time scores, every 6 h: what the site shows) ----------
 # as a 'rewards' alert (♻️ WHALE REWARDS: every page and the stream already show that kind): a token's score crossing a band
 # (weak < 20 · mixed < 40 · healthy < 60 · strong) or moving 10+ points; only tokens whose tracked holders got $500+ of
-# rewards in the week; a token seen for the first time is only remembered; at most 3 a pass (biggest change first, the rest
+# rewards since launch; a token seen for the first time is only remembered; at most 3 a pass (biggest change first, the rest
 # wait for the next pass) and once a day per token
 try:
     ci = load('compound/index.json', {}).get('tokens') or {}
     band = lambda v: 'Weak' if v < 20 else 'Mixed' if v < 40 else 'Healthy' if v < 60 else 'Strong'
-    cprev = state.setdefault('compound', {}); cch = []
+    state.pop('compound', None); cprev = state.setdefault('compoundA', {}); cch = []   # all-time from now (7-day baseline dropped)
     for m, t in ci.items():
-        v = (t.get('score') or {}).get('7d')
-        if v is None or (t.get('r7') is not None and t['r7'] < 500): continue
+        v = (t.get('score') or {}).get('all'); ra = t.get('ra', t.get('r7'))
+        if v is None or (ra is not None and ra < 500): continue
         p = cprev.get(m)
         if p is None: cprev[m] = v; continue
         if band(v) != band(p) or abs(v - p) >= 10: cch.append((abs(v - p), m, t, p, v))
     for _, m, t, p, v in sorted(cch, key=lambda c: -c[0])[:3]:
         sig_('rewards', f"compound:{m}:{t.get('at') or now}", now,
              f"${t.get('sym') or m[:4]} compound score {p:.0f} → {v:.0f} {'▲' if v > p else '▼'} ({band(p)} → {band(v)})"
-             + (f" · {t['c7']:.0f}% of rewards put back this week" if t.get('c7') is not None else ''), m, 0)
+             + (f" · {t['ca']:.0f}% of rewards put back since launch" if t.get('ca') is not None else ''), m, 0)
         cprev[m] = v
 except Exception as e: log('compound alerts', e)
 

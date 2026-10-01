@@ -191,7 +191,7 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
       <div class="tabs" id="sort"><button data-k="vol" class="on">VOLUME</button><button data-k="apy">APY</button><button data-k="paid">PAID OUT</button><button data-k="new">NEWEST</button><button data-k="cmp">COMPOUND</button></div></div>
     <div class="tw"><table>
       <thead><tr><th class="rk">#</th><th>Token</th><th class="r hide-sm">Price<small>24h</small></th><th class="r">Volume<small>24h</small></th><th class="r hide-sm">Market cap</th>
-        <th class="r">APY 3D<small>modeled</small></th><th class="r hide-sm">$100 held<small>per day</small></th><th class="r hide-sm">Holders<small>24h</small></th><th class="r hide-sm">Paid out</th><th class="r clc">CLOBr<small>score · delayed</small></th><th class="r" title="Compound score: are the biggest holders putting their rewards back in? (7 days)">Compound<small>7d</small></th><th class="r hide-sm">Bonded</th></tr></thead>
+        <th class="r">APY 3D<small>modeled</small></th><th class="r hide-sm">$100 held<small>per day</small></th><th class="r hide-sm">Holders<small>24h</small></th><th class="r hide-sm">Paid out</th><th class="r clc">CLOBr<small>score · delayed</small></th><th class="r" title="Compound score: are the biggest holders putting their rewards back in? (since launch)">Compound<small>all time</small></th><th class="r hide-sm">Bonded</th></tr></thead>
       <tbody id="rows"><tr><td colspan="12" class="nt">loading…</td></tr></tbody>
     </table></div>
     <button class="more" id="more" type="button" style="display:none"></button>
@@ -256,12 +256,12 @@ async function load(){
   const at=Math.max(tk.value?.at||0,bd.value?.at||0);$('meta').textContent=ROWS.length+' tokens'+(at?' · updated '+ago(at*1000)+' ago':'');
   render()}
 const SORTS={vol:r=>r.vol??-1,apy:r=>r.apy??-1,paid:r=>r.paid??-1,new:r=>r.bonded??-1,cmp:r=>{const c=cmpOf(r.mint);return c?c.s+(c.c||0)/1000:-1}};
-// compounding (terminal/compound/index.json, every 6 h): each token's 7-day compound score; a token whose tracked holders got
-// under $500 of rewards in the week isn't ranked (a handful of trades would decide it)
+// compounding (terminal/compound/index.json, every 6 h): each token's all-time compound score; a token whose tracked holders got
+// under $500 of rewards since launch isn't ranked (a handful of trades would decide it)
 let CMPI={};
-const cmpOf=m=>{const t=CMPI[m];if(!t||!t.score||t.score['7d']==null)return null;if(t.r7!=null&&t.r7<500)return null;return{s:t.score['7d'],c:t.c7}};
+const cmpOf=m=>{const t=CMPI[m];if(!t||!t.score||t.score.all==null)return null;if((t.ra??t.r7)!=null&&(t.ra??t.r7)<500)return null;return{s:t.score.all,c:t.ca??t.c7}};
 function cmpCell(m){const c=cmpOf(m);if(!c)return'<span class="dim">—</span>';const v=c.s,col=v>=40?'var(--green)':v>=20?'var(--amber)':'var(--red)';
-  return`<a class="sc" style="color:${col}" href="${open2(m)}" title="${c.c!=null?Math.round(c.c)+'% of rewards put back in · ':''}7 days · ${v>=60?'Strong':v>=40?'Healthy':v>=20?'Mixed':'Weak'}">${Math.round(v)}</a>`}
+  return`<a class="sc" style="color:${col}" href="${open2(m)}" title="${c.c!=null?Math.round(c.c)+'% of rewards put back in · ':''}since launch · ${v>=60?'Strong':v>=40?'Healthy':v>=20?'Mixed':'Weak'}">${Math.round(v)}</a>`}
 j('https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/compound/index.json').then(d=>{CMPI=(d&&d.tokens)||{};render()}).catch(()=>{});
 function scoreCell(s){if(!s||s.score==null)return'<span class="dim">—</span>';const v=s.score,c=v>=60?'var(--green)':v<=40?'var(--red)':'var(--amber)';
   return`<span class="sc" style="color:${c}" title="${esc(s.msg||'CLOBr score')}">${v.toFixed(0)}</span>`}
