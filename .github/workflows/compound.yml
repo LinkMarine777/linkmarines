@@ -1,0 +1,51 @@
+# Compounding (intel/compound.py): every 6 h, are the holders of $MARINE and stonkfun's top 10 putting their rewards back in?
+# Writes terminal/compound/<mint>.json + index.json and terminal/compound-state.json to the data branch.
+# ~10 Helius credits per token per run (one balance snapshot). "Run workflow" with backfill = the exact last 7 days (one-off).
+name: compounding
+on:
+  schedule:
+    - cron: '23 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      backfill:
+        description: 'read the last 7 days exactly (one-off, ~40K credits) instead of the 6-hourly update'
+        type: boolean
+        default: false
+permissions:
+  contents: write
+concurrency:
+  group: compound
+  cancel-in-progress: false
+jobs:
+  compound:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: main
+          sparse-checkout: intel
+      - uses: actions/checkout@v4
+        with:
+          ref: data
+          path: data
+      - name: compounding
+        env:
+          HELIUS_KEY: ${{ secrets.HELIUS_KEY }}
+          SOLANA_RPC: ${{ secrets.SOLANA_RPC }}
+        run: python3 main/intel/compound.py data/terminal ${{ inputs.backfill && '--backfill' || '' }}
+      - name: save to the data branch
+        working-directory: data
+        run: |
+          # the bot and the whale job commit to this branch too: start from its latest each try, lay our files on top, push
+          git config user.name "war-room-compound"; git config user.email "compound@users.noreply.github.com"
+          mkdir -p "$RUNNER_TEMP/c"; cp -r terminal/compound terminal/compound-state.json "$RUNNER_TEMP/c/"
+          for i in 1 2 3 4 5; do
+            git fetch -q origin data && git reset -q --hard origin/data
+            mkdir -p terminal/compound; cp -r "$RUNNER_TEMP/c/compound/." terminal/compound/; cp "$RUNNER_TEMP/c/compound-state.json" terminal/
+            git add terminal/compound terminal/compound-state.json
+            git diff --cached --quiet && exit 0
+            git commit -q -m "compounding" && git push -q origin HEAD:data && exit 0
+            sleep $((i * 5))
+          done
+          exit 1
