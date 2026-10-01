@@ -1032,7 +1032,7 @@ let CMP=null,cmpW='7d',cmpAll=false;
 const cmpUsd=n=>Math.abs(n)>=1000?compact(n):(n<0?'-':'')+'$'+Math.round(Math.abs(n));
 const CMPC={Compounder:'var(--green)',Partial:'var(--blue2)',Collector:'var(--dim)',Seller:'var(--red)'};
 async function loadCompound(){try{const r=await fetch('https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/compound/'+CA+'.json',{cache:'no-store'});
-  if(!r.ok)return;CMP=await r.json();$('cmpWrap').style.display='';renderCompound()}catch(e){}}
+  if(!r.ok)return;const d=await r.json();if(!d.wallets)return;CMP=d;$('cmpWrap').style.display='';renderCompound()}catch(e){}}
 function renderCompound(){if(!CMP)return;const W=CMP.win[cmpW]||{},sc=W.score,sym=esc(CMP.sym);
   const since=new Date(CMP.since*1000).toLocaleDateString(undefined,{month:'short',day:'numeric'});
   $('cmpMeta').textContent=`${CMP.wallets} wallets · ${Math.round(CMP.cover)}% of supply · since ${since}`;
