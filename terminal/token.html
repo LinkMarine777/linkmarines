@@ -407,7 +407,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 
 @media (min-width:1000px) and (max-width:1299px){.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.stat{border-bottom:1px solid var(--line)}.stat:nth-child(3n){border-right:0}}
 .moreStats,#mbar{display:none}
-.mtok{display:none}.pchips{display:none}.tkb .nm small{display:none}.tkb .nm b{font-weight:inherit}.mca{display:none}
+.mtok{display:none}.pchips{display:none}.pchips span[data-tf]{cursor:pointer}.pchips span[data-tf]:hover{background:rgba(74,122,255,.1)}.pchips span.on{background:rgba(74,122,255,.18);box-shadow:inset 0 -2px 0 var(--blue2)}.tkb .nm small{display:none}.tkb .nm b{font-weight:inherit}.mca{display:none}
 /* desktop: name under the ticker, short copyable address, bigger price, rounded search */
 @media (min-width:1000px){
   header{flex-wrap:nowrap!important}header .ca{flex:1 1 auto;max-width:620px;margin:0 auto 0 18px}header .ca input{border-radius:17px;height:34px;padding-left:14px}
@@ -416,6 +416,9 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .ctok .tkb img{width:32px;height:32px}.ctok .tkb .nm b{font-family:'VT323';font-weight:400;font-size:26px;color:#fff;letter-spacing:1px;line-height:1}.ctok .tkb .nm b .q{font-family:'IBM Plex Mono';font-size:12px;margin-left:3px;letter-spacing:0}
   .ctok .tkl a,.ctok .tkl button{width:26px;height:26px;border-radius:5px}
   .chartP>.ph{flex-wrap:wrap;row-gap:8px}.chartP>.ph .legend{white-space:nowrap}
+  .chartP>.ph .pchips:not(:empty){display:flex;margin-left:auto;border:1px solid var(--line);border-radius:6px;overflow:hidden}.chartP>.ph .pchips:not(:empty)+.tabs{margin-left:8px}
+  .chartP>.ph .pchips span{display:flex;align-items:baseline;gap:4px;padding:5px 9px;font-size:11px;white-space:nowrap}.chartP>.ph .pchips span+span{border-left:1px solid var(--line)}
+  .chartP>.ph .pchips i{font-style:normal;color:var(--dim)}.chartP>.ph .pchips b{font-family:inherit;font-size:11px;font-weight:400;display:inline;line-height:1.3}.chartP>.ph .pchips .up{color:var(--green)}.chartP>.ph .pchips .dn{color:var(--red)}
   .tkb .nm{display:flex;flex-direction:column;line-height:1.1}.tkb .nm small{display:block;font-size:9.5px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .mca{display:inline-flex;align-items:center;gap:4px;flex:none;background:none;border:0;color:var(--dim);font:inherit;font-size:11px;padding:0 2px;cursor:pointer}.mca svg{width:11px;height:11px;fill:currentColor}.mca:hover{color:#fff}.mca.ok{color:var(--green)}
   .stat.mkt .mrow b{font-size:38px}
@@ -571,7 +574,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
         <div class="legend" style="margin:0"><span><i style="background:var(--blue2)"></i><span class="tkSym">$MARINE</span> (right)</span><span><i style="background:var(--amber)"></i><span class="tkQs">$LINK</span> (left)</span><a id="depthLeg" style="display:none" target="_blank" rel="noopener" title="CLOBr market depth, delayed up to 1h. Real-time on CLOBr Pro"><i style="background:linear-gradient(90deg,var(--green) 50%,var(--red) 50%)"></i>CLOBr depth <span class="dly">delayed</span></a></div>
         <div class="tabs" id="dtab" style="display:none"><button id="depthBtn" class="on" type="button" title="CLOBr market depth for the token: support (green) and resistance (red) liquidity by price">DEPTH</button></div>
         <div class="tabs" id="tf">
-          <button data-tf="1d">24H</button><button data-tf="7d" class="on">7D</button><button data-tf="all">ALL</button>
+          <button data-tf="1h">1H</button><button data-tf="6h">6H</button><button data-tf="1d">24H</button><button data-tf="7d" class="on">7D</button><button data-tf="all">ALL</button>
         </div>
       </div>
       <div id="chartWrap"><canvas id="chart"></canvas><div id="tip"></div></div>
@@ -763,8 +766,10 @@ const phone=matchMedia('(max-width:999px)');
 function placeTok(){const f=$('caForm'),srch=f.querySelector('.srch');
   const hm=document.querySelector('header>a');if(hm){hm.href=phone.matches?'/trending/':'/';hm.title=phone.matches?'Trending tokens':'The Marines HQ'}
   if(phone.matches){$('mtok').insertBefore($('tkBadge'),$('mtl'));$('mtl').insertBefore($('mCa'),$('mtl').firstChild);$('mtl').appendChild($('tkLinks'));$('mtok').appendChild($('tkMsg'))}
-  else{const c=$('ctok');c.appendChild($('tkBadge'));c.appendChild($('mCa'));c.appendChild($('tkLinks'));f.appendChild($('tkMsg'))}}
+  else{const c=$('ctok');c.appendChild($('tkBadge'));c.appendChild($('mCa'));c.appendChild($('tkLinks'));f.appendChild($('tkMsg'))}
+  if(phone.matches)document.querySelector('.stat.mkt').appendChild($('pChips'));else $('tf').parentNode.insertBefore($('pChips'),$('tf'))}
 placeTok();phone.addEventListener?phone.addEventListener('change',placeTok):phone.addListener(placeTok);
+$('pChips').addEventListener('click',e=>{const c=e.target.closest('span[data-tf]');if(!c)return;const b=$('tf').querySelector(`[data-tf="${c.dataset.tf}"]`);if(b)b.click()});
 $('mCa').onclick=()=>{const b=$('copyCa');if(b)b.click();$('mCa').classList.add('ok');setTimeout(()=>$('mCa').classList.remove('ok'),1400)};
 $('caForm').addEventListener('submit',e=>{e.preventDefault();const v=$('caIn').value.trim();
   if(!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(v)){$('tkMsg').textContent='that is not a Solana token address';return}
@@ -885,7 +890,8 @@ async function loadMarket(){
     const p=d.pair||(d.pairs||[])[0];if(!p)return;const flip=p.baseToken.address!==CA;
     marinePx=flip?(+p.priceUsd/+p.priceNative):+p.priceUsd;
     $('sPrice').textContent=px(marinePx);chg24=p.priceChange?.h24;renderChg();
-    const pc=p.priceChange||{};$('pChips').innerHTML=flip?'':[['m5','5m'],['h1','1h'],['h6','6h'],['h24','24h']].map(([k,l])=>pc[k]==null?'':`<span><i>${l}</i><b class="${pc[k]>=0?'up':'dn'}">${pc[k]>=0?'':'−'}${Math.abs(pc[k]).toFixed(2)}%</b></span>`).join('');
+    const pc=p.priceChange||{};PC=flip?{}:pc;const ct={h1:'1h',h6:'6h',h24:'1d'};   // tap 1h / 6h / 24h: the chart switches to it
+    $('pChips').innerHTML=flip?'':[['m5','5m'],['h1','1h'],['h6','6h'],['h24','24h']].map(([k,l])=>pc[k]==null?'':`<span${ct[k]?` data-tf="${ct[k]}" role="button" title="Show the ${l} chart"`:''}${ct[k]===tf?' class="on"':''}><i>${l}</i><b class="${pc[k]>=0?'up':'dn'}">${pc[k]>=0?'':'−'}${Math.abs(pc[k]).toFixed(2)}%</b></span>`).join('');renderChg();
     MCAP=flip?0:(p.marketCap||p.fdv||0);$('sMcap').textContent=flip?'—':compact(p.marketCap||p.fdv);
     // the pool lists this token second (LINK/ALLINU): its market cap from a pair that lists it first
     if(flip&&!(Date.now()-(loadMarket.mcAt||0)<600e3)){loadMarket.mcAt=Date.now();loadMarket.mc=j('https://api.dexscreener.com/tokens/v1/solana/'+CA).then(L=>{const q=(Array.isArray(L)?L:[]).filter(x=>x.baseToken&&x.baseToken.address===CA&&(x.marketCap||x.fdv)).sort((a,b)=>((b.liquidity||{}).usd||0)-((a.liquidity||{}).usd||0))[0];return q?(q.marketCap||q.fdv):0}).catch(()=>0)}
@@ -899,16 +905,18 @@ async function loadMarket(){
 }
 
 // ---------- chart ----------
-const TF={'1d':'minute?aggregate=15&limit=96','7d':'hour?aggregate=1&limit=168','all':'hour?aggregate=4&limit=500'};
+const TF={'1h':'minute?aggregate=1&limit=60','6h':'minute?aggregate=5&limit=72','1d':'minute?aggregate=15&limit=96','7d':'hour?aggregate=1&limit=168','all':'hour?aggregate=4&limit=500'};
+const TFL={'1h':'1h','6h':'6h','1d':'24h','7d':'7d','all':'all'},TFB={'1h':60,'6h':300,'1d':900,'7d':3600,all:14400},TFPC={'1h':'h1','6h':'h6','1d':'h24'};
 let tf='7d',series=null,CH={};
 function setSeries(){const raw=CH[tf];if(!raw||!raw.length)return false;
   series=raw.map(([t,m,l])=>({t:t*1000,m,l}));hover=null;draw();
-  const lc=series.filter(p=>p.l);if(lc.length>1){const a=lc[0].l,b=lc[lc.length-1].l;$('sLinkChg').innerHTML=pct((b-a)/a*100)+' <span class="dim">'+({'1d':'24h','7d':'7d','all':'all'})[tf]+'</span>'}
+  const lc=series.filter(p=>p.l);if(lc.length>1){const a=lc[0].l,b=lc[lc.length-1].l;$('sLinkChg').innerHTML=pct((b-a)/a*100)+' <span class="dim">'+TFL[tf]+'</span>'}
   renderChg();return true}
-// the token's price change over the chart's timeframe: DexScreener's 24h for 24H, the chart's own first-to-last otherwise
-let chg24=null;
-function renderChg(){let c=chg24,lab='24h';
-  if(tf!=='1d'&&series&&series.length>1){const a=series[0].m,b=series[series.length-1].m;if(a&&b){c=(b-a)/a*100;lab=tf==='7d'?'7d':'all'}}
+// the token's price change over the chart's timeframe: DexScreener's own for 1H / 6H / 24H, the chart's first-to-last otherwise
+let chg24=null,PC={};
+function renderChg(){let c=PC[TFPC[tf]]??(tf==='1d'?chg24:null),lab=TFL[tf];
+  if(c==null&&series&&series.length>1&&CH[tf]){const a=series[0].m,b=series[series.length-1].m;if(a&&b)c=(b-a)/a*100}
+  document.querySelectorAll('#pChips span[data-tf]').forEach(x=>x.classList.toggle('on',x.dataset.tf===tf));
   if(c!=null)$('sChg').innerHTML=pct(c)+' <span class="dim">'+lab+'</span>'}
 async function loadLive(k){
   if(!GT)return;
@@ -919,7 +927,7 @@ async function loadLive(k){
   const f=pts.find(p=>p[2]!=null)?.[2];pts.forEach(p=>{if(p[2]==null)p[2]=f});CH[k]=pts}
 // the chart's last point follows the live price (DexScreener, every 30 s), so the chart never trails the ticker
 let QPX=0;
-function liveTail(){const r=CH[tf];if(!r||!r.length||!marinePx)return;const B={'1d':900,'7d':3600,all:14400}[tf]||3600,t=Math.floor(Date.now()/1000/B)*B,last=r[r.length-1];
+function liveTail(){const r=CH[tf];if(!r||!r.length||!marinePx)return;const B=TFB[tf]||3600,t=Math.floor(Date.now()/1000/B)*B,last=r[r.length-1];
   if(t<last[0])return;const q=QPX||last[2];if(t===last[0]){last[1]=marinePx;last[2]=q}else r.push([t,marinePx,q])}
 async function loadChart(){
   // shows a chart at once: this browser's last copy (kept 6 h) or, for $MARINE, the saved chart.json (the whale job rebuilds it
@@ -928,7 +936,7 @@ async function loadChart(){
   const k=tf;let fresh=false;
   if(!CH[k]){const c=chartMem(k);if(c){CH[k]=c;liveTail();setSeries()}}
   if(CA===MARINE){try{const d=await j(DATA+'chart.json?'+Date.now()),age=Date.now()/1000-(d.at||0);
-    if(d&&d['7d']&&age<5400){['1d','7d','all'].forEach(x=>{if(d[x]&&d[x].length&&(!CH[x]||age<1200))CH[x]=d[x]});fresh=age<1200;if(tf===k){liveTail();setSeries()}}}catch(e){}}
+    if(d&&d['7d']&&age<5400){['1d','7d','all'].forEach(x=>{if(d[x]&&d[x].length&&(!CH[x]||age<1200))CH[x]=d[x]});fresh=age<1200&&!!(d[k]&&d[k].length);if(tf===k){liveTail();setSeries()}}}catch(e){}}   // 1H / 6H aren't in it: live
   if(!fresh){try{await loadLive(k);chartMem(k,CH[k]);loadChart.fails=0}catch(e){if((loadChart.fails=(loadChart.fails||0)+1)<4)setTimeout(loadChart,3000*loadChart.fails)}}
   if(tf===k){liveTail();setSeries()}}
 const chartMem=(k,v)=>{const key='wrChart:'+CA+':'+k;try{if(v){localStorage.setItem(key,JSON.stringify({at:Date.now(),v}));return}
@@ -1102,7 +1110,7 @@ $('depthBtn').onclick=()=>{depthOn=!depthOn;$('depthBtn').classList.toggle('on',
   try{localStorage.setItem('wrDepth',depthOn?'1':'0')}catch(e){}draw()};
 $('depthBtn').classList.toggle('on',depthOn);
 $('tf').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
-  [...$('tf').children].forEach(x=>x.classList.toggle('on',x===b));tf=b.dataset.tf;loadChart()});
+  [...$('tf').children].forEach(x=>x.classList.toggle('on',x===b));tf=b.dataset.tf;renderChg();loadChart()});
 
 // ---------- compounding (intel/compound.py writes terminal/compound/<mint>.json every 6 h; tracked tokens only) ----------
 let CMP=null,cmpW='all',cmpAll=false;
