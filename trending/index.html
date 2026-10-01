@@ -68,6 +68,7 @@ main{max-width:1500px;margin:0 auto;padding:16px;display:flex;flex-direction:col
 .tabs{display:flex;gap:4px;margin-left:auto}
 .tabs button{border:1px solid var(--line);background:#050914;color:var(--dim);font:inherit;font-size:11px;padding:4px 10px;cursor:pointer;letter-spacing:1px}
 .tabs button.on{border-color:var(--blue2);color:#fff;background:rgba(74,122,255,.15)}
+.per{display:inline-flex;gap:2px}.per button{border:1px solid var(--line);background:#050914;color:var(--dim);font:inherit;font-size:10px;padding:2px 7px;cursor:pointer;letter-spacing:1px}.per button.on{border-color:var(--blue2);color:#fff;background:rgba(74,122,255,.15)}
 .tw{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
 th{font-size:10px;letter-spacing:1px;color:var(--dim);text-align:left;font-weight:400;padding:8px 10px;border-bottom:1px solid var(--line);text-transform:uppercase;white-space:nowrap}
@@ -177,13 +178,13 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
     <section class="panel d-al"><div class="ph"><h2>🐋 ALERTS</h2><span class="meta hide-sm">every alert the terminals show, in order · whales · big trades · movers · Stonk Board · CLOBr</span>
       <div class="tabs" id="fk"><button data-f="all" class="on">ALL</button><button data-f="marine">$MARINE</button><button data-f="whale">WHALES</button><button data-f="mover">MARKET</button><button data-f="score">CLOBr</button><button data-f="payout">PAYOUTS</button></div></div>
       <div class="feed" id="feed"><p class="nt">loading…</p></div></section>
-    <section class="panel d-wh"><div class="ph"><h2>🐋 WHALE RADAR · 24H</h2>
+    <section class="panel d-wh"><div class="ph"><h2>🐋 WHALE RADAR</h2><span class="per" id="wp"><button data-p="1h">1H</button><button data-p="24h" class="on">24H</button></span>
       <div class="tabs" id="wk"><button data-w="buying" class="on">BUYING</button><button data-w="selling">SELLING</button><button data-w="recent">LIVE</button></div></div>
       <div class="feed lrs" id="whaleRows"><p class="nt">loading…</p></div>
-      <div class="src">What the top holders of stonkfun's top tokens and $MARINE bought and sold in the last 24h, read from the chain · refreshed every 30 min</div></section>
-    <section class="panel d-fl"><div class="ph"><h2>⚡ FLOW · LAST HOUR</h2><span class="meta hide-sm">stonkfun top 10 by market cap</span></div>
+      <div class="src">What the top holders of stonkfun's top tokens and $MARINE bought and sold in the last <span id="wpT">24h</span>, read from the chain · refreshed every few minutes</div></section>
+    <section class="panel d-fl"><div class="ph"><h2>⚡ FLOW</h2><span class="per" id="fp"><button data-p="1h" class="on">1H</button><button data-p="24h">24H</button></span><span class="meta hide-sm">stonkfun top 10 by market cap</span></div>
       <div class="feed lrs" id="flowRows"><p class="nt">loading…</p></div>
-      <div class="src">Buys ▲ and sells ▼ in the last hour, busiest first · DexScreener, every minute</div></section>
+      <div class="src">Buys ▲ and sells ▼ in the last <span id="fpT">hour</span>, busiest first · DexScreener, every minute</div></section>
     <section class="panel d-tr">
     <div class="ph"><h1>TRENDING ON STONKFUN</h1><span class="meta" id="meta"></span>
       <div class="tabs" id="sort"><button data-k="vol" class="on">VOLUME</button><button data-k="apy">APY</button><button data-k="paid">PAID OUT</button><button data-k="new">NEWEST</button></div></div>
@@ -196,8 +197,8 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
     <div class="src">Click a token to open it in the terminal. Volume and price: stonkfun. APY, holders and payouts: <a href="https://thestonkboard.com/" target="_blank" rel="noopener">thestonkboard.com</a> (modeled from recent payouts; not a forecast). Score: CLOBr (0-100, support vs resistance), delayed up to 1h; <a href="https://clobr.io/premium?ref=DF92VC53" target="_blank" rel="noopener" style="color:#FF6B00">real-time with CLOBr Pro + the CLOBr extension · free 7-day trial ▸</a>. Nothing here is financial advice.</div>
   </section>
     <div class="d-side">
-    <section class="panel d-lp"><div class="ph"><h2>💧 BEST LP · 24H FEES</h2><span class="meta hide-sm">fees per $ of liquidity · every stonkfun + Stonk Board token</span></div>
-      <div class="tw lpw"><table><thead><tr><th>Pool</th><th class="r">Liquidity</th><th class="r hide-sm">Fees 24h</th><th class="r">Per day</th><th></th></tr></thead><tbody id="lpRows"><tr><td colspan="5" class="nt">loading…</td></tr></tbody></table></div>
+    <section class="panel d-lp"><div class="ph"><h2>💧 BEST LP</h2><span class="per" id="lpp"><button data-p="1h">1H</button><button data-p="24h" class="on">24H</button></span><span class="meta hide-sm">fees per $ of liquidity · every stonkfun + Stonk Board token</span></div>
+      <div class="tw lpw"><table><thead><tr><th>Pool</th><th class="r">Liquidity</th><th class="r hide-sm" id="lpF">Fees 24h</th><th class="r" id="lpD">Per day</th><th></th></tr></thead><tbody id="lpRows"><tr><td colspan="5" class="nt">loading…</td></tr></tbody></table></div>
       <div class="src">Fees only, before impermanent loss, and yesterday's fees aren't tomorrow's. Raydium + Meteora pools of every stonkfun and Stonk Board token with $5K+ liquidity.</div></section>
     <section class="panel d-ap"><div class="ph"><h2>📋 STONK BOARD · TOP APY</h2><span class="meta hide-sm">24h, modeled</span></div>
       <div class="feed lrs" id="apyRows"><p class="nt">loading…</p></div>
@@ -306,9 +307,11 @@ function renderIntel(){if(!IN)return;const icon=m=>m===MARINE?MLOGO:(TOK[m]&&TOK
     return`<a class="fi" href="${x.m?open2(x.m):'#'}"><span class="ft">${ago(x.t*1000)}</span>${im?`<img src="${esc(im)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span class="ph0"></span>'}
       <span><b class="fk ${c}">${h}</b>${esc(x.text)}</span></a>`}).join('')
     :`<p class="nt">${{score:'No CLOBr score changes',mover:'No market alerts',payout:'No holder payouts',whale:'No whale alerts',marine:'No $MARINE alerts'}[fk]||'No alerts'} yet.</p>`;
-  const P=IN.lp||[];$('lpRows').innerHTML=P.length?P.map(x=>`<tr><td><div class="pp">${(x.i||icon(x.m))?`<img src="${esc(x.i||icon(x.m))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span style="width:20px;flex:none"></span>'}<span><a href="${open2(x.m)}">${esc(x.pair)}</a><span class="dx">${esc(x.dex)}</span></span></div></td>
-      <td class="r">${compact(x.tvl)}</td><td class="r hide-sm">${compact(x.fee)}</td><td class="r up">${x.d.toFixed(1)}%</td><td class="r"><a class="add" href="${esc(x.url)}" target="_blank" rel="noopener">ADD ▸</a></td></tr>`).join('')
-    :'<tr><td colspan="5" class="nt">No pools yet.</td></tr>'}
+  renderLp()}
+function renderLp(){if(!IN)return;const icon=m=>m===MARINE?MLOGO:(TOK[m]&&TOK[m].image)||'',h1=PER.lpp==='1h';$('lpF').textContent=h1?'Fees 1h':'Fees 24h';$('lpD').textContent=h1?'Last hour':'Per day';
+  const P=(h1?IN.lp1:IN.lp)||[];$('lpRows').innerHTML=P.length?P.map(x=>`<tr><td><div class="pp">${(x.i||icon(x.m))?`<img src="${esc(x.i||icon(x.m))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span style="width:20px;flex:none"></span>'}<span><a href="${open2(x.m)}">${esc(x.pair)}</a><span class="dx">${esc(x.dex)}</span></span></div></td>
+      <td class="r">${compact(x.tvl)}</td><td class="r hide-sm">${compact(h1?x.fee1:x.fee)}</td><td class="r up">${h1?x.d1.toFixed(2):x.d.toFixed(1)}%</td><td class="r"><a class="add" href="${esc(x.url)}" target="_blank" rel="noopener">ADD ▸</a></td></tr>`).join('')
+    :`<tr><td colspan="5" class="nt">${h1&&!IN.lp1?'Last-hour numbers arrive with the next LP scan.':'No pools yet.'}</td></tr>`}
 // the alert history comes from the bot's database (every alert, saved in order, the same for everyone); pools and whale
 // data from the intel job's file
 async function loadIntel(){const [a,b]=await Promise.allSettled([j(BOT+'/alerts?limit=500'),j(INTEL)]);
@@ -318,26 +321,33 @@ $('fk').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)re
 loadIntel();setInterval(loadIntel,60e3);
 // ---------- from the stream's rotation: whale radar, last-hour flow, Stonk Board top APY ----------
 let wk='buying',FLOW=null,APY=null;
+// 1H / 24H switches (whale radar, flow, best LP), remembered per viewer
+const PER={wp:'24h',fp:'1h',lpp:'24h'};try{Object.assign(PER,JSON.parse(localStorage.getItem('wrPer')||'{}'))}catch(e){}
+const perDraw={wp:()=>renderWhales(),fp:()=>renderFlow(),lpp:()=>renderLp()};
+Object.keys(PER).forEach(id=>{const el=$(id),set=()=>{[...el.children].forEach(b=>b.classList.toggle('on',b.dataset.p===PER[id]))};set();
+  el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;PER[id]=b.dataset.p;set();try{localStorage.setItem('wrPer',JSON.stringify(PER))}catch(x){}perDraw[id]()})});
 const tokImg=m=>m===MARINE?MLOGO:(TOK[m]&&TOK[m].image)||'';
 const lrow=(href,img,name,sub,right,lead='')=>`<a class="lr" href="${href}"${/^https?:/.test(href)?' target="_blank" rel="noopener"':''}>${lead}${img?`<img src="${esc(img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span class="ph0"></span>'}<span class="ln"><b>${name}</b>${sub?`<small>${sub}</small>`:''}</span>${right}</a>`;
 const whales=n=>n+' whale'+(n===1?'':'s');
-function renderWhales(){const b=$('whaleRows');if(!IN)return;
-  if(wk==='recent'){const L=(IN.recent||[]).slice(0,30);
+function renderWhales(){const b=$('whaleRows');if(!IN)return;const h1=PER.wp==='1h';$('wpT').textContent=h1?'hour':'24h';
+  if(wk==='recent'){const L=(IN.recent||[]).filter(x=>!h1||x.t*1000>Date.now()-3600e3).slice(0,30);
     b.innerHTML=L.length?L.map(x=>lrow('https://solscan.io/tx/'+encodeURIComponent(x.sig||''),x.bi,`sold $${esc(x.sell)} → $${esc(x.buy)}`,esc(x.who||x.w||'')+' · '+ago(x.t*1000)+' ago',`<span class="r"><b>${compact(x.u)}</b></span>`)).join('')
-      :'<p class="nt">No whale trades in the last day.</p>';return}
-  const L=IN[wk]||[];
+      :`<p class="nt">No whale trades in the last ${h1?'hour':'day'}.</p>`;return}
+  if(h1&&!IN[wk+'1h']){b.innerHTML='<p class="nt">Last-hour numbers arrive with the next whale scan.</p>';return}
+  const L=IN[wk+(h1?'1h':'')]||[];
   b.innerHTML=L.length?L.map(r=>lrow(open2(r.m),r.i||tokImg(r.m),'$'+esc(r.s||'?'),
       wk==='buying'?`${whales(r.buyers)} buying${r.sellers?' · '+r.sellers+' selling':''}`:`${whales(r.sellers)} selling${r.buyers?' · '+r.buyers+' buying':''}`,
       `<span class="r"><b class="${r.net>=0?'up':'dn'}">${r.net>=0?'+':'−'}${compact(Math.abs(r.net))}</b><small>▲${compact(r.b)} ▼${compact(r.x)}</small></span>`)).join('')
-    :`<p class="nt">No whales ${wk} right now.</p>`}
+    :`<p class="nt">No whales ${wk} in the last ${h1?'hour':'day'}.</p>`}
 $('wk').addEventListener('click',e=>{const x=e.target.closest('button');if(!x)return;wk=x.dataset.w;[...$('wk').children].forEach(y=>y.classList.toggle('on',y===x));renderWhales()});
 async function loadFlow(){const top=ROWS.filter(r=>r.sf&&r.mcap).sort((a,b)=>b.mcap-a.mcap).slice(0,10);if(!top.length)return;
   try{const d=await j('https://api.dexscreener.com/tokens/v1/solana/'+top.map(t=>t.mint).join(',')),best={};
     (Array.isArray(d)?d:[]).forEach(p=>{const m=p.baseToken&&p.baseToken.address,l=(p.liquidity||{}).usd||0;if(m&&(!best[m]||l>best[m].l))best[m]={l,p}});
-    FLOW=top.map(t=>{const x=best[t.mint];if(!x)return null;const h=(x.p.txns||{}).h1||{};return{m:t.mint,s:t.symbol,i:t.image,b:h.buys||0,x:h.sells||0,v:(x.p.volume||{}).h1||0,c:(x.p.priceChange||{}).h1}}).filter(Boolean).sort((a,b)=>b.v-a.v);
+    FLOW=top.map(t=>{const x=best[t.mint];if(!x)return null;const w={};['h1','h24'].forEach(k=>{const h=(x.p.txns||{})[k]||{};w[k]={b:h.buys||0,x:h.sells||0,v:(x.p.volume||{})[k]||0,c:(x.p.priceChange||{})[k]}});return{m:t.mint,s:t.symbol,i:t.image,w}}).filter(Boolean);
     renderFlow()}catch(e){}}
-function renderFlow(){if(!FLOW)return;$('flowRows').innerHTML=FLOW.length?FLOW.map(f=>lrow(open2(f.m),f.i||tokImg(f.m),'$'+esc(f.s),`${compact(f.v)} traded`+(f.c!=null?` · <span class="${f.c>=0?'up':'dn'}">${f.c>=0?'+':''}${(+f.c).toFixed(1)}%</span>`:''),
-    `<span class="r"><b><span class="up">▲${f.b}</span> <span class="dn">▼${f.x}</span></b><small>${f.b+f.x?Math.round(f.b/(f.b+f.x)*100)+'% buys':'no trades'}</small></span>`)).join(''):'<p class="nt">No trades in the last hour.</p>'}
+function renderFlow(){if(!FLOW)return;const k=PER.fp==='24h'?'h24':'h1';$('fpT').textContent=k==='h1'?'hour':'24h';
+  $('flowRows').innerHTML=FLOW.length?FLOW.map(f=>({m:f.m,s:f.s,i:f.i,...f.w[k]})).sort((a,b)=>b.v-a.v).map(f=>lrow(open2(f.m),f.i||tokImg(f.m),'$'+esc(f.s),`${compact(f.v)} traded`+(f.c!=null?` · <span class="${f.c>=0?'up':'dn'}">${f.c>=0?'+':''}${(+f.c).toFixed(1)}%</span>`:''),
+    `<span class="r"><b><span class="up">▲${f.b}</span> <span class="dn">▼${f.x}</span></b><small>${f.b+f.x?Math.round(f.b/(f.b+f.x)*100)+'% buys':'no trades'}</small></span>`)).join(''):`<p class="nt">No trades in the last ${k==='h1'?'hour':'day'}.</p>`}
 function renderApy(){if(!APY)return;$('apyRows').innerHTML=APY.length?APY.map((a,i)=>lrow(open2(a.mint),a.logo||tokImg(a.mint),'$'+esc(a.symbol),'#'+a.rank+' on the board · mc '+compact(a.mcap)+(a.quote?' · paid in $'+esc(a.quote):''),
     `<span class="r"><b class="apy">${apyFmt(a.apy)}</b></span>`,`<span class="rk2">${i+1}</span>`)).join(''):'<p class="nt">No board data right now.</p>'}
 setTimeout(()=>{loadFlow();setInterval(()=>{if(!document.hidden)loadFlow()},60e3)},3000);
