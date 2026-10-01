@@ -309,9 +309,17 @@ function renderIntel(){if(!IN)return;const icon=m=>m===MARINE?MLOGO:(TOK[m]&&TOK
     :`<p class="nt">${{score:'No CLOBr score changes',mover:'No market alerts',payout:'No holder payouts',whale:'No whale alerts',marine:'No $MARINE alerts'}[fk]||'No alerts'} yet.</p>`;
   renderLp()}
 function renderLp(){if(!IN)return;const icon=m=>m===MARINE?MLOGO:(TOK[m]&&TOK[m].image)||'',h1=PER.lpp==='1h';$('lpF').textContent=h1?'Fees 1h':'Fees 24h';$('lpD').textContent=h1?'Last hour':'Per day';
-  const P=(h1?IN.lp1:IN.lp)||[];$('lpRows').innerHTML=P.length?P.map(x=>`<tr><td><div class="pp">${(x.i||icon(x.m))?`<img src="${esc(x.i||icon(x.m))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span style="width:20px;flex:none"></span>'}<span><a href="${open2(x.m)}">${esc(x.pair)}</a><span class="dx">${esc(x.dex)}</span></span></div></td>
+  const has1=IN.lp1&&IN.lp1.length,P=(h1?(has1?IN.lp1:lpHour()):IN.lp)||[];$('lpRows').innerHTML=P.length?P.map(x=>`<tr><td><div class="pp">${(x.i||icon(x.m))?`<img src="${esc(x.i||icon(x.m))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span style="width:20px;flex:none"></span>'}<span><a href="${open2(x.m)}">${esc(x.pair)}</a><span class="dx">${esc(x.dex)}</span></span></div></td>
       <td class="r">${compact(x.tvl)}</td><td class="r hide-sm">${compact(h1?x.fee1:x.fee)}</td><td class="r up">${h1?x.d1.toFixed(2):x.d.toFixed(1)}%</td><td class="r"><a class="add" href="${esc(x.url)}" target="_blank" rel="noopener">ADD ▸</a></td></tr>`).join('')
-    :`<tr><td colspan="5" class="nt">${h1&&!IN.lp1?'Last-hour numbers arrive with the next LP scan.':'No pools yet.'}</td></tr>`}
+    :`<tr><td colspan="5" class="nt">${h1&&!has1&&!LPH?'loading…':'No pools yet.'}</td></tr>`}
+// last-hour LP until the whale job writes lp1: each of the 24 h list's pools earns its share of the day's fees in proportion
+// to its last-hour volume (DexScreener, one call)
+let LPH=null,LPHat=0;
+function lpHour(){if(Date.now()-LPHat>60e3&&(IN.lp||[]).length){LPHat=Date.now();
+  const id=x=>(/pool_id=([^&]+)/.exec(x.url)||/dlmm\/([^/?]+)/.exec(x.url)||[])[1],L=IN.lp.filter(id);
+  j('https://api.dexscreener.com/latest/dex/pairs/solana/'+L.map(id).join(',')).then(d=>{const v={};((d&&d.pairs)||[]).forEach(p=>v[p.pairAddress]=p.volume||{});
+    LPH=L.filter(x=>v[id(x)]&&v[id(x)].h24).map(x=>{const f1=x.fee*(v[id(x)].h1||0)/v[id(x)].h24;return{...x,fee1:f1,d1:f1/x.tvl*100}}).filter(x=>x.fee1>0).sort((a,b)=>b.d1-a.d1);renderLp()}).catch(()=>{LPHat=0;setTimeout(renderLp,10e3)})}
+  return LPH}
 // the alert history comes from the bot's database (every alert, saved in order, the same for everyone); pools and whale
 // data from the intel job's file
 async function loadIntel(){const [a,b]=await Promise.allSettled([j(BOT+'/alerts?limit=500'),j(INTEL)]);
@@ -333,12 +341,28 @@ function renderWhales(){const b=$('whaleRows');if(!IN)return;const h1=PER.wp==='
   if(wk==='recent'){const L=(IN.recent||[]).filter(x=>!h1||x.t*1000>Date.now()-3600e3).slice(0,30);
     b.innerHTML=L.length?L.map(x=>lrow('https://solscan.io/tx/'+encodeURIComponent(x.sig||''),x.bi,`sold $${esc(x.sell)} → $${esc(x.buy)}`,esc(x.who||x.w||'')+' · '+ago(x.t*1000)+' ago',`<span class="r"><b>${compact(x.u)}</b></span>`)).join('')
       :`<p class="nt">No whale trades in the last ${h1?'hour':'day'}.</p>`;return}
-  if(h1&&!IN[wk+'1h']){b.innerHTML='<p class="nt">Last-hour numbers arrive with the next whale scan.</p>';return}
-  const L=IN[wk+(h1?'1h':'')]||[];
+  let L=IN[wk]||[];
+  if(h1){const T=whaleTrades();if(!T){b.innerHTML='<p class="nt">loading…</p>';return}L=whaleFlow(T,Date.now()/1000-3600)[wk]}
   b.innerHTML=L.length?L.map(r=>lrow(open2(r.m),r.i||tokImg(r.m),'$'+esc(r.s||'?'),
       wk==='buying'?`${whales(r.buyers)} buying${r.sellers?' · '+r.sellers+' selling':''}`:`${whales(r.sellers)} selling${r.buyers?' · '+r.buyers+' buying':''}`,
       `<span class="r"><b class="${r.net>=0?'up':'dn'}">${r.net>=0?'+':'−'}${compact(Math.abs(r.net))}</b><small>▲${compact(r.b)} ▼${compact(r.x)}</small></span>`)).join('')
     :`<p class="nt">No whales ${wk} in the last ${h1?'hour':'day'}.</p>`}
+// the 1H view: built here from the last hour of whale trades (whales.json tx/tm; until the whale job writes those, its
+// state file, read once and kept 5 min), the same way the job builds the 24 h lists
+const BASEM=new Set(['So11111111111111111111111111111111111111112','EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v','Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB']);
+let WST=null,WSTat=0;
+function whaleTrades(){
+  if(IN.tx&&IN.tm)return IN.tx.map(r=>{const b=IN.tm[r[2]],x=IN.tm[r[4]];return{t:r[0],w:r[1],buy:{m:b[0],s:b[1],i:b[2],base:b[3],u:r[3]},sell:{m:x[0],s:x[1],i:x[2],base:x[3],u:r[5]}}});
+  if(Date.now()-WSTat>300e3){WSTat=Date.now();j('https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/whales-state.json').then(d=>{
+    if(!d||!d.swaps)return;const side=o=>({m:o.m,base:BASEM.has(o.m),u:o.u});
+    WST=d.swaps.filter(x=>x.sell&&x.t>Date.now()/1000-3600).map(x=>({t:x.t,w:x.w,buy:side(x.buy),sell:side(x.sell)}));renderWhales()}).catch(()=>{WSTat=0;setTimeout(renderWhales,10e3)})}
+  return WST}
+function whaleFlow(T,since){const F={};
+  T.filter(x=>x.t>since).forEach(x=>[['buy',1],['sell',-1]].forEach(([k,sg])=>{const o=x[k];if(o.base)return;
+    const f=F[o.m]||(F[o.m]={m:o.m,s:o.s||(TOK[o.m]&&TOK[o.m].symbol)||(o.m===MARINE?'MARINE':o.m.slice(0,4)),i:o.i||tokImg(o.m),b:0,x:0,B:new Set(),S:new Set()});if(sg>0){f.b+=o.u;f.B.add(x.w)}else{f.x+=o.u;f.S.add(x.w)}}));
+  const rows=Object.values(F).map(f=>({m:f.m,s:f.s,i:f.i,b:f.b,x:f.x,net:f.b-f.x,buyers:f.B.size,sellers:f.S.size}));
+  return{buying:rows.filter(r=>r.net>0).sort((a,b)=>b.buyers-a.buyers||b.net-a.net).slice(0,15),
+         selling:rows.filter(r=>r.net<0).sort((a,b)=>b.sellers-a.sellers||a.net-b.net).slice(0,15)}}
 $('wk').addEventListener('click',e=>{const x=e.target.closest('button');if(!x)return;wk=x.dataset.w;[...$('wk').children].forEach(y=>y.classList.toggle('on',y===x));renderWhales()});
 async function loadFlow(){const top=ROWS.filter(r=>r.sf&&r.mcap).sort((a,b)=>b.mcap-a.mcap).slice(0,10);if(!top.length)return;
   try{const d=await j('https://api.dexscreener.com/tokens/v1/solana/'+top.map(t=>t.mint).join(',')),best={};

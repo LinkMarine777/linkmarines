@@ -24,7 +24,7 @@ Signals (each fires once):
                showed: $MARINE buys $100+, $LINK buys $1,000+, payouts, milestones, $LINK ±5%/h, paid TTS
   score        a token's CLOBr score changed verdict or moved 10+ points (hour-delayed scores via the bot)
 Also: lp = stonkfun tokens' Raydium + Meteora pools ranked by what liquidity earned in fees over 24 h (free APIs); lp1 the same
-for the last hour.
+for the last hour. tx + tm: the last hour of whale trades, compact, for the trending page's 1H view.
 """
 import base64, json, os, struct, sys, time, urllib.request
 
@@ -494,7 +494,7 @@ if os.path.exists(bf_path):
         signals = sorted(signals + [x for x in bf if x['id'] not in have], key=lambda s: -s['t'])
         state['backfilled'] = tag; log(f'backfill: {len(bf)} past alerts included for the database')
 
-# ---------- what whales are buying / selling (24 h, and the last hour for the trending page's 1H switch) ----------
+# ---------- what whales are buying / selling (24 h; the page builds the last hour from tx below) ----------
 def whale_flow(L):
     flow = {}
     for s in L:
@@ -508,12 +508,18 @@ def whale_flow(L):
     return (sorted([r for r in rows if r['net'] > 0], key=lambda r: (-r['buyers'], -r['net']))[:15],
             sorted([r for r in rows if r['net'] < 0], key=lambda r: (-r['sellers'], r['net']))[:15])
 buying, selling = whale_flow(trades)
-buying1h, selling1h = whale_flow([s for s in trades if s['t'] > now - 3600])
+# the whale trades of the last hour, compact, so the trending page builds its 1H view itself:
+# tx = [time, wallet, buy mint #, buy $, sell mint #, sell $], tm = [mint, symbol, icon, 1 if SOL/USDC/USDT]
+tm, tmi = [], {}
+def mi(m):
+    if m not in tmi: tmi[m] = len(tm); tm.append([m, sym(m), (meta.get(m) or {}).get('i'), 1 if m in BASE else 0])
+    return tmi[m]
+tx = [[s['t'], s['w'][:6], mi(s['buy']['m']), round(s['buy']['u']), mi(s['sell']['m']), round(s['sell']['u'])] for s in trades if s['t'] > now - 3600]
 recent = [{'t': s['t'], 'w': s['w'][:4], 'who': label(s['w']), 'buy': sym(s['buy']['m']), 'bi': (meta.get(s['buy']['m']) or {}).get('i'),
            'sell': sym(s['sell']['m']), 'u': round(max(s['buy']['u'], s['sell']['u'])), 'sig': s['sig']} for s in trades[:60]]
 save('whales.json', {
     'at': now, 'wallets': len(whale), 'tokens': ['$' + t['symbol'] for t in watch],
-    'buying': buying, 'selling': selling, 'buying1h': buying1h, 'selling1h': selling1h,
+    'buying': buying, 'selling': selling, 'tx': tx, 'tm': tm,
     'signals': signals, 'recent': recent, 'lp': lp, 'lp1': lp1, 'marine': marine})
 save('whales-state.json', state)
 
