@@ -26,11 +26,12 @@ One-off: ~45K credits for all 11 tokens (two reads per wallet, 10+ credits each)
 
 Score per wallet over a window, counting from its first reward (the buy that got it in isn't compounding):
   R = rewards ($), N = net bought ($), c = min(max(N, 0), R) / R, k = share of reward days with a buy that day or the next
-  score = 100 x (0.7 c + 0.3 k), 0 for a net seller · Compounder c >= 50% · Partial 10-50% · Collector < 10% · Seller N < 0
+  e = buying beyond the rewards: min(1, log2(N / R) / 3) when N > R (2x = 1/3, 4x = 2/3, 8x+ = 1)
+  score = 100 x (0.6 c + 0.25 k + 0.15 e), 0 for a net seller · Compounder c >= 50% · Partial 10-50% · Collector < 10% · Seller N < 0
 Token score: the wallets' scores weighted by how much they hold.
 Never prints the RPC URL.
 """
-import base64, bisect, calendar, json, os, struct, sys, time, urllib.request
+import base64, bisect, calendar, json, math, os, struct, sys, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from statistics import median
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -396,13 +397,39 @@ def score(days, since_day):
     B = sum(v[1] for d, v in ds if d != first_ever); S = sum(v[2] for d, v in ds if d != first_ever); N = B - S
     bought = {d for d, v in ds if v[1] > 0 and d != first_ever}; rd = [d for d, v in ds if v[0] > 0]
     c = min(max(N, 0), R) / R if R else 0; k = sum(1 for d in rd if d in bought or d + 1 in bought) / len(rd)
-    sc = round(100 * (0.7 * c + 0.3 * k)) if N >= 0 else 0
+    e = min(1, math.log2(N / R) / 3) if R and N > R else 0   # buying beyond the rewards: 2x = 1/3, 4x = 2/3, 8x+ = all of it
+    sc = round(100 * (0.6 * c + 0.25 * k + 0.15 * e)) if N >= 0 else 0
     tag = 'Seller' if N < 0 else 'Compounder' if c >= 0.5 else 'Partial' if c >= 0.1 else 'Collector'
     return [round(R, 2), round(N, 2), round(c, 3), round(k, 3), sc, tag, round(B, 2), round(S, 2)]   # + bought, sold (the page's detail line)
 
 
 WINDOWS = {'7d': 7, '30d': 30, 'all': KEEP_DAYS}
+
+
+def summarize(rows):
+    """The token's numbers per window from its wallets' rows: holding-weighted score, % of rewards put back, new money, tags."""
+    summ = {}
+    for k_ in WINDOWS:
+        S_ = [r for r in rows if r[k_]]; W_ = sum(r['p'] for r in S_) or 1; RR = sum(r[k_][0] for r in S_) or 1
+        summ[k_] = {'score': round(sum(r['p'] * r[k_][4] for r in S_) / W_, 1) if S_ else None,
+                    'compounded': round(100 * sum(min(r[k_][0], max(r[k_][1], 0)) for r in S_) / RR, 1) if S_ else None,
+                    'fresh': round(sum(max(r[k_][1], 0) for r in S_) / RR, 2) if S_ else None,
+                    'rewards': round(sum(r[k_][0] for r in S_)), 'scored': len(S_),
+                    'tags': {t: [sum(1 for r in S_ if r[k_][5] == t), round(sum(r['p'] for r in S_ if r[k_][5] == t), 2)]
+                             for t in ('Compounder', 'Partial', 'Collector', 'Seller')}}
+    return summ
+
+
 index = load('compound/index.json', {'tokens': {}})
+if '--rescore' in sys.argv:   # the score formula changed: rebuild every token's page from the saved daily numbers, no RPC at all
+    for mint, it in index['tokens'].items():
+        page, T = load(f'compound/{mint}.json', None), ST.get(mint)
+        if not page or not T: continue
+        for r in page['rows']:
+            for k_, n in WINDOWS.items(): r[k_] = score((T.get('days') or {}).get(r['w']) or {}, today - n + 1)
+        page['win'] = summ = summarize(page['rows']); save(f'compound/{mint}.json', page)
+        it.update({'score': {k_: summ[k_]['score'] for k_ in WINDOWS}, 'c7': summ['7d']['compounded'], 'r7': summ['7d']['rewards']})
+    save('compound/index.json', index); log(f"rescored {len(index['tokens'])} tokens"); sys.exit(0)
 for mint in watch:
     T = ST.setdefault(mint, {})
     if not T.get('v2') and len(T.get('bal') or {}) < MIN_W and not T.get('backfilled'):   # one-off: partial snapshots an earlier run saved
@@ -450,14 +477,7 @@ for mint in watch:
             r = {'w': w, 'p': round(people[w] / total * 100, 3)}
             for k_, n in WINDOWS.items(): r[k_] = score((T['days'].get(w) or {}), today - n + 1)
             rows.append(r)
-        for k_ in WINDOWS:
-            S_ = [r for r in rows if r[k_]]; W_ = sum(r['p'] for r in S_) or 1; RR = sum(r[k_][0] for r in S_) or 1
-            summ[k_] = {'score': round(sum(r['p'] * r[k_][4] for r in S_) / W_, 1) if S_ else None,
-                        'compounded': round(100 * sum(min(r[k_][0], max(r[k_][1], 0)) for r in S_) / RR, 1) if S_ else None,
-                        'fresh': round(sum(max(r[k_][1], 0) for r in S_) / RR, 2) if S_ else None,
-                        'rewards': round(sum(r[k_][0] for r in S_)), 'scored': len(S_),
-                        'tags': {t: [sum(1 for r in S_ if r[k_][5] == t), round(sum(r['p'] for r in S_ if r[k_][5] == t), 2)]
-                                 for t in ('Compounder', 'Partial', 'Collector', 'Seller')}}
+        summ = summarize(rows)
         page = {'mint': mint, 'sym': sym, 'quote': qsym, 'at': now, 'since': T['since'], 'holders': len(people),
                 'wallets': len(wallets), 'cover': round(sum(people[w] for w in wallets) / total * 100, 1), 'win': summ, 'rows': rows}
         save(f'compound/{mint}.json', page)
