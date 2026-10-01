@@ -555,8 +555,8 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
           <thead><tr><th>#</th><th>Wallet</th><th class="r">Holds</th><th class="r fx">≈ Value</th><th class="r">7d</th></tr></thead>
           <tbody></tbody>
         </table>
-        <div id="compound" style="display:none"><div class="cmpHead"><span class="meta" id="cmpMeta"></span><div class="tabs" id="cmpWin"><button data-w="7d" class="on">7D</button><button data-w="30d">30D</button><button data-w="all">ALL</button></div></div><div id="cmpBody"></div>
-          <div class="cmpSrc">The wallets that together own 80% of the supply (pools excluded); 7d = balance change (CLOBr). Rewards: each wallet's share of every payout, counted from its first one, so the buy that got it in doesn't count. Score = 60% how much of their rewards they bought back in + 25% how often (days they bought after a payout) + 15% buying beyond their rewards (8× or more counts in full); net sellers score 0. Buys and sells are balance changes, so moving tokens between your own wallets shows as a trade. Refreshed every 6 h.</div></div>
+        <div id="compound" style="display:none"><div class="cmpHead"><span class="meta" id="cmpMeta"></span><div class="tabs" id="cmpWin"><button data-w="7d">7D</button><button data-w="30d">30D</button><button data-w="all" class="on">ALL</button></div></div><div id="cmpBody"></div>
+          <div class="cmpSrc">The wallets that together own 80% of the supply (pools, lockers and other program accounts excluded); 7d = balance change (CLOBr). Rewards: each wallet's share of every payout, counted from its first one, so the buy that got it in doesn't count. Score = 60% how much of their rewards they bought back in + 25% how often (days they bought after a payout) + 15% buying beyond their rewards (8× or more counts in full); net sellers score 0. Buys and sells are balance changes, so moving tokens between your own wallets shows as a trade. Refreshed every 6 h.</div></div>
         </div>
       </section>
       <section class="panel ads">
@@ -1050,16 +1050,16 @@ $('tf').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)re
   [...$('tf').children].forEach(x=>x.classList.toggle('on',x===b));tf=b.dataset.tf;loadChart()});
 
 // ---------- compounding (intel/compound.py writes terminal/compound/<mint>.json every 6 h; tracked tokens only) ----------
-let CMP=null,cmpW='7d',cmpAll=false;
+let CMP=null,cmpW='all',cmpAll=false;
 const cmpUsd=n=>(n<0?'−':'')+(Math.abs(n)>=1000?compact(Math.abs(n)):'$'+Math.round(Math.abs(n)));
 const CMPC={Compounder:'var(--green)',Partial:'var(--blue2)',Collector:'var(--dim)',Seller:'var(--red)'};
 async function loadCompound(){try{const r=await fetch('https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/compound/'+CA+'.json',{cache:'no-store'});
   if(!r.ok)return;const d=await r.json();if(!d.wallets)return;CMP=d;renderHolders();
-  const W=d.win['7d']||{};paintCmp(W.score,W.compounded);try{localStorage.setItem('cmpS:'+CA,JSON.stringify({at:Date.now(),s:W.score,c:W.compounded}))}catch(e){}}catch(e){}}
+  const W=d.win.all||{};paintCmp(W.score,W.compounded);try{localStorage.setItem('cmpA:'+CA,JSON.stringify({at:Date.now(),s:W.score,c:W.compounded}))}catch(e){}}catch(e){}}
 // the compound tile, painted straight from this browser's last copy on reload, then from the fresh file
-try{const c=JSON.parse(localStorage.getItem('cmpS:'+CA)||'null');if(c&&Date.now()-c.at<12*3600e3)setTimeout(()=>{if(!CMP)paintCmp(c.s,c.c)},0)}catch(e){}
+try{const c=JSON.parse(localStorage.getItem('cmpA:'+CA)||'null');if(c&&Date.now()-c.at<12*3600e3)setTimeout(()=>{if(!CMP)paintCmp(c.s,c.c)},0)}catch(e){}
 function paintCmp(sc,comp){const W={compounded:comp};if(sc!=null){const col=sc>=40?'var(--green)':sc>=20?'var(--amber)':'var(--red)';$('cmpStat').style.display='';syncScores();
-    $('sCmp').textContent=Math.round(sc);$('sCmp').style.color=col;$('sCmpMsg').textContent=(sc>=60?'Strong':sc>=40?'Healthy':sc>=20?'Mixed':'Weak')+' · 7d';$('cmpStat').title=`Compound score, 7 days: ${Math.round(W.compounded)}% of rewards put back in by the biggest holders. Click for the holder list`}}
+    $('sCmp').textContent=Math.round(sc);$('sCmp').style.color=col;$('sCmpMsg').textContent=(sc>=60?'Strong':sc>=40?'Healthy':sc>=20?'Mixed':'Weak')+' · all';$('cmpStat').title=`Compound score, since launch: ${Math.round(W.compounded)}% of rewards put back in by the biggest holders. Click for the holder list`}}
 // HOLDERS with compounding attached: the tracked wallets (80% of supply) by size, each with its 7d change (CLOBr, when it has
 // the wallet), rewards, net bought and compound score; one summary line on top
 function renderCompound(){if(!CMP)return;const W=CMP.win[cmpW]||{},sc=W.score,sym=esc(CMP.sym);
