@@ -956,7 +956,7 @@ function clobrLive(){const t=$('scoreDly'),live=!!(CL&&CL.delayed===false)||/^\s
   d.textContent=live?'● Live · real-time CLOBr data via your CLOBr extension ▸':'⏱ Delayed'+(CL&&CL.fetchedAt?' · updated '+ago(CL.fetchedAt).split(' ')[0]+' ago':' up to 1h')+' · real-time with CLOBr Pro + the CLOBr extension · free 7-day trial ▸'}
 try{new MutationObserver(()=>clobrLive()).observe(document.getElementById('scoreDly'),{childList:true,characterData:true,subtree:true})}catch(e){}
 function paintScore(sc){$('scoreStat').style.display=sc?'':'none';syncScores();
-  if(sc){$('sScore').textContent=sc.score!=null?(+sc.score).toFixed(1):'—';$('sScore').style.color=sc.score>=60?'var(--green)':sc.score<=40?'var(--red)':'var(--amber)';
+  if(sc){$('sScore').textContent=sc.score!=null?Math.round(+sc.score):'—';$('sScore').style.color=sc.score>=60?'var(--green)':sc.score<=40?'var(--red)':'var(--amber)';
     // CLOBr's message is "verdict: reason"; the tile shows both lines so the score explains itself
     const [v,...why]=String(sc.msg||'').split(':');$('sScoreMsg').textContent=v.trim();$('sScoreWhy').textContent=why.join(':').trim()||' ';
     $('scoreStat').title=(sc.msg||'CLOBr score').replace(':',' ·')+' · 0-100 balance of support vs resistance liquidity. Click for more on CLOBr'}
@@ -1059,7 +1059,7 @@ async function loadCompound(){try{const r=await fetch('https://raw.githubusercon
 // the compound tile, painted straight from this browser's last copy on reload, then from the fresh file
 try{const c=JSON.parse(localStorage.getItem('cmpA:'+CA)||'null');if(c&&Date.now()-c.at<12*3600e3)setTimeout(()=>{if(!CMP)paintCmp(c.s,c.c)},0)}catch(e){}
 function paintCmp(sc,comp){const W={compounded:comp};if(sc!=null){const col=sc>=40?'var(--green)':sc>=20?'var(--amber)':'var(--red)';$('cmpStat').style.display='';syncScores();
-    $('sCmp').textContent=Math.round(sc);$('sCmp').style.color=col;$('sCmpMsg').textContent=(sc>=60?'Strong':sc>=40?'Healthy':sc>=20?'Mixed':'Weak')+' · all';$('cmpStat').title=`Compound score, since launch: ${Math.round(W.compounded)}% of rewards put back in by the biggest holders. Click for the holder list`}}
+    $('sCmp').textContent=Math.round(sc);$('sCmp').style.color=col;$('sCmpMsg').textContent=(sc>=60?'Strong':sc>=40?'Healthy':sc>=20?'Mixed':'Weak')+'';$('cmpStat').title=`Compound score, since launch: ${Math.round(W.compounded)}% of rewards put back in by the biggest holders. Click for the holder list`}}
 // HOLDERS with compounding attached: the tracked wallets (80% of supply) by size, each with its 7d change (CLOBr, when it has
 // the wallet), rewards, net bought and compound score; one summary line on top
 function renderCompound(){if(!CMP)return;const W=CMP.win[cmpW]||{},sc=W.score,sym=esc(CMP.sym);

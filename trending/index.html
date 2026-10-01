@@ -71,9 +71,9 @@ main{max-width:1500px;margin:0 auto;padding:16px;display:flex;flex-direction:col
 .per{display:inline-flex;gap:2px}.per button{border:1px solid var(--line);background:#050914;color:var(--dim);font:inherit;font-size:10px;padding:2px 7px;cursor:pointer;letter-spacing:1px}.per button.on{border-color:var(--blue2);color:#fff;background:rgba(74,122,255,.15)}
 .tw{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
-th{font-size:10px;letter-spacing:1px;color:var(--dim);text-align:left;font-weight:400;padding:8px 10px;border-bottom:1px solid var(--line);text-transform:uppercase;white-space:nowrap}
+th{font-size:10px;letter-spacing:1px;color:var(--dim);text-align:left;font-weight:400;padding:8px 8px;border-bottom:1px solid var(--line);text-transform:uppercase;white-space:nowrap}
 th small{display:block;font-size:9px;letter-spacing:.5px;text-transform:none;opacity:.8}
-td{padding:9px 10px;border-bottom:1px solid rgba(26,36,68,.6);white-space:nowrap}
+td{padding:9px 8px;border-bottom:1px solid rgba(26,36,68,.6);white-space:nowrap}
 td.r,th.r{text-align:right}
 tbody tr{cursor:pointer}tbody tr:hover{background:rgba(74,122,255,.07)}
 tr.me{background:rgba(42,90,218,.1)}
@@ -82,7 +82,7 @@ tr.me{background:rgba(42,90,218,.1)}
 .tok b{color:#fff;font-weight:500}.tok .q{color:var(--dim);font-size:10px;display:block}
 .rk{color:var(--dim);font-size:11px;width:28px}
 .apy{color:var(--green)}
-@media (max-width:640px){table.bycmp .clc{display:none}}   /* phones: sorted by compound, its column replaces CLOBr's */
+@media (max-width:640px){table.bycmp .clc{display:none}#rows td,#rows~* td,table:has(#rows) th{padding-left:3px;padding-right:3px}table:has(#rows) .tok{gap:5px}}   /* phones: sorted by compound, its column replaces CLOBr's */
 .sc{display:inline-block;min-width:38px;text-align:center;font-family:'VT323';font-size:19px;line-height:1;padding:1px 4px;border:1px solid currentColor}
 .src{font-size:10px;color:var(--dim);padding:10px 16px;line-height:1.6}.src a{color:var(--dim);text-decoration:underline}
 .more{display:block;width:100%;border:0;border-top:1px solid var(--line);background:none;color:var(--blue2);font:inherit;font-size:12px;padding:10px;cursor:pointer}
@@ -191,7 +191,7 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
       <div class="tabs" id="sort"><button data-k="vol" class="on">VOLUME</button><button data-k="apy">APY</button><button data-k="paid">PAID OUT</button><button data-k="new">NEWEST</button><button data-k="cmp">COMPOUND</button></div></div>
     <div class="tw"><table>
       <thead><tr><th class="rk">#</th><th>Token</th><th class="r hide-sm">Price<small>24h</small></th><th class="r">Volume<small>24h</small></th><th class="r hide-sm">Market cap</th>
-        <th class="r">APY 3D<small>modeled</small></th><th class="r hide-sm">$100 held<small>per day</small></th><th class="r hide-sm">Holders<small>24h</small></th><th class="r hide-sm">Paid out</th><th class="r clc">CLOBr<small>score · delayed</small></th><th class="r" title="Compound score: are the biggest holders putting their rewards back in? (since launch)">Compound<small>all time</small></th><th class="r hide-sm">Bonded</th></tr></thead>
+        <th class="r">APY 3D<small>modeled</small></th><th class="r hide-sm">$100 held<small>per day</small></th><th class="r hide-sm">Holders<small>24h</small></th><th class="r hide-sm">Paid out</th><th class="r clc" title="CLOBr score (delayed)">CLOBr<small>delayed</small></th><th class="r" title="Compound score: are the biggest holders putting their rewards back in? (since launch)">Compound<small>all time</small></th><th class="r hide-sm">Bonded</th></tr></thead>
       <tbody id="rows"><tr><td colspan="12" class="nt">loading…</td></tr></tbody>
     </table></div>
     <button class="more" id="more" type="button" style="display:none"></button>
