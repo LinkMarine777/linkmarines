@@ -1055,8 +1055,14 @@ function renderClobr(){
   renderHolders();
   // a panel CLOBr has nothing for right now is folded into one line under the header (it comes back as soon as there is data),
   // instead of a box each saying "nothing here" (about 700px of scrolling on a phone)
-  const none={liqP:'order-book walls',whP:'whale data',loP:'limit orders',dcP:'DCA orders',lpP:'Meteora LP pools'},empty=[];
-  for(const k in panels){$(k).style.display=panels[k]?'':'none';if(!panels[k])empty.push(none[k])}
+  // desktop: every panel shows, one CLOBr has nothing for right now says so inside it. Phones: those are folded into one line
+  // under the header instead (a box each saying "nothing here" was about 400px of scrolling); they come back with data
+  const sym=esc('$'+String(TK.symbol).replace(/^\$/,'')),small=innerWidth<1000;
+  const none={liqP:['aBody','No order-book walls near the price','order-book walls'],whP:['whBody','No whale data','whale data'],loP:['loBody','No open limit orders','limit orders'],
+    dcP:['dcBody','No active DCA orders','DCA orders'],lpP:['lpBody','No Meteora DLMM LP pools','Meteora LP pools']},empty=[];
+  for(const k in panels){if(panels[k]){$(k).style.display='';continue}
+    if(small){$(k).style.display='none';empty.push(none[k][2])}
+    else{$(k).style.display='';$(none[k][0]).innerHTML=`<div class="empty">${none[k][1]} for <b>${sym}</b> on CLOBr right now. It shows up here as soon as there is one.</div>`}}
   $('missP').style.display='none';const any=!!CL;
   $('clobrMiss').textContent=empty.length?' · nothing on CLOBr right now for '+(empty.length>1?empty.slice(0,-1).join(', ')+' or '+empty[empty.length-1]:empty[0])+' (shows up here when there is)':'';
   $('clobrWrap').style.display=any||sc?'':'none';clobrCols()}
@@ -1070,11 +1076,11 @@ function renderWhales(){const W=CL&&CL.whales;if(!W||W.none||!W.summary)return f
       <div class="cbar"><i style="width:${acc==null?0:Math.min(100,acc/size*100).toFixed(0)}%;background:var(--green)"></i></div>
       <div class="wl">${neu?`+${neu} new wallet${neu>1?'s':''}`:'<span class="dim">no new wallets</span>'}</div>
       <div class="wl ${net>=0?'up':'dn'}" title="net ${esc(TK.symbol)} bought by these holders">${tokAmt(net)}${usdv!=null?` <span class="dim">≈ ${compact(Math.abs(usdv))} ${net>=0?'bought':'sold'}</span>`:''}</div></div>`};
-  const sp=W.spark||[],mx=Math.max(1,...sp.map(d=>Math.abs(d.net||0))),bw=100/Math.max(1,sp.length);
+  const sp=(W.spark||[]).slice(-({'1d':1,'7d':7,'30d':30}[w]||30)),mx=Math.max(1,...sp.map(d=>Math.abs(d.net||0))),bw=100/Math.max(1,sp.length);   // the bars follow the window too
   const svg=sp.length?`<svg class="spark" viewBox="0 0 100 40" preserveAspectRatio="none"><line x1="0" y1="20" x2="100" y2="20" stroke="#1a2444" stroke-width=".4"/>${sp.map((d,i)=>{const h=Math.abs(d.net||0)/mx*19;return`<rect x="${(i*bw+bw*.15).toFixed(2)}" y="${(d.net>=0?20-h:20).toFixed(2)}" width="${(bw*.7).toFixed(2)}" height="${Math.max(.3,h).toFixed(2)}" fill="${d.net>=0?'#39ff6a':'#ff3355'}" opacity=".85"><title>${esc(d.day)}: ${d.net>=0?'bought':'sold'} ${compact(Math.abs(d.net||0),'')} ${esc(TK.symbol)} · ${d.acc??'—'} of top 100 buying</title></rect>`}).join('')}</svg>
     <div class="sx"><span>${esc(dshort(sp[0].day))}</span><span>top 100 · net bought <i class="up">▮</i> / sold <i class="dn">▮</i> per day</span><span>${esc(dshort(sp[sp.length-1].day))}</span></div>`:'';
     $('whBody').innerHTML=`<div class="wcs">${['top20','top50','top100'].map(card).join('')}</div>`
-    +(svg?`<div class="sub">Last ${sp.length} days</div>${svg}`:'')
+    +(svg?`<div class="sub">${sp.length>1?`Last ${sp.length} days`:'Last day'}</div>${svg}`:'')
     ;
   renderHolders();return true}
 // Biggest holders (CLOBr) share the tape's panel: THE TAPE | HOLDERS
