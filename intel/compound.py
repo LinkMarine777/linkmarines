@@ -46,7 +46,7 @@ NOT_WALLETS = {'5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1', 'GpMZbSM2GgvTKHJi
                'WLHv2UAZm6z4KyaaELi5pjdbJh6RESMva1Rnn8pJVVh', 'HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC'}
 DAY, KEEP_DAYS, COVER, MIN_W, MAX_W = 86400, 90, 0.8, 20, 600
 BACKFILL_W, BACKFILL_DAYS = int(os.environ.get('BACKFILL_W', 200)), int(os.environ.get('BACKFILL_DAYS', 7))
-PAGES = int(os.environ.get('PAGES', 50))   # most a token's balance snapshot may page through (1 credit a page)
+PAGES = int(os.environ.get('PAGES', 80))   # most pages a big token's holder lookup may take (1,000 holders, 10 credits each)
 now = int(time.time()); today = now // DAY
 CALLS, CREDITS = {}, [0]
 
@@ -119,23 +119,27 @@ def holders(mint, T):
     if 'prog' not in T:
         T['prog'] = rpc('getAccountInfo', [mint, {'encoding': 'base64', 'dataSlice': {'offset': 0, 'length': 0}}])['value']['owner']
         T['dec'] = rpc('getTokenSupply', [mint])['value']['decimals']
-    opts = {'encoding': 'base64', 'dataSlice': {'offset': 32, 'length': 40}, 'filters': [{'memcmp': {'offset': 0, 'bytes': mint}}]}
-    accs = None
-    if KEY or 'helius' in URL:   # Helius: the paginated version (1 credit a page of 10,000; the plain one refuses big programs)
-        try:
-            accs, key, pages = [], None, 0
-            while pages < PAGES:   # a page can come back empty with more after it: go on until there's no next key
-                r = rpc('getProgramAccountsV2', [T['prog'], {**opts, 'limit': 10000, **({'paginationKey': key} if key else {})}]); CREDITS[0] += 1
-                pages += 1; accs += r.get('accounts') or []; key = r.get('paginationKey')
-                if not key: break
-            if key: log(f'  stopped after {pages} pages ({len(accs)} accounts so far)')
-        except RuntimeError as e: log('  getProgramAccountsV2 refused, trying the plain call:', e); accs = None
-    if accs is None: accs = rpc('getProgramAccounts', [T['prog'], opts]); CREDITS[0] += 10
     own = {}
-    for a in accs:
-        raw = base64.b64decode(a['account']['data'][0])
-        if len(raw) < 40: continue
-        o = b58e(raw[:32]); own[o] = own.get(o, 0) + struct.unpack('<Q', raw[32:40])[0] / 10 ** T['dec']
+    if not T.get('big'):
+        try:
+            accs = rpc('getProgramAccounts', [T['prog'], {'encoding': 'base64', 'dataSlice': {'offset': 32, 'length': 40},
+                                                          'filters': [{'memcmp': {'offset': 0, 'bytes': mint}}]}]); CREDITS[0] += 10
+            for a in accs:
+                raw = base64.b64decode(a['account']['data'][0])
+                if len(raw) < 40: continue
+                o = b58e(raw[:32]); own[o] = own.get(o, 0) + struct.unpack('<Q', raw[32:40])[0] / 10 ** T['dec']
+        except RuntimeError as e:
+            if 'Too many accounts' not in str(e) or not (KEY or 'helius' in URL): raise
+            T['big'] = True; log('  too many accounts for one call: holder lookup by mint from now on (every 24 h)')
+    if T.get('big'):   # Helius' token-holder lookup by mint: 1,000 accounts a page, 10 credits a page
+        cur, pages, done = None, 0, False
+        while pages < PAGES:
+            r = rpc('getTokenAccounts', {'mint': mint, 'limit': 1000, **({'cursor': cur} if cur else {})}); CREDITS[0] += 10; pages += 1
+            L = r.get('token_accounts') or []
+            for a in L: own[a['owner']] = own.get(a['owner'], 0) + float(a.get('amount') or 0) / 10 ** T['dec']
+            cur = r.get('cursor')
+            if not L or not cur or len(L) < 1000: done = True; break
+        if not done: raise RuntimeError(f'holder list incomplete after {pages} pages')   # never save a partial snapshot
     out = {o: b for o, b in own.items() if b > 0 and o not in NOT_WALLETS and on_curve(b58d(o))}
     if not out: raise RuntimeError(f'no holders returned ({len(accs)} accounts)')
     return out
@@ -295,7 +299,10 @@ WINDOWS = {'7d': 7, '30d': 30, 'all': KEEP_DAYS}
 index = load('compound/index.json', {'tokens': {}})
 for mint in watch:
     T = ST.setdefault(mint, {})
-    if not BACKFILL and T.get('at') and T.get('bal') and now - T['at'] < 6 * 3600 - 900: continue   # every 6 h (the workflow also runs 6-hourly)
+    if not T.get('v2') and len(T.get('bal') or {}) < MIN_W and not T.get('backfilled'):   # one-off: partial snapshots an earlier run saved
+        for k in ('at', 'bal', 'dist', 'elig', 'days', 'since'): T.pop(k, None)
+    gap = (24 if T.get('big') else 6) * 3600   # big tokens (holder lookup by mint, 10 credits per 1,000) once a day
+    if not BACKFILL and T.get('at') and T.get('bal') and now - T['at'] < gap - 900: continue   # every 6 h (the workflow also runs 6-hourly)
     if BACKFILL and (T.get('backfilled') or mint not in backfill_set): continue
     try:
         rw = G[mint]; quote = (rw.get('quote') or {}).get('mint')
@@ -320,7 +327,7 @@ for mint in watch:
                 d = b1 - b0
                 add(T, w, today, R=R, B=max(d, 0) * xpx if b0 > 0 else 0, S=max(-d, 0) * xpx)
         T.setdefault('since', now)
-        T.update({'at': now, 'dist': dist, 'elig': elig, 'sym': sym, 'qsym': qsym,
+        T.update({'at': now, 'dist': dist, 'elig': elig, 'sym': sym, 'qsym': qsym, 'v2': True,
                   'bal': {w: round(people.get(w, 0), 6) for w in wallets}})
         cut = today - KEEP_DAYS                                        # forget days past 90 and wallets with nothing left
         T['days'] = {w: {d: v for d, v in dd.items() if int(d) > cut} for w, dd in (T.get('days') or {}).items()}
