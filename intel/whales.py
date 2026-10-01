@@ -444,12 +444,20 @@ if mb:
     st['mrank'], st['mapy'] = mb.get('rank'), mb.get('apy24h')
 else: st['mrank'] = None
 st['mseen'] = True
-try:   # whale watch: more of $MARINE's top-20 wallets buying this week (CLOBr's hour-delayed data the terminals already use)
-    acc = ((((get(f"{BOT}/clobr?mint={MARINE}&d=1").get('whales') or {}).get('summary') or {}).get('accumulating') or {}).get('top20') or {}).get('7d')
+try:   # whale watch: more of $MARINE's top-20 wallets adding to their bags this week (CLOBr's hour-delayed data the terminals use)
+    # CLOBr counts any top-20 wallet whose balance rose in 7 days, new entrants to the top 20 included, so: worded as that, not
+    # as "buying" (our own trade data finds fewer actual buys); a whale-kind alert, not a BUY; only when the count is up 2+ on
+    # the last alert, at most every 12 h (a 12 -> 13 -> 12 -> 13 wobble isn't news)
+    sm = ((get(f"{BOT}/clobr?mint={MARINE}&d=1").get('whales') or {}).get('summary') or {})
+    acc = ((sm.get('accumulating') or {}).get('top20') or {}).get('7d'); new = ((sm.get('new_wallets') or {}).get('top20') or {}).get('7d')
     if acc is not None:
-        if st.get('acc20') is not None and acc > st['acc20']:
-            sig_('buy', f"whalewatch:{acc}:{now // 3600}", now, f"🐋 Whale watch: {acc - st['acc20']} more top-20 $MARINE wallet{'s' if acc - st['acc20'] > 1 else ''} buying · {acc} of the top 20 are buying this week", MARINE, 0)
-            signals[-1].update({'s': 'MARINE', 'side': 'buy'})
+        last = st.get('acc20al')
+        if last is None: st['acc20al'] = acc
+        elif acc >= last + 2 and now - st.get('acc20at', 0) >= 12 * 3600:
+            sig_('convergence', f"whalewatch:{acc}:{now // 3600}", now, f"🐋 Whale watch: {acc} of the top 20 $MARINE wallets added to their bags this week (up from {last}"
+                 + (f" · {new} new to the top 20" if new else '') + ")", MARINE, 0)
+            signals[-1].update({'s': 'MARINE', 'side': 'buy'}); st['acc20al'], st['acc20at'] = acc, now
+        elif acc < last: st['acc20al'] = acc   # follow it down, so the next real climb is measured from the low
         st['acc20'] = acc
 except Exception as e: log('whale watch', e)
 for x in (load('tts.json', {}).get('items') or [])[-30:]:   # paid TTS that played on the stream
