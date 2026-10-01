@@ -75,10 +75,8 @@ html.fit #soundBtn{font-size:24px;padding:4px 10px}
 .tape-bar.top .lbl{background:#6b3cff}
 .tape-bar .lbl button{background:#0005;border:1px solid #fff4;color:#fff;font:inherit;font-size:15px;padding:0 6px;cursor:pointer}
 .tape-bar .lbl button.on{background:#fff;color:#000}
-.track{display:inline-block;padding:7px 0 7px 0;animation:scroll linear infinite}
-.vol .track{animation-duration:130s}
-.top .track{animation-duration:110s}
-.tape-bar:hover .track{animation-play-state:paused}
+.tape{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch}.tape::-webkit-scrollbar{display:none}
+.track{display:inline-block;padding:7px 0 7px 0}
 .tk{display:inline-flex;align-items:center;gap:8px;margin-right:34px;font-size:12px;color:var(--txt)}
 .tk img{width:18px;height:18px;border-radius:50%;object-fit:cover;background:#111}
 .tk b{color:#fff}.tk .q{color:var(--dim)}.tk .apy{color:#b69cff}
@@ -407,6 +405,7 @@ html.fit #ttsPop{min-width:900px;max-width:1500px;padding:32px 44px;border-width
 html.fit #ttsPop .from{font-size:26px}html.fit #ttsPop .msg{font-size:84px}
 html.fit #tip{font-size:20px;padding:10px 14px}
 
+@media (min-width:1000px) and (max-width:1299px){.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.stat{border-bottom:1px solid var(--line)}.stat:nth-child(3n){border-right:0}}
 .moreStats,#mbar{display:none}
 .ph .chev{display:none}
 @media (max-width:999px){
@@ -444,6 +443,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .src .fx{display:none}.src{padding:6px 12px}
   #mbar{display:grid;grid-template-columns:1.45fr .6fr 1.2fr .85fr;gap:6px;position:fixed;left:0;right:0;bottom:0;z-index:45;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(4,6,15,.96);border-top:1px solid var(--line);backdrop-filter:blur(6px)}
   #mbar .btn{text-align:center;padding:11px 4px;font-size:12px;letter-spacing:0;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .stats{gap:8px;padding:8px;background:#03050d;border-bottom:1px solid var(--line)}.stat,.stat:nth-child(2n){border:1px solid var(--line)!important;border-radius:8px;background:var(--panel)}
 }
 .tkl a.sfl img{width:15px;height:15px;display:block}.tkl a.fwl{position:relative;color:var(--green)}
 .fwtip{display:none;position:absolute;top:32px;left:50%;transform:translateX(-50%);width:290px;z-index:60;background:#050914;border:1px solid var(--blue2);box-shadow:0 8px 30px rgba(0,0,0,.6);padding:10px 12px;font-size:12px;line-height:1.5;color:var(--txt);text-align:left;white-space:normal;letter-spacing:0}
@@ -501,11 +501,11 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
 
 <div class="tape-bar top">
   <div class="lbl">STONK<span class="lg">&nbsp;BOARD TOP 10</span>&nbsp;APY <button data-k="apy3d" class="on">3D</button><button data-k="apy24h">24H</button></div>
-  <div class="track" id="boardTicker"><span class="tk dim">loading…</span></div>
+  <div class="tape"><div class="track" id="boardTicker"><span class="tk dim">loading…</span></div></div>
 </div>
 <div class="tape-bar vol">
   <div class="lbl">STONKFUN<span class="lg">&nbsp;TOP 10 · 24H</span>&nbsp;VOL</div>
-  <div class="track" id="ticker"><span class="tk dim">loading…</span></div>
+  <div class="tape"><div class="track" id="ticker"><span class="tk dim">loading…</span></div></div>
 </div>
 
 <section class="stats">
@@ -1162,12 +1162,22 @@ async function loadTicker(){
       <b>$${esc(t.symbol)}</b><span class="q">/${esc(t.quote)}</span>
       <span>vol ${compact(t.vol24)}</span>${t.chg24!=null?pct(t.chg24):''}
       ${t.paidUsd?`<span class="dim">· ${compact(t.paidUsd)} paid out</span>`:''}</a>`).join('');
-    setTrack('ticker',html,130);
+    setTrack('ticker',html);
   }catch(e){}
 }
 // keep scroll speed constant (px/sec) no matter how long the content is
-function setTrack(id,html,base){const el=$(id);el.innerHTML=html+html;
-  requestAnimationFrame(()=>{const w=el.scrollWidth/2;el.style.animationDuration=Math.max(base,w/45)+'s'})}
+// the tickers move by scrolling their box, not by animating one very wide layer (iOS Safari leaves a layer that wide
+// blank). Hover pauses; on phones a swipe looks around and it carries on a moment later
+function setTrack(id,html){$(id).innerHTML=html+html}
+document.querySelectorAll('.tape').forEach(el=>{const tr=el.firstElementChild;let x=0,last=0,hold=0;const SPEED=45;   // px a second
+  const stop=()=>{hold=Date.now()+1e9},go=()=>{hold=Date.now()+2500;x=el.scrollLeft};
+  el.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')stop()});el.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')go()});
+  el.addEventListener('touchstart',stop,{passive:true});el.addEventListener('touchend',go,{passive:true});
+  function step(t){const dt=last?Math.min(t-last,100):0;last=t;const half=tr.scrollWidth/2;
+    if(Date.now()>hold&&!document.hidden){if(half>el.clientWidth){x+=SPEED*dt/1000;if(x>=half)x-=half;el.scrollLeft=x}}
+    else if(half>0&&el.scrollLeft>=half)el.scrollLeft-=half;
+    requestAnimationFrame(step)}
+  requestAnimationFrame(step)});
 
 // ---------- top ticker: thestonkboard.com top 10 by APY ----------
 let board=null,boardKey='apy3d';
@@ -1177,7 +1187,7 @@ function renderBoard(){if(!board)return;const L=board[boardKey]||[],lab=boardKey
     <b>$${esc(String(t.symbol).replace(/^\$/,''))}</b><span class="q">/${esc(t.quote)}</span>
     <span class="apy">${apyFmt(t.apy)} APY ${lab}</span><span class="dim">mc ${compact(t.mcap)}</span></a>`).join('');
   const m=boardStats();if(m&&m.rank)html+=`<a class="tk me" href="${esc(tokLink(TK.mint))}" target="_blank" rel="noopener"><span class="dim">board #${m.rank}</span><b>$${TK.symbol}</b><span class="q">/${TK.quote}</span><span class="apy">${apyFmt(m[boardKey])} APY ${lab}</span></a>`
-  setTrack('boardTicker',html,110)}
+  setTrack('boardTicker',html)}
 // board-x.json: the hourly extras for each coin (launch, flywheel rank, transfers, holder growth, concentration)
 let boardX=null;
 async function loadBoard(){try{board=await j(DATA+'board.json?'+Date.now());renderBoard();renderApy()}catch(e){}
