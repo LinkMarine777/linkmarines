@@ -528,7 +528,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
 
     <div class="lower">
       <section class="panel tapeP acc" data-acc="tape" data-def="1">
-        <div class="ph"><h2 class="tapeH"><button data-v="trades" class="on">THE TAPE</button><button data-v="holders" id="holdTab" style="display:none">HOLDERS <span class="hc" id="holdN"></span> <span class="hc" id="cmpN"></span></button></h2>
+        <div class="ph"><h2 class="tapeH"><button data-v="trades" class="on">THE TAPE</button><button data-v="holders" id="holdTab" style="display:none">HOLDERS <span class="hc" id="holdN"></span></button></h2>
           <span class="meta hide-sm fx" id="tapeMeta"><span class="tkSym">$MARINE</span>/<span class="tkQ">LINK</span> pool · large = $2,500+</span>
           <span class="meta hide-sm" id="holdMeta" style="display:none">top wallets · data from CLOBr</span>
           <div class="tabs" id="tapeF"><button data-min="0" class="on">ALL</button><button data-min="100">$100+</button></div>
@@ -1032,7 +1032,7 @@ async function loadCompound(){try{const r=await fetch('https://raw.githubusercon
   if(!r.ok)return;const d=await r.json();if(!d.wallets)return;CMP=d;renderHolders()}catch(e){}}
 // HOLDERS with compounding attached: the tracked wallets (80% of supply) by size, each with its 7d change (CLOBr, when it has
 // the wallet), rewards, net bought and compound score; one summary line on top
-function renderCompound(){if(!CMP)return;const W=CMP.win[cmpW]||{},sc=W.score,sym=esc(CMP.sym);$('cmpN').textContent=sc==null?'':'♻ '+Math.round(sc);
+function renderCompound(){if(!CMP)return;const W=CMP.win[cmpW]||{},sc=W.score,sym=esc(CMP.sym);
   const since=new Date(CMP.since*1000).toLocaleDateString(undefined,{month:'short',day:'numeric'});
   $('cmpMeta').textContent=`${CMP.wallets} wallets · ${Math.round(CMP.cover)}% of supply · since ${since}`;
   const d7={};((CL&&CL.whales&&!CL.whales.none&&CL.whales.wallets)||[]).forEach(x=>d7[x.owner]=x.d7);
@@ -1040,7 +1040,7 @@ function renderCompound(){if(!CMP)return;const W=CMP.win[cmpW]||{},sc=W.score,sy
   let top;
   if(sc==null)top=`<div class="cmpSum">${CMP.at-CMP.since<86400?`Compounding: tracking started ${since}, the numbers fill in from the next payout (checked every 6 h).`:'No payouts in this window.'}</div>`;
   else{const tg=W.tags,lbl=sc>=60?'Strong':sc>=40?'Healthy':sc>=20?'Mixed':'Weak',col=sc>=40?'var(--green)':sc>=20?'var(--amber)':'var(--red)';
-    top=`<div class="cmpSum"><span class="cmpSc" style="color:${col};border-color:${col}" title="compound score">${Math.round(sc)}</span><b>${lbl}</b> compounding ·
+    top=`<div class="cmpSum"><span>Compound score</span><span class="cmpSc" style="color:${col};border-color:${col}">${Math.round(sc)}</span><b>${lbl}</b> ·
       <span><b>${Math.round(W.compounded)}%</b> of rewards put back into $${sym}</span> · <span><b>${(W.fresh||0).toFixed(1)}×</b> new money on top</span> ·
       <span><b>${Math.round(tg.Compounder[1])}%</b> of supply compounds</span></div>
     <div class="cmpBar">${Object.entries(tg).filter(([k,v])=>v[1]>0).map(([k,v])=>`<span style="flex:${v[1]};background:${CMPC[k]}"></span>`).join('')}</div>
