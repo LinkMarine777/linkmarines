@@ -24,18 +24,30 @@ function domains(req) {
   // old shared links came out blank): a token link to its token page, anything else to the stream / trending
   const old = /^\/(terminal2?)\/?(index\.html)?$/.exec(u.pathname);
   if (old) return Response.redirect(`https://${u.hostname}${u.searchParams.get('ca') ? '/terminal/token' : old[1] === 'terminal' ? '/stream/' : '/trending/'}${u.search}`, 301);
+  // pages that only moved in the browser (a script): a real redirect, so a shared link's preview isn't blank
+  const moved = { '/tts': '/tts/checkout', '/terminal2/token': '/terminal/token', '/terminal2/trending': '/trending/', '/terminal2/checkout': '/tts/checkout' }[u.pathname.replace(/(\/index)?(\.html)?\/?$/, '')];
+  if (moved) return Response.redirect(`https://${u.hostname}${moved}${u.search || (moved === '/tts/checkout' ? '?k=t' : '')}`, 301);
   return null;
 }
 
 export default {
   async fetch(req, env) {
     try { const r = domains(req); if (r) return r; } catch (e) {}
+    // a token's share card, from the bot but on this domain (X won't show preview images hosted on workers.dev)
+    const card = /^\/card\/([1-9A-HJ-NP-Za-km-z]{32,44})\.png$/.exec(new URL(req.url).pathname);
+    if (card) {
+      try {
+        const r = await (env.BOT ? env.BOT.fetch(`${BOT}/card/${card[1]}.png`) : fetch(`${BOT}/card/${card[1]}.png`));
+        if (r.ok) return new Response(r.body, { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=600' } });
+      } catch (e) {}
+      return Response.redirect(`${BOT}/card/${card[1]}.png`, 302);
+    }
     const res = await env.ASSETS.fetch(req);
     if (!new URL(req.url).pathname.startsWith('/terminal/token')) return res;
     try {
       const ca = new URL(req.url).searchParams.get('ca');
       if (!MINT.test(ca || '') || !(res.headers.get('content-type') || '').includes('text/html')) return res;
-      const img = `${BOT}/card/${ca}.png`;
+      const img = `${new URL(req.url).origin}/card/${ca}.png`;
       let title = null, desc = null;
       if (CRAWLER.test(req.headers.get('user-agent') || '')) {
         const ask = env.BOT ? env.BOT.fetch(`${BOT}/token/${ca}`) : fetch(`${BOT}/token/${ca}`, { cf: { cacheTtl: 300 } });
