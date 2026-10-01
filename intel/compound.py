@@ -17,6 +17,8 @@ Helius credits (getProgramAccountsV2, 1 credit per 10,000 accounts; ~15-30K cred
     least stonkfun's minimum holding). Checked against each payout read one by one for $MARINE's top 20: within ~2%.
   - buying / selling: the change in the wallet's balance (moving tokens between your own wallets looks like a trade)
   added to the wallet's numbers for that day (UTC), kept 90 days.
+--history: every token's whole history since launch, read the cheap way (each wallet's token account + the 8 biggest
+wallets' reward accounts for the payout rounds; see history_fill), once; resumable, stops at a credit / time limit.
 --backfill ($MARINE + stonkfun's top 10 by market cap only): the last 7 days read exactly instead (each wallet's token account + reward-token account; payouts counted
 only when they match one of the token's own payout rounds, since stonkfun pays every LINK / ZEC / ... token from shared
 wallets) for each token's 200 biggest wallets, then the 6-hourly runs carry on from there (the rest start then).
@@ -28,7 +30,7 @@ Score per wallet over a window, counting from its first reward (the buy that got
 Token score: the wallets' scores weighted by how much they hold.
 Never prints the RPC URL.
 """
-import base64, bisect, json, os, struct, sys, time, urllib.request
+import base64, bisect, calendar, json, os, struct, sys, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from statistics import median
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -36,6 +38,7 @@ from pda import b58d, b58e, on_curve, pda, ATA
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else 'terminal'
 BACKFILL = '--backfill' in sys.argv
+HISTORY = '--history' in sys.argv   # every token's whole history since launch, once (resumable; see history_fill)
 KEY = os.environ.get('HELIUS_KEY', '').strip(); URL = os.environ.get('SOLANA_RPC', '').strip()
 RPC = URL or (f'https://mainnet.helius-rpc.com/?api-key={KEY}' if KEY else 'https://api.mainnet-beta.solana.com')
 SF = 'https://www.stonkfun.xyz'
@@ -44,8 +47,10 @@ SOL = 'So11111111111111111111111111111111111111112'
 STABLE = {'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'}
 NOT_WALLETS = {'5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1', 'GpMZbSM2GgvTKHJirzeGfMFoaZ8UR2X7F4v8vHTvxFbL',
                'WLHv2UAZm6z4KyaaELi5pjdbJh6RESMva1Rnn8pJVVh', 'HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC'}
-DAY, KEEP_DAYS, COVER, MIN_W, MAX_W = 86400, 90, 0.8, 20, 600
+DAY, KEEP_DAYS, COVER, MIN_W, MAX_W = 86400, 180, 0.8, 20, 600
 BACKFILL_W, BACKFILL_DAYS = int(os.environ.get('BACKFILL_W', 200)), int(os.environ.get('BACKFILL_DAYS', 7))
+HISTORY_BUDGET = int(os.environ.get('HISTORY_BUDGET', 160000))   # credits one history run may spend before it stops starting tokens
+HISTORY_MINUTES = int(os.environ.get('HISTORY_MINUTES', 110))      # ... or minutes (the job has 140); the next run carries on
 PAGES = int(os.environ.get('PAGES', 80))   # most pages a big token's holder lookup may take (1,000 holders, 10 credits each)
 now = int(time.time()); today = now // DAY
 CALLS, CREDITS = {}, [0]
@@ -97,6 +102,8 @@ def save(name, data):
 # ---------- which tokens: every reward token the site lists ----------
 toks = load('tokens.json', {}).get('tokens', []); board = load('board.json', {}).get('tokens', {})
 names = {**{m: b.get('symbol') for m, b in board.items()}, **{t['mint']: t.get('symbol') for t in toks}}
+bonded = {m: b.get('bondedAt') for m, b in board.items() if b.get('bondedAt')}
+bonded.update({t['mint']: t['bondedAt'] for t in toks if t.get('bondedAt')})
 mcap = {**{m: b.get('mcap') or 0 for m, b in board.items()}, **{t['mint']: t.get('mcap') or 0 for t in toks}}
 ranked = [m for m in sorted(set(mcap) - {MARINE}, key=lambda m: -(mcap[m] or 0))]
 G = {x['mint']: x for x in get(f'{SF}/api/public/v1/rewards')['data']['launches']}   # every launch's payout total, one call
@@ -173,6 +180,50 @@ def series_gt(mint, since):
     time.sleep(2.2)
     r = get(f"https://api.geckoterminal.com/api/v2/networks/solana/pools/{pool['attributes']['address']}/ohlcv/hour?aggregate=1&limit=1000&token={side}")
     return sorted((int(x[0]), float(x[4])) for x in r['data']['attributes']['ohlcv_list'] if int(x[0]) >= since - 7200)
+
+
+def series_long(mint, since, now_px):
+    """Hourly $ prices back to `since` (GeckoTerminal, 1,000 hours a call); today's price if it won't answer."""
+    try:
+        time.sleep(2.2)
+        p = get(f'https://api.geckoterminal.com/api/v2/networks/solana/tokens/{mint}/pools?page=1')
+        pool = p['data'][0]; side = 'base' if pool['relationships']['base_token']['data']['id'].endswith(mint) else 'quote'
+        out, before = [], now
+        for _ in range(6):
+            if before <= since: break
+            time.sleep(2.2)
+            r = get(f"https://api.geckoterminal.com/api/v2/networks/solana/pools/{pool['attributes']['address']}/ohlcv/hour?aggregate=1&limit=1000&before_timestamp={before}&token={side}")
+            rows = r['data']['attributes']['ohlcv_list']
+            if not rows or min(int(x[0]) for x in rows) >= before: break
+            out += [(int(x[0]), float(x[4])) for x in rows]; before = min(int(x[0]) for x in rows)
+        return sorted(set(out)) or [(since, now_px)]
+    except Exception as e: log('  price history unavailable, using the current price:', mint[:6], e); return [(since, now_px)] if now_px else []
+
+
+def deltas(tx, w):
+    """What one transaction did to wallet w: {mint: change} (SOL included, fee back out), and whether w signed it."""
+    m = tx['meta']; keys = [k['pubkey'] for k in tx['transaction']['message']['accountKeys']]; ch = {}
+    for side, sgn in (('preTokenBalances', -1), ('postTokenBalances', 1)):
+        for b in m.get(side) or []:
+            if b.get('owner') == w:
+                ch[b['mint']] = ch.get(b['mint'], 0) + sgn * float((b.get('uiTokenAmount') or {}).get('uiAmountString') or 0)
+    if w in keys:
+        i = keys.index(w); ch[SOL] = ch.get(SOL, 0) + (m['postBalances'][i] - m['preBalances'][i] + (m.get('fee', 0) if i == 0 else 0)) / 1e9
+    return {k: v for k, v in ch.items() if abs(v) > 1e-9}, keys[0] == w
+
+
+def find_rounds(ev):
+    """Payout events {w, t, rate} -> this token's payout batches. One batch pays every holder at one rate (reward tokens per
+    token held) within minutes; a round can be several batches minutes apart at slightly different rates, and other tokens'
+    payouts land in the same account. A payout joins an open batch within 30 min whose rate is within 3% and that hasn't
+    paid that wallet yet, else opens a new one; batches at least 2 wallets agree on are kept. Returns [{t, rate, ev}]."""
+    open_, done = [], []
+    for e in sorted(ev, key=lambda e: e['t']):
+        for b in [b for b in open_ if e['t'] - b['t'] > 1800]: open_.remove(b); done.append(b)
+        b = next((b for b in open_ if e['w'] not in b['ws'] and abs(e['rate'] / b['rate'] - 1) <= 0.03), None)
+        if b: b['ev'].append(e); b['ws'].add(e['w'])
+        else: open_.append({'t': e['t'], 'rate': e['rate'], 'ev': [e], 'ws': {e['w']}})
+    return [{'t': b['t'], 'rate': median(f['rate'] for f in b['ev']), 'ev': b['ev']} for b in done + open_ if len(b['ws']) >= 2]
 
 
 GTFA = [bool(KEY or 'helius' in URL)]   # Helius' batch history; else (or if it's refused) one transaction at a time
@@ -252,20 +303,9 @@ def backfill(mint, quote, T, people, wallets, since):
             a = tx['ch'].get(quote, 0)
             if a > 0 and not tx['signer'] and all(abs(v) < 1e-6 for k, v in tx['ch'].items() if k != quote) and tx['before'] > 0:
                 events.append({'w': w, 't': tx['t'], 'rate': a / tx['before'], 'tx': tx})
-    events.sort(key=lambda e: e['t']); rounds = 0; burst = []
-    def close(B):
-        nonlocal rounds
-        if len(B) < 3: return
-        best = max(B, key=lambda e: sum(1 for f in B if abs(f['rate'] / e['rate'] - 1) <= 0.2))
-        r = median(f['rate'] for f in B if abs(f['rate'] / best['rate'] - 1) <= 0.2)
-        mine = [f for f in B if abs(f['rate'] / r - 1) <= 0.2]
-        if len({f['w'] for f in mine}) >= 3:
-            rounds += 1
-            for f in mine: f['tx']['mine'] = True
-    for e in events:
-        if burst and e['t'] - burst[-1]['t'] > 900: close(burst); burst = []
-        burst.append(e)
-    close(burst)
+    found = find_rounds(events); rounds = len(found)
+    for b in found:
+        for f in b['ev']: f['tx']['mine'] = True
 
     T['days'] = {}
     for w, txs in hist.items():
@@ -278,6 +318,59 @@ def backfill(mint, quote, T, people, wallets, since):
             if dx > 0 and out_ > 0: add(T, w, day, B=out_)
             elif dx < 0 and in_ > 0: add(T, w, day, S=in_)
     log(f"  backfill: {len(events)} payouts, {sum(1 for e in events if e['tx'].get('mine'))} from this token's {rounds} rounds")
+
+
+# ---------- whole history since launch (--history) ----------
+# Cheaper than reading every payout: each wallet's token account only (its buys, sells and balance over time: usually one
+# read), plus the reward account of the 8 biggest wallets to find every payout round and its rate (reward tokens per token
+# held, the same for everyone in a round). A wallet's reward in a round = the rate x its balance then (if worth $20+).
+# Checked against payouts read one by one for $MARINE's top 20: ~2%. ~1.5K credits a token.
+def history_fill(mint, quote, T, people, wallets, since):
+    px = {m: series_long(m, since, price.get(m, 0)) for m in (mint, quote, SOL)}; pt = {m: [t for t, _ in s] for m, s in px.items()}
+    def at(m, t):
+        if m in STABLE: return 1.0
+        s = px.get(m)
+        return s[max(bisect.bisect_right(pt[m], t) - 1, 0)][1] if s else 0.0
+    qprog = rpc('getAccountInfo', [quote, {'encoding': 'base64', 'dataSlice': {'offset': 0, 'length': 0}}])['value']['owner']
+    xata = lambda w: pda([b58d(w), b58d(T['prog']), b58d(mint)], ATA)
+    def trades(w):   # the wallet's token account: every change to its balance since launch, oldest first
+        out = []
+        for tx in history(xata(w), since):
+            if (tx.get('meta') or {}).get('err'): continue
+            ch, signer = deltas(tx, w)
+            if ch.get(mint): out.append({'t': tx.get('blockTime') or now, 'ch': ch})
+        out.sort(key=lambda x: x['t']); bal = people.get(w, 0)
+        for x in reversed(out): x['after'] = bal; bal -= x['ch'][mint]; x['before'] = bal
+        return w, out
+    with ThreadPoolExecutor(2) as ex: H = dict(ex.map(trades, wallets))
+    def bal_at(w, t):
+        L = H.get(w) or []
+        i = bisect.bisect_right([x['t'] for x in L], t) - 1
+        return L[i]['after'] if i >= 0 else (L[0]['before'] if L else people.get(w, 0))
+
+    # payout rounds: the biggest wallets' reward accounts; a burst's payouts that agree on one rate are this token's round
+    ev = []
+    for w in wallets[:8]:
+        for tx in history(pda([b58d(w), b58d(qprog), b58d(quote)], ATA), since):
+            if (tx.get('meta') or {}).get('err'): continue
+            ch, signer = deltas(tx, w); a = ch.get(quote, 0); t = tx.get('blockTime') or now; b = bal_at(w, t)
+            if a > 0 and not signer and b > 0 and all(abs(v) < 1e-6 for k, v in ch.items() if k != quote): ev.append({'w': w, 't': t, 'rate': a / b})
+    rounds = [(b['t'], b['rate']) for b in find_rounds(ev)]
+
+    T['days'] = {}
+    for t, r in rounds:
+        for w in wallets:
+            b = bal_at(w, t)
+            if b > 0 and b * at(mint, t) >= 20: add(T, w, t // DAY, R=b * r * at(quote, t))
+    for w, L in H.items():
+        for x in L:
+            t, ch = x['t'], x['ch']; dx = ch[mint]
+            other = {m: v for m, v in ch.items() if m != mint and not (m == SOL and abs(v) < 0.01)}
+            out_ = sum(-v * at(m, t) for m, v in other.items() if v < 0); in_ = sum(v * at(m, t) for m, v in other.items() if v > 0)
+            if dx > 0 and out_ > 0: add(T, w, t // DAY, B=out_)
+            elif dx < 0 and in_ > 0: add(T, w, t // DAY, S=in_)
+    log(f"  history since {time.strftime('%Y-%m-%d', time.gmtime(since))}: {len(rounds)} payout rounds, {sum(len(L) for L in H.values())} trades")
+    if os.environ.get('DEBUG'): T['dbg'] = {'rounds': rounds, 'events': [(e['w'][:6], e['t'], e['rate']) for e in ev]}
 
 
 # ---------- score ----------
@@ -302,8 +395,9 @@ for mint in watch:
     if not T.get('v2') and len(T.get('bal') or {}) < MIN_W and not T.get('backfilled'):   # one-off: partial snapshots an earlier run saved
         for k in ('at', 'bal', 'dist', 'elig', 'days', 'since'): T.pop(k, None)
     gap = (24 if T.get('big') else 6) * 3600   # big tokens (holder lookup by mint, 10 credits per 1,000) once a day
-    if not BACKFILL and T.get('at') and T.get('bal') and now - T['at'] < gap - 900: continue   # every 6 h (the workflow also runs 6-hourly)
+    if not BACKFILL and not HISTORY and T.get('at') and T.get('bal') and now - T['at'] < gap - 900: continue   # every 6 h (the workflow also runs 6-hourly)
     if BACKFILL and (T.get('backfilled') or mint not in backfill_set): continue
+    if HISTORY and (T.get('history') or CREDITS[0] > HISTORY_BUDGET or time.time() - now > HISTORY_MINUTES * 60): continue
     try:
         rw = G[mint]; quote = (rw.get('quote') or {}).get('mint')
         if not quote: continue
@@ -315,7 +409,11 @@ for mint in watch:
         elig = sum(b for b in people.values() if b * xpx >= minusd) if xpx else sum(people.values())
         wallets = top_set(people); total = sum(people.values()) or 1
         log(f"${sym}: {len(people)} holders, {len(wallets)} wallets own {sum(people[w] for w in wallets) / total * 100:.0f}% · eligible {elig:,.0f}")
-        if BACKFILL:
+        if HISTORY:
+            since = calendar.timegm(time.strptime(bonded[mint][:19], '%Y-%m-%dT%H:%M:%S')) if bonded.get(mint) else now - KEEP_DAYS * DAY
+            since = max(since, now - KEEP_DAYS * DAY)
+            history_fill(mint, quote, T, people, wallets[:int(os.environ.get('HISTORY_W', MAX_W))], since); T['history'] = now; T['since'] = since
+        elif BACKFILL:
             backfill(mint, quote, T, people, wallets[:BACKFILL_W], now - BACKFILL_DAYS * DAY); T['backfilled'] = now; T['since'] = now - BACKFILL_DAYS * DAY
         elif T.get('at') and T.get('bal') is not None:
             dD = max(dist - T.get('dist', dist), 0); E = (elig + T.get('elig', elig)) / 2 or 1
@@ -353,7 +451,7 @@ for mint in watch:
         index['tokens'][mint] = {'sym': sym, 'at': now, 'since': T['since'], 'wallets': len(wallets), 'holders': len(people),
                                  'score': {k_: summ[k_]['score'] for k_ in WINDOWS}}
         log(f"  score 7d {summ['7d']['score']} · 30d {summ['30d']['score']} · credits so far {CREDITS[0]}")
-        if BACKFILL: save('compound/index.json', index); save('compound-state.json', state)   # a run cut short keeps what it did
+        if BACKFILL or HISTORY: save('compound/index.json', index); save('compound-state.json', state)   # a run cut short keeps what it did
     except Exception as e: log(mint[:6], 'failed:', e)
 # tokens the site no longer lists: off the index now, their saved numbers dropped after 7 days
 index['tokens'] = {m: v for m, v in index['tokens'].items() if m in watch}
