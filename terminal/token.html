@@ -1029,7 +1029,7 @@ $('tf').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)re
 
 // ---------- compounding (intel/compound.py writes terminal/compound/<mint>.json every 6 h; tracked tokens only) ----------
 let CMP=null,cmpW='7d',cmpAll=false;
-const cmpUsd=n=>Math.abs(n)>=1000?compact(n):(n<0?'-':'')+'$'+Math.round(Math.abs(n));
+const cmpUsd=n=>(n<0?'−':'')+(Math.abs(n)>=1000?compact(Math.abs(n)):'$'+Math.round(Math.abs(n)));
 const CMPC={Compounder:'var(--green)',Partial:'var(--blue2)',Collector:'var(--dim)',Seller:'var(--red)'};
 async function loadCompound(){try{const r=await fetch('https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/compound/'+CA+'.json',{cache:'no-store'});
   if(!r.ok)return;const d=await r.json();if(!d.wallets)return;CMP=d;$('cmpWrap').style.display='';renderCompound()}catch(e){}}
