@@ -556,7 +556,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
           <tbody></tbody>
         </table>
         <div id="compound" style="display:none"><div class="cmpHead"><span class="meta" id="cmpMeta"></span><div class="tabs" id="cmpWin"><button data-w="7d" class="on">7D</button><button data-w="30d">30D</button><button data-w="all">ALL</button></div></div><div id="cmpBody"></div>
-          <div class="cmpSrc">The wallets that together own 80% of the supply (pools excluded); 7d = balance change (CLOBr). Rewards: each wallet's share of every payout, counted from its first one, so the buy that got it in doesn't count. Score = 70% how much of their rewards they bought back in + 30% how often (days they bought after a payout); net sellers score 0. Buys and sells are balance changes, so moving tokens between your own wallets shows as a trade. Refreshed every 6 h.</div></div>
+          <div class="cmpSrc">The wallets that together own 80% of the supply (pools excluded); 7d = balance change (CLOBr). Rewards: each wallet's share of every payout, counted from its first one, so the buy that got it in doesn't count. Score = 60% how much of their rewards they bought back in + 25% how often (days they bought after a payout) + 15% buying beyond their rewards (8× or more counts in full); net sellers score 0. Buys and sells are balance changes, so moving tokens between your own wallets shows as a trade. Refreshed every 6 h.</div></div>
         </div>
       </section>
       <section class="panel ads">
@@ -1078,9 +1078,10 @@ function renderCompound(){if(!CMP)return;const W=CMP.win[cmpW]||{},sc=W.score,sy
     <div class="cmpLg">${Object.entries(tg).map(([k,v])=>`<span><i style="background:${CMPC[k]}"></i>${k} ${v[0]} · ${v[1].toFixed(1)}%</span>`).join('')}</div>`}
   $('cmpBody').innerHTML=top+`<table class="cmpT"><thead><tr><th>#</th><th>Wallet</th><th class="r">Holds</th><th class="r hs">7d</th><th class="r hs">Rewards</th><th class="r" title="bought minus sold since the wallet's first reward">Net bought</th><th class="r">Score</th></tr></thead><tbody>
     ${shown.map((r,i)=>{const v=r[cmpW],x=d7[r.w];const [R,N,c,k,s_,t,B,S]=v||[];
-      const why=v?`${t} · score ${s_} = 70% × ${Math.round(c*100)}% of rewards bought back in + 30% × bought after ${Math.round(k*100)}% of payout days`:'';
+      const mult=v&&R>0?N/R:0,ext=mult>1?Math.min(1,Math.log2(mult)/3):0;
+      const why=v?`${t} · score ${s_} = 60% × ${Math.round(c*100)}% of rewards bought back in + 25% × bought after ${Math.round(k*100)}% of payout days + 15% × buying beyond rewards (${mult>1?mult.toFixed(1)+'× rewards':'none'})`:'';
       const det=v?`<tr class="cmpDet" style="display:none"><td></td><td colspan="6">Rewards <b>${cmpUsd(R)}</b> · bought <b>${B!=null?cmpUsd(B):'—'}</b> · sold <b>${S!=null?cmpUsd(S):'—'}</b> · net <b>${N>0?'+':''}${cmpUsd(N)}</b><br>
-        ${Math.round(c*100)}% of rewards bought back in · bought after ${Math.round(k*100)}% of payout days · score ${s_} (${t})</td></tr>`:'';
+        ${Math.round(c*100)}% of rewards bought back in${mult>1?` + ${(mult-1).toFixed(1)}× more on top`:''} · bought after ${Math.round(k*100)}% of payout days · score ${s_} (${t})</td></tr>`:'';
       return`<tr class="${v?'cmpRow':''}" title="${v?'tap for details':''}"><td class="dim">${i+1}</td><td><a href="https://solscan.io/account/${esc(r.w)}" target="_blank" rel="noopener">${esc(r.w.slice(0,4))}…${esc(r.w.slice(-4))}</a></td>
       <td class="r">${r.p.toFixed(2)}%</td><td class="r hs">${x==null?dash:x===0?'<span class="dim">0</span>':pct(x)}</td>
       ${v?`<td class="r hs">${cmpUsd(R)}</td><td class="r" style="color:${N>0?'var(--green)':N<0?'var(--red)':'var(--dim)'}">${N>0?'+':''}${cmpUsd(N)}</td>
