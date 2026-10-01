@@ -11,6 +11,10 @@ on:
         description: 'read the last 7 days exactly (one-off, ~40K credits) instead of the 6-hourly update'
         type: boolean
         default: false
+      history:
+        description: "every token's whole history since launch (one-off, ~150-200K credits; stops at 160K or 110 min, run again to carry on)"
+        type: boolean
+        default: false
 permissions:
   contents: write
 concurrency:
@@ -34,7 +38,7 @@ jobs:
           HELIUS_KEY: ${{ secrets.HELIUS_KEY }}
           SOLANA_RPC: ${{ secrets.SOLANA_RPC }}
         timeout-minutes: 140
-        run: python3 main/intel/compound.py data/terminal ${{ inputs.backfill && '--backfill' || '' }}
+        run: python3 main/intel/compound.py data/terminal ${{ inputs.backfill && '--backfill' || '' }} ${{ inputs.history && '--history' || '' }}
       - name: save to the data branch
         if: always()   # also when the run was cut short: compound.py saves after every token
         working-directory: data
