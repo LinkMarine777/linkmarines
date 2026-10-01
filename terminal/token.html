@@ -416,7 +416,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .ctok{display:flex;align-items:center;gap:10px;min-width:0}.ctok~h2{display:none}.ctok:empty{display:none}.ctok:empty~h2{display:block}
   .ctok .tkb img{width:32px;height:32px}.ctok .tkb .nm b{font-family:'VT323';font-weight:400;font-size:26px;color:#fff;letter-spacing:1px;line-height:1}.ctok .tkb .nm b .q{font-family:'IBM Plex Mono';font-size:12px;margin-left:3px;letter-spacing:0}
   .ctok .tkl a,.ctok .tkl button{width:26px;height:26px;border-radius:5px}
-  .chartP>.ph{flex-wrap:wrap;row-gap:8px}.chartP>.ph .legend{white-space:nowrap}
+  .chartP>.ph{flex-wrap:wrap;row-gap:8px;align-items:center}.chartP>.ph .legend{white-space:nowrap;flex:1 1 auto;justify-content:center;align-items:center;margin:0!important}   /* the line key centred in the space between the token and the chips */
   .chartP>.ph .pchips:not(:empty){display:flex;margin-left:auto;border:1px solid var(--line);border-radius:6px;overflow:hidden}.chartP>.ph .pchips:not(:empty)+.tabs{margin-left:8px}
   .chartP>.ph .pchips span{display:flex;align-items:baseline;gap:4px;padding:5px 9px;font-size:11px;white-space:nowrap}.chartP>.ph .pchips span+span{border-left:1px solid var(--line)}
   .chartP>.ph .pchips i{font-style:normal;color:var(--dim)}.chartP>.ph .pchips b{font-family:inherit;font-size:11px;font-weight:400;display:inline;line-height:1.3}.chartP>.ph .pchips .up{color:var(--green)}.chartP>.ph .pchips .dn{color:var(--red)}
@@ -431,7 +431,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .stat.hero,.stat.pulse,.stat.mkt,.stat.duo{grid-column:span 2;border-right:0}
   .stat.hero{order:1}.stat.pulse{order:2}.stat.mkt{order:3}.stat.pay{order:4;border-right:1px solid var(--line)}.stat.qt{order:5;border-right:0}.stat.duo{order:6}
   .stat.duo{padding-top:8px;padding-bottom:8px;gap:2px}.duo.both .half+.half{padding-top:4px}.duo .half b{font-size:24px}
-  main{grid-template-columns:minmax(0,1fr)}.lower{grid-template-columns:minmax(0,1fr)}.ph{flex-wrap:wrap}.legend{display:none}header nav{margin-left:0}
+  main{grid-template-columns:minmax(0,1fr)}.lower{grid-template-columns:minmax(0,1fr)}.ph{flex-wrap:wrap}.legend{display:none}.chartP .legend{display:flex;order:9;flex-basis:100%;justify-content:center;align-items:center;font-size:11px;margin:2px 0 0!important}header nav{margin-left:0}
   header nav .btn:not(.primary):not(.tts):not(#menuBtn){display:none}#chartWrap{height:260px}.brand{font-size:24px}.brand small{font-size:14px}header{gap:10px;flex-wrap:wrap}
   .hide-sm{display:none}#ttsPop{min-width:0;width:92%}#ttsPop .msg{font-size:30px}
   /* ---- mobile: collapsible sections, fewer things fighting for space ---- */
