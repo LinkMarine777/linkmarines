@@ -46,6 +46,7 @@ NOT_WALLETS = {'5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1', 'GpMZbSM2GgvTKHJi
                'WLHv2UAZm6z4KyaaELi5pjdbJh6RESMva1Rnn8pJVVh', 'HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC'}
 DAY, KEEP_DAYS, COVER, MIN_W, MAX_W = 86400, 90, 0.8, 20, 600
 BACKFILL_W, BACKFILL_DAYS = int(os.environ.get('BACKFILL_W', 200)), int(os.environ.get('BACKFILL_DAYS', 7))
+PAGES = int(os.environ.get('PAGES', 50))   # most a token's balance snapshot may page through (1 credit a page)
 now = int(time.time()); today = now // DAY
 CALLS, CREDITS = {}, [0]
 
@@ -122,11 +123,12 @@ def holders(mint, T):
     accs = None
     if KEY or 'helius' in URL:   # Helius: the paginated version (1 credit a page of 10,000; the plain one refuses big programs)
         try:
-            accs, key = [], None
-            for _ in range(100):
+            accs, key, pages = [], None, 0
+            while pages < PAGES:   # a page can come back empty with more after it: go on until there's no next key
                 r = rpc('getProgramAccountsV2', [T['prog'], {**opts, 'limit': 10000, **({'paginationKey': key} if key else {})}]); CREDITS[0] += 1
-                accs += r.get('accounts') or []; key = r.get('paginationKey')
-                if not key or not r.get('accounts'): break
+                pages += 1; accs += r.get('accounts') or []; key = r.get('paginationKey')
+                if not key: break
+            if key: log(f'  stopped after {pages} pages ({len(accs)} accounts so far)')
         except RuntimeError as e: log('  getProgramAccountsV2 refused, trying the plain call:', e); accs = None
     if accs is None: accs = rpc('getProgramAccounts', [T['prog'], opts]); CREDITS[0] += 10
     own = {}
@@ -134,7 +136,9 @@ def holders(mint, T):
         raw = base64.b64decode(a['account']['data'][0])
         if len(raw) < 40: continue
         o = b58e(raw[:32]); own[o] = own.get(o, 0) + struct.unpack('<Q', raw[32:40])[0] / 10 ** T['dec']
-    return {o: b for o, b in own.items() if b > 0 and o not in NOT_WALLETS and on_curve(b58d(o))}
+    out = {o: b for o, b in own.items() if b > 0 and o not in NOT_WALLETS and on_curve(b58d(o))}
+    if not out: raise RuntimeError(f'no holders returned ({len(accs)} accounts)')
+    return out
 
 
 def top_set(people):
@@ -291,7 +295,7 @@ WINDOWS = {'7d': 7, '30d': 30, 'all': KEEP_DAYS}
 index = load('compound/index.json', {'tokens': {}})
 for mint in watch:
     T = ST.setdefault(mint, {})
-    if not BACKFILL and T.get('at') and now - T['at'] < 6 * 3600 - 900: continue   # every 6 h (the workflow also runs 6-hourly)
+    if not BACKFILL and T.get('at') and T.get('bal') and now - T['at'] < 6 * 3600 - 900: continue   # every 6 h (the workflow also runs 6-hourly)
     if BACKFILL and (T.get('backfilled') or mint not in backfill_set): continue
     try:
         rw = G[mint]; quote = (rw.get('quote') or {}).get('mint')
