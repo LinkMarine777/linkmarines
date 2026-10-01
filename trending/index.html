@@ -58,7 +58,7 @@ main{max-width:1500px;margin:0 auto;padding:16px;display:flex;flex-direction:col
 @media (max-width:999px){.intel{grid-template-columns:1fr}}
 .hero{display:grid;grid-template-columns:minmax(0,2.5fr) repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
 .hero>div{background:var(--panel);padding:12px 16px;min-width:0}
-.hero label{display:block;font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hero label{display:block;font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase}.hero .smv{display:none}
 .hero b{display:block;font-family:'VT323';font-weight:400;font-size:34px;color:#fff;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hero .s{font-size:11px;color:var(--dim)}
 .pin{display:grid;grid-template-columns:minmax(0,1fr) 190px;column-gap:18px;row-gap:8px;align-content:center;background:linear-gradient(135deg,rgba(42,90,218,.2),var(--panel) 70%)!important}
@@ -108,6 +108,7 @@ tr.me{background:rgba(42,90,218,.1)}
   .rk{display:none}.tok{min-width:0;gap:7px}.tok img{width:22px;height:22px}td,th{padding:8px 6px}.ph h1{font-size:22px}.ph{padding:10px 12px}
   .tabs{margin-left:0;width:100%;flex-wrap:wrap}.tabs button{flex:1 1 0;min-width:0;padding:6px 2px;letter-spacing:.5px}
   #fk button{flex-basis:calc(33.33% - 3px)}   /* six alert filters: two rows of three instead of running off the screen */
+  .hero label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hero .lgv{display:none}.hero .smv{display:inline}   /* phones: '24h vol' so the three numbers sit level */
   .hero .pin .s{display:block;margin-top:2px}   /* keep the $MARINE price / 24h / mcap / vol line on phones */
   header{flex-wrap:nowrap!important;gap:8px!important;padding:8px 10px}header .brand{display:none}header img{width:28px;height:28px}
   header nav{order:-1;margin:0!important}header nav>.btn{display:none!important}.mnu{left:0;right:auto}#menuBtn{width:36px;height:36px;padding:0;font-size:18px;border:0;background:none}
@@ -191,7 +192,7 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
       <div class="pchips" id="pinChips"></div>
       <div class="acts"><a class="btn primary" href="/terminal/token?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">OPEN ▸</a><a class="btn buyJ" href="https://jup.ag/tokens/F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">BUY ON JUP ▸</a></div>
     </div>
-    <div><label>24h vol · top 30</label><b id="kVol">—</b><span class="s">stonkfun tokens by volume</span></div>
+    <div><label>24h <span class="lgv">volume</span><span class="smv">vol</span> · top 30</label><b id="kVol">—</b><span class="s">stonkfun tokens by volume</span></div>
     <div><label>Paid to holders</label><b id="kPaid">—</b><span class="s">all-time, Stonk Board top 100</span></div>
     <div><label>Median APY 3D</label><b id="kApy" class="apy">—</b><span class="s">Stonk Board top 100, modeled</span></div>
   </section>
