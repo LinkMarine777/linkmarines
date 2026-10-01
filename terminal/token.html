@@ -574,7 +574,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
         <div class="legend" style="margin:0"><span><i style="background:var(--blue2)"></i><span class="tkSym">$MARINE</span> (right)</span><span><i style="background:var(--amber)"></i><span class="tkQs">$LINK</span> (left)</span><a id="depthLeg" style="display:none" target="_blank" rel="noopener" title="CLOBr market depth, delayed up to 1h. Real-time on CLOBr Pro"><i style="background:linear-gradient(90deg,var(--green) 50%,var(--red) 50%)"></i>CLOBr depth <span class="dly">delayed</span></a></div>
         <div class="tabs" id="dtab" style="display:none"><button id="depthBtn" class="on" type="button" title="CLOBr market depth for the token: support (green) and resistance (red) liquidity by price">DEPTH</button></div>
         <div class="tabs" id="tf">
-          <button data-tf="1h">1H</button><button data-tf="6h">6H</button><button data-tf="1d">24H</button><button data-tf="7d" class="on">7D</button><button data-tf="all">ALL</button>
+          <button data-tf="5m">5M</button><button data-tf="1h">1H</button><button data-tf="6h">6H</button><button data-tf="1d">24H</button><button data-tf="7d" class="on">7D</button><button data-tf="all">ALL</button>
         </div>
       </div>
       <div id="chartWrap"><canvas id="chart"></canvas><div id="tip"></div></div>
@@ -890,7 +890,8 @@ async function loadMarket(){
     const p=d.pair||(d.pairs||[])[0];if(!p)return;const flip=p.baseToken.address!==CA;
     marinePx=flip?(+p.priceUsd/+p.priceNative):+p.priceUsd;
     $('sPrice').textContent=px(marinePx);chg24=p.priceChange?.h24;renderChg();
-    const pc=p.priceChange||{};PC=flip?{}:pc;const ct={h1:'1h',h6:'6h',h24:'1d'};   // tap 1h / 6h / 24h: the chart switches to it
+    const pc=p.priceChange||{};PC=flip?{}:pc;const ct={m5:'5m',h1:'1h',h6:'6h',h24:'1d'};   // tap 1h / 6h / 24h: the chart switches to it
+    if(!flip&&pc.m5==null&&pc.h1!=null)pc.m5=0;
     $('pChips').innerHTML=flip?'':[['m5','5m'],['h1','1h'],['h6','6h'],['h24','24h']].map(([k,l])=>pc[k]==null?'':`<span${ct[k]?` data-tf="${ct[k]}" role="button" title="Show the ${l} chart"`:''}${ct[k]===tf?' class="on"':''}><i>${l}</i><b class="${pc[k]>=0?'up':'dn'}">${pc[k]>=0?'':'−'}${Math.abs(pc[k]).toFixed(2)}%</b></span>`).join('');renderChg();
     MCAP=flip?0:(p.marketCap||p.fdv||0);$('sMcap').textContent=flip?'—':compact(p.marketCap||p.fdv);
     // the pool lists this token second (LINK/ALLINU): its market cap from a pair that lists it first
@@ -905,8 +906,8 @@ async function loadMarket(){
 }
 
 // ---------- chart ----------
-const TF={'1h':'minute?aggregate=1&limit=60','6h':'minute?aggregate=5&limit=72','1d':'minute?aggregate=15&limit=96','7d':'hour?aggregate=1&limit=168','all':'hour?aggregate=4&limit=500'};
-const TFL={'1h':'1h','6h':'6h','1d':'24h','7d':'7d','all':'all'},TFB={'1h':60,'6h':300,'1d':900,'7d':3600,all:14400},TFPC={'1h':'h1','6h':'h6','1d':'h24'};
+const TF={'5m':'minute?aggregate=1&limit=30','1h':'minute?aggregate=1&limit=90','6h':'minute?aggregate=5&limit=72','1d':'minute?aggregate=15&limit=96','7d':'hour?aggregate=1&limit=168','all':'hour?aggregate=4&limit=500'};
+const TFL={'5m':'5m','1h':'1h','6h':'6h','1d':'24h','7d':'7d','all':'all'},TFB={'5m':60,'1h':60,'6h':300,'1d':900,'7d':3600,all:14400},TFW={'5m':300,'1h':3600,'6h':21600,'1d':86400},TFPC={'5m':'m5','1h':'h1','6h':'h6','1d':'h24'};
 let tf='7d',series=null,CH={};
 function setSeries(){const raw=CH[tf];if(!raw||!raw.length)return false;
   series=raw.map(([t,m,l])=>({t:t*1000,m,l}));hover=null;draw();
@@ -918,13 +919,24 @@ function renderChg(){let c=PC[TFPC[tf]]??(tf==='1d'?chg24:null),lab=TFL[tf];
   if(c==null&&series&&series.length>1&&CH[tf]){const a=series[0].m,b=series[series.length-1].m;if(a&&b)c=(b-a)/a*100}
   document.querySelectorAll('#pChips span[data-tf]').forEach(x=>x.classList.toggle('on',x.dataset.tf===tf));
   if(c!=null)$('sChg').innerHTML=pct(c)+' <span class="dim">'+lab+'</span>'}
+// 5M from the tape's own trades (one point per trade, real time; GeckoTerminal's minute candles lag a few minutes)
+function tape5m(){if(typeof tapeRaw==='undefined'||!tapeRaw||!tapeRaw.length)return null;const now=Math.floor(Date.now()/1000),t0=now-300,q=QPX||null,pts=[];let prev=null;
+  for(const a of tapeRaw){const t=Math.floor(Date.parse(a.block_timestamp)/1000),buy=a.to_token_address===CA,pr=+(buy?a.price_to_in_usd:a.price_from_in_usd);if(!(pr>0))continue;
+    if(t>=t0)pts.push([t,pr,q]);else{prev=pr;break}}
+  if(!pts.length&&prev==null)return null;pts.reverse();pts.unshift([t0,prev??pts[0][1],q]);if(pts.length<2)pts.push([now,pts[0][1],q]);return pts}
 async function loadLive(k){
+  if(k==='5m'){const t=tape5m();if(t){CH[k]=t;return}}
   if(!GT)return;
   const [qq,bb]=await Promise.all([j(`${GT}/ohlcv/${TF[k]}&token=quote`),j(`${GT}/ohlcv/${TF[k]}&token=base`)]);
   const [m,l]=bb.meta?.base?.address===CA?[bb,qq]:[qq,bb];
   const L=new Map(l.data.attributes.ohlcv_list.map(c=>[c[0],c[4]]));let last=null;
   const pts=m.data.attributes.ohlcv_list.slice().reverse().map(c=>{if(L.has(c[0]))last=L.get(c[0]);return[c[0],c[4],last]});
-  const f=pts.find(p=>p[2]!=null)?.[2];pts.forEach(p=>{if(p[2]==null)p[2]=f});CH[k]=pts}
+  const f=pts.find(p=>p[2]!=null)?.[2];pts.forEach(p=>{if(p[2]==null)p[2]=f});
+  // GeckoTerminal only returns candles that had trades, so N candles can reach back much further than the window on a quiet
+  // token: keep the window exactly (5M = the last 5 minutes...), starting from the last price before it
+  const W=TFW[k];if(W){const t0=Math.floor(Date.now()/1000)-W,i=pts.findIndex(p=>p[0]>=t0),prev=i>0?pts[i-1]:i<0?pts[pts.length-1]:null;
+    const kept=i<0?[]:pts.slice(i);if(prev)kept.unshift([t0,prev[1],prev[2]]);if(kept.length)CH[k]=kept.length>1?kept:[kept[0],[Math.floor(Date.now()/1000),kept[0][1],kept[0][2]]];else CH[k]=pts}
+  else CH[k]=pts}
 // the chart's last point follows the live price (DexScreener, every 30 s), so the chart never trails the ticker
 let QPX=0;
 function liveTail(){const r=CH[tf];if(!r||!r.length||!marinePx)return;const B=TFB[tf]||3600,t=Math.floor(Date.now()/1000/B)*B,last=r[r.length-1];
@@ -1205,7 +1217,7 @@ function nextBuy(){if(!alertsOn){bpQ.length=0;return}while(bpQ.length&&!akOn(bpQ
 var bpTimer=null;
 function closeBuy(){clearTimeout(bpTimer);if(!$('buyPop').classList.contains('show'))return;$('buyPop').classList.remove('show');setTimeout(()=>{bpBusy=false;nextBuy()},500)}
 // a rate-limited call (GeckoTerminal 429) retries in 5 s instead of waiting for the next 20 s round
-async function loadTrades(){if(!GT)return;clearTimeout(loadTrades.r);try{const d=await j(GT+'/trades');tapeRaw=d.data.map(t=>t.attributes);renderTape();checkBuys(tapeRaw)}catch(e){loadTrades.r=setTimeout(loadTrades,5000)}}
+async function loadTrades(){if(!GT)return;clearTimeout(loadTrades.r);try{const d=await j(GT+'/trades');tapeRaw=d.data.map(t=>t.attributes);renderTape();checkBuys(tapeRaw);if(tf==='5m'&&hover==null){const t=tape5m();if(t){CH['5m']=t;liveTail();setSeries()}}}catch(e){loadTrades.r=setTimeout(loadTrades,5000)}}
 $('tapeF').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   [...$('tapeF').children].forEach(x=>x.classList.toggle('on',x===b));tapeMin=+b.dataset.min;renderTape()});
 
