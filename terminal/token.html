@@ -407,6 +407,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 
 @media (min-width:1000px) and (max-width:1299px){.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.stat{border-bottom:1px solid var(--line)}.stat:nth-child(3n){border-right:0}}
 .moreStats,#mbar{display:none}
+.mtok{display:none}.tkb .nm small{display:none}.tkb .nm b{font-weight:inherit}.mca{display:none}
 .ph .chev{display:none}
 @media (max-width:999px){
   html,body,#stage{max-width:100vw;overflow-x:hidden}main>*,.lower>*,.col>*,.stats>*{min-width:0}.tape-bar{max-width:100vw}.tape-bar .track{max-width:none}
@@ -443,6 +444,25 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .src .fx{display:none}.src{padding:6px 12px}
   #mbar{display:grid;grid-template-columns:1.45fr .6fr 1.2fr .85fr;gap:6px;position:fixed;left:0;right:0;bottom:0;z-index:45;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(4,6,15,.96);border-top:1px solid var(--line);backdrop-filter:blur(6px)}
   #mbar .btn{text-align:center;padding:11px 4px;font-size:12px;letter-spacing:0;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* ---- phones, ordered like Jupiter's token page: [menu · logo · search · icons] / tickers / token header / price / the rest ---- */
+  header{gap:8px!important;padding:8px 10px}header .brand{display:none}header nav{order:-1;margin:0!important}.mnu{left:0;right:auto}
+  header .ca{order:2;flex:1 1 0;min-width:0;margin:0;flex-wrap:nowrap}header .ca .srch{flex:1;min-width:0}
+  header .ca input{height:36px;border-radius:18px;padding-left:14px;font-size:13px;background:#0a0f1f}header #caForm .t7p{font-size:9px;padding:2px 5px;letter-spacing:.5px}
+  .live{order:3;padding:0;border:0;background:none}#liveTxt{display:none}#soundBtn{order:4}#alertBtn{order:5}
+  #soundBtn,#alertBtn{width:34px;height:34px;border-radius:50%}#menuBtn{width:36px;height:36px;padding:0;font-size:18px;border:0;background:none}
+  .tape-bar .lbl{font-size:14px}.track{padding:4px 0}
+  .mtok{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;row-gap:4px;align-items:center;padding:14px 14px 2px}
+  .mtok .tkb{display:contents}.mtok .tkb img{grid-row:1/3;width:50px;height:50px;border-radius:50%;border:1px solid var(--line)}
+  .mtok .nm{display:flex;align-items:baseline;gap:8px;min-width:0;overflow:hidden}.mtok .nm b{font-family:'IBM Plex Mono';font-weight:600;font-size:22px;color:#fff;white-space:nowrap}
+  .mtok .nm b .q{font-size:13px;font-weight:400;margin-left:2px}.mtok .nm small{display:block;font-size:13px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mtl{display:flex;align-items:center;gap:6px;min-width:0;overflow-x:auto;scrollbar-width:none}.mtl::-webkit-scrollbar{display:none}
+  .mca{display:inline-flex;align-items:center;gap:5px;flex:none;background:none;border:0;color:var(--dim);font:inherit;font-size:13px;padding:0 6px 0 0;cursor:pointer}.mca svg{width:13px;height:13px;fill:currentColor}.mca.ok{color:var(--green)}
+  .mtok .tkl{flex-wrap:nowrap;gap:4px}.mtok .tkl a,.mtok .tkl button{width:30px;height:30px;border:0;background:none;border-radius:50%}.mtok .tkl svg{width:16px;height:16px}.mtok .tkl #copyCa{display:none}
+  .mtok .tkm{grid-column:1/-1;font-size:11px}
+  .stats{padding:4px 8px 8px}.stat.mkt{order:1}.stat.hero{order:2}.stat.pulse{order:3}.stat.pay{order:4}.stat.qt{order:5}.stat.duo{order:6}
+  .stats .stat.mkt{border:0!important;background:none;border-radius:0;padding:4px 6px 8px}.stat.mkt>label{display:none}
+  .stat.mkt .mrow b{font-family:'IBM Plex Mono';font-weight:600;font-size:34px}.stat.mkt .mini{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:10px}
+  .stat.mkt .mini i{font-style:normal;font-size:12px;letter-spacing:0;text-transform:capitalize;color:var(--dim)}.stat.mkt .mini em{font-size:17px}
   .stats{gap:8px;padding:8px;background:#03050d;border-bottom:1px solid var(--line)}.stat,.stat:nth-child(2n){border:1px solid var(--line)!important;border-radius:8px;background:var(--panel)}
 }
 .tkl a.sfl img{width:15px;height:15px;display:block}.tkl a.fwl{position:relative;color:var(--green)}
@@ -507,6 +527,8 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
   <div class="lbl">STONKFUN<span class="lg">&nbsp;TOP 10 · 24H</span>&nbsp;VOL</div>
   <div class="tape"><div class="track" id="ticker"><span class="tk dim">loading…</span></div></div>
 </div>
+
+<section class="mtok" id="mtok"><div class="mtl" id="mtl"><button type="button" class="mca" id="mCa" title="Copy contract address"></button></div></section>
 
 <section class="stats">
   <div class="stat hero"><label><span class="tkQ">LINK</span> distributed to holders</label><b id="sDist">—</b><span class="dim" id="sDistUsd">&nbsp;</span><span id="s24" style="display:block">&nbsp;</span></div>
@@ -686,7 +708,8 @@ async function resolveToken(){
   document.querySelectorAll('.tkQ').forEach(e=>e.textContent=String(TK.quote).replace(/^\$/,''));
   document.querySelectorAll('.buyTk').forEach(a=>a.href='https://jup.ag/tokens/'+CA);
 
-  $('tkBadge').innerHTML=(TK.image?`<img src="${esc(TK.image)}" alt="" onerror="this.remove()">`:'')+`${esc(sym)}<span class="q">/${esc(qs)}</span>`;
+  $('tkBadge').innerHTML=(TK.image?`<img src="${esc(TK.image)}" alt="" onerror="this.remove()">`:'')+`<span class="nm"><b>${esc(sym)}<span class="q">/${esc(qs)}</span></b>${TK.name&&TK.name.replace(/^\$/,'').toLowerCase()!==String(sym).replace(/^\$/,'').toLowerCase()?`<small>${esc(TK.name)}</small>`:''}</span>`;
+  $('mCa').innerHTML=esc(CA.slice(0,4)+'…'+CA.slice(-4))+' <svg viewBox="0 0 24 24"><path d="M8 3h11a2 2 0 012 2v11h-2V5H8zM4 7h11a2 2 0 012 2v11a2 2 0 01-2 2H4a2 2 0 01-2-2V9a2 2 0 012-2zm0 2v11h11V9z"/></svg>';
   $('caIn').value='';   // the box stays empty, ready for the next search (the token's CA is on the copy button)
   // the bare /terminal/token link is $MARINE: show its CA in the address bar so any view can be shared as-is
   if(new URLSearchParams(location.search).get('ca')!==CA)try{history.replaceState(null,'','?ca='+CA+location.hash)}catch(e){}
@@ -719,6 +742,15 @@ function renderLinks(pairs){const info=(pairs||[]).map(p=>p.info).find(i=>i&&((i
   $('tkLinks').innerHTML=L.join('');
   $('copyCa').onclick=async()=>{try{await navigator.clipboard.writeText(CA)}catch(e){const t=document.createElement('textarea');t.value=CA;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove()}
     const b=$('copyCa');b.classList.add('ok');b.innerHTML='<svg viewBox="0 0 24 24">'+ICO.ok+'</svg>';setTimeout(()=>{b.classList.remove('ok');b.innerHTML='<svg viewBox="0 0 24 24">'+ICO.copy+'</svg>'},1400)}}
+// phones: the token's badge, address and links sit in their own header above its numbers (like Jupiter's token page);
+// desktop: in the header bar, as before
+const phone=matchMedia('(max-width:999px)');
+function placeTok(){const f=$('caForm'),srch=f.querySelector('.srch');
+  $('caIn').placeholder=phone.matches?'Search':'Search $TICKER, name or paste CA…';
+  if(phone.matches){$('mtok').insertBefore($('tkBadge'),$('mtl'));$('mtl').appendChild($('tkLinks'));$('mtok').appendChild($('tkMsg'))}
+  else{f.insertBefore($('tkBadge'),srch);f.insertBefore($('tkLinks'),srch);f.appendChild($('tkMsg'))}}
+placeTok();phone.addEventListener?phone.addEventListener('change',placeTok):phone.addListener(placeTok);
+$('mCa').onclick=()=>{const b=$('copyCa');if(b)b.click();$('mCa').classList.add('ok');setTimeout(()=>$('mCa').classList.remove('ok'),1400)};
 $('caForm').addEventListener('submit',e=>{e.preventDefault();const v=$('caIn').value.trim();
   if(!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(v)){$('tkMsg').textContent='that is not a Solana token address';return}
   location.search='?ca='+v});
