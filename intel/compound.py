@@ -455,7 +455,9 @@ for mint in watch:
     if not T.get('v2') and len(T.get('bal') or {}) < MIN_W and not T.get('backfilled'):   # one-off: partial snapshots an earlier run saved
         for k in ('at', 'bal', 'dist', 'elig', 'days', 'since'): T.pop(k, None)
     gap = (24 if T.get('big') else 6) * 3600   # big tokens (holder lookup by mint, 10 credits per 1,000) once a day
-    if not BACKFILL and not HISTORY and T.get('at') and T.get('bal') and now - T['at'] < gap - 900: continue   # every 6 h (the workflow also runs 6-hourly)
+    # every 6 h: the workflow runs 6-hourly but reaches each token at a different minute, so anything over 4 h old is due (with
+    # 15 min of slack, tokens updated late in one run were skipped by the next and went 12 h)
+    if not BACKFILL and not HISTORY and T.get('at') and T.get('bal') and now - T['at'] < gap - 2 * 3600: continue
     if BACKFILL and (T.get('backfilled') or mint not in backfill_set): continue
     if HISTORY and (T.get('history') or CREDITS[0] > HISTORY_BUDGET or time.time() - now > HISTORY_MINUTES * 60): continue
     try:
