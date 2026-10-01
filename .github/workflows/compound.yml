@@ -1,6 +1,6 @@
-# Compounding (intel/compound.py): every 6 h, are the holders of $MARINE and stonkfun's top 10 putting their rewards back in?
+# Compounding (intel/compound.py): every 6 h, are the holders of every reward token the site lists (~100) putting their rewards back in?
 # Writes terminal/compound/<mint>.json + index.json and terminal/compound-state.json to the data branch.
-# ~10 Helius credits per token per run (one balance snapshot). "Run workflow" with backfill = the exact last 7 days (one-off).
+# ~10 Helius credits per token per run (one balance snapshot). "Run workflow" with backfill = the exact last 7 days for $MARINE + the top 10 (one-off).
 name: compounding
 on:
   schedule:
