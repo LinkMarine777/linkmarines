@@ -37,6 +37,9 @@ header img{width:40px;height:40px;object-fit:contain}
 header .ca{display:flex;gap:6px;flex:1;max-width:620px;margin:0 8px;position:relative}
 header .ca input{flex:1;min-width:120px;background:#050914;border:1px solid var(--line);color:#fff;font:inherit;font-size:12px;padding:7px 9px}
 header .ca input:focus{outline:none;border-color:var(--blue2)}
+.srch{position:relative;flex:1 1 150px;min-width:120px;display:flex}.srch input{flex:1;min-width:0;padding-right:34px!important}
+.srch button{position:absolute;right:1px;top:1px;bottom:1px;width:32px;border:0;background:none;color:var(--dim);cursor:pointer;display:grid;place-items:center}.srch button:hover{color:#fff}.srch svg{width:15px;height:15px;fill:currentColor}
+header .ca input{border-radius:17px;height:34px;padding-left:14px}
 .tkm{position:absolute;right:0;top:100%;margin-top:3px;font-size:11px;color:var(--amber);background:#02030a;border:1px solid var(--line);padding:2px 7px;z-index:5}.tkm:empty{display:none}
 header nav{margin-left:auto;display:flex;gap:10px}
 .btn{border:1px solid var(--line);padding:6px 12px;color:var(--txt);font:inherit;font-size:12px;background:var(--panel);cursor:pointer;white-space:nowrap}
@@ -53,7 +56,7 @@ main{max-width:1500px;margin:0 auto;padding:16px;display:flex;flex-direction:col
 .lpw{max-height:330px;overflow-y:auto}.lpw td .pp{display:flex;align-items:center;gap:8px}.lpw td img{width:20px;height:20px;border-radius:50%}.lpw .dx{display:block;font-size:10px;color:var(--dim)}
 .lpw a.add{color:var(--green);text-decoration:none;white-space:nowrap;font-size:11px}
 @media (max-width:999px){.intel{grid-template-columns:1fr}}
-.hero{display:grid;grid-template-columns:minmax(0,1.9fr) repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.hero{display:grid;grid-template-columns:minmax(0,2.5fr) repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
 .hero>div{background:var(--panel);padding:12px 16px;min-width:0}
 .hero label{display:block;font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hero b{display:block;font-family:'VT323';font-weight:400;font-size:34px;color:#fff;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -67,7 +70,8 @@ main{max-width:1500px;margin:0 auto;padding:16px;display:flex;flex-direction:col
 .ppx{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.ppx b{font-size:38px;line-height:1}.ppx span{font-size:12px}
 .pst{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));max-width:360px}.pst i{display:block;font-style:normal;font-size:9.5px;letter-spacing:1.2px;color:var(--dim);text-transform:uppercase}.pst em{font-style:normal;font-size:14px;color:#fff}
 .pchips:not(:empty){display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:6px;overflow:hidden;max-width:360px}
-.pchips span{display:flex;justify-content:center;align-items:baseline;gap:4px;padding:5px 2px;font-size:11px;white-space:nowrap}.pchips span+span{border-left:1px solid var(--line)}.pchips i{font-style:normal;color:var(--dim)}.hero .pchips b{display:inline;font-family:inherit;font-size:11px;line-height:1.3;overflow:visible}.pchips .up{color:var(--green)}.pchips .dn{color:var(--red)}
+.pchips span{display:flex;justify-content:center;align-items:baseline;gap:4px;padding:5px 2px;font-size:11px;white-space:nowrap}
+@media (min-width:1000px) and (max-width:1299px){.pchips span{gap:3px;font-size:9.5px;letter-spacing:-.3px;padding:5px 0}.hero .pchips b{font-size:9.5px}.pt .t label{letter-spacing:.5px}}.pchips span+span{border-left:1px solid var(--line)}.pchips i{font-style:normal;color:var(--dim)}.hero .pchips b{display:inline;font-family:inherit;font-size:11px;line-height:1.3;overflow:visible}.pchips .up{color:var(--green)}.pchips .dn{color:var(--red)}
 .panel{background:var(--panel);border:1px solid var(--line)}
 .ph{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .ph h1{font-family:'VT323';font-weight:400;font-size:28px;color:#fff;letter-spacing:1px}
@@ -105,6 +109,11 @@ tr.me{background:rgba(42,90,218,.1)}
   .tabs{margin-left:0;width:100%;flex-wrap:wrap}.tabs button{flex:1 1 0;min-width:0;padding:6px 2px;letter-spacing:.5px}
   #fk button{flex-basis:calc(33.33% - 3px)}   /* six alert filters: two rows of three instead of running off the screen */
   .hero .pin .s{display:block;margin-top:2px}   /* keep the $MARINE price / 24h / mcap / vol line on phones */
+  header{flex-wrap:nowrap!important;gap:8px!important;padding:8px 10px}header .brand{display:none}header img{width:28px;height:28px}
+  header nav{order:-1;margin:0!important}header nav>.btn{display:none!important}.mnu{left:0;right:auto}#menuBtn{width:36px;height:36px;padding:0;font-size:18px;border:0;background:none}
+  header .ca{order:2;flex:1 1 0;flex-basis:0!important;min-width:0;margin:0;flex-wrap:nowrap}header .ca input{height:36px;border-radius:18px;font-size:13px;background:#0a0f1f}
+  #soundBtn{order:3}#alertBtn{order:4}#soundBtn,#alertBtn{width:34px;height:34px;border-radius:50%}
+  .per button{min-height:30px;min-width:40px}.tabs button{min-height:32px}   /* easy to hit with a thumb */
 }
 .pin .acts{display:grid;grid-template-columns:1fr;gap:8px}.pin .acts .btn{margin:0;text-align:center;white-space:nowrap}.pin .t{min-width:0;flex:1}.pin .buyJ{border-color:var(--green);color:var(--green)}.pin .cpy{font:inherit;font-size:11px;cursor:pointer;background:none}.pin .cpy.ok{color:var(--green)}
 /* scrollbars: slim and dark to match the site (not the default white bar) */
@@ -147,14 +156,13 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
   <button id="soundBtn" type="button" title="Sound on: click to mute alert sounds" aria-label="Mute sounds"></button>
   <button id="alertBtn" type="button" title="Alerts on: click to choose which alerts you see" aria-label="Alert settings"></button>
   <form id="caForm" class="ca" autocomplete="off">
-    <input id="caIn" placeholder="Paste any stonk token CA…" spellcheck="false" aria-label="Token contract address">
-    <button class="btn" type="submit">GO</button>
+    <span class="srch"><input id="caIn" placeholder="Paste any stonk token CA…" spellcheck="false" aria-label="Token contract address"><button type="submit" title="Open this token" aria-label="Open token"><svg viewBox="0 0 24 24"><path d="M10 2a8 8 0 016.3 12.9l5.4 5.4-1.4 1.4-5.4-5.4A8 8 0 1110 2zm0 2a6 6 0 100 12 6 6 0 000-12z"/></svg></button></span>
     <span id="tkMsg" class="tkm"></span>
   </form>
   <nav>
-    <a class="btn" href="/">HQ</a>
-    <a class="btn" href="/terminal/token?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">$MARINE TERMINAL</a>
+    <a class="btn" href="/terminal/token?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">⚓ $MARINE TERMINAL</a>
     <a class="btn tts" href="/tts/checkout?k=t" onclick="return wrCheckout('t')">BUY TTS</a>
+    <a class="btn primary" href="https://jup.ag/tokens/F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">BUY $MARINE</a>
     <div class="menu"><button class="btn" id="menuBtn" type="button" aria-haspopup="true" aria-expanded="false" title="More">☰</button>
       <div class="mnu" id="mnu" role="menu">
         <a href="/trending/">🔥 Trending tokens</a>
@@ -241,7 +249,8 @@ const open2=m=>'/terminal/token?ca='+encodeURIComponent(m);
 // One row per token: stonkfun's top 30 by volume merged with thestonkboard's top 100 (both snapshotted by the bot)
 // a token logo that won't load (dead IPFS / irys links): the Stonk Board's copy of it, by the mint its link points to; else hidden
 function imgFb(i,rm){const a=i.closest('a[href*="ca="]'),m=a&&(/[?&]ca=([1-9A-HJ-NP-Za-km-z]{32,44})/.exec(a.getAttribute('href'))||[])[1];
-  if(m&&!i.dataset.fb){i.dataset.fb=1;i.src='https://thestonkboard.com/api/logos/'+m;return}if(rm)i.remove();else i.style.visibility='hidden'}
+  if(m&&!i.dataset.fb){i.dataset.fb=1;i.src='https://thestonkboard.com/api/logos/'+m;return}
+  if(i.dataset.fb!=='2'){i.dataset.fb='2';i.onerror=null;i.src='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';i.style.background='#16213f';return}if(rm)i.remove();else i.style.visibility='hidden'}
 let ROWS=[],sortK='vol',showAll=false,SC={};
 
 // live quotes: the saved token list refreshes every 20 min, so price, 24h change, volume and market cap come straight from

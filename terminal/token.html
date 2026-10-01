@@ -76,6 +76,7 @@ html.fit #soundBtn{font-size:24px;padding:4px 10px}
 .tape-bar .lbl button{background:#0005;border:1px solid #fff4;color:#fff;font:inherit;font-size:15px;padding:0 6px;cursor:pointer}
 .tape-bar .lbl button.on{background:#fff;color:#000}
 .tape{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch}.tape::-webkit-scrollbar{display:none}
+html.slideTape .tape{overflow:hidden}html.slideTape .tape:hover .track{animation-play-state:paused}html.slideTape .track{will-change:transform}
 .track{display:inline-block;padding:7px 0 7px 0}
 .tk{display:inline-flex;align-items:center;gap:8px;margin-right:34px;font-size:12px;color:var(--txt)}
 .tk img{width:18px;height:18px;border-radius:50%;object-fit:cover;background:#111}
@@ -222,7 +223,7 @@ tr.whale td{background:rgba(74,122,255,.08)}
 .cmpTg{font-size:10.5px;letter-spacing:.5px}.cmpRow{cursor:pointer}.cmpRow:hover td{background:rgba(42,90,218,.06)}.cmpDet td{font-size:11px;color:var(--dim);white-space:normal;line-height:1.5;padding-top:0;background:rgba(42,90,218,.06)}.cmpDet b{color:#fff;font-weight:500}.cmpMore{margin:8px 0 0}.cmpSrc{font-size:10.5px;color:var(--dim);margin-top:10px;line-height:1.5}
 @media (max-width:640px){.cmpT .hs{display:none}.cmpT td,.cmpT th{padding:7px 4px}}
 .cHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,rgba(255,107,0,.12),transparent 60%)}
-.cMiss{display:block;font-size:10px;margin-top:2px}.cMiss:empty{display:none}
+.cMiss{display:block;font-size:11px;margin-top:3px}.cMiss:empty{display:none}
 .empty{font-size:12px;line-height:1.55;color:var(--dim);padding:6px 0}.empty b{color:#fff;font-weight:400}.empty a{color:var(--green)}
 .cDelay{display:block;font-size:11px;color:#FF6B00;margin-top:3px;text-decoration:none}.cDelay:hover{text-decoration:underline}.dly{font-size:9px;letter-spacing:.5px;color:#FF6B00;border:1px solid rgba(255,107,0,.5);padding:0 3px;margin-left:4px;vertical-align:1px}
 #scoreDly{margin-left:6px}.dly.lv,.cDelay.lv{color:var(--green)!important;border-color:rgba(57,255,106,.5)}
@@ -474,6 +475,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .mca{display:inline-flex;align-items:center;gap:5px;flex:none;background:none;border:0;color:var(--dim);font:inherit;font-size:13px;padding:0 6px 0 0;cursor:pointer}.mca svg{width:13px;height:13px;fill:currentColor}.mca.ok{color:var(--green)}
   .mtok .tkl{flex-wrap:nowrap;gap:4px}.mtok .tkl a,.mtok .tkl button{width:30px;height:30px;border:0;background:none;border-radius:50%}.mtok .tkl svg{width:16px;height:16px}.mtok .tkl #copyCa{display:none}
   .mtok .tkm{grid-column:1/-1;font-size:11px}
+  .chartP .tabs button,#tapeF button,#cmpWin button,#whWin button{min-height:34px}.mca{min-height:30px}   /* easy to hit with a thumb */
   .stats{padding:4px 8px 8px}.stat.mkt{order:1}.stat.hero{order:2}.stat.pulse{order:3}.stat.pay{order:4}.stat.qt{order:5}.stat.duo{order:6}
   .stats .stat.mkt{border:0!important;background:none;border-radius:0;padding:4px 6px 8px}.stat.mkt>label{display:none}
   .stat.mkt .mrow b{font-size:42px}
@@ -960,7 +962,14 @@ function nice(min,max,count=5){
   const lo=Math.floor(min/step)*step,hi=Math.ceil(max/step)*step,t=[];
   for(let v=lo;v<=hi+step/2;v+=step)t.push(+v.toPrecision(12));
   return{lo,hi,t,step}}
-function fmtTick(v,step){if(v>=1)return'$'+v.toFixed(step<1?2:0);const d=Math.max(0,-Math.floor(Math.log10(step)));return'$'+v.toFixed(d)}
+// the quote's axis on the same gridlines as the token's: the same number of steps, each a round number, covering its range
+function niceN(min,max,n){if(min===max){min*=.95;max*=1.05}const mag0=Math.pow(10,Math.floor(Math.log10((max-min)/n)));
+  for(const mag of [mag0,mag0*10,mag0*100])for(const s of [1,2,2.5,5]){const step=s*mag,lo=Math.floor(min/step)*step;
+    if(lo+n*step>=max-1e-12){const t=[];for(let i=0;i<=n;i++)t.push(+(lo+i*step).toPrecision(12));return{lo,hi:lo+n*step,t,step}}}
+  return nice(min,max,n)}
+// enough decimals that every tick shows exactly (a step of 2.5 needs one more than a step of 5)
+function fmtTick(v,step){const e=Math.floor(Math.log10(step)),m=+(step/Math.pow(10,e)).toPrecision(6),d=Math.max(0,-e+(Number.isInteger(m)?0:1));
+  return'$'+(v>=1?v.toFixed(Math.max(d,step<1?2:0)):v.toFixed(d))}
 function draw(){
   const c=$('chart');if(!c)return;const dpr=(window.devicePixelRatio||1)*Math.max(1,S),W=c.clientWidth,H=c.clientHeight;
   if(!W||!H)return;
@@ -970,7 +979,7 @@ function draw(){
   const pad={l:CF*7,r:CF*7,t:FIT?14:10,b:CF*2.8},w=W-pad.l-pad.r,h=H-pad.t-pad.b;
   const ms=series.map(p=>p.m),ls=series.map(p=>p.l);
   const nt=FIT?Math.max(2,Math.min(5,Math.floor(h/55))):5;
-  const A=nice(Math.min(...ms),Math.max(...ms),nt),B=nice(Math.min(...ls),Math.max(...ls),nt);
+  const A=nice(Math.min(...ms),Math.max(...ms),nt),B=niceN(Math.min(...ls),Math.max(...ls),A.t.length-1);   // both axes' labels on the same lines
   const t0=series[0].t,t1=series[series.length-1].t;
   const X=t=>pad.l+(t-t0)/(t1-t0)*w,YA=v=>pad.t+h-(v-A.lo)/(A.hi-A.lo)*h,YB=v=>pad.t+h-(v-B.lo)/(B.hi-B.lo)*h;
   x.font=CF+'px IBM Plex Mono';x.lineWidth=1;
@@ -1044,12 +1053,12 @@ function renderClobr(){
   try{if(sc)localStorage.setItem('clobrS:'+CA,JSON.stringify({at:Date.now(),sc}))}catch(e){}
   const panels={liqP:renderLiq(),whP:renderWhales(),loP:renderLimits(),dcP:renderDca(),lpP:renderLp()};
   renderHolders();
-  // every panel always shows, in the same order; one CLOBr has nothing for right now says so inside it
-  const sym=esc('$'+String(TK.symbol).replace(/^\$/,''));
-  const none={liqP:['aBody','No order-book walls near the price'],whP:['whBody','No whale data'],loP:['loBody','No open limit orders'],
-    dcP:['dcBody','No active DCA orders'],lpP:['lpBody','No Meteora DLMM LP pools']};
-  for(const k in panels){$(k).style.display='';if(!panels[k])$(none[k][0]).innerHTML=`<div class="empty">${none[k][1]} for <b>${sym}</b> on CLOBr right now. It shows up here as soon as there is one.</div>`}
-  $('missP').style.display='none';$('clobrMiss').textContent='';const any=!!CL;
+  // a panel CLOBr has nothing for right now is folded into one line under the header (it comes back as soon as there is data),
+  // instead of a box each saying "nothing here" (about 700px of scrolling on a phone)
+  const none={liqP:'order-book walls',whP:'whale data',loP:'limit orders',dcP:'DCA orders',lpP:'Meteora LP pools'},empty=[];
+  for(const k in panels){$(k).style.display=panels[k]?'':'none';if(!panels[k])empty.push(none[k])}
+  $('missP').style.display='none';const any=!!CL;
+  $('clobrMiss').textContent=empty.length?' · nothing on CLOBr right now for '+(empty.length>1?empty.slice(0,-1).join(', ')+' or '+empty[empty.length-1]:empty[0])+' (shows up here when there is)':'';
   $('clobrWrap').style.display=any||sc?'':'none';clobrCols()}
 // as many columns as fit (about 400px each), never more than there are panels
 function clobrCols(){const r=$('clobrRow'),n=[...r.children].filter(e=>e.style.display!=='none').length;
@@ -1057,7 +1066,7 @@ function clobrCols(){const r=$('clobrRow'),n=[...r.children].filter(e=>e.style.d
 addEventListener('resize',()=>{clearTimeout(clobrCols.t);clobrCols.t=setTimeout(clobrCols,150)});
 function renderWhales(){const W=CL&&CL.whales;if(!W||W.none||!W.summary)return false;const S=W.summary,w=whWin;
   const card=t=>{const size=+t.slice(3),acc=S.accumulating?.[t]?.[w],neu=S.new_wallets?.[t]?.[w],net=S.net_flow?.[t]?.[w]?.net,usdv=net!=null&&marinePx?net*marinePx:null;
-    return `<div class="wc"><label>Top ${size}</label><div class="wv"><b>${acc??'—'}</b><span class="dim">/${size} buying</span></div>
+    return `<div class="wc"><label>Top ${size}</label><div class="wv"><b>${acc??'—'}</b><span class="dim" title="top wallets whose balance grew in the window (new entrants included), per CLOBr">/${size} adding</span></div>
       <div class="cbar"><i style="width:${acc==null?0:Math.min(100,acc/size*100).toFixed(0)}%;background:var(--green)"></i></div>
       <div class="wl">${neu?`+${neu} new wallet${neu>1?'s':''}`:'<span class="dim">no new wallets</span>'}</div>
       <div class="wl ${net>=0?'up':'dn'}" title="net ${esc(TK.symbol)} bought by these holders">${tokAmt(net)}${usdv!=null?` <span class="dim">≈ ${compact(Math.abs(usdv))} ${net>=0?'bought':'sold'}</span>`:''}</div></div>`};
@@ -1236,10 +1245,15 @@ async function loadTicker(){
 // keep scroll speed constant (px/sec) no matter how long the content is
 // the tickers move by scrolling their box, not by animating one very wide layer (iOS Safari leaves a layer that wide
 // blank). Hover pauses; on phones a swipe looks around and it carries on a moment later
-function setTrack(id,html){$(id).innerHTML=html+html}
-document.querySelectorAll('.tape').forEach(el=>{const tr=el.firstElementChild;let x=0,last=0,hold=0;const SPEED=45;   // px a second
+// iPhones / iPads leave a very wide animated layer blank, so there the tickers move by scrolling their box (swipe to look around,
+// it carries on a moment later). Everywhere else they use the smooth CSS slide (scrolling snaps to whole pixels and looks
+// shaky), paused while the mouse is over them and moving again the moment it leaves.
+const IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+function setTrack(id,html){const tr=$(id);tr.innerHTML=html+html;
+  if(!IOS)requestAnimationFrame(()=>{const half=tr.scrollWidth/2;tr.style.animation=half>0?`scroll ${Math.max(20,half/45)}s linear infinite`:''})}
+if(!IOS)document.documentElement.classList.add('slideTape');
+else document.querySelectorAll('.tape').forEach(el=>{const tr=el.firstElementChild;let x=0,last=0,hold=0;const SPEED=45;   // px a second
   const stop=()=>{hold=Date.now()+1e9},go=()=>{hold=Date.now()+2500;x=el.scrollLeft};
-  el.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')stop()});el.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')go()});
   el.addEventListener('touchstart',stop,{passive:true});el.addEventListener('touchend',go,{passive:true});
   function step(t){const dt=last?Math.min(t-last,100):0;last=t;const half=tr.scrollWidth/2;
     if(Date.now()>hold&&!document.hidden){if(half>el.clientWidth){x+=SPEED*dt/1000;if(x>=half)x-=half;el.scrollLeft=x}}
