@@ -413,6 +413,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.stat{border-bottom:1px solid var(--line)}.stat:nth-child(2n){border-right:0}
   .stat.hero,.stat.pulse,.stat.mkt,.stat.duo{grid-column:span 2;border-right:0}
   .stat.hero{order:1}.stat.pulse{order:2}.stat.mkt{order:3}.stat.pay{order:4;border-right:1px solid var(--line)}.stat.qt{order:5;border-right:0}.stat.duo{order:6}
+  .stat.duo{padding-top:8px;padding-bottom:8px;gap:2px}.duo.both .half+.half{padding-top:4px}.duo .half b{font-size:24px}
   main{grid-template-columns:minmax(0,1fr)}.lower{grid-template-columns:minmax(0,1fr)}.ph{flex-wrap:wrap}.legend{display:none}header nav{margin-left:0}
   header nav .btn:not(.primary):not(.tts):not(#menuBtn){display:none}#chartWrap{height:260px}.brand{font-size:24px}.brand small{font-size:14px}header{gap:10px;flex-wrap:wrap}
   .hide-sm{display:none}#ttsPop{min-width:0;width:92%}#ttsPop .msg{font-size:30px}
@@ -440,8 +441,8 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .post .txt{-webkit-line-clamp:3}
   .board{min-height:90px}#slot1{aspect-ratio:1112/358;min-height:0}.slots .board.house,.slots .board.img{aspect-ratio:912/176;min-height:0}.bill .board.sold .head,.board.sold .head{font-size:30px}
   .src .fx{display:none}.src{padding:6px 12px}
-  #mbar{display:grid;grid-template-columns:1.2fr .8fr 1.2fr 1fr;gap:6px;position:fixed;left:0;right:0;bottom:0;z-index:45;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(4,6,15,.96);border-top:1px solid var(--line);backdrop-filter:blur(6px)}
-  #mbar .btn{text-align:center;padding:11px 6px;font-size:12px;text-decoration:none}
+  #mbar{display:grid;grid-template-columns:1.45fr .6fr 1.2fr .85fr;gap:6px;position:fixed;left:0;right:0;bottom:0;z-index:45;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(4,6,15,.96);border-top:1px solid var(--line);backdrop-filter:blur(6px)}
+  #mbar .btn{text-align:center;padding:11px 4px;font-size:12px;letter-spacing:0;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 }
 .tkl a.sfl img{width:15px;height:15px;display:block}.tkl a.fwl{position:relative;color:var(--green)}
 .fwtip{display:none;position:absolute;top:32px;left:50%;transform:translateX(-50%);width:290px;z-index:60;background:#050914;border:1px solid var(--blue2);box-shadow:0 8px 30px rgba(0,0,0,.6);padding:10px 12px;font-size:12px;line-height:1.5;color:var(--txt);text-align:left;white-space:normal;letter-spacing:0}
@@ -743,7 +744,7 @@ const usd=(n,d)=>n==null||isNaN(n)?'—':'$'+Number(n).toLocaleString('en-US',{m
 function compact(n,pre='$'){if(n==null||isNaN(n))return'—';if(n===0)return pre+'0';const a=Math.abs(n);
   if(a>=1e9)return pre+(n/1e9).toFixed(2)+'B';if(a>=1e6)return pre+(n/1e6).toFixed(2)+'M';
   if(a>=1e3)return pre+(n/1e3).toFixed(1)+'K';return pre+n.toFixed(a<1?4:2)}
-function px(n){if(n==null||isNaN(n)||n===0)return'—';if(n>=1)return'$'+n.toFixed(2);
+function px(n){if(n==null||isNaN(n)||n===0)return'—';if(n>=1000)return usd(n,0);if(n>=1)return'$'+n.toFixed(2);
   const z=Math.floor(-Math.log10(n));return'$'+n.toFixed(Math.min(z+4,12))}
 function apyFmt(n){if(n==null||!isFinite(n))return'—';if(n>=1e12)return'>1T%';
   if(n>=1e9)return(n/1e9).toFixed(1)+'B%';if(n>=1e6)return(n/1e6).toFixed(1)+'M%';if(n>=1e4)return(n/1e3).toFixed(0)+'K%';return n.toFixed(0)+'%'}
@@ -801,12 +802,13 @@ async function loadRewards(){
   if(prevR&&r.lastPayoutAt&&r.lastPayoutAt!==prevR.lastPayoutAt&&r.distributedTokens>prevR.distributedTokens)
     pulseTakeover(r.distributedTokens-prevR.distributedTokens,(r.distributedUsd||0)-(prevR.distributedUsd||0),(HOLD&&(HOLD.over||HOLD.holders))||(CA===MARINE&&WRM&&(WRM.eligible||WRM.holders))||r.holderCount,r.distributedTokens);
   prevR=r;
-  $('sDist').textContent=num(r.distributedTokens,1)+' '+TK.quote;
+  const qx=r.distributedTokens>0&&r.distributedUsd>0?Math.max(0,Math.floor(Math.log10(r.distributedUsd/r.distributedTokens))-1):0;   // a pricey reward token (WBTC) gets more decimals
+  $('sDist').textContent=num(r.distributedTokens,1+qx)+' '+TK.quote;
   $('sDistUsd').textContent='≈ '+usd(r.distributedUsd,0)+' at today\'s '+TK.quote+' price';
   $('sPayouts').textContent=num(r.payoutCount);
   showHolders();
   const p=Math.min(1,(r.pendingUsd||0)/(r.minDistributionUsd||1));
-  $('pPending').textContent=num(r.pendingTokens,2)+' '+TK.quote;
+  $('pPending').textContent=num(r.pendingTokens,2+qx)+' '+TK.quote;
   $('pPendingUsd').innerHTML=usd(r.pendingUsd,0)+(r.pendingTaxUsd?'<span class="fx"> · '+usd(r.pendingTaxUsd,0)+' tax to swap</span>':'');
   $('pBar').querySelector('i').style.width=(p*100).toFixed(1)+'%';
   $('pBar').classList.toggle('ready',p>=1);
