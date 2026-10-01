@@ -404,6 +404,7 @@ def score(days, since_day):
 
 
 WINDOWS = {'7d': 7, '30d': 30, 'all': KEEP_DAYS}
+NEW_HIST = [0]   # coins new to the site that got their history filled this run (at most 3 a run, to cap credits)
 
 
 def summarize(rows):
@@ -449,10 +450,13 @@ for mint in watch:
         elig = sum(b for b in people.values() if b * xpx >= minusd) if xpx else sum(people.values())
         wallets = top_set(people); total = sum(people.values()) or 1
         log(f"${sym}: {len(people)} holders, {len(wallets)} wallets own {sum(people[w] for w in wallets) / total * 100:.0f}% · eligible {elig:,.0f}")
-        if HISTORY:
+        new_coin = not HISTORY and not BACKFILL and not T.get('history') and NEW_HIST[0] < 3   # a coin new to the site gets its
+        if new_coin: NEW_HIST[0] += 1                                                            # whole history on its first run
+        if HISTORY or new_coin:
             since = calendar.timegm(time.strptime(bonded[mint][:19], '%Y-%m-%dT%H:%M:%S')) if bonded.get(mint) else now - KEEP_DAYS * DAY
             since = max(since, now - KEEP_DAYS * DAY)
             history_fill(mint, quote, T, people, wallets[:int(os.environ.get('HISTORY_W', MAX_W))], since); T['history'] = now; T['since'] = since
+            if new_coin: log(f'  new coin: whole history filled ({CREDITS[0]} credits so far)')
         elif BACKFILL:
             backfill(mint, quote, T, people, wallets[:BACKFILL_W], now - BACKFILL_DAYS * DAY); T['backfilled'] = now; T['since'] = now - BACKFILL_DAYS * DAY
         elif T.get('at') and T.get('bal') is not None:
