@@ -89,11 +89,11 @@ html.fit #soundBtn{font-size:24px;padding:4px 10px}
 .stats{display:flex;border-bottom:1px solid var(--line);flex:none}
 .stat{padding:10px 14px;border-right:1px solid var(--line);min-width:0;overflow:hidden;flex:1 1 0}.stat.hero{flex:1.55 1 0}.stat.pulse{flex:1.85 1 0}
 /* CLOBr + compound score share one tile, side by side */
-.stat.duo{display:flex;gap:12px;flex:1.25 1 0}
+.stat.duo{display:flex;flex-direction:column;justify-content:center;gap:6px;flex:1.5 1 0}
 /* the token's market in one tile: price + change, then mcap / liquidity / 24h volume */
-.stat.mkt{flex:2.3 1 0}.mkt .mq span{font-size:10.5px}.mkt .mrow{display:flex;align-items:baseline;gap:10px}.mkt .mrow span{flex:none}
+.stat.mkt{flex:1.7 1 0}.stat.qt{flex:.75 1 0}.mkt .mrow{display:flex;align-items:baseline;gap:10px}.mkt .mrow span{flex:none}
 .mkt .mini{display:flex;gap:14px;margin-top:5px}.mkt .mini div{min-width:0}.mkt .mini i{display:block;font-style:normal;font-size:9.5px;letter-spacing:1.2px;color:var(--dim);text-transform:uppercase}
-.mkt .mini em{font-style:normal;font-size:14px;color:#fff;white-space:nowrap}.duo .half{flex:1 1 0;min-width:0;overflow:hidden}.duo.both .half+.half{border-left:1px solid var(--line);padding-left:12px}.duo .half span{display:block}.duo .half label{white-space:nowrap}.duo .half .dly{display:inline;font-size:0;border:0;padding:0;margin-left:5px}.duo .half .dly::after{content:'⏱';font-size:11px}.duo .half .dly.lv::after{content:'●'}
+.mkt .mini em{font-style:normal;font-size:14px;color:#fff;white-space:nowrap}.duo .half{flex:0 0 auto;min-width:0;overflow:hidden}.duo.both .half+.half{border-top:1px solid var(--line);padding-top:6px}.duo .half{display:flex;align-items:baseline;gap:8px}.duo .half label{flex:0 0 72px}.duo .half b{font-size:26px;flex:none}.duo .half span{display:block;min-width:0}.duo .half label{white-space:nowrap}.duo .half .dly{display:inline;font-size:0;border:0;padding:0;margin-left:5px}.duo .half .dly::after{content:'⏱';font-size:11px}.duo .half .dly.lv::after{content:'●'}
 .stat:last-child{border-right:0}
 .stat label{display:block;font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;white-space:nowrap}
 .stat b{display:block;font-family:'VT323';font-size:32px;font-weight:400;color:#fff;line-height:1.05;white-space:nowrap}
@@ -355,7 +355,7 @@ html.fit .tape-bar .lbl{font-size:25px;padding:0 16px;gap:10px}
 html.fit .tape-bar .lbl button{font-size:20px;padding:0 9px}
 html.fit .track{padding:5px 0}
 html.fit .tk{font-size:21px;gap:9px;margin-right:50px}html.fit .tk img{width:26px;height:26px}
-html.fit .stats{grid-template-columns:1.35fr 1.55fr 1fr 2.1fr 1fr}
+html.fit .stats{grid-template-columns:1.35fr 1.55fr 1fr 1.7fr .9fr 1fr}
 html.fit .mkt .mini i{font-size:14px}html.fit .mkt .mini em{font-size:24px}
 html.fit .stat{padding:8px 20px}
 html.fit .stat label{font-size:16px;letter-spacing:1.5px}
@@ -411,7 +411,8 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 @media (max-width:999px){
   html,body,#stage{max-width:100vw;overflow-x:hidden}main>*,.lower>*,.col>*,.stats>*{min-width:0}.tape-bar{max-width:100vw}.tape-bar .track{max-width:none}
   .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.stat{border-bottom:1px solid var(--line)}.stat:nth-child(2n){border-right:0}
-  .stat.hero,.stat.pulse,.stat.mkt{grid-column:span 2;border-right:0}
+  .stat.hero,.stat.pulse,.stat.mkt,.stat.duo{grid-column:span 2;border-right:0}
+  .stat.hero{order:1}.stat.pulse{order:2}.stat.mkt{order:3}.stat.pay{order:4;border-right:1px solid var(--line)}.stat.qt{order:5;border-right:0}.stat.duo{order:6}
   main{grid-template-columns:minmax(0,1fr)}.lower{grid-template-columns:minmax(0,1fr)}.ph{flex-wrap:wrap}.legend{display:none}header nav{margin-left:0}
   header nav .btn:not(.primary):not(.tts):not(#menuBtn){display:none}#chartWrap{height:260px}.brand{font-size:24px}.brand small{font-size:14px}header{gap:10px;flex-wrap:wrap}
   .hide-sm{display:none}#ttsPop{min-width:0;width:92%}#ttsPop .msg{font-size:30px}
@@ -513,14 +514,14 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
     <div class="bar" id="pBar"><i style="width:0"></i></div>
     <div class="pmeta"><span id="pPct">0%</span><span id="pLast">last —</span><span id="pThr">min —</span></div>
   </div>
-  <div class="stat xtra"><label>Payouts sent</label><b id="sPayouts">—</b><span class="dim" id="sHolders">&nbsp;</span><span class="dim" id="pMin" style="display:block">&nbsp;</span></div>
+  <div class="stat pay"><label>Payouts sent</label><b id="sPayouts">—</b><span class="dim" id="sHolders">&nbsp;</span><span class="dim" id="pMin" style="display:block">&nbsp;</span></div>
   <div class="stat mkt"><label class="tkSym">$MARINE</label><div class="mrow"><b id="sPrice">—</b><span id="sChg">&nbsp;</span></div>
-    <div class="mini"><div><i>mcap</i><em id="sMcap">—</em></div><div><i>liq</i><em id="sLiq">—</em></div><div id="sVolC"><i>vol 24h</i><em id="sVol">—</em></div><div class="mq"><i class="tkQs">$LINK</i><em id="sLink">—</em> <span id="sLinkChg"></span></div></div></div>
+    <div class="mini"><div><i>mcap</i><em id="sMcap">—</em></div><div><i>liq</i><em id="sLiq">—</em></div><div id="sVolC"><i>vol 24h</i><em id="sVol">—</em></div></div></div>
+  <div class="stat qt"><label class="tkQs">$LINK</label><b id="sLink">—</b><span id="sLinkChg">&nbsp;</span></div>
   <div class="stat duo" id="scoresStat" style="display:none">
   <div class="half" id="scoreStat" style="display:none" title="CLOBr score: 0-100 balance of support vs resistance liquidity. Click for more on CLOBr"><label>CLOBr ↗ <span class="dly" id="scoreDly" title="CLOBr data on Terminal 7 is up to 1 hour old; live with CLOBr Pro and the CLOBr extension (free 7-day trial)">delayed</span></label><b id="sScore">—</b><span class="dim" id="sScoreMsg">&nbsp;</span><span class="dim" id="sScoreWhy">&nbsp;</span></div>
   <div class="half fx" id="cmpStat" style="display:none" title="Are the biggest holders putting their rewards back in? Click for the holder list"><label>Compound</label><b id="sCmp">—</b><span class="dim" id="sCmpMsg">&nbsp;</span></div>
   </div>
-  <button class="moreStats" id="moreStats" type="button">MORE STATS ▾</button>
 </section>
 
 <main>
@@ -1527,7 +1528,7 @@ document.querySelectorAll('.acc').forEach(sec=>{
     const shut=sec.classList.toggle('shut');accSt[k]=!shut;localStorage.setItem('wrAcc',JSON.stringify(accSt));
     if(!shut){requestAnimationFrame(draw)}});
 });
-$('moreStats').addEventListener('click',()=>{const o=document.querySelector('.stats').classList.toggle('open');$('moreStats').textContent=o?'LESS ▴':'MORE STATS ▾'});
+
 addEventListener('resize',fit);
 fit();
 // $MARINE's pool is known up front, so its chart starts loading right away, alongside the token lookup
