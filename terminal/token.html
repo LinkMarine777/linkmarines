@@ -1036,7 +1036,7 @@ async function loadCompound(){try{const r=await fetch('https://raw.githubusercon
 function renderCompound(){if(!CMP)return;const W=CMP.win[cmpW]||{},sc=W.score,sym=esc(CMP.sym);
   const since=new Date(CMP.since*1000).toLocaleDateString(undefined,{month:'short',day:'numeric'});
   $('cmpMeta').textContent=`${CMP.wallets} wallets · ${Math.round(CMP.cover)}% of supply · since ${since}`;
-  if(sc==null){$('cmpBody').innerHTML='<div class="empty">No payouts in this window yet: the first numbers arrive with the next payout.</div>';return}
+  if(sc==null){$('cmpBody').innerHTML=`<div class="empty">${CMP.at-CMP.since<86400?`Tracking started ${since}: the numbers fill in from the next payout (checked every 6 h).`:'No payouts in this window.'}</div>`;return}
   const tg=W.tags,lbl=sc>=60?'Strong':sc>=40?'Healthy':sc>=20?'Mixed':'Weak',col=sc>=40?'var(--green)':sc>=20?'var(--amber)':'var(--red)';
   const rows=CMP.rows.filter(r=>r[cmpW]),shown=cmpAll?rows:rows.slice(0,20);
   $('cmpBody').innerHTML=`<div class="cmpTop"><div class="cmpBig"><span>Compound score</span><b style="color:${col}">${Math.round(sc)}</b><em>${lbl}</em></div>

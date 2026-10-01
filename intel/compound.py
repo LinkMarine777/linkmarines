@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Compounding: are the holders of stonkfun's reward tokens putting their rewards back into the token?
 
-Runs every 6 h on GitHub Actions (.github/workflows/compound.yml) for $MARINE + stonkfun's top 10 by market cap and writes
-into the data branch:
+Runs every 6 h on GitHub Actions (.github/workflows/compound.yml) for every reward token the site lists ($MARINE,
+stonkfun's top 30 and the Stonk Board's top 100, ~100 tokens) and writes into the data branch:
   terminal/compound/<mint>.json   what the token page reads: the token's compound score, tags, and one row per wallet
   terminal/compound/index.json    every tracked token's summary (scores for 7d / 30d / all)
   terminal/compound-state.json    memory between runs: last balances, payout total and daily numbers per wallet
@@ -10,13 +10,14 @@ into the data branch:
 Wallets: the fewest that together own 80% of the token's supply held by people (pools / program accounts excluded),
 at least 20 and at most 600 ($MARINE ~85, $ZCAT ~460).
 
-Every run, per token (about 10 Helius credits, whatever the holder count):
+Every run: stonkfun's payout totals for all tokens (one call) and prices (Jupiter, 50 tokens a call); per token about 10
+Helius credits, whatever the holder count (~130K credits a month for ~100 tokens):
   - every holder's balance (one getProgramAccounts) and stonkfun's payout total for the token (distributedTokens)
   - rewards since the last run: the payout total's growth x the wallet's share of the eligible supply (wallets worth at
     least stonkfun's minimum holding). Checked against each payout read one by one for $MARINE's top 20: within ~2%.
   - buying / selling: the change in the wallet's balance (moving tokens between your own wallets looks like a trade)
   added to the wallet's numbers for that day (UTC), kept 90 days.
---backfill: the last 7 days read exactly instead (each wallet's token account + reward-token account; payouts counted
+--backfill ($MARINE + stonkfun's top 10 by market cap only): the last 7 days read exactly instead (each wallet's token account + reward-token account; payouts counted
 only when they match one of the token's own payout rounds, since stonkfun pays every LINK / ZEC / ... token from shared
 wallets) for each token's 200 biggest wallets, then the 6-hourly runs carry on from there (the rest start then).
 One-off: ~45K credits for all 11 tokens (two reads per wallet, 10+ credits each).
@@ -91,10 +92,22 @@ def save(name, data):
     json.dump(data, open(path + '.tmp', 'w'), separators=(',', ':')); os.replace(path + '.tmp', path)
 
 
-# ---------- which tokens ----------
-toks = load('tokens.json', {}).get('tokens', [])
-watch = [MARINE] + [t['mint'] for t in sorted([t for t in toks if t.get('mint') != MARINE and t.get('reward', True)],
-                                              key=lambda t: -(t.get('mcap') or 0))[:10]]
+# ---------- which tokens: every reward token the site lists ----------
+toks = load('tokens.json', {}).get('tokens', []); board = load('board.json', {}).get('tokens', {})
+names = {**{m: b.get('symbol') for m, b in board.items()}, **{t['mint']: t.get('symbol') for t in toks}}
+mcap = {**{m: b.get('mcap') or 0 for m, b in board.items()}, **{t['mint']: t.get('mcap') or 0 for t in toks}}
+ranked = [m for m in sorted(set(mcap) - {MARINE}, key=lambda m: -(mcap[m] or 0))]
+G = {x['mint']: x for x in get(f'{SF}/api/public/v1/rewards')['data']['launches']}   # every launch's payout total, one call
+watch = [m for m in [MARINE] + ranked if m in G]
+backfill_set = set(watch[:11])                                                        # $MARINE + the top 10 by market cap
+price = {}
+mints = sorted(set(watch) | {G[m]['quote']['mint'] for m in watch if (G[m].get('quote') or {}).get('mint')})
+for i in range(0, len(mints), 50):
+    try:
+        for t in get('https://lite-api.jup.ag/tokens/v2/search?query=' + ','.join(mints[i:i + 50])):
+            price[t['id']] = float(t.get('usdPrice') or 0); names.setdefault(t['id'], t.get('symbol'))
+    except Exception as e: log('jupiter', e)
+    time.sleep(1)
 state = load('compound-state.json', {'tokens': {}})
 ST = state['tokens']
 
@@ -257,15 +270,14 @@ index = load('compound/index.json', {'tokens': {}})
 for mint in watch:
     T = ST.setdefault(mint, {})
     if not BACKFILL and T.get('at') and now - T['at'] < 6 * 3600 - 900: continue   # every 6 h (the workflow also runs 6-hourly)
-    if BACKFILL and T.get('backfilled'): continue
+    if BACKFILL and (T.get('backfilled') or mint not in backfill_set): continue
     try:
-        info = get(f'{SF}/api/public/v1/tokens/{mint}')['data']['token']; time.sleep(1)
-        rw = get(f'{SF}/api/rewards?mint={mint}'); time.sleep(1)
-        quote = (info.get('quote') or {}).get('mint') or rw.get('quoteMint')
-        if not rw.get('isRewardLaunch') or not quote: log(info.get('symbol'), 'not a reward token'); continue
-        sym, qsym = info.get('symbol'), rw.get('quoteSymbol') or (info.get('quote') or {}).get('symbol')
-        xpx = float((info.get('market') or {}).get('priceUsd') or 0); qpx = float(rw.get('quotePriceUsd') or 0)
-        dist = float(rw.get('distributedTokens') or 0); minusd = float(rw.get('minHoldingUsd') or 20)
+        rw = G[mint]; quote = (rw.get('quote') or {}).get('mint')
+        if not quote: continue
+        sym, qsym = names.get(mint) or mint[:4], (rw.get('quote') or {}).get('symbol')
+        xpx, qpx = price.get(mint, 0), price.get(quote, 0)
+        dist = float(rw.get('distributedTokens') or 0); minusd = 20   # stonkfun's minimum holding ($20 on every token so far)
+        if not xpx or not qpx: log(f'${sym}: no price, skipped this run'); continue
         people = holders(mint, T)
         elig = sum(b for b in people.values() if b * xpx >= minusd) if xpx else sum(people.values())
         wallets = top_set(people); total = sum(people.values()) or 1
@@ -309,6 +321,9 @@ for mint in watch:
                                  'score': {k_: summ[k_]['score'] for k_ in WINDOWS}}
         log(f"  score 7d {summ['7d']['score']} · 30d {summ['30d']['score']} · credits so far {CREDITS[0]}")
     except Exception as e: log(mint[:6], 'failed:', e)
+# tokens the site no longer lists: off the index now, their saved numbers dropped after 7 days
+index['tokens'] = {m: v for m, v in index['tokens'].items() if m in watch}
+for m in [m for m, T in ST.items() if m not in watch and now - T.get('at', 0) > 7 * DAY]: del ST[m]
 index['at'] = now
 save('compound/index.json', index); save('compound-state.json', state)
 log('calls', CALLS, '· estimated Helius credits', CREDITS[0])
