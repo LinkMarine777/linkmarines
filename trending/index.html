@@ -344,7 +344,8 @@ function renderWhales(){const b=$('whaleRows');if(!IN)return;const h1=PER.wp==='
     b.innerHTML=L.length?L.map(x=>lrow('https://solscan.io/tx/'+encodeURIComponent(x.sig||''),x.bi,`sold $${esc(x.sell)} → $${esc(x.buy)}`,esc(x.who||x.w||'')+' · '+ago(x.t*1000)+' ago',`<span class="r"><b>${compact(x.u)}</b></span>`)).join('')
       :`<p class="nt">No whale trades in the last ${h1?'hour':'day'}.</p>`;return}
   let L=IN[wk]||[];
-  if(h1){const T=whaleTrades();if(!T){b.innerHTML='<p class="nt">loading…</p>';return}L=whaleFlow(T,Date.now()/1000-3600)[wk]}
+  if(h1&&!IN.tx&&IN[wk+'1h'])L=IN[wk+'1h'];
+  else if(h1){const T=whaleTrades();if(!T){b.innerHTML='<p class="nt">loading…</p>';return}L=whaleFlow(T,Date.now()/1000-3600)[wk]}
   b.innerHTML=L.length?L.map(r=>lrow(open2(r.m),r.i||tokImg(r.m),'$'+esc(r.s||'?'),
       wk==='buying'?`${whales(r.buyers)} buying${r.sellers?' · '+r.sellers+' selling':''}`:`${whales(r.sellers)} selling${r.buyers?' · '+r.buyers+' buying':''}`,
       `<span class="r"><b class="${r.net>=0?'up':'dn'}">${r.net>=0?'+':'−'}${compact(Math.abs(r.net))}</b><small>▲${compact(r.b)} ▼${compact(r.x)}</small></span>`)).join('')
@@ -352,16 +353,20 @@ function renderWhales(){const b=$('whaleRows');if(!IN)return;const h1=PER.wp==='
 // the 1H view: built here from the last hour of whale trades (whales.json tx/tm; until the whale job writes those, its
 // state file, read once and kept 5 min), the same way the job builds the 24 h lists
 const BASEM=new Set(['So11111111111111111111111111111111111111112','EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v','Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB']);
-let WST=null,WSTat=0;
+let WST=null,WSTat=0;const NAMES={};
+function tokName(m){if(NAMES[m])return NAMES[m];if(m===MARINE)return{s:'MARINE',i:MLOGO};if(TOK[m]&&TOK[m].symbol)return{s:TOK[m].symbol,i:TOK[m].image};
+  const x=[...(IN.buying||[]),...(IN.selling||[]),...(IN.lp||[]),...(IN.signals||[])].find(r=>r.m===m&&r.s);return x?{s:x.s,i:x.i}:null}
 function whaleTrades(){
   if(IN.tx&&IN.tm)return IN.tx.map(r=>{const b=IN.tm[r[2]],x=IN.tm[r[4]];return{t:r[0],w:r[1],buy:{m:b[0],s:b[1],i:b[2],base:b[3],u:r[3]},sell:{m:x[0],s:x[1],i:x[2],base:x[3],u:r[5]}}});
   if(Date.now()-WSTat>300e3){WSTat=Date.now();j('https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/whales-state.json').then(d=>{
     if(!d||!d.swaps)return;const side=o=>({m:o.m,base:BASEM.has(o.m),u:o.u});
-    WST=d.swaps.filter(x=>x.sell&&x.t>Date.now()/1000-3600).map(x=>({t:x.t,w:x.w,buy:side(x.buy),sell:side(x.sell)}));renderWhales()}).catch(()=>{WSTat=0;setTimeout(renderWhales,10e3)})}
+    WST=d.swaps.filter(x=>x.sell&&x.t>Date.now()/1000-3600).map(x=>({t:x.t,w:x.w,buy:side(x.buy),sell:side(x.sell)}));renderWhales();
+    const miss=[...new Set(WST.flatMap(x=>[x.buy.m,x.sell.m]))].filter(m=>!BASEM.has(m)&&!tokName(m)).slice(0,100);
+    if(miss.length)j('https://lite-api.jup.ag/tokens/v2/search?query='+miss.join(',')).then(L=>{(L||[]).forEach(t=>{if(t.id&&t.symbol)NAMES[t.id]={s:t.symbol,i:t.icon}});renderWhales()}).catch(()=>{})}).catch(()=>{WSTat=0;setTimeout(renderWhales,10e3)})}
   return WST}
 function whaleFlow(T,since){const F={};
   T.filter(x=>x.t>since).forEach(x=>[['buy',1],['sell',-1]].forEach(([k,sg])=>{const o=x[k];if(o.base)return;
-    const f=F[o.m]||(F[o.m]={m:o.m,s:o.s||(TOK[o.m]&&TOK[o.m].symbol)||(o.m===MARINE?'MARINE':o.m.slice(0,4)),i:o.i||tokImg(o.m),b:0,x:0,B:new Set(),S:new Set()});if(sg>0){f.b+=o.u;f.B.add(x.w)}else{f.x+=o.u;f.S.add(x.w)}}));
+    const n=o.s?null:tokName(o.m),f=F[o.m]||(F[o.m]={m:o.m,s:o.s||(n&&n.s)||o.m.slice(0,4),i:o.i||(n&&n.i)||tokImg(o.m),b:0,x:0,B:new Set(),S:new Set()});if(sg>0){f.b+=o.u;f.B.add(x.w)}else{f.x+=o.u;f.S.add(x.w)}}));
   const rows=Object.values(F).map(f=>({m:f.m,s:f.s,i:f.i,b:f.b,x:f.x,net:f.b-f.x,buyers:f.B.size,sellers:f.S.size}));
   return{buying:rows.filter(r=>r.net>0).sort((a,b)=>b.buyers-a.buyers||b.net-a.net).slice(0,15),
          selling:rows.filter(r=>r.net<0).sort((a,b)=>b.sellers-a.sellers||a.net-b.net).slice(0,15)}}
