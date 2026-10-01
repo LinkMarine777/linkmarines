@@ -514,7 +514,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
     <div class="bar" id="pBar"><i style="width:0"></i></div>
     <div class="pmeta"><span id="pPct">0%</span><span id="pLast">last —</span><span id="pThr">min —</span></div>
   </div>
-  <div class="stat pay"><label>Payouts sent</label><b id="sPayouts">—</b><span class="dim" id="sHolders">&nbsp;</span><span class="dim" id="pMin" style="display:block">&nbsp;</span></div>
+  <div class="stat pay" title="payouts sent · holders earning rewards out of all holders · minimum holding to earn · the token's tax"><label>Payouts sent</label><b id="sPayouts">—</b><span class="dim" id="sHolders" style="display:block">&nbsp;</span><span class="dim" id="pMin" style="display:block">&nbsp;</span></div>
   <div class="stat mkt"><label class="tkSym">$MARINE</label><div class="mrow"><b id="sPrice">—</b><span id="sChg">&nbsp;</span></div>
     <div class="mini"><div><i>mcap</i><em id="sMcap">—</em></div><div><i>liq</i><em id="sLiq">—</em></div><div id="sVolC"><i>vol 24h</i><em id="sVol">—</em></div></div></div>
   <div class="stat qt"><label class="tkQs">$LINK</label><b id="sLink">—</b><span id="sLinkChg">&nbsp;</span></div>
@@ -782,7 +782,11 @@ async function loadHolders(){try{const r=rewards,min=r&&r.minHoldingUsd&&marineP
 setTimeout(()=>{loadHolders();setInterval(loadHolders,120e3)},1500);
 function showHolders(){const r=rewards,hn=(HOLD&&HOLD.holders)||(CA===MARINE&&WRM&&WRM.holders)||null,en=(HOLD&&HOLD.over)||(CA===MARINE&&WRM&&WRM.eligible)||null;
   $('holdN').textContent=hn?num(hn):'';if(!r)return;
-  $('sHolders').textContent=(hn?num(hn):'—')+' holders'+(en?' · '+num(en)+' earning':'')+' · '+(+(r.transferTaxBps/100).toFixed(1))+'% tax'}
+  $('sHolders').textContent=en&&hn?num(en)+' of '+num(hn)+' earning':(hn?num(hn):'—')+' holders';
+  PAYTAX=r.transferTaxBps!=null?+(r.transferTaxBps/100).toFixed(1):null;payMin()}
+// the payouts tile's second line: what it takes to earn, and the token's tax
+let PAYTAX=null,PAYMIN=null;
+function payMin(){if(PAYMIN!=null)$('pMin').textContent='min hold '+usd(PAYMIN,0)+(PAYTAX!=null?' · '+PAYTAX+'% tax':'')}
 // $MARINE: the live payout numbers (through the bot, 60 s cache: the pulse bar moves within a minute, like the stream's) over
 // the saved snapshot, which adds the 24h / 7d totals and is the fallback
 async function marineRewards(){const[a,b]=await Promise.allSettled([j(DATA+'rewards.json?'+Date.now()),j(BOT+'/token/'+CA)]);
@@ -809,7 +813,7 @@ async function loadRewards(){
   $('pPct').textContent=(p*100).toFixed(0)+'% loaded';
   $('pThr').textContent='min '+usd(r.minDistributionUsd,0);
   pulseBadge();
-  $('pMin').textContent='hold '+usd(r.minHoldingUsd,0)+'+ to receive';
+  PAYMIN=r.minHoldingUsd;payMin();
   const w=r.window24h,w7=r.window7d;
   $('s24').innerHTML=w&&w.coveredSec>=3600&&w.tokens>=0.05?'<span class="up">+'+num(Math.max(0,w.tokens),1)+' '+TK.quote+'</span> <span class="dim">'+(w.complete?'last 24h':'in '+ago(Date.now()-w.coveredSec*1000))+(w7&&w7.complete?' · '+num(w7.tokens,0)+' last 7d':'')+'</span>':(w?'<span class="dim">24h total: tracking…</span>':'&nbsp;');
   tickLast();
