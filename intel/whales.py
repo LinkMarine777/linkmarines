@@ -23,7 +23,8 @@ Signals (each fires once):
   buy / pulse / milestone / link / tts   the stream's own alerts, recorded so the history matches what the stream
                showed: $MARINE buys $100+, $LINK buys $1,000+, payouts, milestones, $LINK ±5%/h, paid TTS
   score        a token's CLOBr score changed verdict or moved 10+ points (hour-delayed scores via the bot)
-Also: lp = stonkfun tokens' Raydium + Meteora pools ranked by what liquidity earned in fees over 24 h (free APIs).
+Also: lp = stonkfun tokens' Raydium + Meteora pools ranked by what liquidity earned in fees over 24 h (free APIs); lp1 the same
+for the last hour.
 """
 import base64, json, os, struct, sys, time, urllib.request
 
@@ -453,16 +454,30 @@ for t in ([] if FAST else every.values()):
             if tvl >= 5000 and fee > 0:
                 lp.append({'m': m, 's': t.get('symbol'), 'i': t.get('image'), 'pair': f"{p['mintA']['symbol']}/{p['mintB']['symbol']}".replace('WSOL', 'SOL'),
                            'dex': 'Raydium ' + ('CLMM' if p.get('type') == 'Concentrated' else 'AMM'), 'tvl': round(tvl), 'fee': round(fee), 'd': round(fee / tvl * 100, 2),
-                           'url': f"https://raydium.io/liquidity/increase/?mode=add&pool_id={p['id']}"})
+                           'url': f"https://raydium.io/liquidity/increase/?mode=add&pool_id={p['id']}", 'id': p['id'], 'rate': p.get('feeRate') or 0})
     except Exception as e: log('raydium', t.get('symbol'), e)
     try:
         for p in get(f'https://dlmm.datapi.meteora.ag/pools?query={m}&page_size=5').get('data') or []:
             tvl, fee = p.get('tvl') or 0, (p.get('fees') or {}).get('24h') or 0
             if tvl >= 5000 and fee > 0 and not p.get('is_blacklisted'):
+                f1 = (p.get('fees') or {}).get('1h') or 0
                 lp.append({'m': m, 's': t.get('symbol'), 'i': t.get('image'), 'pair': (p.get('name') or '').replace('-', '/'), 'dex': 'Meteora DLMM',
-                           'tvl': round(tvl), 'fee': round(fee), 'd': round(fee / tvl * 100, 2), 'url': f"https://app.meteora.ag/dlmm/{p['address']}"})
+                           'tvl': round(tvl), 'fee': round(fee), 'd': round(fee / tvl * 100, 2), 'url': f"https://app.meteora.ag/dlmm/{p['address']}",
+                           'fee1': round(f1), 'd1': round(f1 / tvl * 100, 3)})
     except Exception as e: log('meteora', t.get('symbol'), e)
-lp = sorted(lp, key=lambda x: -x['d'])[:20] if not FAST else load('whales.json', {}).get('lp', [])
+# last hour (the trending page's 1H switch): Meteora reports it; Raydium only has the day, so its pools' last-hour volume
+# (DexScreener, 30 pools per call) x the pool's fee rate
+ray = [x for x in lp if 'id' in x]
+for i in range(0, len(ray), 30):
+    try:
+        vol = {p['pairAddress']: (p.get('volume') or {}).get('h1') or 0
+               for p in get('https://api.dexscreener.com/latest/dex/pairs/solana/' + ','.join(x['id'] for x in ray[i:i + 30])).get('pairs') or []}
+        for x in ray[i:i + 30]:
+            if x['id'] in vol: f1 = vol[x['id']] * x['rate']; x['fee1'], x['d1'] = round(f1), round(f1 / x['tvl'] * 100, 3)
+    except Exception as e: log('dexscreener lp', e)
+for x in lp: x.pop('id', None); x.pop('rate', None)
+if FAST: lp, lp1 = load('whales.json', {}).get('lp', []), load('whales.json', {}).get('lp1', [])
+else: lp, lp1 = sorted(lp, key=lambda x: -x['d'])[:20], sorted([x for x in lp if x.get('fee1')], key=lambda x: -x['d1'])[:20]
 
 old = {s['id']: s['t'] for s in load('whales.json', {}).get('signals', [])}
 for s in signals: s['t'] = old.get(s['id'], s['t'])            # a signal keeps the time it first fired
@@ -479,23 +494,27 @@ if os.path.exists(bf_path):
         signals = sorted(signals + [x for x in bf if x['id'] not in have], key=lambda s: -s['t'])
         state['backfilled'] = tag; log(f'backfill: {len(bf)} past alerts included for the database')
 
-# ---------- what whales are buying / selling (24 h) ----------
-flow = {}
-for s in trades:
-    for side, sign in (('buy', 1), ('sell', -1)):
-        m = s[side]['m']
-        if m in BASE: continue
-        f = flow.setdefault(m, {'m': m, 's': sym(m), 'i': (meta.get(m) or {}).get('i'), 'p': (meta.get(m) or {}).get('p'),
-                                 'top': m in top_mints, 'b': 0, 'x': 0, 'buyers': set(), 'sellers': set()})
-        f['b' if sign > 0 else 'x'] += s[side]['u']; f['buyers' if sign > 0 else 'sellers'].add(s['w'])
-rows = [{**f, 'b': round(f['b']), 'x': round(f['x']), 'net': round(f['b'] - f['x']), 'buyers': len(f['buyers']), 'sellers': len(f['sellers'])} for f in flow.values()]
+# ---------- what whales are buying / selling (24 h, and the last hour for the trending page's 1H switch) ----------
+def whale_flow(L):
+    flow = {}
+    for s in L:
+        for side, sign in (('buy', 1), ('sell', -1)):
+            m = s[side]['m']
+            if m in BASE: continue
+            f = flow.setdefault(m, {'m': m, 's': sym(m), 'i': (meta.get(m) or {}).get('i'), 'p': (meta.get(m) or {}).get('p'),
+                                     'top': m in top_mints, 'b': 0, 'x': 0, 'buyers': set(), 'sellers': set()})
+            f['b' if sign > 0 else 'x'] += s[side]['u']; f['buyers' if sign > 0 else 'sellers'].add(s['w'])
+    rows = [{**f, 'b': round(f['b']), 'x': round(f['x']), 'net': round(f['b'] - f['x']), 'buyers': len(f['buyers']), 'sellers': len(f['sellers'])} for f in flow.values()]
+    return (sorted([r for r in rows if r['net'] > 0], key=lambda r: (-r['buyers'], -r['net']))[:15],
+            sorted([r for r in rows if r['net'] < 0], key=lambda r: (-r['sellers'], r['net']))[:15])
+buying, selling = whale_flow(trades)
+buying1h, selling1h = whale_flow([s for s in trades if s['t'] > now - 3600])
 recent = [{'t': s['t'], 'w': s['w'][:4], 'who': label(s['w']), 'buy': sym(s['buy']['m']), 'bi': (meta.get(s['buy']['m']) or {}).get('i'),
            'sell': sym(s['sell']['m']), 'u': round(max(s['buy']['u'], s['sell']['u'])), 'sig': s['sig']} for s in trades[:60]]
 save('whales.json', {
     'at': now, 'wallets': len(whale), 'tokens': ['$' + t['symbol'] for t in watch],
-    'buying': sorted([r for r in rows if r['net'] > 0], key=lambda r: (-r['buyers'], -r['net']))[:15],
-    'selling': sorted([r for r in rows if r['net'] < 0], key=lambda r: (-r['sellers'], r['net']))[:15],
-    'signals': signals, 'recent': recent, 'lp': lp, 'marine': marine})
+    'buying': buying, 'selling': selling, 'buying1h': buying1h, 'selling1h': selling1h,
+    'signals': signals, 'recent': recent, 'lp': lp, 'lp1': lp1, 'marine': marine})
 save('whales-state.json', state)
 
 # ---------- the $MARINE chart (chart.json): GeckoTerminal answers GitHub's runners, while the bot's copy from Cloudflare's
