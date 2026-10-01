@@ -10,8 +10,8 @@ stonkfun's top 30 and the Stonk Board's top 100, ~100 tokens) and writes into th
 Wallets: the fewest that together own 80% of the token's supply held by people (pools / program accounts excluded),
 at least 20 and at most 600 ($MARINE ~85, $ZCAT ~460).
 
-Every run: stonkfun's payout totals for all tokens (one call) and prices (Jupiter, 50 tokens a call); per token about 10
-Helius credits, whatever the holder count (~130K credits a month for ~100 tokens):
+Every run: stonkfun's payout totals for all tokens (one call) and prices (Jupiter, 50 tokens a call); per token a few
+Helius credits (getProgramAccountsV2, 1 credit per 10,000 accounts; ~15-30K credits a month for ~100 tokens):
   - every holder's balance (one getProgramAccounts) and stonkfun's payout total for the token (distributedTokens)
   - rewards since the last run: the payout total's growth x the wallet's share of the eligible supply (wallets worth at
     least stonkfun's minimum holding). Checked against each payout read one by one for $MARINE's top 20: within ~2%.
@@ -118,8 +118,17 @@ def holders(mint, T):
     if 'prog' not in T:
         T['prog'] = rpc('getAccountInfo', [mint, {'encoding': 'base64', 'dataSlice': {'offset': 0, 'length': 0}}])['value']['owner']
         T['dec'] = rpc('getTokenSupply', [mint])['value']['decimals']
-    accs = rpc('getProgramAccounts', [T['prog'], {'encoding': 'base64', 'dataSlice': {'offset': 32, 'length': 40},
-                                                  'filters': [{'memcmp': {'offset': 0, 'bytes': mint}}]}]); CREDITS[0] += 10
+    opts = {'encoding': 'base64', 'dataSlice': {'offset': 32, 'length': 40}, 'filters': [{'memcmp': {'offset': 0, 'bytes': mint}}]}
+    accs = None
+    if KEY or 'helius' in URL:   # Helius: the paginated version (1 credit a page of 10,000; the plain one refuses big programs)
+        try:
+            accs, key = [], None
+            for _ in range(100):
+                r = rpc('getProgramAccountsV2', [T['prog'], {**opts, 'limit': 10000, **({'paginationKey': key} if key else {})}]); CREDITS[0] += 1
+                accs += r.get('accounts') or []; key = r.get('paginationKey')
+                if not key or not r.get('accounts'): break
+        except RuntimeError as e: log('  getProgramAccountsV2 refused, trying the plain call:', e); accs = None
+    if accs is None: accs = rpc('getProgramAccounts', [T['prog'], opts]); CREDITS[0] += 10
     own = {}
     for a in accs:
         raw = base64.b64decode(a['account']['data'][0])
