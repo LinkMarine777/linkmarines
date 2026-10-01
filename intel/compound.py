@@ -506,7 +506,7 @@ for mint in watch:
         page = {'mint': mint, 'sym': sym, 'quote': qsym, 'at': now, 'since': T['since'], 'holders': len(people),
                 'wallets': len(wallets), 'cover': round(sum(people[w] for w in wallets) / total * 100, 1), 'win': summ, 'rows': rows}
         save(f'compound/{mint}.json', page)
-        index['tokens'][mint] = {'sym': sym, 'at': now, 'since': T['since'], 'wallets': len(wallets), 'holders': len(people),
+        index['tokens'][mint] = {'sym': sym, 'at': now, 'since': T['since'], 'wallets': len(wallets), 'holders': len(people), 'big': bool(T.get('big')),   # big: refreshed daily
                                  'score': {k_: summ[k_]['score'] for k_ in WINDOWS},
                                  'c7': summ['7d']['compounded'], 'r7': summ['7d']['rewards'],    # % put back, $ rewards: 7 days
                                  'ca': summ['all']['compounded'], 'ra': summ['all']['rewards']}  # ... and since launch (what the site shows)
