@@ -386,7 +386,7 @@ def history_fill(mint, quote, T, people, wallets, since):
 
 # ---------- score ----------
 def score(days, since_day):
-    """days: {day: [R, B, S]} -> (R, N, c, k, score, tag) over the days from since_day, counting from the first reward."""
+    """days: {day: [R, B, S]} -> (R, N, c, k, score, tag, B, S) over the days from since_day, counting from the first reward."""
     allds = sorted((int(d), v) for d, v in days.items())
     first_ever = next((d for d, v in allds if v[0] > 0), None)   # the day of the wallet's very first reward: its entry buy is
     ds = [(d, v) for d, v in allds if d >= since_day]             # usually that day too, so that day's trades don't count
@@ -398,7 +398,7 @@ def score(days, since_day):
     c = min(max(N, 0), R) / R if R else 0; k = sum(1 for d in rd if d in bought or d + 1 in bought) / len(rd)
     sc = round(100 * (0.7 * c + 0.3 * k)) if N >= 0 else 0
     tag = 'Seller' if N < 0 else 'Compounder' if c >= 0.5 else 'Partial' if c >= 0.1 else 'Collector'
-    return [round(R, 2), round(N, 2), round(c, 3), round(k, 3), sc, tag]
+    return [round(R, 2), round(N, 2), round(c, 3), round(k, 3), sc, tag, round(B, 2), round(S, 2)]   # + bought, sold (the page's detail line)
 
 
 WINDOWS = {'7d': 7, '30d': 30, 'all': KEEP_DAYS}
