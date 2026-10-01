@@ -61,7 +61,7 @@ header .ca input:focus{outline:none;border-color:var(--blue2)}
 .tkl a{display:grid;place-items:center;width:26px;height:26px;border:1px solid var(--line);color:var(--dim);background:#050914;text-decoration:none}.tkl a:hover{color:#fff;border-color:var(--blue2)}.tkl svg{width:13px;height:13px;fill:currentColor}.tkm{font-size:11px;color:var(--amber);white-space:nowrap;position:absolute;right:0;top:100%;margin-top:3px;background:#02030a;border:1px solid var(--line);padding:2px 7px;z-index:6}.tkm:empty{display:none}
 @media (max-width:480px){#liveTxt{display:none}.live{gap:0}}
 @media (max-width:999px){header{flex-wrap:wrap!important}header .ca{order:9;flex-basis:100%;max-width:none;margin:4px 0 0;flex-wrap:wrap;row-gap:6px}header .ca input{flex-basis:100%;order:5}header .ca .btn{order:6}.tkm{position:static;order:7}}
-@media (min-width:1000px) and (max-width:1499px){header{flex-wrap:wrap!important;row-gap:6px}header .ca{order:9;flex-basis:100%;max-width:none;margin:0}.tkm{position:static}}
+
 #soundBtn,#alertBtn{background:none;border:1px solid var(--line);color:var(--txt);font-size:14px;line-height:1;padding:3px 7px;cursor:pointer}
 #soundBtn:hover,#alertBtn:hover{border-color:var(--blue2)}#soundBtn.off,#alertBtn.off{opacity:.55}
 html.fit #soundBtn{font-size:24px;padding:4px 10px}
@@ -408,6 +408,18 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 @media (min-width:1000px) and (max-width:1299px){.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.stat{border-bottom:1px solid var(--line)}.stat:nth-child(3n){border-right:0}}
 .moreStats,#mbar{display:none}
 .mtok{display:none}.pchips{display:none}.tkb .nm small{display:none}.tkb .nm b{font-weight:inherit}.mca{display:none}
+/* desktop: name under the ticker, short copyable address, bigger price, rounded search */
+@media (min-width:1000px){
+  header{flex-wrap:nowrap!important}header .ca{flex:1 1 auto;max-width:620px;margin:0 auto 0 18px}header .ca input{border-radius:17px;height:34px;padding-left:14px}
+  /* the token (logo, name, address, links) heads its chart */
+  .ctok{display:flex;align-items:center;gap:10px;min-width:0}.ctok~h2{display:none}.ctok:empty{display:none}.ctok:empty~h2{display:block}
+  .ctok .tkb img{width:32px;height:32px}.ctok .tkb .nm b{font-family:'VT323';font-weight:400;font-size:26px;color:#fff;letter-spacing:1px;line-height:1}.ctok .tkb .nm b .q{font-family:'IBM Plex Mono';font-size:12px;margin-left:3px;letter-spacing:0}
+  .ctok .tkl a,.ctok .tkl button{width:26px;height:26px;border-radius:5px}
+  .chartP>.ph{flex-wrap:wrap;row-gap:8px}.chartP>.ph .legend{white-space:nowrap}
+  .tkb .nm{display:flex;flex-direction:column;line-height:1.1}.tkb .nm small{display:block;font-size:9.5px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mca{display:inline-flex;align-items:center;gap:4px;flex:none;background:none;border:0;color:var(--dim);font:inherit;font-size:11px;padding:0 2px;cursor:pointer}.mca svg{width:11px;height:11px;fill:currentColor}.mca:hover{color:#fff}.mca.ok{color:var(--green)}
+  .stat.mkt .mrow b{font-size:38px}
+}
 .ph .chev{display:none}
 @media (max-width:999px){
   html,body,#stage{max-width:100vw;overflow-x:hidden}main>*,.lower>*,.col>*,.stats>*{min-width:0}.tape-bar{max-width:100vw}.tape-bar .track{max-width:none}
@@ -554,6 +566,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
   <div class="col left">
     <section class="panel chartP acc" data-acc="chart" data-def="1">
       <div class="ph">
+        <div class="ctok" id="ctok"></div>
         <h2><span class="tkSym">$MARINE</span> × <span class="tkQs">$LINK</span></h2>
         <div class="legend" style="margin:0"><span><i style="background:var(--blue2)"></i><span class="tkSym">$MARINE</span> (right)</span><span><i style="background:var(--amber)"></i><span class="tkQs">$LINK</span> (left)</span><a id="depthLeg" style="display:none" target="_blank" rel="noopener" title="CLOBr market depth, delayed up to 1h. Real-time on CLOBr Pro"><i style="background:linear-gradient(90deg,var(--green) 50%,var(--red) 50%)"></i>CLOBr depth <span class="dly">delayed</span></a></div>
         <div class="tabs" id="dtab" style="display:none"><button id="depthBtn" class="on" type="button" title="CLOBr market depth for the token: support (green) and resistance (red) liquidity by price">DEPTH</button></div>
@@ -749,8 +762,8 @@ function renderLinks(pairs){const info=(pairs||[]).map(p=>p.info).find(i=>i&&((i
 const phone=matchMedia('(max-width:999px)');
 function placeTok(){const f=$('caForm'),srch=f.querySelector('.srch');
   const hm=document.querySelector('header>a');if(hm){hm.href=phone.matches?'/trending/':'/';hm.title=phone.matches?'Trending tokens':'The Marines HQ'}
-  if(phone.matches){$('mtok').insertBefore($('tkBadge'),$('mtl'));$('mtl').appendChild($('tkLinks'));$('mtok').appendChild($('tkMsg'))}
-  else{f.insertBefore($('tkBadge'),srch);f.insertBefore($('tkLinks'),srch);f.appendChild($('tkMsg'))}}
+  if(phone.matches){$('mtok').insertBefore($('tkBadge'),$('mtl'));$('mtl').insertBefore($('mCa'),$('mtl').firstChild);$('mtl').appendChild($('tkLinks'));$('mtok').appendChild($('tkMsg'))}
+  else{const c=$('ctok');c.appendChild($('tkBadge'));c.appendChild($('mCa'));c.appendChild($('tkLinks'));f.appendChild($('tkMsg'))}}
 placeTok();phone.addEventListener?phone.addEventListener('change',placeTok):phone.addListener(placeTok);
 $('mCa').onclick=()=>{const b=$('copyCa');if(b)b.click();$('mCa').classList.add('ok');setTimeout(()=>$('mCa').classList.remove('ok'),1400)};
 $('caForm').addEventListener('submit',e=>{e.preventDefault();const v=$('caIn').value.trim();
