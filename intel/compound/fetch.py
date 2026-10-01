@@ -8,7 +8,7 @@ getTransaction. Prints calls and estimated credits. Never prints the RPC URL.
 """
 import base64, json, os, struct, sys, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor
-from pda import b58d, b58e, on_curve, pda, ATA
+import sys, os; sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")); from pda import b58d, b58e, on_curve, pda, ATA
 
 KEY = os.environ.get('HELIUS_KEY', '').strip(); URL = os.environ.get('SOLANA_RPC', '').strip()
 RPC = URL or (f'https://mainnet.helius-rpc.com/?api-key={KEY}' if KEY else 'https://api.mainnet-beta.solana.com')
