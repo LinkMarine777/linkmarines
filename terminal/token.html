@@ -204,20 +204,16 @@ tr.whale td{background:rgba(74,122,255,.08)}
 /* compounding (intel/compound.py, every 6 h): are the holders putting their rewards back in? */
 @media (min-width:1000px){.tapeP .tw>#compound{position:absolute;inset:0;overflow-y:auto}}
 .cmpHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap}.cmpT .rv{display:none}
-.cmpTop{display:grid;grid-template-columns:130px 1fr;gap:16px;align-items:center;padding:4px 0 12px;border-bottom:1px solid var(--line)}
-.cmpBig{text-align:center;border:1px solid var(--line);background:var(--panel2);padding:8px 4px}
-.cmpBig b{display:block;font-family:'VT323';font-size:58px;line-height:1}.cmpBig span{font-size:10px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
-.cmpBig em{display:block;font-style:normal;color:#fff;font-size:12px;margin-top:2px}
-.cmpKp{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.cmpKp div{border-left:2px solid var(--line);padding-left:10px}
-.cmpKp b{display:block;font-family:'VT323';font-size:30px;color:#fff;line-height:1}.cmpKp span{font-size:10.5px;color:var(--dim)}
-.cmpBar{display:flex;height:10px;margin:12px 0 6px;border:1px solid var(--line)}
+.cmpSum{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--dim)}.cmpSum b{color:#fff;font-weight:500}
+.cmpSum .cmpSc{font-size:24px;min-width:42px}
+.cmpBar{display:flex;height:6px;margin:8px 0 5px;border:1px solid var(--line)}
 .cmpLg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:10.5px;color:var(--dim);margin-bottom:8px}.cmpLg i{display:inline-block;width:8px;height:8px;margin-right:5px}
 .cmpT{width:100%;border-collapse:collapse}.cmpT th{font-size:10px;letter-spacing:1px;color:var(--dim);text-align:left;font-weight:400;text-transform:uppercase;padding:6px;border-bottom:1px solid var(--line)}
 .cmpT td{padding:7px 6px;border-bottom:1px solid rgba(26,36,68,.6);white-space:nowrap}.cmpT .r{text-align:right}
 .cmpR{display:flex;align-items:center;gap:6px}.cmpR s{display:block;height:6px;background:var(--line);width:60px;position:relative;text-decoration:none}.cmpR s i{position:absolute;inset:0 auto 0 0;background:var(--green)}
 .cmpSc{display:inline-block;min-width:34px;text-align:center;font-family:'VT323';font-size:18px;border:1px solid;padding:0 4px;line-height:1.2}
 .cmpTg{font-size:10.5px;letter-spacing:.5px}.cmpMore{margin:8px 0 0}.cmpSrc{font-size:10.5px;color:var(--dim);margin-top:10px;line-height:1.5}
-@media (max-width:640px){.cmpTop{grid-template-columns:1fr}.cmpKp b{font-size:24px}.cmpT .hs{display:none}.cmpT td,.cmpT th{padding:7px 4px}}
+@media (max-width:640px){.cmpT .hs{display:none}.cmpT td,.cmpT th{padding:7px 4px}}
 .cHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,rgba(255,107,0,.12),transparent 60%)}
 .cMiss{display:block;font-size:10px;margin-top:2px}.cMiss:empty{display:none}
 .empty{font-size:12px;line-height:1.55;color:var(--dim);padding:6px 0}.empty b{color:#fff;font-weight:400}.empty a{color:var(--green)}
@@ -340,7 +336,7 @@ html.fit .board.house{padding:0}html.fit .board.house .htag{font-size:13px;paddi
    below 18px, headline numbers are 60px+, and low-value detail is dropped. */
 html.fit,html.fit body{width:100%;height:100%;overflow:hidden;background:#000}
 html.fit #stage{position:absolute;width:1920px;height:1080px;min-height:0;transform-origin:0 0;font-size:20px;background-size:48px 48px}
-html.fit .fx{display:none!important}html.fit #cmpTab{display:none!important}
+html.fit .fx{display:none!important}html.fit #compound{display:none!important}
 html.fit header{padding:8px 24px;gap:24px}
 html.fit header img{width:54px;height:54px}
 html.fit .brand{font-size:54px}html.fit .brand small{font-size:26px;color:var(--amber)}
@@ -532,7 +528,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
 
     <div class="lower">
       <section class="panel tapeP acc" data-acc="tape" data-def="1">
-        <div class="ph"><h2 class="tapeH"><button data-v="trades" class="on">THE TAPE</button><button data-v="holders" id="holdTab" style="display:none">HOLDERS <span class="hc" id="holdN"></span></button><button data-v="compound" id="cmpTab" style="display:none">COMPOUNDING <span class="hc" id="cmpN"></span></button></h2>
+        <div class="ph"><h2 class="tapeH"><button data-v="trades" class="on">THE TAPE</button><button data-v="holders" id="holdTab" style="display:none">HOLDERS <span class="hc" id="holdN"></span> <span class="hc" id="cmpN"></span></button></h2>
           <span class="meta hide-sm fx" id="tapeMeta"><span class="tkSym">$MARINE</span>/<span class="tkQ">LINK</span> pool · large = $2,500+</span>
           <span class="meta hide-sm" id="holdMeta" style="display:none">top wallets · data from CLOBr</span>
           <div class="tabs" id="tapeF"><button data-min="0" class="on">ALL</button><button data-min="100">$100+</button></div>
@@ -548,7 +544,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
           <tbody></tbody>
         </table>
         <div id="compound" style="display:none"><div class="cmpHead"><span class="meta" id="cmpMeta"></span><div class="tabs" id="cmpWin"><button data-w="7d" class="on">7D</button><button data-w="30d">30D</button><button data-w="all">ALL</button></div></div><div id="cmpBody"></div>
-          <div class="cmpSrc">The wallets that together own 80% of the supply (pools excluded). Rewards: each wallet's share of every payout, counted from its first one, so the buy that got it in doesn't count. Score = 70% how much of their rewards they bought back in + 30% how often (days they bought after a payout); net sellers score 0. Buys and sells are balance changes, so moving tokens between your own wallets shows as a trade. Refreshed every 6 h.</div></div>
+          <div class="cmpSrc">The wallets that together own 80% of the supply (pools excluded); 7d = balance change (CLOBr). Rewards: each wallet's share of every payout, counted from its first one, so the buy that got it in doesn't count. Score = 70% how much of their rewards they bought back in + 30% how often (days they bought after a payout); net sellers score 0. Buys and sells are balance changes, so moving tokens between your own wallets shows as a trade. Refreshed every 6 h.</div></div>
         </div>
       </section>
       <section class="panel ads">
@@ -975,15 +971,17 @@ function renderWhales(){const W=CL&&CL.whales;if(!W||W.none||!W.summary)return f
 // Biggest holders (CLOBr) share the tape's panel: THE TAPE | HOLDERS
 let tapeView='trades';
 function renderHolders(){const wl=(CL&&CL.whales&&!CL.whales.none&&CL.whales.wallets)||[];
-  $('holdTab').style.display=wl.length?'':'none';if(!wl.length&&tapeView==='holders')setTapeView('trades');
+  $('holdTab').style.display=wl.length||CMP?'':'none';if(!wl.length&&!CMP&&tapeView==='holders')setTapeView('trades');
+  if(CMP)renderCompound();if(tapeView==='holders')setTapeView('holders');
   $('holders').tBodies[0].innerHTML=wl.map(x=>`<tr><td class="dim">${x.rank}</td><td><a href="https://solscan.io/account/${esc(x.owner)}" target="_blank" rel="noopener">${esc(short(x.owner))}</a></td>
     <td class="r">${compact(x.balance,'')}</td><td class="r dim fx">${marinePx?compact(x.balance*marinePx):'—'}</td><td class="r">${x.d7==null?'<span class="dim">—</span>':x.d7===0?'<span class="dim">no change</span>':pct(x.d7)}</td></tr>`).join('');
   if(tapeView==='holders')fitTape()}
 function setTapeView(v){tapeView=v;[...document.querySelectorAll('.tapeH button')].forEach(b=>b.classList.toggle('on',b.dataset.v===v));
-  $('trades').style.display=v==='trades'?'':'none';$('holders').style.display=v==='holders'?'':'none';$('compound').style.display=v==='compound'?'':'none';
-  $('tapeF').style.visibility=v==='trades'?'':'hidden';$('tapeF').style.display=v==='compound'?'none':'';
-  $('tapeMeta').style.display=v==='trades'?'':'none';$('holdMeta').style.display=v==='holders'?'':'none';
-  if(v!=='compound')fitTape()}
+  const merged=v==='holders'&&!!CMP;   // with compounding data, HOLDERS is the merged view
+  $('trades').style.display=v==='trades'?'':'none';$('holders').style.display=v==='holders'&&!merged?'':'none';$('compound').style.display=merged?'':'none';
+  $('tapeF').style.visibility=v==='trades'?'':'hidden';$('tapeF').style.display=merged?'none':'';
+  $('tapeMeta').style.display=v==='trades'?'':'none';$('holdMeta').style.display=v==='holders'&&!merged?'':'none';
+  if(!merged)fitTape()}
 document.querySelector('.tapeH').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();setTapeView(b.dataset.v)});
 function renderLimits(){const L=CL&&CL.limits;if(!L||!L.orders||!L.orders.length)return false;const O=L.orders;
   const B=O.filter(o=>o.side==='B'),S=O.filter(o=>o.side==='S'),sb=B.reduce((t,o)=>t+(o.usd||0),0),ss=S.reduce((t,o)=>t+(o.usd||0),0),tot=Math.max(1,sb+ss);
@@ -1031,25 +1029,28 @@ let CMP=null,cmpW='7d',cmpAll=false;
 const cmpUsd=n=>(n<0?'−':'')+(Math.abs(n)>=1000?compact(Math.abs(n)):'$'+Math.round(Math.abs(n)));
 const CMPC={Compounder:'var(--green)',Partial:'var(--blue2)',Collector:'var(--dim)',Seller:'var(--red)'};
 async function loadCompound(){try{const r=await fetch('https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/compound/'+CA+'.json',{cache:'no-store'});
-  if(!r.ok)return;const d=await r.json();if(!d.wallets)return;CMP=d;$('cmpTab').style.display='';renderCompound()}catch(e){}}
-function renderCompound(){if(!CMP)return;const W=CMP.win[cmpW]||{},sc=W.score,sym=esc(CMP.sym);$('cmpN').textContent=sc==null?'':Math.round(sc);
+  if(!r.ok)return;const d=await r.json();if(!d.wallets)return;CMP=d;renderHolders()}catch(e){}}
+// HOLDERS with compounding attached: the tracked wallets (80% of supply) by size, each with its 7d change (CLOBr, when it has
+// the wallet), rewards, net bought and compound score; one summary line on top
+function renderCompound(){if(!CMP)return;const W=CMP.win[cmpW]||{},sc=W.score,sym=esc(CMP.sym);$('cmpN').textContent=sc==null?'':'♻ '+Math.round(sc);
   const since=new Date(CMP.since*1000).toLocaleDateString(undefined,{month:'short',day:'numeric'});
   $('cmpMeta').textContent=`${CMP.wallets} wallets · ${Math.round(CMP.cover)}% of supply · since ${since}`;
-  if(sc==null){$('cmpBody').innerHTML=`<div class="empty">${CMP.at-CMP.since<86400?`Tracking started ${since}: the numbers fill in from the next payout (checked every 6 h).`:'No payouts in this window.'}</div>`;return}
-  const tg=W.tags,lbl=sc>=60?'Strong':sc>=40?'Healthy':sc>=20?'Mixed':'Weak',col=sc>=40?'var(--green)':sc>=20?'var(--amber)':'var(--red)';
-  const rows=CMP.rows.filter(r=>r[cmpW]),shown=cmpAll?rows:rows.slice(0,20);
-  $('cmpBody').innerHTML=`<div class="cmpTop"><div class="cmpBig"><span>Compound score</span><b style="color:${col}">${Math.round(sc)}</b><em>${lbl}</em></div>
-    <div class="cmpKp"><div><b>${Math.round(W.compounded)}%</b><span>of rewards put back into $${sym}</span></div>
-      <div><b>${(W.fresh||0).toFixed(1)}×</b><span>new money on top of rewards</span></div>
-      <div><b>${Math.round(tg.Compounder[1])}%</b><span>of supply held by compounders</span></div></div></div>
+  const d7={};((CL&&CL.whales&&!CL.whales.none&&CL.whales.wallets)||[]).forEach(x=>d7[x.owner]=x.d7);
+  const shown=cmpAll?CMP.rows:CMP.rows.slice(0,20),dash='<span class="dim">—</span>';
+  let top;
+  if(sc==null)top=`<div class="cmpSum">${CMP.at-CMP.since<86400?`Compounding: tracking started ${since}, the numbers fill in from the next payout (checked every 6 h).`:'No payouts in this window.'}</div>`;
+  else{const tg=W.tags,lbl=sc>=60?'Strong':sc>=40?'Healthy':sc>=20?'Mixed':'Weak',col=sc>=40?'var(--green)':sc>=20?'var(--amber)':'var(--red)';
+    top=`<div class="cmpSum"><span class="cmpSc" style="color:${col};border-color:${col}" title="compound score">${Math.round(sc)}</span><b>${lbl}</b> compounding ·
+      <span><b>${Math.round(W.compounded)}%</b> of rewards put back into $${sym}</span> · <span><b>${(W.fresh||0).toFixed(1)}×</b> new money on top</span> ·
+      <span><b>${Math.round(tg.Compounder[1])}%</b> of supply compounds</span></div>
     <div class="cmpBar">${Object.entries(tg).filter(([k,v])=>v[1]>0).map(([k,v])=>`<span style="flex:${v[1]};background:${CMPC[k]}"></span>`).join('')}</div>
-    <div class="cmpLg">${Object.entries(tg).map(([k,v])=>`<span><i style="background:${CMPC[k]}"></i>${k} ${v[0]} · ${v[1].toFixed(1)}%</span>`).join('')}</div>
-    <table class="cmpT"><thead><tr><th>#</th><th>Holder</th><th class="r">Holds</th><th class="r hs">Rewards</th><th class="r">Net bought</th><th class="rv">Reinvested</th><th class="r">Score</th><th class="r">Tag</th></tr></thead><tbody>
-    ${shown.map((r,i)=>{const [R,N,c,k,s_,t]=r[cmpW];return`<tr><td class="dim">${i+1}</td><td><a href="https://solscan.io/account/${esc(r.w)}" target="_blank" rel="noopener">${esc(r.w.slice(0,4))}…${esc(r.w.slice(-4))}</a></td>
-      <td class="r">${r.p.toFixed(2)}%</td><td class="r hs">${cmpUsd(R)}</td><td class="r" style="color:${N>0?'var(--green)':N<0?'var(--red)':'var(--dim)'}">${N>0?'+':''}${cmpUsd(N)}</td>
-      <td class="rv"><span class="cmpR"><s><i style="width:${Math.round(c*100)}%"></i></s>${Math.round(c*100)}%</span></td>
-      <td class="r"><span class="cmpSc" title="${Math.round(c*100)}% of rewards bought back in" style="color:${CMPC[t]};border-color:${CMPC[t]}">${s_}</span></td><td class="r cmpTg" style="color:${CMPC[t]}">${t.toUpperCase()}</td></tr>`}).join('')}</tbody></table>
-    ${rows.length>20?`<button class="btn cmpMore" id="cmpMore">${cmpAll?'SHOW TOP 20':'SHOW ALL '+rows.length}</button>`:''}`;
+    <div class="cmpLg">${Object.entries(tg).map(([k,v])=>`<span><i style="background:${CMPC[k]}"></i>${k} ${v[0]} · ${v[1].toFixed(1)}%</span>`).join('')}</div>`}
+  $('cmpBody').innerHTML=top+`<table class="cmpT"><thead><tr><th>#</th><th>Wallet</th><th class="r">Holds</th><th class="r hs">7d</th><th class="r hs">Rewards</th><th class="r">Net bought</th><th class="r">Score</th></tr></thead><tbody>
+    ${shown.map((r,i)=>{const v=r[cmpW],x=d7[r.w];const [R,N,c,k,s_,t]=v||[];return`<tr><td class="dim">${i+1}</td><td><a href="https://solscan.io/account/${esc(r.w)}" target="_blank" rel="noopener">${esc(r.w.slice(0,4))}…${esc(r.w.slice(-4))}</a></td>
+      <td class="r">${r.p.toFixed(2)}%</td><td class="r hs">${x==null?dash:x===0?'<span class="dim">0</span>':pct(x)}</td>
+      ${v?`<td class="r hs">${cmpUsd(R)}</td><td class="r" style="color:${N>0?'var(--green)':N<0?'var(--red)':'var(--dim)'}">${N>0?'+':''}${cmpUsd(N)}</td>
+      <td class="r"><span class="cmpSc" title="${t}: ${Math.round(c*100)}% of rewards bought back in" style="color:${CMPC[t]};border-color:${CMPC[t]}">${s_}</span></td>`:`<td class="r hs">${dash}</td><td class="r">${dash}</td><td class="r">${dash}</td>`}</tr>`}).join('')}</tbody></table>
+    ${CMP.rows.length>20?`<button class="btn cmpMore" id="cmpMore">${cmpAll?'SHOW TOP 20':'SHOW ALL '+CMP.rows.length}</button>`:''}`;
   const m=$('cmpMore');if(m)m.onclick=()=>{cmpAll=!cmpAll;renderCompound()}}
 $('cmpWin').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();cmpW=b.dataset.w;[...$('cmpWin').children].forEach(x=>x.classList.toggle('on',x===b));renderCompound()});
 loadCompound();setInterval(()=>{if(!document.hidden)loadCompound()},30*60e3);
