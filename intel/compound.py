@@ -102,7 +102,7 @@ G = {x['mint']: x for x in get(f'{SF}/api/public/v1/rewards')['data']['launches'
 watch = [m for m in [MARINE] + ranked if m in G]
 backfill_set = set(watch[:11])                                                        # $MARINE + the top 10 by market cap
 price = {}
-mints = sorted(set(watch) | {G[m]['quote']['mint'] for m in watch if (G[m].get('quote') or {}).get('mint')})
+mints = sorted(set(watch) | {SOL} | {G[m]['quote']['mint'] for m in watch if (G[m].get('quote') or {}).get('mint')})
 for i in range(0, len(mints), 50):
     try:
         for t in get('https://lite-api.jup.ag/tokens/v2/search?query=' + ','.join(mints[i:i + 50])):
@@ -142,8 +142,14 @@ def add(T, w, day, R=0.0, B=0.0, S=0.0):
 
 
 # ---------- the exact 7-day read (backfill) ----------
-def series(mint, since):
-    """$ price per hour from GeckoTerminal (the token's busiest pool)."""
+def series(mint, since, now_px):
+    """$ price per hour from GeckoTerminal (the token's busiest pool); today's price if GeckoTerminal won't answer."""
+    try: return series_gt(mint, since)
+    except Exception as e: log('  price history unavailable, using the current price:', mint[:6], e); return [(since, now_px)] if now_px else []
+
+
+def series_gt(mint, since):
+    time.sleep(2.2)
     p = get(f'https://api.geckoterminal.com/api/v2/networks/solana/tokens/{mint}/pools?page=1')
     if not p or not p.get('data'): return []
     pool = p['data'][0]; side = 'base' if pool['relationships']['base_token']['data']['id'].endswith(mint) else 'quote'
@@ -191,6 +197,7 @@ def history_fast(addr, since):
 
 
 def backfill(mint, quote, T, people, wallets, since):
+    px = {m: series(m, since, price.get(m, 0)) for m in (mint, quote, SOL)}; pt = {m: [t for t, _ in s] for m, s in px.items()}   # first: free
     qprog = rpc('getAccountInfo', [quote, {'encoding': 'base64', 'dataSlice': {'offset': 0, 'length': 0}}])['value']['owner']
 
     def one(w):
@@ -212,7 +219,6 @@ def backfill(mint, quote, T, people, wallets, since):
         return w, sorted(txs, key=lambda x: x['t'])
     with ThreadPoolExecutor(2) as ex: hist = dict(ex.map(one, wallets))   # 2 at a time: Helius' free plan refuses bursts
 
-    px = {m: series(m, since) for m in (mint, quote, SOL)}; pt = {m: [t for t, _ in s] for m, s in px.items()}
     def usd(m, a, t):
         if m in STABLE: return a
         s = px.get(m)
