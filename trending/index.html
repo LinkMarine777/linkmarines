@@ -231,7 +231,9 @@ let ROWS=[],sortK='vol',showAll=false,SC={};
 // DexScreener every minute for the busiest tokens (and $MARINE): the most liquid pair's price and market cap, volume summed
 // over all of a token's pairs. Laid over the saved list, so a reload of the list never shows older numbers.
 let LIVE={},liveAt=0;
-function applyLive(){ROWS.forEach(r=>{const q=LIVE[r.mint];if(!q)return;r.price=q.price;if(q.chg!=null)r.chg=q.chg;if(q.vol)r.vol=q.vol;if(q.mcap)r.mcap=q.mcap})}
+// DexScreener misprices some pools (BOP/BONK, MINECAT/ORE: $30-90M "volume" on $80K of liquidity), so its volume is used only
+// when it's within 5x of the saved one (stonkfun's or the Stonk Board's)
+function applyLive(){ROWS.forEach(r=>{const q=LIVE[r.mint];if(!q)return;r.price=q.price;if(q.chg!=null)r.chg=q.chg;if(q.vol)r.vol=r.vol0&&q.vol>5*r.vol0?r.vol0:q.vol;if(q.mcap)r.mcap=q.mcap})}
 async function loadQuotes(){const ms=[...new Set([MARINE,...ROWS.slice().sort((a,b)=>(b.vol||0)-(a.vol||0)).slice(0,59).map(r=>r.mint)])],next={};
   for(let i=0;i<ms.length;i+=30){try{const d=await j('https://api.dexscreener.com/tokens/v1/solana/'+ms.slice(i,i+30).join(','));
     (Array.isArray(d)?d:[]).forEach(p=>{const m=p.baseToken&&p.baseToken.address;if(!m||!ms.includes(m))return;const l=(p.liquidity||{}).usd||0,q=next[m]||(next[m]={l:-1,vol:0});
@@ -241,11 +243,11 @@ async function load(){
   const [tk,bd]=await Promise.allSettled([j(DATA+'tokens.json?'+Date.now()),j(DATA+'board.json?'+Date.now())]);
   const T=tk.status==='fulfilled'?tk.value.tokens||[]:[],B=bd.status==='fulfilled'?bd.value.tokens||{}:{},by={};
   TOK=by;setTimeout(renderIntel,0);   // token logos for the alerts feed
-  T.forEach(t=>by[t.mint]={mint:t.mint,symbol:t.symbol,quote:t.quote,image:t.mint===MARINE?MLOGO:t.image,price:t.price,chg:t.chg24,vol:t.vol24,mcap:t.mcap,paid:t.paidUsd,sf:true});
+  T.forEach(t=>by[t.mint]={mint:t.mint,symbol:t.symbol,quote:t.quote,image:t.mint===MARINE?MLOGO:t.image,price:t.price,chg:t.chg24,vol:t.vol24,mcap:t.mcap,paid:t.paidUsd,bonded:t.bondedAt?Date.parse(t.bondedAt):null,sf:true});
   for(const m in B){const b=B[m],r=by[m]||(by[m]={mint:m,symbol:b.symbol,quote:b.quote});
-    Object.assign(r,{rank:b.rank,apy:b.apy3d??b.apy24h,apr:b.apr3d??b.apr24h,holders:b.holders,h24:b.hold24h,bonded:b.bondedAt?Date.parse(b.bondedAt):null});
+    Object.assign(r,{rank:b.rank,apy:b.apy3d??b.apy24h,apr:b.apr3d??b.apr24h,holders:b.holders,h24:b.hold24h,bonded:b.bondedAt?Date.parse(b.bondedAt):r.bonded??null});
     r.price=r.price??b.price;r.chg=r.chg??b.chg24;r.vol=r.vol??b.vol24;r.mcap=r.mcap??b.mcap;r.paid=r.paid??b.paidUsd;r.quote=r.quote||b.quote}
-  ROWS=Object.values(by);
+  ROWS=Object.values(by);ROWS.forEach(r=>r.vol0=r.vol);
   applyLive();
   if(bd.status==='fulfilled'){APY=(bd.value.apy24h||[]).slice(0,10);renderApy()}if(!FLOW)loadFlow();
   const tv=T.reduce((s,t)=>s+(+t.vol24||0),0),paid=Object.values(B).reduce((s,b)=>s+(+b.paidUsd||0),0),ap=Object.values(B).map(b=>b.apy3d).filter(v=>v!=null).sort((a,b)=>a-b);
