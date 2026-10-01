@@ -462,7 +462,8 @@ for mint in watch:
                 'wallets': len(wallets), 'cover': round(sum(people[w] for w in wallets) / total * 100, 1), 'win': summ, 'rows': rows}
         save(f'compound/{mint}.json', page)
         index['tokens'][mint] = {'sym': sym, 'at': now, 'since': T['since'], 'wallets': len(wallets), 'holders': len(people),
-                                 'score': {k_: summ[k_]['score'] for k_ in WINDOWS}}
+                                 'score': {k_: summ[k_]['score'] for k_ in WINDOWS},
+                                 'c7': summ['7d']['compounded'], 'r7': summ['7d']['rewards']}   # trending: % put back, $ rewards (7 days)
         log(f"  score 7d {summ['7d']['score']} · 30d {summ['30d']['score']} · credits so far {CREDITS[0]}")
         if BACKFILL or HISTORY: save('compound/index.json', index); save('compound-state.json', state)   # a run cut short keeps what it did
     except Exception as e: log(mint[:6], 'failed:', e)
