@@ -63,13 +63,13 @@ def log(*a):
     print(out, flush=True)
 
 
-def get(url, tries=4):
+def get(url, tries=5):
     for i in range(tries):
         try:
             return json.load(urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'war-room-compound'}), timeout=30))
         except Exception as e:
             if i == tries - 1: raise
-            time.sleep(5 * (i + 1) if '429' in str(e) else 2)
+            time.sleep(15 * (i + 1) if '429' in str(e) else 2)   # GeckoTerminal's limit resets within a minute
 
 
 def rpc(m, p, tries=6):
@@ -182,8 +182,19 @@ def series_gt(mint, since):
     return sorted((int(x[0]), float(x[4])) for x in r['data']['attributes']['ohlcv_list'] if int(x[0]) >= since - 7200)
 
 
+PXC = {}   # price histories already fetched this run (SOL and shared reward tokens are needed by many tokens)
+
+
 def series_long(mint, since, now_px):
-    """Hourly $ prices back to `since` (GeckoTerminal, 1,000 hours a call); today's price if it won't answer."""
+    """Hourly $ prices back to `since` (GeckoTerminal, 1,000 hours a call, fetched once per run); today's price if it won't answer."""
+    c = PXC.get(mint)
+    if c and c[0] <= since: return c[1]
+    out = series_long_gt(mint, since, now_px)
+    if len(out) > 1: PXC[mint] = (out[0][0], out)
+    return out
+
+
+def series_long_gt(mint, since, now_px):
     try:
         time.sleep(2.2)
         p = get(f'https://api.geckoterminal.com/api/v2/networks/solana/tokens/{mint}/pools?page=1')
@@ -191,7 +202,7 @@ def series_long(mint, since, now_px):
         out, before = [], now
         for _ in range(6):
             if before <= since: break
-            time.sleep(2.2)
+            time.sleep(3)   # GeckoTerminal allows ~30 calls a minute
             r = get(f"https://api.geckoterminal.com/api/v2/networks/solana/pools/{pool['attributes']['address']}/ohlcv/hour?aggregate=1&limit=1000&before_timestamp={before}&token={side}")
             rows = r['data']['attributes']['ohlcv_list']
             if not rows or min(int(x[0]) for x in rows) >= before: break
