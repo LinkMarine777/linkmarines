@@ -93,7 +93,7 @@ html.fit #soundBtn{font-size:24px;padding:4px 10px}
 /* the token's market in one tile: price + change, then mcap / liquidity / 24h volume */
 .stat.mkt{flex:1.7 1 0}.stat.qt{flex:.75 1 0}.mkt .mrow{display:flex;align-items:baseline;gap:10px}.mkt .mrow span{flex:none}
 .mkt .mini{display:flex;gap:14px;margin-top:5px}.mkt .mini div{min-width:0}.mkt .mini i{display:block;font-style:normal;font-size:9.5px;letter-spacing:1.2px;color:var(--dim);text-transform:uppercase}
-.mkt .mini em{font-style:normal;font-size:14px;color:#fff;white-space:nowrap}.duo .half{flex:0 0 auto;min-width:0;overflow:hidden}.duo.both .half+.half{border-top:1px solid var(--line);padding-top:6px}.duo .half{display:flex;align-items:baseline;gap:8px}.duo .half label{flex:0 0 72px}.duo .half b{font-size:26px;flex:none}.duo .half span{display:block;min-width:0}.duo .half label{white-space:nowrap}.duo .half .dly{display:inline;font-size:0;border:0;padding:0;margin-left:5px}.duo .half .dly::after{content:'⏱';font-size:11px}.duo .half .dly.lv::after{content:'●'}
+.mkt .mini em{font-style:normal;font-size:14px;color:#fff;white-space:nowrap}.duo .half{flex:0 0 auto;min-width:0;overflow:hidden}.duo.both .half+.half{border-top:1px solid var(--line);padding-top:6px}.duo .half{display:flex;align-items:baseline;gap:6px}.duo .half label{flex:0 0 72px}.duo .half b{font-size:26px;flex:none}.duo .half span{display:block;min-width:0;flex:0 1 auto}.duo .half label{white-space:nowrap;flex:0 0 74px!important;overflow:hidden}.duo .half .dly{display:inline;font-size:0;border:0;padding:0;margin-left:2px;flex:none}.duo .half .dly::after{content:'⏱';font-size:11px}.duo .half .dly.lv::after{content:'●'}
 .stat:last-child{border-right:0}
 .stat label{display:block;font-size:10px;letter-spacing:1.5px;color:var(--dim);text-transform:uppercase;white-space:nowrap}
 .stat b{display:block;font-family:'VT323';font-size:32px;font-weight:400;color:#fff;line-height:1.05;white-space:nowrap}
@@ -240,7 +240,7 @@ tr.whale td{background:rgba(74,122,255,.08)}
 .dr{display:grid;grid-template-columns:62px 1fr auto auto;gap:8px;font-size:11px;padding:4px 0;border-bottom:1px solid rgba(26,36,68,.6);white-space:nowrap}
 .lp{border-bottom:1px solid rgba(26,36,68,.6);padding:7px 0}.lpt{font-size:12px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}.lpt .dim{font-size:10px}
 .lps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:4px;font-size:12px;color:#fff}.lps label{display:block;font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
-#scoreStat,#cmpStat{cursor:pointer}#scoreStat:hover label{color:#FF6B00}#scoreStat #sScoreMsg,#scoreStat #sScoreWhy{font-size:10px;line-height:1.35}#scoreStat #sScoreWhy{display:none}
+#scoreStat,#cmpStat{cursor:pointer}#scoreStat:hover label{color:#FF6B00}#scoreStat #sScoreMsg,#scoreStat #sScoreWhy{font-size:11px;line-height:1.35}#scoreStat #sScoreWhy{display:none}
 .clobrRow .panel{min-width:0;overflow:hidden}.clobrRow .lq label{white-space:nowrap}.clobrRow table{font-size:11px}.clobrRow td,.clobrRow th{padding:3px 5px}
 
 .clobrRow .r{text-align:right}.clobrRow .sub{font-size:10px;color:var(--dim);letter-spacing:1px;margin:10px 0 4px;text-transform:uppercase}
@@ -514,13 +514,13 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
     <div class="bar" id="pBar"><i style="width:0"></i></div>
     <div class="pmeta"><span id="pPct">0%</span><span id="pLast">last —</span><span id="pThr">min —</span></div>
   </div>
-  <div class="stat pay"><label>Payouts sent</label><b id="sPayouts">—</b><span class="dim" id="sHolders">&nbsp;</span><span class="dim" id="pMin" style="display:block">&nbsp;</span></div>
+  <div class="stat pay" title="payouts sent · holders earning rewards out of all holders · minimum holding to earn · the token's tax"><label>Payouts sent</label><b id="sPayouts">—</b><span class="dim" id="sHolders" style="display:block">&nbsp;</span><span class="dim" id="pMin" style="display:block">&nbsp;</span></div>
   <div class="stat mkt"><label class="tkSym">$MARINE</label><div class="mrow"><b id="sPrice">—</b><span id="sChg">&nbsp;</span></div>
     <div class="mini"><div><i>mcap</i><em id="sMcap">—</em></div><div><i>liq</i><em id="sLiq">—</em></div><div id="sVolC"><i>vol 24h</i><em id="sVol">—</em></div></div></div>
   <div class="stat qt"><label class="tkQs">$LINK</label><b id="sLink">—</b><span id="sLinkChg">&nbsp;</span></div>
   <div class="stat duo" id="scoresStat" style="display:none">
-  <div class="half" id="scoreStat" style="display:none" title="CLOBr score: 0-100 balance of support vs resistance liquidity. Click for more on CLOBr"><label>CLOBr ↗ <span class="dly" id="scoreDly" title="CLOBr data on Terminal 7 is up to 1 hour old; live with CLOBr Pro and the CLOBr extension (free 7-day trial)">delayed</span></label><b id="sScore">—</b><span class="dim" id="sScoreMsg">&nbsp;</span><span class="dim" id="sScoreWhy">&nbsp;</span></div>
   <div class="half fx" id="cmpStat" style="display:none" title="Are the biggest holders putting their rewards back in? Click for the holder list"><label>Compound</label><b id="sCmp">—</b><span class="dim" id="sCmpMsg">&nbsp;</span></div>
+  <div class="half" id="scoreStat" style="display:none" title="CLOBr score: 0-100 balance of support vs resistance liquidity. Click for more on CLOBr"><label>CLOBr ↗</label><b id="sScore">—</b><span class="dim" id="sScoreMsg">&nbsp;</span><span class="dly" id="scoreDly" title="CLOBr data on Terminal 7 is up to 1 hour old; live with CLOBr Pro and the CLOBr extension (free 7-day trial)">delayed</span><span class="dim" id="sScoreWhy">&nbsp;</span></div>
   </div>
 </section>
 
@@ -782,7 +782,11 @@ async function loadHolders(){try{const r=rewards,min=r&&r.minHoldingUsd&&marineP
 setTimeout(()=>{loadHolders();setInterval(loadHolders,120e3)},1500);
 function showHolders(){const r=rewards,hn=(HOLD&&HOLD.holders)||(CA===MARINE&&WRM&&WRM.holders)||null,en=(HOLD&&HOLD.over)||(CA===MARINE&&WRM&&WRM.eligible)||null;
   $('holdN').textContent=hn?num(hn):'';if(!r)return;
-  $('sHolders').textContent=(hn?num(hn):'—')+' holders'+(en?' · '+num(en)+' earning':'')+' · '+(+(r.transferTaxBps/100).toFixed(1))+'% tax'}
+  $('sHolders').textContent=en&&hn?num(en)+' of '+num(hn)+' earning':(hn?num(hn):'—')+' holders';
+  PAYTAX=r.transferTaxBps!=null?+(r.transferTaxBps/100).toFixed(1):null;payMin()}
+// the payouts tile's second line: what it takes to earn, and the token's tax
+let PAYTAX=null,PAYMIN=null;
+function payMin(){if(PAYMIN!=null)$('pMin').textContent='min hold '+usd(PAYMIN,0)+(PAYTAX!=null?' · '+PAYTAX+'% tax':'')}
 // $MARINE: the live payout numbers (through the bot, 60 s cache: the pulse bar moves within a minute, like the stream's) over
 // the saved snapshot, which adds the 24h / 7d totals and is the fallback
 async function marineRewards(){const[a,b]=await Promise.allSettled([j(DATA+'rewards.json?'+Date.now()),j(BOT+'/token/'+CA)]);
@@ -809,7 +813,7 @@ async function loadRewards(){
   $('pPct').textContent=(p*100).toFixed(0)+'% loaded';
   $('pThr').textContent='min '+usd(r.minDistributionUsd,0);
   pulseBadge();
-  $('pMin').textContent='hold '+usd(r.minHoldingUsd,0)+'+ to receive';
+  PAYMIN=r.minHoldingUsd;payMin();
   const w=r.window24h,w7=r.window7d;
   $('s24').innerHTML=w&&w.coveredSec>=3600&&w.tokens>=0.05?'<span class="up">+'+num(Math.max(0,w.tokens),1)+' '+TK.quote+'</span> <span class="dim">'+(w.complete?'last 24h':'in '+ago(Date.now()-w.coveredSec*1000))+(w7&&w7.complete?' · '+num(w7.tokens,0)+' last 7d':'')+'</span>':(w?'<span class="dim">24h total: tracking…</span>':'&nbsp;');
   tickLast();
@@ -942,6 +946,7 @@ const clobrUrl=()=>'https://clobr.io/token/'+encodeURIComponent(CA)+'?ref='+CLOB
 const every=s=>!s?'—':s<60?Math.round(s)+'s':s<3600?Math.floor(s/60)+'m'+(s%60?' '+Math.round(s%60)+'s':''):s<86400?Math.round(s/3600)+'h':Math.round(s/86400)+'d';
 const dshort=d=>{const t=Date.parse(d);return isNaN(t)?String(d||''):new Date(t).toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'})};
 const tokAmt=n=>n==null?'—':(n>=0?'▲ ':'▼ ')+compact(Math.abs(n),'');
+try{const c=JSON.parse(localStorage.getItem('clobrS:'+CA)||'null');if(c&&Date.now()-c.at<6*3600e3)setTimeout(()=>{if(!CL)paintScore(c.sc)},0)}catch(e){}
 async function loadClobr(){if(!FLAGS.CLOBR_ENABLED)return;try{const d=await j(BOT+'/clobr?mint='+CA+'&d=1');CL=d&&!d.error?d:null}catch(e){}renderClobr();draw()}
 // live vs delayed: live when the data came live (the CLOBr extension serves a visitor's own key, or marks our tag live);
 // otherwise our hour-delayed copy. The score tag and the analytics header always agree.
@@ -950,15 +955,18 @@ function clobrLive(){const t=$('scoreDly'),live=!!(CL&&CL.delayed===false)||/^\s
   const d=$('clobrDelay');d.classList.toggle('lv',live);
   d.textContent=live?'● Live · real-time CLOBr data via your CLOBr extension ▸':'⏱ Delayed'+(CL&&CL.fetchedAt?' · updated '+ago(CL.fetchedAt).split(' ')[0]+' ago':' up to 1h')+' · real-time with CLOBr Pro + the CLOBr extension · free 7-day trial ▸'}
 try{new MutationObserver(()=>clobrLive()).observe(document.getElementById('scoreDly'),{childList:true,characterData:true,subtree:true})}catch(e){}
-function renderClobr(){
-  $('clobrLink').href=clobrUrl();$('clobrDelay').href=clobrUrl();
-  // delayed like CLOBr's free tier: say how old the numbers are and where to get them live
-  clobrLive();$('scoreStat').onclick=()=>open(clobrUrl(),'_blank','noopener');
-  const sc=CL&&CL.score;$('scoreStat').style.display=sc?'':'none';syncScores();
+function paintScore(sc){$('scoreStat').style.display=sc?'':'none';syncScores();
   if(sc){$('sScore').textContent=sc.score!=null?(+sc.score).toFixed(1):'—';$('sScore').style.color=sc.score>=60?'var(--green)':sc.score<=40?'var(--red)':'var(--amber)';
     // CLOBr's message is "verdict: reason"; the tile shows both lines so the score explains itself
     const [v,...why]=String(sc.msg||'').split(':');$('sScoreMsg').textContent=v.trim();$('sScoreWhy').textContent=why.join(':').trim()||' ';
     $('scoreStat').title=(sc.msg||'CLOBr score').replace(':',' ·')+' · 0-100 balance of support vs resistance liquidity. Click for more on CLOBr'}
+}
+function renderClobr(){
+  $('clobrLink').href=clobrUrl();$('clobrDelay').href=clobrUrl();
+  // delayed like CLOBr's free tier: say how old the numbers are and where to get them live
+  clobrLive();$('scoreStat').onclick=()=>open(clobrUrl(),'_blank','noopener');
+  const sc=CL&&CL.score;paintScore(sc);
+  try{if(sc)localStorage.setItem('clobrS:'+CA,JSON.stringify({at:Date.now(),sc}))}catch(e){}
   const panels={liqP:renderLiq(),whP:renderWhales(),loP:renderLimits(),dcP:renderDca(),lpP:renderLp()};
   renderHolders();
   // every panel always shows, in the same order; one CLOBr has nothing for right now says so inside it
@@ -1047,8 +1055,11 @@ const cmpUsd=n=>(n<0?'−':'')+(Math.abs(n)>=1000?compact(Math.abs(n)):'$'+Math.
 const CMPC={Compounder:'var(--green)',Partial:'var(--blue2)',Collector:'var(--dim)',Seller:'var(--red)'};
 async function loadCompound(){try{const r=await fetch('https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/compound/'+CA+'.json',{cache:'no-store'});
   if(!r.ok)return;const d=await r.json();if(!d.wallets)return;CMP=d;renderHolders();
-  const W=d.win['7d']||{},sc=W.score;if(sc!=null){const col=sc>=40?'var(--green)':sc>=20?'var(--amber)':'var(--red)';$('cmpStat').style.display='';syncScores();
-    $('sCmp').textContent=Math.round(sc);$('sCmp').style.color=col;$('sCmpMsg').textContent=(sc>=60?'Strong':sc>=40?'Healthy':sc>=20?'Mixed':'Weak')+' · 7d';$('cmpStat').title=`Compound score, 7 days: ${Math.round(W.compounded)}% of rewards put back in by the biggest holders. Click for the holder list`}}catch(e){}}
+  const W=d.win['7d']||{};paintCmp(W.score,W.compounded);try{localStorage.setItem('cmpS:'+CA,JSON.stringify({at:Date.now(),s:W.score,c:W.compounded}))}catch(e){}}catch(e){}}
+// the compound tile, painted straight from this browser's last copy on reload, then from the fresh file
+try{const c=JSON.parse(localStorage.getItem('cmpS:'+CA)||'null');if(c&&Date.now()-c.at<12*3600e3)setTimeout(()=>{if(!CMP)paintCmp(c.s,c.c)},0)}catch(e){}
+function paintCmp(sc,comp){const W={compounded:comp};if(sc!=null){const col=sc>=40?'var(--green)':sc>=20?'var(--amber)':'var(--red)';$('cmpStat').style.display='';syncScores();
+    $('sCmp').textContent=Math.round(sc);$('sCmp').style.color=col;$('sCmpMsg').textContent=(sc>=60?'Strong':sc>=40?'Healthy':sc>=20?'Mixed':'Weak')+' · 7d';$('cmpStat').title=`Compound score, 7 days: ${Math.round(W.compounded)}% of rewards put back in by the biggest holders. Click for the holder list`}}
 // HOLDERS with compounding attached: the tracked wallets (80% of supply) by size, each with its 7d change (CLOBr, when it has
 // the wallet), rewards, net bought and compound score; one summary line on top
 function renderCompound(){if(!CMP)return;const W=CMP.win[cmpW]||{},sc=W.score,sym=esc(CMP.sym);
