@@ -387,12 +387,14 @@ def history_fill(mint, quote, T, people, wallets, since):
 # ---------- score ----------
 def score(days, since_day):
     """days: {day: [R, B, S]} -> (R, N, c, k, score, tag) over the days from since_day, counting from the first reward."""
-    ds = sorted((int(d), v) for d, v in days.items() if int(d) >= since_day)
+    allds = sorted((int(d), v) for d, v in days.items())
+    first_ever = next((d for d, v in allds if v[0] > 0), None)   # the day of the wallet's very first reward: its entry buy is
+    ds = [(d, v) for d, v in allds if d >= since_day]             # usually that day too, so that day's trades don't count
     first = next((d for d, v in ds if v[0] > 0), None)
     if first is None: return None
     R = sum(v[0] for d, v in ds); ds = [(d, v) for d, v in ds if d >= first]
-    B = sum(v[1] for d, v in ds); S = sum(v[2] for d, v in ds); N = B - S
-    bought = {d for d, v in ds if v[1] > 0}; rd = [d for d, v in ds if v[0] > 0]
+    B = sum(v[1] for d, v in ds if d != first_ever); S = sum(v[2] for d, v in ds if d != first_ever); N = B - S
+    bought = {d for d, v in ds if v[1] > 0 and d != first_ever}; rd = [d for d, v in ds if v[0] > 0]
     c = min(max(N, 0), R) / R if R else 0; k = sum(1 for d in rd if d in bought or d + 1 in bought) / len(rd)
     sc = round(100 * (0.7 * c + 0.3 * k)) if N >= 0 else 0
     tag = 'Seller' if N < 0 else 'Compounder' if c >= 0.5 else 'Partial' if c >= 0.1 else 'Collector'
