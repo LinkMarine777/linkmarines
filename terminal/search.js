@@ -13,15 +13,15 @@
 #t7s b{color:#fff;font-weight:600}#t7s .n{color:var(--dim,#5d6a8f);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1}#t7s .v{color:var(--green,#39ff6a);font-size:11px}
 #t7s .m{color:var(--txt,#c9d3ee);font-size:11px;flex:none}
 .t7w{position:relative;flex:1;min-width:120px;display:flex}.t7w input{flex:1;min-width:0}
-#caForm .t7p{position:absolute;top:50%;bottom:auto;left:auto;width:auto;height:auto;display:block;transform:translateY(-50%);z-index:2;border:1px solid var(--line,#1a2444);background:#0a0f1f;color:var(--blue2,#4a7aff);font:inherit;font-size:10px;line-height:1.4;letter-spacing:1px;padding:3px 7px;cursor:pointer}#caForm .t7p:hover{color:#fff;border-color:var(--blue2,#4a7aff)}#t7s .x{padding:9px 10px;color:var(--dim,#5d6a8f);font-size:12px}`;
+#caForm .t7p{position:absolute;top:50%;bottom:auto;left:auto;width:28px;height:28px;display:grid;place-items:center;transform:translateY(-50%);z-index:2;border:0;border-radius:6px;background:none;color:var(--dim,#5d6a8f);padding:0;cursor:pointer}#caForm .t7p svg{width:16px;height:16px;fill:currentColor}#caForm .t7p:hover{color:#fff;background:rgba(74,122,255,.14)}#caForm .t7p:hover{color:#fff;border-color:var(--blue2,#4a7aff)}#t7s .x{padding:9px 10px;color:var(--dim,#5d6a8f);font-size:12px}`;
   document.head.appendChild(st);
   const box = document.createElement('div'); box.id = 't7s'; box.setAttribute('role', 'listbox');
-  if (/Paste/.test(inp.placeholder)) inp.placeholder = 'Search $TICKER, name or paste CA…';
+  inp.placeholder = 'Search';   // a $TICKER, a name, or a pasted CA
   // PASTE: a CA opens straight away, anything else is searched. The box starts empty (and again on Back) for the next search
   const wrap = inp.parentElement.classList.contains('srch') ? inp.parentElement : (() => {
     const w = document.createElement('span'); w.className = 't7w'; inp.parentNode.insertBefore(w, inp); w.appendChild(inp); return w; })();
-  const pb = document.createElement('button'); pb.type = 'button'; pb.className = 't7p'; pb.textContent = 'PASTE'; pb.title = 'Paste a CA or ticker';
-  pb.style.right = wrap.querySelector('button[type="submit"]') ? '34px' : '4px'; inp.style.setProperty('padding-right', (parseInt(pb.style.right) + 56) + 'px', 'important');
+  const pb = document.createElement('button'); pb.type = 'button'; pb.className = 't7p'; pb.innerHTML = '<svg viewBox="0 0 24 24"><path d="M19 2h-4.18C14.4.84 13.3 0 12 0S9.6.84 9.18 2H5a2 2 0 00-2 2v16a2 2 0 002 2h14a2 2 0 002-2V4a2 2 0 00-2-2zm-7 0a1 1 0 110 2 1 1 0 010-2zm7 18H5V4h2v3h10V4h2z"/></svg>'; pb.title = 'Paste a CA or ticker'; pb.setAttribute('aria-label', 'Paste');
+  pb.style.right = wrap.querySelector('button[type="submit"]') ? '34px' : '4px'; inp.style.setProperty('padding-right', (parseInt(pb.style.right) + 32) + 'px', 'important');
   wrap.appendChild(pb); wrap.appendChild(box);
   pb.addEventListener('click', async () => {
     let v = ''; try { v = (await navigator.clipboard.readText() || '').trim(); } catch (e) {}
