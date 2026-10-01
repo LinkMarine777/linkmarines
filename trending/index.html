@@ -182,9 +182,9 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
       <div class="tabs" id="wk"><button data-w="buying" class="on">BUYING</button><button data-w="selling">SELLING</button><button data-w="recent">LIVE</button></div></div>
       <div class="feed lrs" id="whaleRows"><p class="nt">loading…</p></div>
       <div class="src">What the top holders of stonkfun's top tokens and $MARINE bought and sold in the last <span id="wpT">24h</span>, read from the chain · refreshed every few minutes</div></section>
-    <section class="panel d-fl"><div class="ph"><h2>⚡ FLOW</h2><span class="per" id="fp"><button data-p="1h" class="on">1H</button><button data-p="24h">24H</button></span><span class="meta hide-sm">stonkfun top 10 by market cap</span></div>
+    <section class="panel d-fl"><div class="ph"><h2>⚡ FLOW</h2><span class="per" id="fp"><button data-p="1h">1H</button><button data-p="24h" class="on">24H</button></span><span class="meta hide-sm">stonkfun top 10 by market cap</span></div>
       <div class="feed lrs" id="flowRows"><p class="nt">loading…</p></div>
-      <div class="src">Buys ▲ and sells ▼ in the last <span id="fpT">hour</span>, busiest first · DexScreener, every minute</div></section>
+      <div class="src">Buys ▲ and sells ▼ in the last <span id="fpT">24h</span>, busiest first · DexScreener, every minute</div></section>
     <section class="panel d-tr">
     <div class="ph"><h1>TRENDING ON STONKFUN</h1><span class="meta" id="meta"></span>
       <div class="tabs" id="sort"><button data-k="vol" class="on">VOLUME</button><button data-k="apy">APY</button><button data-k="paid">PAID OUT</button><button data-k="new">NEWEST</button></div></div>
@@ -332,10 +332,10 @@ loadIntel();setInterval(loadIntel,60e3);
 // ---------- from the stream's rotation: whale radar, last-hour flow, Stonk Board top APY ----------
 let wk='buying',FLOW=null,APY=null;
 // 1H / 24H switches (whale radar, flow, best LP), remembered per viewer
-const PER={wp:'24h',fp:'1h',lpp:'24h'};try{Object.assign(PER,JSON.parse(localStorage.getItem('wrPer')||'{}'))}catch(e){}
+const PER={wp:'24h',fp:'24h',lpp:'24h'};try{Object.assign(PER,JSON.parse(localStorage.getItem('wrPer2')||'{}'))}catch(e){}   // wrPer2: everyone starts on 24H again
 const perDraw={wp:()=>renderWhales(),fp:()=>renderFlow(),lpp:()=>renderLp()};
 Object.keys(PER).forEach(id=>{const el=$(id),set=()=>{[...el.children].forEach(b=>b.classList.toggle('on',b.dataset.p===PER[id]))};set();
-  el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;PER[id]=b.dataset.p;set();try{localStorage.setItem('wrPer',JSON.stringify(PER))}catch(x){}perDraw[id]()})});
+  el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;PER[id]=b.dataset.p;set();try{localStorage.setItem('wrPer2',JSON.stringify(PER))}catch(x){}perDraw[id]()})});
 const tokImg=m=>m===MARINE?MLOGO:(TOK[m]&&TOK[m].image)||'';
 const lrow=(href,img,name,sub,right,lead='')=>`<a class="lr" href="${href}"${/^https?:/.test(href)?' target="_blank" rel="noopener"':''}>${lead}${img?`<img src="${esc(img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span class="ph0"></span>'}<span class="ln"><b>${name}</b>${sub?`<small>${sub}</small>`:''}</span>${right}</a>`;
 const whales=n=>n+' whale'+(n===1?'':'s');
