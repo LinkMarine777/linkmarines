@@ -407,7 +407,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 
 @media (min-width:1000px) and (max-width:1299px){.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.stat{border-bottom:1px solid var(--line)}.stat:nth-child(3n){border-right:0}}
 .moreStats,#mbar{display:none}
-.mtok{display:none}.tkb .nm small{display:none}.tkb .nm b{font-weight:inherit}.mca{display:none}
+.mtok{display:none}.pchips{display:none}.tkb .nm small{display:none}.tkb .nm b{font-weight:inherit}.mca{display:none}
 .ph .chev{display:none}
 @media (max-width:999px){
   html,body,#stage{max-width:100vw;overflow-x:hidden}main>*,.lower>*,.col>*,.stats>*{min-width:0}.tape-bar{max-width:100vw}.tape-bar .track{max-width:none}
@@ -453,7 +453,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .tape-bar .lbl{font-size:14px}.track{padding:4px 0}
   .mtok{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;row-gap:4px;align-items:center;padding:14px 14px 2px}
   .mtok .tkb{display:contents}.mtok .tkb img{grid-row:1/3;width:50px;height:50px;border-radius:50%;border:1px solid var(--line)}
-  .mtok .nm{display:flex;flex-direction:column;gap:1px;min-width:0;overflow:hidden}.mtok .nm b{font-family:'IBM Plex Mono';font-weight:600;font-size:22px;color:#fff;white-space:nowrap}
+  .mtok .nm{display:flex;flex-direction:column;gap:1px;min-width:0;overflow:hidden}.mtok .nm b{font-weight:400;font-size:21px;color:#fff;white-space:nowrap}
   .mtok .nm b .q{font-size:13px;font-weight:400;margin-left:2px}.mtok .nm small{display:block;font-size:12px;letter-spacing:.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .mtl{display:flex;align-items:center;gap:6px;min-width:0;overflow-x:auto;scrollbar-width:none}.mtl::-webkit-scrollbar{display:none}
   .mca{display:inline-flex;align-items:center;gap:5px;flex:none;background:none;border:0;color:var(--dim);font:inherit;font-size:13px;padding:0 6px 0 0;cursor:pointer}.mca svg{width:13px;height:13px;fill:currentColor}.mca.ok{color:var(--green)}
@@ -461,8 +461,10 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .mtok .tkm{grid-column:1/-1;font-size:11px}
   .stats{padding:4px 8px 8px}.stat.mkt{order:1}.stat.hero{order:2}.stat.pulse{order:3}.stat.pay{order:4}.stat.qt{order:5}.stat.duo{order:6}
   .stats .stat.mkt{border:0!important;background:none;border-radius:0;padding:4px 6px 8px}.stat.mkt>label{display:none}
-  .stat.mkt .mrow b{font-family:'IBM Plex Mono';font-weight:600;font-size:34px}.stat.mkt .mini{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:10px}
-  .stat.mkt .mini i{font-style:normal;font-size:12px;letter-spacing:0;text-transform:capitalize;color:var(--dim)}.stat.mkt .mini em{font-size:17px}
+  .stat.mkt .mrow b{font-size:42px}
+  body.chips .pchips:not(:empty){display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:12px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .pchips span{display:flex;justify-content:center;align-items:baseline;gap:6px;padding:8px 2px;font-size:13px}.pchips span+span{border-left:1px solid var(--line)}.pchips i{font-style:normal;color:var(--dim)}.pchips b{font-family:inherit;font-size:13px;font-weight:400;display:inline}.pchips .up{color:var(--green)}.pchips .dn{color:var(--red)}.stat.mkt .mini{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:10px}
+  .stat.mkt .mini i{font-size:10.5px}.stat.mkt .mini em{font-size:16px}
   .stats{gap:8px;padding:8px;background:#03050d;border-bottom:1px solid var(--line)}.stat,.stat:nth-child(2n){border:1px solid var(--line)!important;border-radius:8px;background:var(--panel)}
 }
 .tkl a.sfl img{width:15px;height:15px;display:block}.tkl a.fwl{position:relative;color:var(--green)}
@@ -540,7 +542,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
   </div>
   <div class="stat pay" title="payouts sent · holders earning rewards out of all holders · minimum holding to earn · the token's tax"><label>Payouts sent</label><b id="sPayouts">—</b><span class="dim" id="sHolders" style="display:block">&nbsp;</span><span class="dim" id="pMin" style="display:block">&nbsp;</span></div>
   <div class="stat mkt"><label class="tkSym">$MARINE</label><div class="mrow"><b id="sPrice">—</b><span id="sChg">&nbsp;</span></div>
-    <div class="mini"><div><i>mcap</i><em id="sMcap">—</em></div><div><i>liq</i><em id="sLiq">—</em></div><div id="sVolC"><i>vol 24h</i><em id="sVol">—</em></div></div></div>
+    <div class="mini"><div><i>mcap</i><em id="sMcap">—</em></div><div><i>liq</i><em id="sLiq">—</em></div><div id="sVolC"><i>vol 24h</i><em id="sVol">—</em></div></div><div class="pchips" id="pChips"></div></div>
   <div class="stat qt"><label class="tkQs">$LINK</label><b id="sLink">—</b><span id="sLinkChg">&nbsp;</span></div>
   <div class="stat duo" id="scoresStat" style="display:none">
   <div class="half fx" id="cmpStat" style="display:none" title="Are the biggest holders putting their rewards back in? Click for the holder list"><label>Compound</label><b id="sCmp">—</b><span class="dim" id="sCmpMsg">&nbsp;</span></div>
@@ -746,6 +748,7 @@ function renderLinks(pairs){const info=(pairs||[]).map(p=>p.info).find(i=>i&&((i
 // desktop: in the header bar, as before
 const phone=matchMedia('(max-width:999px)');
 function placeTok(){const f=$('caForm'),srch=f.querySelector('.srch');
+  const hm=document.querySelector('header>a');if(hm){hm.href=phone.matches?'/trending/':'/';hm.title=phone.matches?'Trending tokens':'The Marines HQ'}
   if(phone.matches){$('mtok').insertBefore($('tkBadge'),$('mtl'));$('mtl').appendChild($('tkLinks'));$('mtok').appendChild($('tkMsg'))}
   else{f.insertBefore($('tkBadge'),srch);f.insertBefore($('tkLinks'),srch);f.appendChild($('tkMsg'))}}
 placeTok();phone.addEventListener?phone.addEventListener('change',placeTok):phone.addListener(placeTok);
@@ -869,6 +872,7 @@ async function loadMarket(){
     const p=d.pair||(d.pairs||[])[0];if(!p)return;const flip=p.baseToken.address!==CA;
     marinePx=flip?(+p.priceUsd/+p.priceNative):+p.priceUsd;
     $('sPrice').textContent=px(marinePx);chg24=p.priceChange?.h24;renderChg();
+    const pc=p.priceChange||{};$('pChips').innerHTML=flip?'':[['m5','5m'],['h1','1h'],['h6','6h'],['h24','24h']].map(([k,l])=>pc[k]==null?'':`<span><i>${l}</i><b class="${pc[k]>=0?'up':'dn'}">${pc[k]>=0?'':'−'}${Math.abs(pc[k]).toFixed(2)}%</b></span>`).join('');
     MCAP=flip?0:(p.marketCap||p.fdv||0);$('sMcap').textContent=flip?'—':compact(p.marketCap||p.fdv);
     // the pool lists this token second (LINK/ALLINU): its market cap from a pair that lists it first
     if(flip&&!(Date.now()-(loadMarket.mcAt||0)<600e3)){loadMarket.mcAt=Date.now();loadMarket.mc=j('https://api.dexscreener.com/tokens/v1/solana/'+CA).then(L=>{const q=(Array.isArray(L)?L:[]).filter(x=>x.baseToken&&x.baseToken.address===CA&&(x.marketCap||x.fdv)).sort((a,b)=>((b.liquidity||{}).usd||0)-((a.liquidity||{}).usd||0))[0];return q?(q.marketCap||q.fdv):0}).catch(()=>0)}
