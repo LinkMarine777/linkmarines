@@ -240,6 +240,7 @@ tr.whale td{background:rgba(74,122,255,.08)}
 .dr{display:grid;grid-template-columns:62px 1fr auto auto;gap:8px;font-size:11px;padding:4px 0;border-bottom:1px solid rgba(26,36,68,.6);white-space:nowrap}
 .lp{border-bottom:1px solid rgba(26,36,68,.6);padding:7px 0}.lpt{font-size:12px;display:flex;flex-wrap:wrap;align-items:center;gap:6px}.lpt .dim{font-size:10px}
 .lps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:4px;font-size:12px;color:#fff}.lps label{display:block;font-size:9px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
+body.norew .stat.pulse,body.norew .stat.pay{display:none}body.norew .stat.qt{grid-column:span 2}
 #scoreStat,#cmpStat{cursor:pointer}#scoreStat:hover label{color:#FF6B00}#scoreStat #sScoreMsg,#scoreStat #sScoreWhy{font-size:11px;line-height:1.35}#scoreStat #sScoreWhy{display:none}
 .clobrRow .panel{min-width:0;overflow:hidden}.clobrRow .lq label{white-space:nowrap}.clobrRow table{font-size:11px}.clobrRow td,.clobrRow th{padding:3px 5px}
 
@@ -796,6 +797,7 @@ async function marineRewards(){const[a,b]=await Promise.allSettled([j(DATA+'rewa
   if(!s)throw new Error('no rewards');return s}
 async function loadRewards(){
   try{rewards=CA===MARINE?await marineRewards():(await j(BOT+'/token/'+CA)).rewards;}catch(e){return}
+  document.body.classList.toggle('norew',!rewards);
   if(!rewards){$('sDist').textContent='—';$('sDistUsd').textContent='no holder rewards for this token';$('live').classList.remove('stale');$('liveTxt').textContent='LIVE';return}
   if(!rewards.snapshotAt)rewards.snapshotAt=Math.floor(Date.now()/1000);
   const r=rewards;
@@ -836,7 +838,10 @@ async function loadMarket(){
     const p=d.pair||(d.pairs||[])[0];if(!p)return;const flip=p.baseToken.address!==CA;
     marinePx=flip?(+p.priceUsd/+p.priceNative):+p.priceUsd;
     $('sPrice').textContent=px(marinePx);chg24=p.priceChange?.h24;renderChg();
-    MCAP=flip?0:(p.marketCap||p.fdv||0);$('sMcap').textContent=flip?'—':compact(p.marketCap||p.fdv);$('sLiq').textContent=compact(p.liquidity?.usd);
+    MCAP=flip?0:(p.marketCap||p.fdv||0);$('sMcap').textContent=flip?'—':compact(p.marketCap||p.fdv);
+    // the pool lists this token second (LINK/ALLINU): its market cap from a pair that lists it first
+    if(flip&&!(Date.now()-(loadMarket.mcAt||0)<600e3)){loadMarket.mcAt=Date.now();loadMarket.mc=j('https://api.dexscreener.com/tokens/v1/solana/'+CA).then(L=>{const q=(Array.isArray(L)?L:[]).filter(x=>x.baseToken&&x.baseToken.address===CA&&(x.marketCap||x.fdv)).sort((a,b)=>((b.liquidity||{}).usd||0)-((a.liquidity||{}).usd||0))[0];return q?(q.marketCap||q.fdv):0}).catch(()=>0)}
+    if(flip)loadMarket.mc.then(v=>{if(v){MCAP=v;$('sMcap').textContent=compact(v)}});$('sLiq').textContent=compact(p.liquidity?.usd);
     $('sVol').textContent=compact(p.volume?.h24);
     const t=p.txns?.h24||{};$('sVolC').title=num(t.buys)+' buys / '+num(t.sells)+' sells in 24h';
     const linkPx=flip?+p.priceUsd:marinePx/(+p.priceNative);

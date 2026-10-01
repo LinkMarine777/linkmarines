@@ -226,6 +226,9 @@ async function j(u){try{const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw
 const open2=m=>'/terminal/token?ca='+encodeURIComponent(m);
 
 // One row per token: stonkfun's top 30 by volume merged with thestonkboard's top 100 (both snapshotted by the bot)
+// a token logo that won't load (dead IPFS / irys links): the Stonk Board's copy of it, by the mint its link points to; else hidden
+function imgFb(i,rm){const a=i.closest('a[href*="ca="]'),m=a&&(/[?&]ca=([1-9A-HJ-NP-Za-km-z]{32,44})/.exec(a.getAttribute('href'))||[])[1];
+  if(m&&!i.dataset.fb){i.dataset.fb=1;i.src='https://thestonkboard.com/api/logos/'+m;return}if(rm)i.remove();else i.style.visibility='hidden'}
 let ROWS=[],sortK='vol',showAll=false,SC={};
 
 // live quotes: the saved token list refreshes every 20 min, so price, 24h change, volume and market cap come straight from
@@ -240,15 +243,23 @@ async function loadQuotes(){const ms=[...new Set([MARINE,...ROWS.slice().sort((a
     (Array.isArray(d)?d:[]).forEach(p=>{const m=p.baseToken&&p.baseToken.address;if(!m||!ms.includes(m))return;const l=(p.liquidity||{}).usd||0,q=next[m]||(next[m]={l:-1,vol:0});
       q.vol+=(p.volume||{}).h24||0;if(l>q.l){q.l=l;q.price=+p.priceUsd;q.chg=(p.priceChange||{}).h24;q.mcap=p.marketCap||p.fdv}})}catch(e){}}
   if(!Object.keys(next).length)return;Object.assign(LIVE,next);liveAt=Date.now();applyLive();render()}
+// paid out for reward tokens the bot's list has no total for yet (it only knows the ones the payout alerts follow): stonkfun's
+// own total (through the bot, which caches it), a few tokens at most, kept in this browser for an hour
+async function fillPaid(){let C={};try{C=JSON.parse(localStorage.getItem('sfPaid')||'{}')}catch(e){}const now=Date.now();
+  const miss=ROWS.filter(r=>r.reward&&r.paid==null).slice(0,6);if(!miss.length)return;
+  for(const r of miss){const c=C[r.mint];if(c&&now-c.at<3600e3){r.paid=c.usd;continue}
+    try{const d=((await j(BOT+'/token/'+r.mint))||{}).rewards;if(d&&d.distributedUsd!=null){r.paid=d.distributedUsd;C[r.mint]={at:now,usd:d.distributedUsd}}}catch(e){}}
+  try{localStorage.setItem('sfPaid',JSON.stringify(C))}catch(e){}render()}
 async function load(){
   const [tk,bd]=await Promise.allSettled([j(DATA+'tokens.json?'+Date.now()),j(DATA+'board.json?'+Date.now())]);
   const T=tk.status==='fulfilled'?tk.value.tokens||[]:[],B=bd.status==='fulfilled'?bd.value.tokens||{}:{},by={};
   TOK=by;setTimeout(renderIntel,0);   // token logos for the alerts feed
-  T.forEach(t=>by[t.mint]={mint:t.mint,symbol:t.symbol,quote:t.quote,image:t.mint===MARINE?MLOGO:t.image,price:t.price,chg:t.chg24,vol:t.vol24,mcap:t.mcap,paid:t.paidUsd,bonded:t.bondedAt?Date.parse(t.bondedAt):null,sf:true});
+  T.forEach(t=>by[t.mint]={mint:t.mint,symbol:t.symbol,quote:t.quote,image:t.mint===MARINE?MLOGO:t.image,price:t.price,chg:t.chg24,vol:t.vol24,mcap:t.mcap,paid:t.paidUsd,bonded:t.bondedAt?Date.parse(t.bondedAt):null,sf:true,reward:t.reward});
   for(const m in B){const b=B[m],r=by[m]||(by[m]={mint:m,symbol:b.symbol,quote:b.quote});
     Object.assign(r,{rank:b.rank,apy:b.apy3d??b.apy24h,apr:b.apr3d??b.apr24h,holders:b.holders,h24:b.hold24h,bonded:b.bondedAt?Date.parse(b.bondedAt):r.bonded??null});
     r.price=r.price??b.price;r.chg=r.chg??b.chg24;r.vol=r.vol??b.vol24;r.mcap=r.mcap??b.mcap;r.paid=r.paid??b.paidUsd;r.quote=r.quote||b.quote}
   ROWS=Object.values(by);ROWS.forEach(r=>r.vol0=r.vol);
+  fillPaid();
   applyLive();
   if(bd.status==='fulfilled'){APY=(bd.value.apy24h||[]).slice(0,10);renderApy()}if(!FLOW)loadFlow();
   const tv=T.reduce((s,t)=>s+(+t.vol24||0),0),paid=Object.values(B).reduce((s,b)=>s+(+b.paidUsd||0),0),ap=Object.values(B).map(b=>b.apy3d).filter(v=>v!=null).sort((a,b)=>a-b);
@@ -269,7 +280,7 @@ function render(){document.getElementById('rows').closest('table').classList.tog
   const list=ROWS.filter(r=>(sortK!=='new'||r.bonded)&&(sortK!=='cmp'||cmpOf(r.mint))).sort((a,b)=>SORTS[sortK](b)-SORTS[sortK](a)),shown=showAll?list:list.slice(0,25);
   $('rows').innerHTML=shown.length?shown.map((r,i)=>{const day=r.apr!=null?100*r.apr/100/365:null,img=r.image||'https://thestonkboard.com/api/logos/'+r.mint;
     return`<tr data-m="${esc(r.mint)}"${r.mint===MARINE?' class="me"':''}><td class="rk">${i+1}</td>
-      <td><a class="tok" href="${open2(r.mint)}"><img src="${esc(img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><span><b>$${esc(String(r.symbol||'?').replace(/^\$/,''))}</b><span class="q">/${esc(r.quote||'')}</span></span></a></td>
+      <td><a class="tok" href="${open2(r.mint)}"><img src="${esc(img)}" alt="" loading="lazy" onerror="imgFb(this)"><span><b>$${esc(String(r.symbol||'?').replace(/^\$/,''))}</b><span class="q">/${esc(r.quote||'')}</span></span></a></td>
       <td class="r hide-sm">${r.price!=null?px(r.price):'<span class="dim">—</span>'}${r.chg!=null?`<br><span class="${r.chg>=0?'up':'dn'}" style="font-size:10px">${r.chg>=0?'▲':'▼'} ${Math.abs(r.chg).toFixed(1)}%</span>`:''}</td>
       <td class="r">${compact(r.vol)}</td><td class="r hide-sm">${compact(r.mcap)}</td>
       <td class="r apy">${r.apy!=null?apyFmt(r.apy):'<span class="dim" title="not in the Stonk Board top 100">—</span>'}</td>
@@ -279,12 +290,15 @@ function render(){document.getElementById('rows').closest('table').classList.tog
       <td class="r hide-sm dim">${r.bonded?ago(r.bonded)+' ago':'—'}</td></tr>`}).join('')
     :'<tr><td colspan="12" class="nt">No data yet. The bot refreshes these lists every 10 minutes.</td></tr>';
   $('more').style.display=list.length>25?'':'none';$('more').textContent=showAll?'SHOW TOP 25 ▴':`SHOW ALL ${list.length} ▾`;
-  loadScores(shown.slice(0,20).map(r=>r.mint))}
-// CLOBr scores for the visible top 20 (the bot caches each for 10 minutes)
-let scAsked=new Set();
-async function loadScores(mints){const need=mints.filter(m=>!scAsked.has(m));if(!need.length)return;need.forEach(m=>scAsked.add(m));
-  try{const d=await j(BOT+'/scores?mints='+need.join(','));if(d&&d.scores){Object.assign(SC,d.scores);
-    document.querySelectorAll('#rows tr[data-m]').forEach(tr=>{const s=SC[tr.dataset.m];if(s)tr.children[9].innerHTML=scoreCell(s)})}}catch(e){need.forEach(m=>scAsked.delete(m))}}
+  loadScores(shown.map(r=>r.mint))}
+// CLOBr scores for every visible row, 20 a request (the bot's limit; it reuses each score for an hour). A token the bot
+// skipped (it fetches at most ~24 from CLOBr a minute) is asked again a minute later
+let scAsked=new Set(),scBusy=false,scRetry=null,scTries=0;
+async function loadScores(mints){if(scBusy)return;const need=mints.filter(m=>!scAsked.has(m));if(!need.length)return;scBusy=true;const missed=[];
+  for(let i=0;i<need.length;i+=20){const part=need.slice(i,i+20);part.forEach(m=>scAsked.add(m));
+    try{const d=await j(BOT+'/scores?mints='+part.join(','));const got=(d&&d.scores)||{};Object.assign(SC,got);part.forEach(m=>{if(!got[m])missed.push(m)});
+      document.querySelectorAll('#rows tr[data-m]').forEach(tr=>{const s=SC[tr.dataset.m];if(s)tr.children[9].innerHTML=scoreCell(s)})}catch(e){missed.push(...part)}}
+  scBusy=false;if(missed.length&&!scRetry&&scTries++<3)scRetry=setTimeout(()=>{scRetry=null;missed.forEach(m=>scAsked.delete(m));render()},65000)}
 $('sort').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;sortK=b.dataset.k;[...$('sort').children].forEach(x=>x.classList.toggle('on',x===b));render()});
 $('more').onclick=()=>{showAll=!showAll;render()};
 $('rows').addEventListener('click',e=>{if(e.target.closest('a'))return;const tr=e.target.closest('tr[data-m]');if(tr)location.href=open2(tr.dataset.m)});
@@ -309,17 +323,17 @@ function scoreRow(x,h,c,icon){const ms=String(x.i||'').startsWith('mints:')?x.i.
   const parts=String(x.text).replace(/^CLOBr( update)?:\s*(\d+ scores moved · )?/,'').split(' · ');
   const chips=parts.map((p,k)=>{const sm=/^\$(\S+)/.exec(p),mint=ms?ms[k]:(sm&&bySym(sm[1]))||(parts.length===1?x.m:null),img='',
       txt=p.replace(' CLOBr score ',' ').replace(' CLOBr ',' ').replace(/ \(now [^)]*\)/,'');
-    return mint?`<a class="fsc" href="${open2(mint)}">${img?`<img src="${esc(img)}" alt="" loading="lazy" onerror="this.remove()">`:''}${esc(txt)}</a>`:`<span class="fsc">${esc(txt)}</span>`}).join('');
+    return mint?`<a class="fsc" href="${open2(mint)}">${img?`<img src="${esc(img)}" alt="" loading="lazy" onerror="imgFb(this,1)">`:''}${esc(txt)}</a>`:`<span class="fsc">${esc(txt)}</span>`}).join('');
   return`<div class="fi"><span class="ft">${ago(x.t*1000)}</span><img src="/terminal/img/clobr.svg" alt="CLOBr" class="clg"><span><b class="fk ${c}">${h}</b><span class="scs">${chips}</span></span></div>`}
 function renderIntel(){if(!IN)return;const icon=m=>m===MARINE?MLOGO:(TOK[m]&&TOK[m].image)||'';
   const L=(IN.signals||[]).filter(x=>fk==='all'||group(x.kind,x)===fk);
   $('feed').innerHTML=L.length?L.map(x=>{const [h,c]=kindOf(x),im=x.m===MARINE?MLOGO:x.i||icon(x.m);if(x.kind==='score')return scoreRow(x,h,c,icon);
-    return`<a class="fi" href="${x.m?open2(x.m):'#'}"><span class="ft">${ago(x.t*1000)}</span>${im?`<img src="${esc(im)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span class="ph0"></span>'}
+    return`<a class="fi" href="${x.m?open2(x.m):'#'}"><span class="ft">${ago(x.t*1000)}</span>${im?`<img src="${esc(im)}" alt="" loading="lazy" onerror="imgFb(this)">`:'<span class="ph0"></span>'}
       <span><b class="fk ${c}">${h}</b>${esc(x.text)}</span></a>`}).join('')
     :`<p class="nt">${{score:'No CLOBr score changes',mover:'No market alerts',payout:'No holder payouts',whale:'No whale alerts',marine:'No $MARINE alerts'}[fk]||'No alerts'} yet.</p>`;
   renderLp()}
 function renderLp(){if(!IN)return;const icon=m=>m===MARINE?MLOGO:(TOK[m]&&TOK[m].image)||'',h1=PER.lpp==='1h';$('lpF').textContent=h1?'Fees 1h':'Fees 24h';$('lpD').textContent=h1?'Last hour':'Per day';
-  const has1=IN.lp1&&IN.lp1.length,P=(h1?(has1?IN.lp1:lpHour()):IN.lp)||[];$('lpRows').innerHTML=P.length?P.map(x=>`<tr><td><div class="pp">${(x.i||icon(x.m))?`<img src="${esc(x.i||icon(x.m))}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span style="width:20px;flex:none"></span>'}<span><a href="${open2(x.m)}">${esc(x.pair)}</a><span class="dx">${esc(x.dex)}</span></span></div></td>
+  const has1=IN.lp1&&IN.lp1.length,P=(h1?(has1?IN.lp1:lpHour()):IN.lp)||[];$('lpRows').innerHTML=P.length?P.map(x=>`<tr><td><div class="pp">${(x.i||icon(x.m))?`<img src="${esc(x.i||icon(x.m))}" alt="" loading="lazy" onerror="imgFb(this)">`:'<span style="width:20px;flex:none"></span>'}<span><a href="${open2(x.m)}">${esc(x.pair)}</a><span class="dx">${esc(x.dex)}</span></span></div></td>
       <td class="r">${compact(x.tvl)}</td><td class="r hide-sm">${compact(h1?x.fee1:x.fee)}</td><td class="r up">${h1?x.d1.toFixed(2):x.d.toFixed(1)}%</td><td class="r"><a class="add" href="${esc(x.url)}" target="_blank" rel="noopener">ADD ▸</a></td></tr>`).join('')
     :`<tr><td colspan="5" class="nt">${h1&&!has1&&!LPH?'loading…':'No pools yet.'}</td></tr>`}
 // last-hour LP until the whale job writes lp1: each of the 24 h list's pools earns its share of the day's fees in proportion
@@ -345,7 +359,7 @@ const perDraw={wp:()=>renderWhales(),fp:()=>renderFlow(),lpp:()=>renderLp()};
 Object.keys(PER).forEach(id=>{const el=$(id),set=()=>{[...el.children].forEach(b=>b.classList.toggle('on',b.dataset.p===PER[id]))};set();
   el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;PER[id]=b.dataset.p;set();try{localStorage.setItem('wrPer2',JSON.stringify(PER))}catch(x){}perDraw[id]()})});
 const tokImg=m=>m===MARINE?MLOGO:(TOK[m]&&TOK[m].image)||'';
-const lrow=(href,img,name,sub,right,lead='')=>`<a class="lr" href="${href}"${/^https?:/.test(href)?' target="_blank" rel="noopener"':''}>${lead}${img?`<img src="${esc(img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`:'<span class="ph0"></span>'}<span class="ln"><b>${name}</b>${sub?`<small>${sub}</small>`:''}</span>${right}</a>`;
+const lrow=(href,img,name,sub,right,lead='')=>`<a class="lr" href="${href}"${/^https?:/.test(href)?' target="_blank" rel="noopener"':''}>${lead}${img?`<img src="${esc(img)}" alt="" loading="lazy" onerror="imgFb(this)">`:'<span class="ph0"></span>'}<span class="ln"><b>${name}</b>${sub?`<small>${sub}</small>`:''}</span>${right}</a>`;
 const whales=n=>n+' whale'+(n===1?'':'s');
 function renderWhales(){const b=$('whaleRows');if(!IN)return;const h1=PER.wp==='1h';$('wpT').textContent=h1?'hour':'24h';
   if(wk==='recent'){const L=(IN.recent||[]).filter(x=>!h1||x.t*1000>Date.now()-3600e3).slice(0,30);
