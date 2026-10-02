@@ -52,8 +52,8 @@ jobs:
           SOLANA_RPC: ${{ secrets.SOLANA_RPC }}
           REDO_BEFORE: ${{ inputs.redo_before }}
           RPC_VIA: ${{ inputs.rpc }}
-          WORKERS: '2'   # wallets read at once in a history fill: '8' after the Helius plan upgrade
-          TRADES: '0'   # '1' = trade by trade in the 6-hourly update (~300-500K Helius credits a month, estimated): on after the plan upgrade
+          WORKERS: '8'   # wallets read at once in a history fill (Helius' paid plan takes bursts)
+          TRADES: '1'   # trade by trade in the 6-hourly update (actual swaps, transfers aren't trades); capped at TRADES_BUDGET credits a run
         timeout-minutes: 140
         run: python3 main/intel/compound.py data/terminal ${{ inputs.backfill && '--backfill' || '' }} ${{ inputs.history && '--history' || '' }} ${{ inputs.rescore && '--rescore' || '' }}
       - name: save to the data branch
