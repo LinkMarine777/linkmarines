@@ -121,7 +121,7 @@ main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:1px;backg
 .tabs{display:flex;gap:4px}
 .tabs button{background:transparent;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:11px;padding:3px 9px;cursor:pointer}
 .tabs button.on{color:#fff;border-color:var(--blue2);background:rgba(42,90,218,.2)}
-.legend{display:flex;gap:16px;font-size:11px;margin-bottom:6px}
+.legend{display:flex;gap:16px;font-size:11px;margin-bottom:6px}.brk{display:none}
 .legend i{display:inline-block;width:14px;height:2px;vertical-align:middle;margin-right:6px}
 #depthLeg{color:inherit;text-decoration:none;white-space:nowrap;transition:opacity .15s}#depthLeg:hover{color:#fff}#depthLeg.off{opacity:.35}#depthLeg.off i{background:var(--dim)!important}
 .chartP .tabs button{min-width:52px}
@@ -417,7 +417,12 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .ctok .tkb img{width:32px;height:32px}.ctok .tkb .nm b{font-family:'VT323';font-weight:400;font-size:26px;color:#fff;letter-spacing:1px;line-height:1}.ctok .tkb .nm b .q{font-family:'IBM Plex Mono';font-size:12px;margin-left:3px;letter-spacing:0}
   .ctok .tkl a,.ctok .tkl button{width:26px;height:26px;border-radius:5px}
   .chartP>.ph{flex-wrap:wrap;row-gap:8px;align-items:center}.chartP>.ph .legend{white-space:nowrap;flex:1 1 auto;justify-content:center;align-items:center;margin:0!important}   /* the line key centred in the space between the token and the chips */
-  .chartP>.ph .pchips:not(:empty){display:flex;margin-left:auto;border:1px solid var(--line);border-radius:6px;overflow:hidden}.chartP>.ph .pchips:not(:empty)+.tabs{margin-left:8px}
+  .chartP>.ph .pchips:not(:empty){display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  /* two rows that never move between tokens: [token · key] / [price chips · CANDLES · DEPTH · timeframes] */
+  .chartP>.ph .ctok,.chartP>.ph>h2{order:1}.chartP>.ph .legend{order:2;justify-content:flex-end!important}.chartP>.ph .brk{display:block;order:3;flex-basis:100%;height:0}
+  .chartP>.ph .pchips{order:4;margin-right:auto}#ctab{order:5}#dtab{order:6}#tf{order:7}
+  #clobrRow{display:grid;column-count:auto;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"liq wh lo" "dc wh lp";align-items:start}
+  #liqP{grid-area:liq}#whP{grid-area:wh}#loP{grid-area:lo}#dcP{grid-area:dc}#lpP{grid-area:lp}   /* CLOBr panels: the same spots for every token */
   .chartP>.ph .pchips span{display:flex;align-items:baseline;gap:4px;padding:5px 9px;font-size:11px;white-space:nowrap}.chartP>.ph .pchips span+span{border-left:1px solid var(--line)}
   .chartP>.ph .pchips i{font-style:normal;color:var(--dim)}.chartP>.ph .pchips b{font-family:inherit;font-size:11px;font-weight:400;display:inline;line-height:1.3}.chartP>.ph .pchips .up{color:var(--green)}.chartP>.ph .pchips .dn{color:var(--red)}
   .tkb .nm{display:flex;flex-direction:column;line-height:1.1}.tkb .nm small{display:block;font-size:9.5px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -573,8 +578,10 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
       <div class="ph">
         <div class="ctok" id="ctok"></div>
         <h2><span class="tkSym">$MARINE</span> × <span class="tkQs">$LINK</span></h2>
-        <div class="legend" style="margin:0"><span><i style="background:var(--blue2)"></i><span class="tkSym">$MARINE</span> (right)</span><span><i style="background:var(--amber)"></i><span class="tkQs">$LINK</span> (left)</span><a id="depthLeg" style="display:none" target="_blank" rel="noopener" title="CLOBr market depth, delayed up to 1h. Real-time on CLOBr Pro"><i style="background:linear-gradient(90deg,var(--green) 50%,var(--red) 50%)"></i>CLOBr depth <span class="dly">delayed</span></a></div>
-        <div class="tabs" id="dtab" style="display:none"><button id="depthBtn" class="on" type="button" title="CLOBr market depth for the token: support (green) and resistance (red) liquidity by price">DEPTH</button></div>
+        <div class="legend" style="margin:0"><span><i id="baseSw" style="background:var(--blue2)"></i><span class="tkSym">$MARINE</span> (right)</span><span><i style="background:var(--amber)"></i><span class="tkQs">$LINK</span> (left)</span><a id="depthLeg" style="visibility:hidden" target="_blank" rel="noopener" title="CLOBr market depth, delayed up to 1h. Real-time on CLOBr Pro"><i style="background:linear-gradient(90deg,var(--green) 50%,var(--red) 50%)"></i>CLOBr depth <span class="dly">delayed</span></a></div>
+        <div class="tabs" id="ctab"><button id="candleBtn" type="button" title="Candles instead of a line (volume is underneath either way)">CANDLES</button></div>
+        <div class="tabs" id="dtab" style="visibility:hidden"><button id="depthBtn" class="on" type="button" title="CLOBr market depth for the token: support (green) and resistance (red) liquidity by price">DEPTH</button></div>
+        <i class="brk"></i>
         <div class="tabs" id="tf">
           <button data-tf="5m">5M</button><button data-tf="1h">1H</button><button data-tf="6h">6H</button><button data-tf="1d">24H</button><button data-tf="7d" class="on">7D</button><button data-tf="all">ALL</button>
         </div>
@@ -911,8 +918,14 @@ async function loadMarket(){
 const TF={'5m':'minute?aggregate=1&limit=30','1h':'minute?aggregate=1&limit=90','6h':'minute?aggregate=5&limit=72','1d':'minute?aggregate=15&limit=96','7d':'hour?aggregate=1&limit=168','all':'hour?aggregate=4&limit=500'};
 const TFL={'5m':'5m','1h':'1h','6h':'6h','1d':'24h','7d':'7d','all':'all'},TFB={'5m':60,'1h':60,'6h':300,'1d':900,'7d':3600,all:14400},TFW={'5m':300,'1h':3600,'6h':21600,'1d':86400},TFPC={'5m':'m5','1h':'h1','6h':'h6','1d':'h24'};
 let tf='7d',series=null,CH={};
+let candleOn=false;try{candleOn=localStorage.getItem('wrCandle')==='1'}catch(e){}   // LINE / CANDLES, remembered in this browser
+// points: [t, close, quote close, open, high, low, volume $] (older saved copies have only the first three: drawn as a line)
 function setSeries(){const raw=CH[tf];if(!raw||!raw.length)return false;
-  series=raw.map(([t,m,l])=>({t:t*1000,m,l}));hover=null;draw();
+  let s=raw.map(([t,m,l,o,h,lo,v])=>({t:t*1000,m,l,o:o??m,h:h??m,lo:lo??m,v:v||0}));const ohlc=raw.length>1&&raw[0].length>=6&&raw[raw.length-2].length>=6;   // the live last point always has them: look at the saved ones
+  if(tf==='5m'&&candleOn&&s.length>2){const B=15e3,G=new Map();   // 5M is one point per trade: candles of 15 s
+    s.forEach(p=>{const k=Math.floor(p.t/B)*B,g=G.get(k);if(!g)G.set(k,{t:k,o:p.m,h:p.m,lo:p.m,m:p.m,l:p.l,v:p.v});else{g.h=Math.max(g.h,p.m);g.lo=Math.min(g.lo,p.m);g.m=p.m;g.l=p.l;g.v+=p.v}});
+    s=[...G.values()];for(let i=1;i<s.length;i++){const g=s[i],o=s[i-1].m;g.o=o;g.h=Math.max(g.h,o);g.lo=Math.min(g.lo,o)}}   // each opens at the last close, so a one-trade candle shows the move
+  s.ohlc=ohlc||tf==='5m';series=s;hover=null;draw();
   const lc=series.filter(p=>p.l);if(lc.length>1){const a=lc[0].l,b=lc[lc.length-1].l;$('sLinkChg').innerHTML=pct((b-a)/a*100)+' <span class="dim">'+TFL[tf]+'</span>'}
   renderChg();return true}
 // the token's price change over the chart's timeframe: DexScreener's own for 1H / 6H / 24H, the chart's first-to-last otherwise
@@ -924,25 +937,27 @@ function renderChg(){let c=PC[TFPC[tf]]??(tf==='1d'?chg24:null),lab=TFL[tf];
 // 5M from the tape's own trades (one point per trade, real time; GeckoTerminal's minute candles lag a few minutes)
 function tape5m(){if(typeof tapeRaw==='undefined'||!tapeRaw||!tapeRaw.length)return null;const now=Math.floor(Date.now()/1000),t0=now-300,q=QPX||null,pts=[];let prev=null;
   for(const a of tapeRaw){const t=Math.floor(Date.parse(a.block_timestamp)/1000),buy=a.to_token_address===CA,pr=+(buy?a.price_to_in_usd:a.price_from_in_usd);if(!(pr>0))continue;
-    if(t>=t0)pts.push([t,pr,q]);else{prev=pr;break}}
-  if(!pts.length&&prev==null)return null;pts.reverse();pts.unshift([t0,prev??pts[0][1],q]);if(pts.length<2)pts.push([now,pts[0][1],q]);return pts}
+    if(t>=t0)pts.push([t,pr,q,pr,pr,pr,+a.volume_in_usd||0]);else{prev=pr;break}}
+  if(!pts.length&&prev==null)return null;pts.reverse();const p0=prev??pts[0][1];pts.unshift([t0,p0,q,p0,p0,p0,0]);if(pts.length<2)pts.push([now,p0,q,p0,p0,p0,0]);return pts}
 async function loadLive(k){
   if(k==='5m'){const t=tape5m();if(t){CH[k]=t;return}}
   if(!GT)return;
   const [qq,bb]=await Promise.all([j(`${GT}/ohlcv/${TF[k]}&token=quote`),j(`${GT}/ohlcv/${TF[k]}&token=base`)]);
   const [m,l]=bb.meta?.base?.address===CA?[bb,qq]:[qq,bb];
   const L=new Map(l.data.attributes.ohlcv_list.map(c=>[c[0],c[4]]));let last=null;
-  const pts=m.data.attributes.ohlcv_list.slice().reverse().map(c=>{if(L.has(c[0]))last=L.get(c[0]);return[c[0],c[4],last]});
+  const pts=m.data.attributes.ohlcv_list.slice().reverse().map(c=>{if(L.has(c[0]))last=L.get(c[0]);return[c[0],c[4],last,c[1],c[2],c[3],c[5]]});
   const f=pts.find(p=>p[2]!=null)?.[2];pts.forEach(p=>{if(p[2]==null)p[2]=f});
   // GeckoTerminal only returns candles that had trades, so N candles can reach back much further than the window on a quiet
   // token: keep the window exactly (5M = the last 5 minutes...), starting from the last price before it
   const W=TFW[k];if(W){const t0=Math.floor(Date.now()/1000)-W,i=pts.findIndex(p=>p[0]>=t0),prev=i>0?pts[i-1]:i<0?pts[pts.length-1]:null;
-    const kept=i<0?[]:pts.slice(i);if(prev)kept.unshift([t0,prev[1],prev[2]]);if(kept.length)CH[k]=kept.length>1?kept:[kept[0],[Math.floor(Date.now()/1000),kept[0][1],kept[0][2]]];else CH[k]=pts}
+    const flat=(t,p,q)=>[t,p,q,p,p,p,0];   // a filler point: no trades, no volume
+    const kept=i<0?[]:pts.slice(i);if(prev)kept.unshift(flat(t0,prev[1],prev[2]));if(kept.length)CH[k]=kept.length>1?kept:[kept[0],flat(Math.floor(Date.now()/1000),kept[0][1],kept[0][2])];else CH[k]=pts}
   else CH[k]=pts}
 // the chart's last point follows the live price (DexScreener, every 30 s), so the chart never trails the ticker
 let QPX=0;
 function liveTail(){const r=CH[tf];if(!r||!r.length||!marinePx)return;const B=TFB[tf]||3600,t=Math.floor(Date.now()/1000/B)*B,last=r[r.length-1];
-  if(t<last[0])return;const q=QPX||last[2];if(t===last[0]){last[1]=marinePx;last[2]=q}else r.push([t,marinePx,q])}
+  if(t<last[0])return;const q=QPX||last[2];if(t===last[0]){last[1]=marinePx;last[2]=q;if(last.length>=6){last[4]=Math.max(last[4],marinePx);last[5]=Math.min(last[5],marinePx)}}
+  else{const o=last[1];r.push([t,marinePx,q,o,Math.max(o,marinePx),Math.min(o,marinePx),0])}}
 async function loadChart(){
   // shows a chart at once: this browser's last copy (kept 6 h) or, for $MARINE, the saved chart.json (the whale job rebuilds it
   // every 30 min); live candles from GeckoTerminal only when the saved copy is over 20 min old. The last point always follows
@@ -976,11 +991,14 @@ function draw(){
   c.width=W*dpr;c.height=H*dpr;const x=c.getContext('2d');x.scale(dpr,dpr);x.clearRect(0,0,W,H);
   if(!series||series.length<2)return;
   const FIT=document.documentElement.classList.contains('fit'),CF=FIT?20:11;
-  const pad={l:CF*7,r:CF*7,t:FIT?14:10,b:CF*2.8},w=W-pad.l-pad.r,h=H-pad.t-pad.b;
-  const ms=series.map(p=>p.m),ls=series.map(p=>p.l);
+  const pad={l:CF*7,r:CF*7,t:FIT?14:10,b:CF*2.8},w=W-pad.l-pad.r,hAll=H-pad.t-pad.b;
+  // volume underneath (always on, when the data has it); candles when chosen and the data has open / high / low
+  const CDL=candleOn&&series.ohlc,vmax=Math.max(...series.map(p=>p.v||0)),vh=vmax>0?Math.round(hAll*.18):0,h=hAll-(vh?vh+6:0);
+  const ms=CDL?series.flatMap(p=>[p.h,p.lo]):series.map(p=>p.m),ls=series.map(p=>p.l);
   const nt=FIT?Math.max(2,Math.min(5,Math.floor(h/55))):5;
   const A=nice(Math.min(...ms),Math.max(...ms),nt),B=niceN(Math.min(...ls),Math.max(...ls),A.t.length-1);   // both axes' labels on the same lines
-  const t0=series[0].t,t1=series[series.length-1].t;
+  let dt=Infinity;for(let i=1;i<series.length;i++){const d=series[i].t-series[i-1].t;if(d>0&&d<dt)dt=d}if(!isFinite(dt))dt=0;   // one candle's span: candles get half of it as room at each end
+  const t0=series[0].t-(CDL?dt/2:0),t1=series[series.length-1].t+(CDL?dt/2:0),cw=Math.max(1,Math.min(14,w/series.length*.7,dt/(t1-t0)*w*.7||14));
   const X=t=>pad.l+(t-t0)/(t1-t0)*w,YA=v=>pad.t+h-(v-A.lo)/(A.hi-A.lo)*h,YB=v=>pad.t+h-(v-B.lo)/(B.hi-B.lo)*h;
   x.font=CF+'px IBM Plex Mono';x.lineWidth=1;
   x.textAlign='right';x.textBaseline='middle';
@@ -991,7 +1009,9 @@ function draw(){
   const span=t1-t0,n=Math.max(2,Math.floor(w/(CF*11)));
   for(let i=0;i<=n;i++){const t=t0+span*i/n,d=new Date(t);
     const lab=span<=36*3600e3?d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+(span<=8*86400e3?' '+d.toLocaleTimeString('en-US',{hour:'numeric'}):'');
-    x.fillText(lab,X(t),pad.t+h+8)}
+    x.fillText(lab,X(t),pad.t+hAll+8)}
+  if(vh){const yb=pad.t+hAll;series.forEach((p,i)=>{const bh2=p.v/vmax*vh;if(bh2<.5)return;const up=CDL?p.m>=p.o:(i?p.m>=series[i-1].m:true);
+    x.fillStyle=up?'rgba(74,122,255,.4)':'rgba(232,238,255,.28)';x.fillRect(X(p.t)-cw/2,yb-bh2,cw,bh2)})}
   // CLOBr depth for the token: liquidity per price band on the token's (right) scale, bars growing in from
   // the right edge (the "now" end of the chart). Green = support below price, red = resistance above.
   let bins=null,bh=0;
@@ -1004,18 +1024,23 @@ function draw(){
         x.fillStyle=sup?'rgba(57,255,106,.16)':'rgba(255,51,85,.16)';x.fillRect(pad.l+w-bw,y,bw,bhh);
         x.fillStyle=sup?'rgba(57,255,106,.75)':'rgba(255,51,85,.75)';x.fillRect(pad.l+w-bw,y,FIT?3:2,bhh)});
     }else bins=null}
-  const g=x.createLinearGradient(0,pad.t,0,pad.t+h);g.addColorStop(0,'rgba(74,122,255,.35)');g.addColorStop(1,'rgba(74,122,255,0)');
+  if(CDL)series.forEach(p=>{const up=p.m>=p.o,cx=X(p.t);x.strokeStyle=x.fillStyle=up?'#4a7aff':'#e8eeff';   // the site's blue up, white down: green / red stay CLOBr depth's, yellow the quote's
+   x.lineWidth=1;
+    x.beginPath();x.moveTo(cx,YA(p.h));x.lineTo(cx,YA(p.lo));x.stroke();const y1=YA(Math.max(p.o,p.m));x.fillRect(cx-cw/2,y1,cw,Math.max(1,YA(Math.min(p.o,p.m))-y1))});
+  else{const g=x.createLinearGradient(0,pad.t,0,pad.t+h);g.addColorStop(0,'rgba(74,122,255,.35)');g.addColorStop(1,'rgba(74,122,255,0)');
   x.beginPath();series.forEach((p,i)=>i?x.lineTo(X(p.t),YA(p.m)):x.moveTo(X(p.t),YA(p.m)));
-  x.lineTo(X(t1),pad.t+h);x.lineTo(X(t0),pad.t+h);x.closePath();x.fillStyle=g;x.fill();
-  x.beginPath();series.forEach((p,i)=>i?x.lineTo(X(p.t),YA(p.m)):x.moveTo(X(p.t),YA(p.m)));x.strokeStyle='#4a7aff';x.lineWidth=FIT?4:2;x.stroke();
+  x.lineTo(X(series[series.length-1].t),pad.t+h);x.lineTo(X(series[0].t),pad.t+h);x.closePath();x.fillStyle=g;x.fill();
+  x.beginPath();series.forEach((p,i)=>i?x.lineTo(X(p.t),YA(p.m)):x.moveTo(X(p.t),YA(p.m)));x.strokeStyle='#4a7aff';x.lineWidth=FIT?4:2;x.stroke()}
   x.beginPath();series.forEach((p,i)=>i?x.lineTo(X(p.t),YB(p.l)):x.moveTo(X(p.t),YB(p.l)));x.strokeStyle='rgba(255,210,63,.8)';x.lineWidth=FIT?3:1.25;x.setLineDash(FIT?[9,6]:[4,3]);x.stroke();x.setLineDash([]);
-  if(hover!=null){const p=series[hover],hx=X(p.t);x.strokeStyle='rgba(255,255,255,.25)';x.lineWidth=1;x.beginPath();x.moveTo(hx,pad.t);x.lineTo(hx,pad.t+h);x.stroke();
+  if(hover!=null){const p=series[hover],hx=X(p.t);x.strokeStyle='rgba(255,255,255,.25)';x.lineWidth=1;x.beginPath();x.moveTo(hx,pad.t);x.lineTo(hx,pad.t+hAll);x.stroke();
     [[YA(p.m),'#4a7aff'],[YB(p.l),'#ffd23f']].forEach(([y,col])=>{x.fillStyle=col;x.beginPath();x.arc(hx,y,3.5,0,7);x.fill()});
     const tip=$('tip');tip.style.display='block';
-    tip.innerHTML=new Date(p.t).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'<br><span style="color:#4a7aff">'+esc(TK.symbol)+' '+px(p.m)+'</span><br><span style="color:#ffd23f">'+esc(TK.quote)+' '+px(p.l)+'</span>'
+    tip.innerHTML=new Date(p.t).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'<br><span style="color:#4a7aff">'+esc(TK.symbol)+' '+(CDL?'O '+px(p.o)+' H '+px(p.h)+' L '+px(p.lo)+' C '+px(p.m):px(p.m))+'</span><br><span style="color:#ffd23f">'+esc(TK.quote)+' '+px(p.l)+'</span>'
+      +(p.v?'<br><span class="dim">vol '+compact(p.v)+'</span>':'')
       +(bins?(b=>b&&(b[0]||b[1])?'<br>'+[b[0]?'<span style="color:#39ff6a">support '+compact(b[0])+'</span>':'',b[1]?'<span style="color:#ff3355">resist '+compact(b[1])+'</span>':''].filter(Boolean).join(' · '):'')(bins[Math.min(bins.length-1,Math.max(0,Math.floor((pad.t+h-YA(p.m))/bh)))]):'');
     tip.style.left=Math.min(hx+12,W-tip.offsetWidth-4)+'px';tip.style.top='14px';
   }else $('tip').style.display='none';
+  const sw=$('baseSw');if(sw)sw.style.background=CDL?'linear-gradient(90deg,#4a7aff 50%,#e8eeff 50%)':'var(--blue2)';
   draw.geom={pad,w,t0,t1};
 }
 let hover=null;
@@ -1039,7 +1064,8 @@ function clobrLive(){const t=$('scoreDly'),live=!!(CL&&CL.delayed===false)||/^\s
   const d=$('clobrDelay');d.classList.toggle('lv',live);
   d.textContent=live?'● Live · real-time CLOBr data via your CLOBr extension ▸':'⏱ Delayed'+(CL&&CL.fetchedAt?' · updated '+ago(CL.fetchedAt).split(' ')[0]+' ago':' up to 1h')+' · real-time with CLOBr Pro + the CLOBr extension · free 7-day trial ▸'}
 try{new MutationObserver(()=>clobrLive()).observe(document.getElementById('scoreDly'),{childList:true,characterData:true,subtree:true})}catch(e){}
-function paintScore(sc){$('scoreStat').style.display=sc?'':'none';syncScores();
+function paintScore(sc){$('scoreStat').style.display=sc||DESK?'':'none';syncScores();
+  if(!sc&&DESK){$('sScore').textContent='—';$('sScore').style.color='var(--dim)';$('sScoreMsg').textContent='no CLOBr data';$('sScoreWhy').textContent=' '}
   if(sc){$('sScore').textContent=sc.score!=null?Math.round(+sc.score):'—';$('sScore').style.color=sc.score>=60?'var(--green)':sc.score<=40?'var(--red)':'var(--amber)';
     // CLOBr's message is "verdict: reason"; the tile shows both lines so the score explains itself
     const [v,...why]=String(sc.msg||'').split(':');$('sScoreMsg').textContent=v.trim();$('sScoreWhy').textContent=why.join(':').trim()||' ';
@@ -1065,9 +1091,10 @@ function renderClobr(){
     else{$(k).style.display='';$(none[k][0]).innerHTML=`<div class="empty">${none[k][1]} for <b>${sym}</b> on CLOBr right now. It shows up here as soon as there is one.</div>`}}
   $('missP').style.display='none';const any=!!CL;
   $('clobrMiss').textContent=empty.length?' · nothing on CLOBr right now for '+(empty.length>1?empty.slice(0,-1).join(', ')+' or '+empty[empty.length-1]:empty[0])+' (shows up here when there is)':'';
-  $('clobrWrap').style.display=any||sc?'':'none';clobrCols()}
+  $('clobrWrap').style.display=any||sc||(DESK&&FLAGS.CLOBR_ENABLED)?'':'none';clobrCols()}
 // as many columns as fit (about 400px each), never more than there are panels
 function clobrCols(){const r=$('clobrRow'),n=[...r.children].filter(e=>e.style.display!=='none').length;
+  if(innerWidth>=1000){r.style.columnCount='';return}   // desktop: a fixed grid (CSS), every panel in the same place for every token
   r.style.columnCount=Math.max(1,Math.min(n,innerWidth<1000?1:Math.floor(r.clientWidth/400)))}
 addEventListener('resize',()=>{clearTimeout(clobrCols.t);clobrCols.t=setTimeout(clobrCols,150)});
 function renderWhales(){const W=CL&&CL.whales;if(!W||W.none||!W.summary)return false;const S=W.summary,w=whWin;
@@ -1131,8 +1158,10 @@ $('whWin').addEventListener('click',e=>{const b=e.target.closest('button');if(!b
 let DEPTH=null,depthOn=true;try{depthOn=localStorage.getItem('wrDepth')!=='0'}catch(e){}
 async function loadDepth(){if(!FLAGS.CLOBR_ENABLED)return;try{const d=await j(BOT+'/depth?mint='+CA+'&d=1');
   DEPTH=d&&d.levels&&d.levels.length?d:null}catch(e){}
-  $('dtab').style.display=DEPTH?'':'none';depthLeg();renderClobr();draw()}
-function depthLeg(){const l=$('depthLeg');l.style.display=DEPTH?'':'none';l.classList.toggle('off',!depthOn);l.href=clobrUrl()}
+  $('dtab').style.visibility=DEPTH?'':'hidden';depthLeg();renderClobr();draw()}   // DEPTH keeps its place either way: nothing moves between tokens
+function depthLeg(){const l=$('depthLeg');l.style.display='';l.style.visibility=DEPTH?'':'hidden';l.classList.toggle('off',!depthOn);l.href=clobrUrl()}
+$('candleBtn').classList.toggle('on',candleOn);
+$('candleBtn').onclick=()=>{candleOn=!candleOn;$('candleBtn').classList.toggle('on',candleOn);try{localStorage.setItem('wrCandle',candleOn?'1':'0')}catch(e){}if(!setSeries())draw()};
 $('depthBtn').onclick=()=>{depthOn=!depthOn;$('depthBtn').classList.toggle('on',depthOn);depthLeg();
   try{localStorage.setItem('wrDepth',depthOn?'1':'0')}catch(e){}draw()};
 $('depthBtn').classList.toggle('on',depthOn);
@@ -1182,6 +1211,10 @@ function renderCompound(){if(!CMP)return;const W=CMP.win[cmpW]||{},sc=W.score,sy
     ${CMP.rows.length>20?`<button class="btn cmpMore" id="cmpMore">${cmpAll?'SHOW TOP 20':'SHOW ALL '+CMP.rows.length}</button>`:''}`;
   const m=$('cmpMore');if(m)m.onclick=()=>{cmpAll=!cmpAll;renderCompound()};
   $('cmpBody').querySelectorAll('tr.cmpRow').forEach(tr=>tr.onclick=e=>{if(e.target.closest('a'))return;const d=tr.nextElementSibling;if(d&&d.classList.contains('cmpDet'))d.style.display=d.style.display==='none'?'':'none'})}
+// desktop keeps every panel in the same place for every token: a panel with nothing for this token says so instead of
+// disappearing (phones still fold empty ones away)
+const DESK=matchMedia('(min-width:1000px)').matches;
+if(DESK)setTimeout(()=>{if($('cmpStat').style.display==='none'){$('cmpStat').style.display='';$('sCmp').style.color='var(--dim)';$('sCmpMsg').textContent='not tracked'}syncScores()},0);
 function syncScores(){const a=$('scoreStat').style.display!=='none',b=$('cmpStat').style.display!=='none';$('scoresStat').style.display=a||b?'':'none';$('scoresStat').classList.toggle('both',a&&b)}
 $('cmpStat').onclick=()=>{setTapeView('holders');document.querySelector('.tapeP').scrollIntoView({behavior:'smooth',block:'start'})};
 $('cmpWin').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();cmpW=b.dataset.w;[...$('cmpWin').children].forEach(x=>x.classList.toggle('on',x===b));renderCompound()});
@@ -1302,7 +1335,7 @@ function boardStats(mint=TK.mint){if(!board)return null;
 // and last payout live up top). Hidden when the mint isn't on the board; figures come only from board.json.
 function renderApy(){const m=FLAGS.STONKBOARD_ENABLED&&board?boardStats():null,ranked=!!(m&&m.rank);
   // stonkfun tokens that aren't ranked yet get a one-line note instead of an empty column; other tokens hide it
-  $('sbP').style.display=ranked||(FLAGS.STONKBOARD_ENABLED&&board&&TKR)?'':'none';$('mb').style.display=ranked?'':'none';$('mbNo').style.display=ranked?'none':'';
+  $('sbP').style.display=ranked||(FLAGS.STONKBOARD_ENABLED&&board&&(TKR||DESK))?'':'none';$('mb').style.display=ranked?'':'none';$('mbNo').style.display=ranked?'none':'';
   $('sbLink').href=ranked?'https://thestonkboard.com/coin/'+encodeURIComponent(CA):'https://thestonkboard.com/';$('sbLink').textContent=ranked?'VIEW ON STONK BOARD ▸':'SEE THE BOARD ▸';
   if(!ranked){const sym=esc('$'+String(TK.symbol).replace(/^\$/,''));$('mbNo').innerHTML=`<b>${sym}</b> isn't in the Stonk Board top 100 right now.<br>Its modeled APY, what $100 held earns, and holder stats show here as soon as it ranks.`;return}
   $('mbRank').textContent='#'+m.rank;$('mbA3').textContent=apyFmt(m.apy3d);$('mbA24').textContent=apyFmt(m.apy24h);

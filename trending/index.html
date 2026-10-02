@@ -142,7 +142,7 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
 .dash{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}.dash .panel{display:flex;flex-direction:column;min-width:0}
 .dash .d-al,.dash .d-wh,.dash .d-fl{align-self:stretch}.dash .src{margin-top:auto}
 .dash .d-tr{grid-column:span 2}@media (min-width:1360px){.dash{grid-template-columns:minmax(0,1.4fr) repeat(2,minmax(0,1fr))}#fk{width:100%;margin-left:0}#fk button{flex:1 1 auto;letter-spacing:.5px;padding-left:6px;padding-right:6px}}   /* desktop: the alerts column is wider so all seven filters fit in one row; whale radar and flow stay even (narrower screens: three even columns, filters four then three, so whale radar isn't cut off) */.d-side{display:flex;flex-direction:column;gap:14px;min-width:0}
-.d-al .ph .meta{display:none}.d-side .lpw{max-height:540px}.d-side .feed{max-height:none}
+.d-al .ph .meta{display:none}@media (min-width:1100px){.dash .d-al .feed{flex:1 1 auto;height:0;min-height:330px;max-height:none}}   /* desktop: the alerts list fills its panel (as tall as whale radar / flow), no empty space under it */.d-side .lpw{max-height:540px}.d-side .feed{max-height:none}
 .d-tr td{padding:6px 10px}
 @media (min-width:1100px) and (max-width:1449px){.dash .d-tr{grid-column:1/-1}.d-side{grid-column:1/-1;flex-direction:row;align-items:flex-start}.d-side>.panel{flex:1;min-width:0}}
 @media (max-width:1099px){.dash{grid-template-columns:1fr}.dash .d-tr{grid-column:auto}.d-al{order:1}.d-tr{order:2}.d-wh{order:3}.d-fl{order:4}.d-side{order:5}.d-side .lpw,.d-side .feed{max-height:330px}}
