@@ -207,7 +207,7 @@ tr.whale td{background:rgba(74,122,255,.08)}
 
 .clobrWrap{border-top:1px solid var(--line);background:var(--panel)}
 /* compounding (intel/compound.py, every 6 h): are the holders putting their rewards back in? */
-@media (min-width:1000px){.tapeP .tw>#compound{position:absolute;inset:0;overflow-y:auto}}
+@media (min-width:1000px){.tapeP .tw>#compound{position:absolute;inset:0;overflow-y:auto;padding-right:12px;scrollbar-gutter:stable}}   /* room between the scroll bar and the holders list */
 .cmpHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap}.cmpT .rv{display:none}
 .cmpSum{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--dim)}.cmpSum b{color:#fff;font-weight:500}
 .cmpSum .cmpSc{font-size:24px;min-width:42px}
@@ -312,9 +312,9 @@ html.fit .board.house{padding:0}html.fit .board.house .htag{font-size:13px;paddi
 #walModal .wsc{display:inline-block;min-width:30px;text-align:center;border:1px solid;padding:0 4px;font-family:'VT323';font-size:18px}
 #walModal .wtg{font-size:9px;letter-spacing:1px;margin-left:6px}#walModal .whd{font-size:8.5px;letter-spacing:1px;margin:1px 0 0 24px}
 #walCard{display:block;width:100%;aspect-ratio:1200/630;border:1px solid var(--line);background:var(--panel)}
-#walModal .acts{display:flex;gap:6px;margin-top:8px}#walModal .acts .btn{flex:1;text-align:center;text-decoration:none;font-size:12px;letter-spacing:1px;padding:9px}
+#walModal .acts{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:6px;margin-top:8px}#walModal .acts .btn{text-align:center;text-decoration:none;font-size:11.5px;letter-spacing:1px;padding:9px 4px;white-space:nowrap}
 #walModal .foot{font-size:10px;color:var(--dim);margin-top:10px;line-height:1.5}
-@media (max-width:560px){#walKpi{grid-template-columns:repeat(2,1fr)}#walModal .box{padding:16px 14px}#walModal .hs2{display:none}}
+@media (max-width:560px){#walKpi{grid-template-columns:repeat(2,1fr)}#walModal .acts{grid-template-columns:1fr 1fr}#walModal .box{padding:16px 14px}#walModal .hs2{display:none}}
 #iPrev{display:none;margin-top:8px;max-height:140px;max-width:100%;border:1px solid var(--line)}
 #buyPop{position:fixed;left:50%;bottom:16%;transform:translate(-50%,30px);opacity:0;pointer-events:none;z-index:55;transition:all .35s cubic-bezier(.2,1.4,.4,1);
   background:linear-gradient(135deg,#06240f,#0a0f1f);border:3px solid var(--green);box-shadow:0 0 50px rgba(57,255,106,.4);padding:18px 44px;text-align:center;min-width:600px}
@@ -700,12 +700,13 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
   <div class="wl"><a id="walScan" target="_blank" rel="noopener">SOLSCAN ↗</a><a href="#" id="walCa">COPY ADDRESS</a></div>
   <div id="walKpi"></div>
   <div class="sec">HOLDINGS <span class="dim">stonkfun coins in the wallet now</span></div><div id="walHold"></div>
-  <div class="sec">REWARDS BY COIN <span class="dim">since each coin's tracking started</span></div><div id="walCoins"></div>
-  <div class="sec">SHARE</div><img id="walCard" alt="">
-  <div class="acts"><a class="btn primary" id="walTweet" target="_blank" rel="noopener">SHARE AS TWEET</a><button class="btn" id="walCopy" type="button">COPY LINK</button></div>
+  <div class="sec">REWARDS BY COIN <span class="dim">each coin's full history</span></div><div id="walCoins"></div>
+  <div class="sec">SHARE</div><img id="walCard" alt="" onerror="this.onerror=null;this.src='/share-terminal7-v2.png'">
+  <div class="acts"><a class="btn primary" id="walTweet" target="_blank" rel="noopener">SHARE AS TWEET</a><button class="btn" id="walImg" type="button">COPY IMAGE</button>
+    <button class="btn" id="walSave" type="button">SAVE IMAGE</button><button class="btn" id="walCopy" type="button">COPY LINK</button></div>
   <div class="foot">Rewards and scores come from each coin's compounding tracker, which follows the wallets holding 80% of its supply
     (updated every 6 h). Overall score: each coin's score weighted by the rewards it paid this wallet. P&amp;L: value now + sold + rewards − bought,
-    counting only trades since that coin's tracking began (hover for the date); tokens moved in from another wallet aren't counted as bought.</div>
+    over every trade since the coin launched; tokens moved in from another wallet aren't counted as bought.</div>
 </div></div>
 <div id="infoPop" title="Click to close"><div class="k" id="ipK"></div><div class="h" id="ipH"></div><div class="d" id="ipD"></div></div>
 <div id="ttsPop" title="Click to close"><div class="from" id="ttsFrom"></div><div class="msg" id="ttsMsg"></div></div>
@@ -1302,17 +1303,26 @@ async function openWallet(w){if(!WRE.test(w||''))return;openWallet.w=w;$('walMod
   const earning=d.coins.filter(c=>c.R>0);
   $('walKpi').innerHTML=`<div style="border-color:${col}"><b style="color:${col}">${sc??'—'}</b><span>COMPOUND SCORE · ${lbl.toUpperCase()}</span></div>
     <div><b style="color:var(--green)">${cmpUsd(d.rewards||0)}</b><span>TOTAL REWARDS</span></div><div><b>${cmpUsd(d.value||0)}</b><span>STONKFUN HOLDINGS</span></div><div><b>${earning.length}</b><span>COINS EARNING</span></div>`;
-  const coin=(m,s,i)=>`<a href="/terminal/token?ca=${esc(m)}">${i?`<img src="${esc(i)}" alt="" onerror="this.remove()">`:''}$${esc(String(s||'?').replace(/^\$/,''))}</a>`;
+  // every coin gets a logo: its own, else the Stonk Board's copy, else the helmet
+  const coin=(m,s,i)=>`<a href="/terminal/token?ca=${esc(m)}"><img src="${esc(i||'/helmet.png')}" alt="" loading="lazy" data-sb="https://thestonkboard.com/api/logos/${esc(m)}" onerror="if(this.dataset.sb&&this.src!==this.dataset.sb){this.src=this.dataset.sb;this.dataset.sb=''}else{this.onerror=null;this.src='/helmet.png'}">$${esc(String(s||'?').replace(/^\$/,''))}</a>`;
   const amt=n=>n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n>=1?n.toFixed(0):n.toPrecision(2);
   $('walHold').innerHTML=d.holdings.length?`<table><thead><tr><th>COIN</th><th class="r">AMOUNT</th><th class="r">VALUE</th></tr></thead><tbody>${d.holdings.slice(0,30).map(h=>`<tr><td>${coin(h.m,h.s,h.i)}</td><td class="r">${amt(h.amt)}</td><td class="r">${h.usd?cmpUsd(h.usd):'<span class="dim">—</span>'}</td></tr>`).join('')}</tbody></table>`
     :`<div class="dim" style="font-size:11px">${d.live?'No stonkfun coins in this wallet right now.':'Holdings unavailable right now (the chain read failed) · try again in a minute'}</div>`;
-  $('walCoins').innerHTML=d.coins.length?`<table><thead><tr><th>COIN</th><th class="r hs2">HOLDS</th><th class="r">REWARDS</th><th class="r hs2">NET BOUGHT</th><th class="r" title="value now + sold + rewards − bought, since the coin's tracking began">P&amp;L</th><th class="r">SCORE</th></tr></thead><tbody>${d.coins.map(c=>`<tr><td>${coin(c.m,c.s,c.i)}${c.held==null?'':`<div class="whd" style="color:${c.held?'var(--green)':'var(--dim)'}">${c.held?'HOLDING':'EXITED'}</div>`}</td><td class="r hs2">${c.p.toFixed(2)}%</td>
+  $('walCoins').innerHTML=d.coins.length?`<table><thead><tr><th>COIN</th><th class="r hs2">HOLDS</th><th class="r">REWARDS</th><th class="r hs2">NET BOUGHT</th><th class="r" title="value now + sold + rewards − bought, over the coin's full history">P&amp;L</th><th class="r">SCORE</th></tr></thead><tbody>${d.coins.map(c=>`<tr><td>${coin(c.m,c.s,c.i)}${c.held==null?'':`<div class="whd" style="color:${c.held?'var(--green)':'var(--dim)'}">${c.held?'HOLDING':'EXITED'}</div>`}</td><td class="r hs2">${c.p.toFixed(2)}%</td>
       <td class="r">${c.R>0?cmpUsd(c.R):'<span class="dim">—</span>'}</td><td class="r hs2" style="color:${c.N>0?'var(--green)':c.N<0?'var(--red)':'var(--dim)'}">${c.R>0?(c.N>0?'+':'')+cmpUsd(c.N):'—'}</td>
-      <td class="r" style="color:${c.pnl>0?'var(--green)':c.pnl<0?'var(--red)':'var(--dim)'}" title="${c.since?'since '+new Date(c.since*1000).toLocaleDateString('en-US',{month:'short',day:'numeric'}):''}">${c.pnl==null?'—':(c.pnl>0?'+':'')+cmpUsd(c.pnl)}</td>
+      <td class="r" style="color:${c.pnl>0?'var(--green)':c.pnl<0?'var(--red)':'var(--dim)'}" title="${c.since?'tracked since '+new Date(c.since*1000).toLocaleDateString('en-US',{month:'short',day:'numeric'}):''}">${c.pnl==null?'—':(c.pnl>0?'+':'')+cmpUsd(c.pnl)}</td>
       <td class="r">${c.score!=null?`<span class="wsc" style="color:${CMPC[c.tag]};border-color:${CMPC[c.tag]}">${c.score}</span><span class="wtg" style="color:${CMPC[c.tag]}">${esc(c.tag).toUpperCase()}</span>`:'<span class="dim" style="font-size:9.5px;letter-spacing:1px">NO REWARD YET</span>'}</td></tr>`).join('')}</tbody></table>`
     :'<div class="dim" style="font-size:11px">Not among the biggest holders of any tracked coin, so no rewards are tracked for it yet.</div>';
   const txt=`Wallet ${w.slice(0,4)}…${w.slice(-4)} on stonkfun: compound score ${sc??'—'}${sc!=null?' ('+lbl+')':''} · ${cmpUsd(d.rewards||0)} in rewards from ${earning.length} coin${earning.length===1?'':'s'}`;
   $('walTweet').href='https://x.com/intent/tweet?text='+encodeURIComponent(txt)+'&url='+encodeURIComponent(link);
+  // the card as a file: COPY IMAGE puts it on the clipboard; SAVE IMAGE uses the phone's share sheet (Save to Photos) or downloads it
+  const cardFile=async()=>{const r=await fetch(BOT+'/card/wallet/'+w+'.png');if(!r.ok)throw new Error(r.status);return new File([await r.blob()],'terminal7-wallet-'+w.slice(0,4)+'.png',{type:'image/png'})};
+  const say=(id,t,back)=>{$(id).textContent=t;setTimeout(()=>$(id).textContent=back,1800)};
+  $('walImg').onclick=async()=>{try{await navigator.clipboard.write([new ClipboardItem({'image/png':cardFile().then(f=>f)})]);say('walImg','COPIED','COPY IMAGE')}
+    catch(e){say('walImg',matchMedia('(pointer:coarse)').matches?'HOLD THE IMAGE':'USE SAVE IMAGE','COPY IMAGE')}};
+  $('walSave').onclick=async()=>{let f;try{f=await cardFile()}catch(e){say('walSave','TRY AGAIN','SAVE IMAGE');return}
+    if(matchMedia('(pointer:coarse)').matches&&navigator.canShare?.({files:[f]})){try{await navigator.share({files:[f]});return}catch(e){if(e.name==='AbortError')return}}
+    const u=URL.createObjectURL(f),a=document.createElement('a');a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);say('walSave','SAVED','SAVE IMAGE')};
   $('walCopy').onclick=()=>{navigator.clipboard?.writeText(link).then(()=>{$('walCopy').textContent='COPIED';setTimeout(()=>$('walCopy').textContent='COPY LINK',1500)}).catch(()=>{})}}
 function closeWallet(){openWallet.w=null;$('walModal').classList.remove('show');document.body.style.overflow=''}
 $('walX').onclick=closeWallet;$('walModal').addEventListener('click',e=>{if(e.target.id==='walModal')closeWallet()});
@@ -1368,7 +1378,7 @@ function nextBuy(){if(!alertsOn){bpQ.length=0;return}while(bpQ.length&&!akOn(bpQ
 var bpTimer=null;
 function closeBuy(){clearTimeout(bpTimer);if(!$('buyPop').classList.contains('show'))return;$('buyPop').classList.remove('show');setTimeout(()=>{bpBusy=false;nextBuy()},500)}
 // a rate-limited call (GeckoTerminal 429) retries in 5 s instead of waiting for the next 20 s round
-async function loadTrades(){if(!GT)return;clearTimeout(loadTrades.r);try{const d=await j(GT+'/trades');tapeRaw=d.data.map(t=>t.attributes);renderTape();checkBuys(tapeRaw);if(tf==='5m'&&hover==null){const t=tape5m();if(t){CH['5m']=t;liveTail();setSeries()}}}catch(e){loadTrades.r=setTimeout(loadTrades,5000)}}
+async function loadTrades(){if(!GT)return;clearTimeout(loadTrades.r);try{const d=await j(GT+'/trades');tapeRaw=d.data.map(t=>t.attributes);renderTape();try{localStorage.setItem('wrTape:'+CA,JSON.stringify({at:Date.now(),pool:POOL,v:tapeRaw.slice(0,60)}))}catch(e){}checkBuys(tapeRaw);if(tf==='5m'&&hover==null){const t=tape5m();if(t){CH['5m']=t;liveTail();setSeries()}}}catch(e){loadTrades.r=setTimeout(loadTrades,5000)}}
 $('tapeF').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   [...$('tapeF').children].forEach(x=>x.classList.toggle('on',x===b));tapeMin=+b.dataset.min;renderTape()});
 
@@ -1792,10 +1802,12 @@ fit();
 // $MARINE's pool is known up front, so its chart starts loading right away, alongside the token lookup
 if(CA===MARINE){if(!GT){POOL='BnkYfw796XXq9UQ9kMYoX9iqSgXnjw7sFCsCVWVDiCUa';GT='https://api.geckoterminal.com/api/v2/networks/solana/pools/'+POOL}loadChart()}
 // any other token: its pool from the last visit, so the chart starts now instead of after the two lookups (~1 s)
-let POOL0='';if(CA!==MARINE)try{const p=localStorage.getItem('wrPool:'+CA);if(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(p||'')){POOL=POOL0=p;GT='https://api.geckoterminal.com/api/v2/networks/solana/pools/'+p;loadChart()}}catch(e){}
+let POOL0='';if(CA!==MARINE)try{const p=localStorage.getItem('wrPool:'+CA);if(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(p||'')){POOL=POOL0=p;GT='https://api.geckoterminal.com/api/v2/networks/solana/pools/'+p;loadChart();loadTrades()}}catch(e){}
+// the tape: this browser's last copy (30 min at most) shows at once while the fresh trades load
+try{const c=JSON.parse(localStorage.getItem('wrTape:'+CA)||'null');if(c&&Date.now()-c.at<1800e3&&c.v&&c.v.length&&!tapeRaw.length){tapeRaw=c.v;renderTape()}}catch(e){}
 resolveToken().finally(()=>{loadRewards();loadMarket();
   if(CA!==MARINE&&POOL!==POOL0){try{localStorage.setItem('wrPool:'+CA,POOL)}catch(e){}if(POOL0){CH={};for(const k in CHAT)delete CHAT[k]}}   // its best pool changed: start over on the new one
-  if(CA!==MARINE?!POOL0||POOL!==POOL0:!CH[tf])loadChart();loadTrades();loadTicker();loadBoard();loadTTS();loadPay();loadAds();});
+  if(CA!==MARINE?!POOL0||POOL!==POOL0:!CH[tf])loadChart();if(CA===MARINE||!POOL0||POOL!==POOL0)loadTrades();loadTicker();loadBoard();loadTTS();loadPay();loadAds();});
 setInterval(()=>{if(!document.hidden)loadAds()},15000);setInterval(loadPay,300000);setTimeout(()=>{renderAds();setInterval(renderAds,20000)},20000-Date.now()%20000);
 setInterval(loadTrades,20000);setInterval(loadMarket,30000);setInterval(loadRewards,60000);
 setInterval(loadChart,120000);setTimeout(loadDepth,1500);const vis=f=>()=>{if(!document.hidden)f()};setInterval(vis(loadDepth),600000);setTimeout(loadClobr,2000);setInterval(vis(loadClobr),600000);setInterval(loadTicker,300000);setInterval(loadBoard,300000);
