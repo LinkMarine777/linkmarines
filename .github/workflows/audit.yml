@@ -1,0 +1,39 @@
+# One-off accuracy audit of the compound score (intel/audit.py): read-only chain reads, results to the audit-results branch.
+name: compound-audit
+on:
+  push:
+    branches: [claude/youthful-ramanujan-wa515v]
+    paths: [intel/audit.py, .github/workflows/audit.yml]
+  workflow_dispatch:
+    inputs:
+      mints:
+        description: 'token mints, space-separated (default $MARINE)'
+        default: ''
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: main
+          sparse-checkout: intel
+      - uses: actions/checkout@v4
+        with:
+          ref: data
+          path: data
+          sparse-checkout: terminal/compound-state.json
+          sparse-checkout-cone-mode: false
+      - name: audit
+        env:
+          HELIUS_KEY: ${{ secrets.HELIUS_KEY }}
+          SOLANA_RPC: ${{ secrets.SOLANA_RPC }}
+        run: python3 main/intel/audit.py data/terminal ${{ inputs.mints }}
+      - name: save to the audit-results branch
+        run: |
+          cd audit
+          git init -q -b audit-results; git config user.name "war-room-audit"; git config user.email "audit@users.noreply.github.com"
+          git add . && git commit -q -m "audit $(date -u +%F' '%H:%M)"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:audit-results
