@@ -1020,7 +1020,8 @@ function draw(){
   x.font=CF+'px IBM Plex Mono';const lw=(T,s)=>Math.max(...T.t.map(v=>x.measureText(fmtTick(v,T.step)).width));
   pad.l=Math.ceil(lw(B))+(FIT?20:12);pad.r=Math.ceil(lw(A))+(FIT?20:12);const w=W-pad.l-pad.r;
   let dt=Infinity;for(let i=1;i<series.length;i++){const d=series[i].t-series[i-1].t;if(d>0&&d<dt)dt=d}if(!isFinite(dt))dt=0;   // one candle's span: candles get half of it as room at each end
-  const t0=series[0].t-(CDL?dt/2:0),t1=series[series.length-1].t+(CDL?dt/2:0),cw=Math.max(1,Math.min(14,w/series.length*.7,dt/(t1-t0)*w*.7||14));
+  // candles: some room on the right (6% of the span) so the newest ones clear the edge and the depth bars
+  const t0=series[0].t-(CDL?dt/2:0),t1=series[series.length-1].t+(CDL?dt/2+(series[series.length-1].t-series[0].t)*.06:0),cw=Math.max(1,Math.min(14,w/series.length*.7,dt/(t1-t0)*w*.7||14));
   const X=t=>pad.l+(t-t0)/(t1-t0)*w,YA=v=>pad.t+h-(v-A.lo)/(A.hi-A.lo)*h,YB=v=>pad.t+h-(v-B.lo)/(B.hi-B.lo)*h;
   x.font=CF+'px IBM Plex Mono';x.lineWidth=1;
   x.textAlign='right';x.textBaseline='middle';
