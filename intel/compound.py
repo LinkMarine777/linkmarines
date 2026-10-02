@@ -411,7 +411,7 @@ def score(days, since_day):
     if first is None: return None
     R = sum(v[0] for d, v in ds); ds = [(d, v) for d, v in ds if d >= first]
     B = sum(v[1] for d, v in ds if d != first_ever); S = sum(v[2] for d, v in ds if d != first_ever); N = B - S
-    bought = {d for d, v in ds if v[1] > 0 and d != first_ever}; rd = [d for d, v in ds if v[0] > 0]
+    bought = {d for d, v in ds if v[1] > v[2] and d != first_ever}; rd = [d for d, v in ds if v[0] > 0]   # a day counts when they bought more than they sold
     c = min(max(N, 0), R) / R if R else 0; k = sum(1 for d in rd if d in bought or d + 1 in bought) / len(rd)
     e = min(1, math.log2(N / R) / 3) if R and N > R else 0   # buying beyond the rewards: 2x = 1/3, 4x = 2/3, 8x+ = all of it
     sc = round(100 * (0.6 * c + 0.25 * k + 0.15 * e)) if N >= 0 else 0
@@ -423,15 +423,35 @@ WINDOWS = {'7d': 7, '30d': 30, 'all': KEEP_DAYS}
 NEW_HIST = [0]   # coins new to the site that got their history filled this run (at most 3 a run, to cap credits)
 
 
+CAP, MIN_N, MIN_R = 0.15, 10, 2000   # no wallet over 15% of a token's score; under 10 scored wallets or $2K of rewards = low data
+
+
+def capped(ps):
+    """Holding weights (as shares) with no wallet over CAP: the capped wallets get CAP each, the rest share what's left in
+    proportion (one big holder can't be the whole score); with too few wallets for the cap, they're equal."""
+    n = len(ps)
+    if not n: return []
+    if n * CAP <= 1: return [1 / n] * n
+    fixed = set()
+    while True:
+        free = [i for i in range(n) if i not in fixed]; sf = sum(ps[i] for i in free) or 1; rem = 1 - CAP * len(fixed)
+        over = [i for i in free if ps[i] / sf * rem > CAP]
+        if not over: return [CAP if i in fixed else ps[i] / sf * rem for i in range(n)]
+        fixed |= set(over)
+
+
 def summarize(rows):
-    """The token's numbers per window from its wallets' rows: holding-weighted score, % of rewards put back, new money, tags."""
+    """The token's numbers per window from its wallets' rows: holding-weighted score (capped), % of rewards put back, new
+    money, tags, and whether there's enough behind it (low) and how much the biggest wallet holds of the tracked supply (top1)."""
     summ = {}
     for k_ in WINDOWS:
-        S_ = [r for r in rows if r[k_]]; W_ = sum(r['p'] for r in S_) or 1; RR = sum(r[k_][0] for r in S_) or 1
-        summ[k_] = {'score': round(sum(r['p'] * r[k_][4] for r in S_) / W_, 1) if S_ else None,
+        S_ = [r for r in rows if r[k_]]; RR = sum(r[k_][0] for r in S_) or 1
+        wt = capped([r['p'] for r in S_]); W_ = sum(wt) or 1; P_ = sum(r['p'] for r in S_) or 1
+        summ[k_] = {'score': round(sum(w * r[k_][4] for w, r in zip(wt, S_)) / W_, 1) if S_ else None,
                     'compounded': round(100 * sum(min(r[k_][0], max(r[k_][1], 0)) for r in S_) / RR, 1) if S_ else None,
                     'fresh': round(sum(max(r[k_][1], 0) for r in S_) / RR, 2) if S_ else None,
                     'rewards': round(sum(r[k_][0] for r in S_)), 'scored': len(S_),
+                    'low': len(S_) < MIN_N or RR < MIN_R, 'top1': round(100 * max([r['p'] for r in S_] or [0]) / P_, 1),
                     'tags': {t: [sum(1 for r in S_ if r[k_][5] == t), round(sum(r['p'] for r in S_ if r[k_][5] == t), 2)]
                              for t in ('Compounder', 'Partial', 'Collector', 'Seller')}}
     return summ
@@ -448,7 +468,7 @@ if '--rescore' in sys.argv:   # the score formula changed: rebuild every token's
             for k_, n in WINDOWS.items(): r[k_] = score((T.get('days') or {}).get(r['w']) or {}, today - n + 1)
         page['win'] = summ = summarize(page['rows']); save(f'compound/{mint}.json', page)
         it.update({'score': {k_: summ[k_]['score'] for k_ in WINDOWS}, 'c7': summ['7d']['compounded'], 'r7': summ['7d']['rewards'],
-                   'ca': summ['all']['compounded'], 'ra': summ['all']['rewards'], 'wallets': page['wallets'], 'big': bool(T.get('big'))})
+                   'ca': summ['all']['compounded'], 'ra': summ['all']['rewards'], 'wallets': page['wallets'], 'big': bool(T.get('big')), 'low': summ['all']['low']})
     save('compound/index.json', index); save('compound-state.json', state); log(f"rescored {len(index['tokens'])} tokens"); sys.exit(0)
 for mint in watch:
     T = ST.setdefault(mint, {})
@@ -509,7 +529,8 @@ for mint in watch:
         index['tokens'][mint] = {'sym': sym, 'at': now, 'since': T['since'], 'wallets': len(wallets), 'holders': len(people), 'big': bool(T.get('big')),   # big: refreshed daily
                                  'score': {k_: summ[k_]['score'] for k_ in WINDOWS},
                                  'c7': summ['7d']['compounded'], 'r7': summ['7d']['rewards'],    # % put back, $ rewards: 7 days
-                                 'ca': summ['all']['compounded'], 'ra': summ['all']['rewards']}  # ... and since launch (what the site shows)
+                                 'ca': summ['all']['compounded'], 'ra': summ['all']['rewards'],  # ... and since launch (what the site shows)
+                                 'low': summ['all']['low']}   # too little behind it to rank
         log(f"  score 7d {summ['7d']['score']} · 30d {summ['30d']['score']} · credits so far {CREDITS[0]}")
         if BACKFILL or HISTORY: save('compound/index.json', index); save('compound-state.json', state)   # a run cut short keeps what it did
     except Exception as e: log(mint[:6], 'failed:', e)
