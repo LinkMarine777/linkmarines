@@ -132,6 +132,8 @@ mcap = {**{m: b.get('mcap') or 0 for m, b in board.items()}, **{t['mint']: t.get
 ranked = [m for m in sorted(set(mcap) - {MARINE}, key=lambda m: -(mcap[m] or 0))]
 G = {x['mint']: x for x in get(f'{SF}/api/public/v1/rewards')['data']['launches']}   # every launch's payout total, one call
 watch = [m for m in [MARINE] + ranked if m in G]
+# then stonkfun's biggest coins by holders, up to 200 tracked in all (the long tail is covered on demand by the bot's wallet reader)
+watch += [m for m in sorted(G, key=lambda m: -(G[m].get('holderCount') or 0)) if m not in watch][:max(0, int(os.environ.get('WATCH_N', 200)) - len(watch))]
 backfill_set = set(watch[:11])                                                        # $MARINE + the top 10 by market cap
 price = {}
 mints = sorted(set(watch) | {SOL} | {G[m]['quote']['mint'] for m in watch if (G[m].get('quote') or {}).get('mint')})
