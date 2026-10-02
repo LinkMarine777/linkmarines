@@ -69,7 +69,7 @@ def history(addr, since, until):
     except RuntimeError: NO_BATCH[0] = True; CREDITS[0] += len(sigs); return one()   # an RPC without Helius' batch call: one by one
 
 
-NO_BATCH = [False]
+NO_BATCH, PROG = [False], {}
 
 
 def batch(addr, since, until):
