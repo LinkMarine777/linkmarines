@@ -107,7 +107,7 @@ tr.me{background:rgba(42,90,218,.1)}
   .hide-sm{display:none}main{padding:10px}
   .rk{display:none}.tok{min-width:0;gap:7px}.tok img{width:22px;height:22px}td,th{padding:8px 6px}.ph h1{font-size:22px}.ph{padding:10px 12px}
   .tabs{margin-left:0;width:100%;flex-wrap:wrap}.tabs button{flex:1 1 0;min-width:0;padding:6px 2px;letter-spacing:.5px}
-  #fk button{flex-basis:calc(33.33% - 3px)}   /* six alert filters: two rows of three instead of running off the screen */
+  #fk button{flex-basis:calc(25% - 3px)}   /* seven alert filters: a row of four, then three stretched to the full width */
   .hero>div:not(.pin){display:flex;flex-direction:column}.hero>div:not(.pin) b{margin-top:auto}   /* phones: the numbers sit level even when a label wraps */
   .hero .pin .s{display:block;margin-top:2px}   /* keep the $MARINE price / 24h / mcap / vol line on phones */
   header{flex-wrap:nowrap!important;gap:8px!important;padding:8px 10px}header .brand{display:none}header img{width:28px;height:28px}
@@ -143,6 +143,7 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
 @media (max-width:1099px){.dash{grid-template-columns:1fr}.dash .d-tr{grid-column:auto}.d-al{order:1}.d-tr{order:2}.d-wh{order:3}.d-fl{order:4}.d-side{order:5}.d-side .lpw,.d-side .feed{max-height:330px}}
 .more3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.more3 .panel{display:flex;flex-direction:column;min-width:0}.more3 .src{margin-top:auto}
 @media (max-width:1099px){.more3{grid-template-columns:1fr}}
+.d-al{container-type:inline-size}@container (max-width:620px){#fk{width:100%;margin-left:0;flex-wrap:wrap}#fk button{flex:1 1 calc(25% - 3px);min-width:0;padding-left:2px;padding-right:2px}}   /* alert filters: when the panel's too narrow for one row, four then three instead of running off the edge */
 .lr{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--line);color:inherit;text-decoration:none;font-size:12px}.lr:hover{background:rgba(74,122,255,.06);text-decoration:none}
 .lr img,.lr .ph0{width:22px;height:22px;border-radius:50%;object-fit:cover;background:#0b1a2e;flex:none}.lr .ln{flex:1;min-width:0;overflow:hidden}.lr .ln b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lr small{display:block;color:var(--dim);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lr .r{text-align:right;flex:none}.lr .r b{display:block}.lr .rk2{color:var(--dim);width:22px;text-align:right;flex:none}
@@ -198,8 +199,8 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
   </section>
 
   <div class="dash">
-    <section class="panel d-al"><div class="ph"><h2>🐋 ALERTS</h2><span class="meta hide-sm">every alert the terminals show, in order · whales · big trades · movers · Stonk Board · CLOBr</span>
-      <div class="tabs" id="fk"><button data-f="all" class="on">ALL</button><button data-f="marine">$MARINE</button><button data-f="whale">WHALES</button><button data-f="mover">MARKET</button><button data-f="score">CLOBr</button><button data-f="payout">PAYOUTS</button></div></div>
+    <section class="panel d-al"><div class="ph"><h2>🔔 ALERTS</h2><span class="meta hide-sm">every alert the terminals show, in order · whales · big trades · movers · Stonk Board · CLOBr</span>
+      <div class="tabs" id="fk"><button data-f="all" class="on">ALL</button><button data-f="marine">$MARINE</button><button data-f="whale">WHALES</button><button data-f="mover">MARKET</button><button data-f="compound">COMPOUND</button><button data-f="score">CLOBr</button><button data-f="payout">PAYOUTS</button></div></div>
       <div class="feed" id="feed"><p class="nt">loading…</p></div></section>
     <section class="panel d-wh"><div class="ph"><h2>🐋 WHALE RADAR</h2><span class="per" id="wp"><button data-p="1h">1H</button><button data-p="24h" class="on">24H</button></span>
       <div class="tabs" id="wk"><button data-w="buying" class="on">BUYING</button><button data-w="selling">SELLING</button><button data-w="recent">LIVE</button></div></div>
@@ -336,10 +337,11 @@ const KIND={convergence:['🐋 WHALES PILING IN','k-up'],dumping:['🐋 WHALES D
   dip:['🩸 WHALE DIP BUY','k-up'],rewards:['♻️ WHALE REWARDS','k-bl'],score:['🧱 CLOBr SCORE','k-bl'],
   board:['📋 STONK BOARD','k-bl'],top10:['🚀 STONKFUN TOP 10','k-bl'],payout:['💸 HOLDER PAYOUT','k-bl'],
   buy:['🟢 BUY','k-up'],pulse:['⚡ PULSE','k-bl'],milestone:['🏆 MILESTONE','k-bl'],link:['🔗 $LINK','k-bl'],tts:['📢 TTS ON STREAM','k-bl']};
+const CMPA=x=>x.kind==='rewards'&&/compound score/i.test(x.text||'');   // compound score changes: their own tab
 const kindOf=x=>x.kind==='bigtrade'?(x.side==='sell'?['🐳 BIG SELL','k-dn']:['🐳 BIG BUY','k-up']):x.kind==='mover'?(x.side==='down'?['📉 BIG MOVER','k-bl']:['📈 BIG MOVER','k-bl']):KIND[x.kind]||['🐋 WHALE RADAR','k-up'];
 // holder payouts also get their own tab
 const WRBUY=x=>x.kind==='buy'&&(x.s==='MARINE'||x.s==='LINK'||/whale watch/i.test(x.text));   // other tokens' buys (from 2.0 pages) are market alerts
-const group=(k,x)=>k==='score'?'score':k==='payout'?'payout':['mover','board','top10'].includes(k)||(k==='buy'&&x&&!WRBUY(x))?'mover':['buy','pulse','milestone','link','tts'].includes(k)?'marine':'whale';
+const group=(k,x)=>x&&CMPA(x)?'compound':k==='score'?'score':k==='payout'?'payout':['mover','board','top10'].includes(k)||(k==='buy'&&x&&!WRBUY(x))?'mover':['buy','pulse','milestone','link','tts'].includes(k)?'marine':'whale';
 // CLOBr score alerts: CLOBr's logo, then one line per token (no token logos), each one opening that token's terminal
 function scoreRow(x,h,c,icon){const ms=String(x.i||'').startsWith('mints:')?x.i.slice(6).split(','):null;
   const bySym=s=>{s=s.toUpperCase();const t=Object.values(TOK).find(t=>String(t.symbol||'').toUpperCase()===s);return t&&t.mint};
