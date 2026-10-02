@@ -966,8 +966,10 @@ async function loadChart(){
   if(!CH[k]){const c=chartMem(k);if(c){CH[k]=c;liveTail();setSeries()}}
   if(CA===MARINE){try{const d=await j(DATA+'chart.json?'+Date.now()),age=Date.now()/1000-(d.at||0);
     if(d&&d['7d']&&age<5400){['1d','7d','all'].forEach(x=>{if(d[x]&&d[x].length&&(!CH[x]||age<1200))CH[x]=d[x]});fresh=age<1200&&!!(d[k]&&d[k].length);if(tf===k){liveTail();setSeries()}}}catch(e){}}   // 1H / 6H aren't in it: live
-  if(!fresh){try{await loadLive(k);chartMem(k,CH[k]);loadChart.fails=0}catch(e){if((loadChart.fails=(loadChart.fails||0)+1)<4)setTimeout(loadChart,3000*loadChart.fails)}}
+  // candles on but the saved copy has closes only: live candles
+  if(!fresh||(candleOn&&!hasOhlc(CH[k]))){try{await loadLive(k);chartMem(k,CH[k]);loadChart.fails=0}catch(e){if((loadChart.fails=(loadChart.fails||0)+1)<4)setTimeout(loadChart,3000*loadChart.fails)}}
   if(tf===k){liveTail();setSeries()}}
+const hasOhlc=r=>!!(r&&r.length>1&&r[0].length>=6&&r[r.length-2].length>=6);   // open / high / low saved (not just closes)
 const chartMem=(k,v)=>{const key='wrChart:'+CA+':'+k;try{if(v){localStorage.setItem(key,JSON.stringify({at:Date.now(),v}));return}
   const c=JSON.parse(localStorage.getItem(key)||'null');return c&&Date.now()-c.at<6*3600e3?c.v:null}catch(e){return null}};
 function nice(min,max,count=5){
@@ -1161,7 +1163,7 @@ async function loadDepth(){if(!FLAGS.CLOBR_ENABLED)return;try{const d=await j(BO
   $('dtab').style.visibility=DEPTH?'':'hidden';depthLeg();renderClobr();draw()}   // DEPTH keeps its place either way: nothing moves between tokens
 function depthLeg(){const l=$('depthLeg');l.style.display='';l.style.visibility=DEPTH?'':'hidden';l.classList.toggle('off',!depthOn);l.href=clobrUrl()}
 $('candleBtn').classList.toggle('on',candleOn);
-$('candleBtn').onclick=()=>{candleOn=!candleOn;$('candleBtn').classList.toggle('on',candleOn);try{localStorage.setItem('wrCandle',candleOn?'1':'0')}catch(e){}if(!setSeries())draw()};
+$('candleBtn').onclick=()=>{candleOn=!candleOn;$('candleBtn').classList.toggle('on',candleOn);try{localStorage.setItem('wrCandle',candleOn?'1':'0')}catch(e){}if(candleOn&&!hasOhlc(CH[tf]))loadChart();else if(!setSeries())draw()};
 $('depthBtn').onclick=()=>{depthOn=!depthOn;$('depthBtn').classList.toggle('on',depthOn);depthLeg();
   try{localStorage.setItem('wrDepth',depthOn?'1':'0')}catch(e){}draw()};
 $('depthBtn').classList.toggle('on',depthOn);
