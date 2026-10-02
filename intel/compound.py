@@ -58,7 +58,7 @@ BACKFILL_W, BACKFILL_DAYS = int(os.environ.get('BACKFILL_W', 200)), int(os.envir
 HISTORY_BUDGET = int(os.environ.get('HISTORY_BUDGET', 160000))   # credits one history run may spend before it stops starting tokens
 HISTORY_MINUTES = int(os.environ.get('HISTORY_MINUTES', 110))      # ... or minutes (the job has 140); the next run carries on
 REDO_BEFORE = int(os.environ.get('REDO_BEFORE') or 0)   # --history: also redo tokens whose history was filled before this time (unix seconds)
-# trade by trade (off until the Helius plan has room, ~1M credits a month): in the 6-hourly update, a wallet whose balance moved
+# trade by trade (off until the Helius plan has room; ~300-500K credits a month estimated: a moving wallet usually costs 2-4): in the 6-hourly update, a wallet whose balance moved
 # has its actual transactions read, so a buy / sell is the real swap at its own time and a plain transfer counts as neither.
 # Off: buys and sells are the balance changes between snapshots. TRADES_BUDGET caps it per run (then balance changes again)
 TRADES = os.environ.get('TRADES', '') == '1'
@@ -330,21 +330,21 @@ FAILS = [0]
 
 
 def history(addr, since):
-    if not GTFA[0]: return history_slow(addr, since)
-    try: return history_fast(addr, since)
-    except RuntimeError as e:   # this address only (the free plan rate-limits bursts); 10 refusals in a run = stop using it
-        FAILS[0] += 1; log('getTransactionsForAddress refused, reading this one one by one:', e)
-        if FAILS[0] >= 10: GTFA[0] = False
-        return history_slow(addr, since)
-
-
-def history_slow(addr, since):
+    """Every transaction on an account since `since`, the cheapest way: list its signatures first (1 credit per 1,000; an
+    unused or closed account costs just that), then up to 10 transactions one by one (1 credit each), more with Helius'
+    batch call (10 credits per 100; refused bursts fall back to one by one)."""
     sigs, before = [], None
     while True:
         r = rpc('getSignaturesForAddress', [addr, {'limit': 1000, **({'before': before} if before else {})}]); CREDITS[0] += 1
         keep = [x for x in r if (x.get('blockTime') or 0) >= since and not x.get('err')]; sigs += keep
         if len(r) < 1000 or len(keep) < len(r): break
         before = r[-1]['signature']
+    if not sigs: return []
+    if GTFA[0] and len(sigs) > 10:
+        try: return history_fast(addr, since)
+        except RuntimeError as e:   # this address only (the free plan rate-limits bursts); 10 refusals in a run = stop using it
+            FAILS[0] += 1; log('getTransactionsForAddress refused, reading this one one by one:', e)
+            if FAILS[0] >= 10: GTFA[0] = False
     CREDITS[0] += len(sigs)
     return [t for t in (rpc('getTransaction', [x['signature'], {'encoding': 'jsonParsed', 'maxSupportedTransactionVersion': 1}]) for x in sigs) if t]
 
