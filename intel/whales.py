@@ -108,6 +108,8 @@ for t in watch:
 # every Stonk Board coin's pool, for the bot's live big-trade listener (any coin's $2,500+ trades, not just the top 10's):
 # looked up once and kept (re-checked after 3 days), at most 15 new lookups a run
 PO = state.setdefault('poolOf', {}); board_toks = load('board.json', {}).get('tokens', {}); looked = 0
+for t in watch:   # stonkfun down (503 since 2026-10-02 ~20:45): the watched tokens' pools from the Stonk Board instead
+    if not pool_of.get(t['mint']) and (board_toks.get(t['mint']) or {}).get('pool'): pool_of[t['mint']] = board_toks[t['mint']]['pool']; pools.add(pool_of[t['mint']])
 for m in [m for m in board_toks if m not in pool_of and not (board_toks[m] or {}).get('pool')]:   # (the Stonk Board lists most pools itself)
     if m in PO and now - PO[m][1] < 3 * 86400: continue
     if looked >= 15: break
