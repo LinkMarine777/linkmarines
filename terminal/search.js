@@ -1,6 +1,7 @@
 // Token search for the terminal's search box (#caIn in #caForm): paste a CA as before, or type a $TICKER / name.
 // Names come from Jupiter's token search, stonkfun launches only (launchpad "stonkfun"), Jupiter-verified first, then by
-// market cap. Enter opens the top match; arrows + Enter or a click pick another. A pasted CA is left to the page's own handler.
+// market cap. Enter opens the top match; arrows + Enter or a click pick another. A pasted CA is left to the page's own handler,
+// unless it's a wallet that holds or traded stonkfun coins (the bot's /wallet): then it offers that wallet's window.
 (() => {
   const form = document.getElementById('caForm'), inp = document.getElementById('caIn'); if (!form || !inp) return;
   const CA = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/, open = m => { location.href = '/terminal/token?ca=' + encodeURIComponent(m); };
@@ -26,12 +27,23 @@
   pb.addEventListener('click', async () => {
     let v = ''; try { v = (await navigator.clipboard.readText() || '').trim(); } catch (e) {}
     if (!v) { inp.focus(); const m = document.getElementById('tkMsg'); if (m) m.textContent = 'long-press the box and paste'; return; }
-    if (CA.test(v)) return open(v);
+    if (CA.test(v)) { const d = await walletOf(v); return d ? (location.href = walletLink(d)) : open(v); }
     inp.value = v.slice(0, 60); inp.focus(); inp.dispatchEvent(new Event('input'));
   });
   window.addEventListener('pageshow', () => { inp.value = ''; list = []; show(''); });
   let list = [], sel = 0, seq = 0, timer = null;
   const show = html => { box.innerHTML = html; box.classList.toggle('open', !!html); };
+  const BOT = 'https://war-room-bot.linkmarine777.workers.dev', MARINE = 'F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK';
+  const usd = v => v >= 1e3 ? mc(v) : '$' + Math.round(v || 0);
+  // a pasted address that isn't a token the site knows: a wallet with stonkfun coins (held now, or tracked by compounding)
+  // opens its wallet window on its biggest coin's page; anything else stays the page's own CA handling
+  const walletLink = d => '/terminal/token?ca=' + encodeURIComponent(d.coins[0]?.m || d.holdings[0]?.m || MARINE) + '&w=' + encodeURIComponent(d.w);
+  async function walletOf(a) {
+    if ((await loadLocal()).some(t => t.id === a)) return null;
+    try { const d = await (await fetch(BOT + '/wallet/' + a)).json(); return d && !d.error && (d.coins?.length || d.holdings?.length) ? d : null; } catch (e) { return null; }
+  }
+  const drawWallet = d => show(`<a href="${walletLink(d)}" class="on" role="option"><img src="/helmet.png" alt=""><b>Wallet</b><span class="n">${esc(d.w.slice(0, 4) + '…' + d.w.slice(-4))}` +
+    ` · score ${d.score ?? '—'} · ${usd(d.rewards)} rewards</span><span class="m">${new Set([...d.coins.map(c => c.m), ...d.holdings.map(h => h.m)]).size} coins</span></a>`);
   const draw = () => show(list.length ? list.map((t, i) => `<a href="/terminal/token?ca=${encodeURIComponent(t.id)}" data-i="${i}" class="${i === sel ? 'on' : ''}" role="option">` +
     `<img src="${esc(t.icon || '/helmet.png')}" alt="" loading="lazy" onerror="this.src='/helmet.png'"><b>$${esc(t.symbol)}</b>${t.isVerified ? '<span class="v" title="Verified on Jupiter">✓</span>' : ''}` +
     `<span class="n">${esc(t.name)}</span><span class="m">${mc(t.mcap)}</span></a>`).join('') : '<div class="x">no stonkfun token matches</div>');
@@ -62,21 +74,23 @@
   }
   inp.addEventListener('input', () => {
     clearTimeout(timer); const q = inp.value.trim().replace(/^\$/, '');
-    if (!q || CA.test(q)) { seq++; list = []; show(''); return; }
+    if (CA.test(q)) { const n = ++seq; list = []; show(''); walletOf(q).then(d => { if (n === seq && d) { list = [{ wallet: d }]; sel = 0; drawWallet(d); } }); return; }
+    if (!q) { seq++; list = []; show(''); return; }
     if (q.length < 2) return;
     timer = setTimeout(() => search(q), 220);
   });
   inp.addEventListener('keydown', e => {
-    if (!box.classList.contains('open') || !list.length) return;
+    if (!box.classList.contains('open') || !list.length || list[0].wallet) return;
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); sel = (sel + (e.key === 'ArrowDown' ? 1 : list.length - 1)) % list.length; draw(); }
     else if (e.key === 'Escape') show('');
   });
-  inp.addEventListener('focus', () => { loadLocal(); if (list.length) draw(); });
+  inp.addEventListener('focus', () => { loadLocal(); if (list.length) list[0].wallet ? drawWallet(list[0].wallet) : draw(); });
   document.addEventListener('click', e => { if (!box.contains(e.target) && e.target !== inp) show(''); });
   // Enter on a name opens the highlighted match; runs before the page's own CA-only submit handler
   window.addEventListener('submit', e => {
     if (e.target !== form) return;
-    const v = inp.value.trim(); if (CA.test(v)) return;
+    const v = inp.value.trim();
+    if (CA.test(v)) { if (list[0]?.wallet) { e.preventDefault(); e.stopImmediatePropagation(); location.href = walletLink(list[0].wallet); } return; }
     e.preventDefault(); e.stopImmediatePropagation();
     if (list[sel]) open(list[sel].id);
     else if (v) { const m = document.getElementById('tkMsg'); if (m) m.textContent = 'type a $TICKER or name, or paste a token CA'; }

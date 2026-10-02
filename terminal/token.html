@@ -289,6 +289,32 @@ html.fit .board.house{padding:0}html.fit .board.house .htag{font-size:13px;paddi
 #wModal .foot{font-size:10px;color:var(--dim);margin-top:10px;line-height:1.5}
 #wModal .foot a{color:var(--amber)}
 #wBtn{margin-right:auto;font-size:11px;letter-spacing:1px}#wBtn.on{color:var(--green);border-color:rgba(57,255,106,.45)}
+/* the wallet window (a holder clicked in HOLDERS): its stonkfun coins, score, rewards per coin, share card */
+#walModal{position:fixed;inset:0;background:#000b;backdrop-filter:blur(3px);z-index:72;display:none;align-items:center;justify-content:center;padding:12px}
+#walModal.show{display:flex}
+#walModal .box{position:relative;background:#070c18;border:2px solid var(--blue2);box-shadow:0 0 60px #000;padding:18px 20px;width:min(600px,100%);max-height:calc(100vh - 24px);overflow-y:auto}
+#walModal .x{position:absolute;right:10px;top:10px;background:none;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:13px;width:30px;height:30px;cursor:pointer}
+#walModal .x:hover{color:#fff;border-color:var(--blue2)}
+#walModal .wk{font-size:10px;letter-spacing:2px;color:var(--dim)}
+#walModal h3{font-family:'VT323';font-weight:400;font-size:34px;color:#fff;margin:0;line-height:1}
+#walModal .wl{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;font-size:11px;margin-top:2px}#walModal .wl a{color:var(--blue2)}
+#walKpi{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:14px 0 4px}
+#walKpi>div{background:var(--panel);border:1px solid var(--line);padding:9px 10px;min-width:0}
+#walKpi b{display:block;font-family:'VT323';font-weight:400;font-size:30px;line-height:1;color:#fff}
+#walKpi span{display:block;font-size:9.5px;letter-spacing:1px;color:var(--dim);margin-top:3px}
+#walModal .sec{font-size:10.5px;letter-spacing:2px;color:#fff;margin:16px 0 6px;display:flex;gap:8px;align-items:baseline}#walModal .sec .dim{letter-spacing:0;font-size:10px}
+#walModal table{width:100%;border-collapse:collapse;font-size:12px}
+#walModal td,#walModal th{padding:6px 5px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+#walModal th{font-size:9.5px;letter-spacing:1px;color:var(--dim);font-weight:400}
+#walModal .r{text-align:right}
+#walModal td a{color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:6px}#walModal td a:hover{color:var(--blue2)}
+#walModal td img{width:18px;height:18px;border-radius:50%;object-fit:cover;background:var(--line)}
+#walModal .wsc{display:inline-block;min-width:30px;text-align:center;border:1px solid;padding:0 4px;font-family:'VT323';font-size:18px}
+#walModal .wtg{font-size:9px;letter-spacing:1px;margin-left:6px}#walModal .whd{font-size:8.5px;letter-spacing:1px;margin:1px 0 0 24px}
+#walCard{display:block;width:100%;aspect-ratio:1200/630;border:1px solid var(--line);background:var(--panel)}
+#walModal .acts{display:flex;gap:6px;margin-top:8px}#walModal .acts .btn{flex:1;text-align:center;text-decoration:none;font-size:12px;letter-spacing:1px;padding:9px}
+#walModal .foot{font-size:10px;color:var(--dim);margin-top:10px;line-height:1.5}
+@media (max-width:560px){#walKpi{grid-template-columns:repeat(2,1fr)}#walModal .box{padding:16px 14px}#walModal .hs2{display:none}}
 #iPrev{display:none;margin-top:8px;max-height:140px;max-width:100%;border:1px solid var(--line)}
 #buyPop{position:fixed;left:50%;bottom:16%;transform:translate(-50%,30px);opacity:0;pointer-events:none;z-index:55;transition:all .35s cubic-bezier(.2,1.4,.4,1);
   background:linear-gradient(135deg,#06240f,#0a0f1f);border:3px solid var(--green);box-shadow:0 0 50px rgba(57,255,106,.4);padding:18px 44px;text-align:center;min-width:600px}
@@ -667,6 +693,19 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
   <div id="wList"></div>
   <div class="foot">On mobile, open themarines.link inside your wallet's browser, or use OPEN IN WALLET APP.
   <br><button class="btn" id="wCancel" style="margin-top:9px">CANCEL</button></div>
+</div></div>
+<div id="walModal"><div class="box">
+  <button class="x" id="walX" type="button" title="Close">✕</button>
+  <div class="wk">STONKFUN WALLET</div><h3 id="walAddr"></h3>
+  <div class="wl"><a id="walScan" target="_blank" rel="noopener">SOLSCAN ↗</a><a href="#" id="walCa">COPY ADDRESS</a></div>
+  <div id="walKpi"></div>
+  <div class="sec">HOLDINGS <span class="dim">stonkfun coins in the wallet now</span></div><div id="walHold"></div>
+  <div class="sec">REWARDS BY COIN <span class="dim">since each coin's tracking started</span></div><div id="walCoins"></div>
+  <div class="sec">SHARE</div><img id="walCard" alt="">
+  <div class="acts"><a class="btn primary" id="walTweet" target="_blank" rel="noopener">SHARE AS TWEET</a><button class="btn" id="walCopy" type="button">COPY LINK</button></div>
+  <div class="foot">Rewards and scores come from each coin's compounding tracker, which follows the wallets holding 80% of its supply
+    (updated every 6 h). Overall score: each coin's score weighted by the rewards it paid this wallet. P&amp;L: value now + sold + rewards − bought,
+    counting only trades since that coin's tracking began (hover for the date); tokens moved in from another wallet aren't counted as bought.</div>
 </div></div>
 <div id="infoPop" title="Click to close"><div class="k" id="ipK"></div><div class="h" id="ipH"></div><div class="d" id="ipD"></div></div>
 <div id="ttsPop" title="Click to close"><div class="from" id="ttsFrom"></div><div class="msg" id="ttsMsg"></div></div>
@@ -1233,12 +1272,13 @@ function renderCompound(){if(!CMP)return;const W=CMP.win[cmpW]||{},sc=W.score,sy
       const why=v?`${t} · score ${s_} = 60% × ${Math.round(c*100)}% of rewards bought back in + 25% × bought after ${Math.round(k*100)}% of payout days + 15% × buying beyond rewards (${mult>1?mult.toFixed(1)+'× rewards':'none'})`:'';
       const det=v?`<tr class="cmpDet" style="display:none"><td></td><td colspan="6">Rewards <b>${cmpUsd(R)}</b> · bought <b>${B!=null?cmpUsd(B):'—'}</b> · sold <b>${S!=null?cmpUsd(S):'—'}</b> · net <b>${N>0?'+':''}${cmpUsd(N)}</b><br>
         ${Math.round(c*100)}% of rewards bought back in${mult>1?` + ${(mult-1).toFixed(1)}× more on top`:''} · bought after ${Math.round(k*100)}% of payout days · score ${s_} (${t})${ch!=null?`<br>Sold back ${ch<.5?Math.min(49,Math.round(ch*100)):Math.round(ch*100)}% of what they bought within 7 days${trd?' (trader: in and out)':''}`:''}</td></tr>`:'';
-      return`<tr class="${v?'cmpRow':''}" title="${v?'tap for details':''}"><td class="dim">${i+1}</td><td><a href="https://solscan.io/account/${esc(r.w)}" target="_blank" rel="noopener">${esc(r.w.slice(0,4))}…${esc(r.w.slice(-4))}</a>${v?`<div class="ctg"><span style="color:${CMPC[t]||'var(--dim)'}">${esc(t).toUpperCase()}</span></div>`:'<div class="ctg dim">NO REWARD YET</div>'}</td>
+      return`<tr class="${v?'cmpRow':''}" title="${v?'tap for details':''}"><td class="dim">${i+1}</td><td><a href="https://solscan.io/account/${esc(r.w)}" class="walA" data-w="${esc(r.w)}" title="open this wallet">${esc(r.w.slice(0,4))}…${esc(r.w.slice(-4))}</a>${v?`<div class="ctg"><span style="color:${CMPC[t]||'var(--dim)'}">${esc(t).toUpperCase()}</span></div>`:'<div class="ctg dim">NO REWARD YET</div>'}</td>
       <td class="r">${r.p.toFixed(2)}%</td><td class="r hs">${x==null?dash:x===0?'<span class="dim">0</span>':pct(x)}</td>
       ${v?`<td class="r hs">${cmpUsd(R)}</td><td class="r" style="color:${N>0?'var(--green)':N<0?'var(--red)':'var(--dim)'}">${N>0?'+':''}${cmpUsd(N)}</td>
       <td class="r"><span class="cmpSc" title="${why}" style="color:${CMPC[t]};border-color:${CMPC[t]}">${s_}</span></td>`:`<td class="r hs">${dash}</td><td class="r">${dash}</td><td class="r">${dash}</td>`}</tr>${det}`}).join('')}</tbody></table>
     ${CMP.rows.length>20?`<button class="btn cmpMore" id="cmpMore">${cmpAll?'SHOW TOP 20':'SHOW ALL '+CMP.rows.length}</button>`:''}`;
   const m=$('cmpMore');if(m)m.onclick=()=>{cmpAll=!cmpAll;renderCompound()};
+  $('cmpBody').querySelectorAll('a.walA').forEach(a=>a.onclick=e=>{e.preventDefault();e.stopPropagation();openWallet(a.dataset.w)});
   $('cmpBody').querySelectorAll('tr.cmpRow').forEach(tr=>tr.onclick=e=>{if(e.target.closest('a'))return;const d=tr.nextElementSibling;if(d&&d.classList.contains('cmpDet'))d.style.display=d.style.display==='none'?'':'none'})}
 // desktop keeps every panel in the same place for every token: a panel with nothing for this token says so instead of
 // disappearing (phones still fold empty ones away)
@@ -1248,6 +1288,37 @@ function syncScores(){const a=$('scoreStat').style.display!=='none',b=$('cmpStat
 $('cmpStat').onclick=()=>{setTapeView('holders');document.querySelector('.tapeP').scrollIntoView({behavior:'smooth',block:'start'})};
 $('cmpWin').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();cmpW=b.dataset.w;[...$('cmpWin').children].forEach(x=>x.classList.toggle('on',x===b));renderCompound()});
 loadCompound();setInterval(()=>{if(!document.hidden)loadCompound()},30*60e3);
+// the wallet window: one holder across stonkfun (the bot's /wallet: coins held now + compounding per coin) and its share card.
+// A shared link (?w=<wallet>) opens it on arrival
+const WRE=/^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+async function openWallet(w){if(!WRE.test(w||''))return;openWallet.w=w;$('walModal').classList.add('show');document.body.style.overflow='hidden';
+  $('walAddr').textContent=w.slice(0,4)+'…'+w.slice(-4);$('walScan').href='https://solscan.io/account/'+w;$('walCa').textContent='COPY ADDRESS';
+  const link='https://terminal7.xyz/terminal/token?ca='+CA+'&w='+w;$('walCard').src=BOT+'/card/wallet/'+w+'.png';
+  $('walKpi').innerHTML='';$('walHold').innerHTML=$('walCoins').innerHTML='<div class="dim" style="font-size:11px">loading…</div>';
+  let d=null;try{d=await j(BOT+'/wallet/'+w)}catch(e){}
+  if(openWallet.w!==w)return;
+  if(!d||d.error){$('walHold').innerHTML=$('walCoins').innerHTML='<div class="dim" style="font-size:11px">couldn\'t load this wallet right now · try again in a minute</div>';return}
+  const sc=d.score,col=sc==null?'var(--dim)':sc>=40?'var(--green)':sc>=20?'var(--amber)':'var(--red)',lbl=sc==null?'no rewards yet':sc>=60?'Strong':sc>=40?'Healthy':sc>=20?'Mixed':'Weak';
+  const earning=d.coins.filter(c=>c.R>0);
+  $('walKpi').innerHTML=`<div style="border-color:${col}"><b style="color:${col}">${sc??'—'}</b><span>COMPOUND SCORE · ${lbl.toUpperCase()}</span></div>
+    <div><b style="color:var(--green)">${cmpUsd(d.rewards||0)}</b><span>TOTAL REWARDS</span></div><div><b>${cmpUsd(d.value||0)}</b><span>STONKFUN HOLDINGS</span></div><div><b>${earning.length}</b><span>COINS EARNING</span></div>`;
+  const coin=(m,s,i)=>`<a href="/terminal/token?ca=${esc(m)}">${i?`<img src="${esc(i)}" alt="" onerror="this.remove()">`:''}$${esc(String(s||'?').replace(/^\$/,''))}</a>`;
+  const amt=n=>n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n>=1?n.toFixed(0):n.toPrecision(2);
+  $('walHold').innerHTML=d.holdings.length?`<table><thead><tr><th>COIN</th><th class="r">AMOUNT</th><th class="r">VALUE</th></tr></thead><tbody>${d.holdings.slice(0,30).map(h=>`<tr><td>${coin(h.m,h.s,h.i)}</td><td class="r">${amt(h.amt)}</td><td class="r">${h.usd?cmpUsd(h.usd):'<span class="dim">—</span>'}</td></tr>`).join('')}</tbody></table>`
+    :`<div class="dim" style="font-size:11px">${d.live?'No stonkfun coins in this wallet right now.':'Holdings unavailable right now (the chain read failed) · try again in a minute'}</div>`;
+  $('walCoins').innerHTML=d.coins.length?`<table><thead><tr><th>COIN</th><th class="r hs2">HOLDS</th><th class="r">REWARDS</th><th class="r hs2">NET BOUGHT</th><th class="r" title="value now + sold + rewards − bought, since the coin's tracking began">P&amp;L</th><th class="r">SCORE</th></tr></thead><tbody>${d.coins.map(c=>`<tr><td>${coin(c.m,c.s,c.i)}${c.held==null?'':`<div class="whd" style="color:${c.held?'var(--green)':'var(--dim)'}">${c.held?'HOLDING':'EXITED'}</div>`}</td><td class="r hs2">${c.p.toFixed(2)}%</td>
+      <td class="r">${c.R>0?cmpUsd(c.R):'<span class="dim">—</span>'}</td><td class="r hs2" style="color:${c.N>0?'var(--green)':c.N<0?'var(--red)':'var(--dim)'}">${c.R>0?(c.N>0?'+':'')+cmpUsd(c.N):'—'}</td>
+      <td class="r" style="color:${c.pnl>0?'var(--green)':c.pnl<0?'var(--red)':'var(--dim)'}" title="${c.since?'since '+new Date(c.since*1000).toLocaleDateString('en-US',{month:'short',day:'numeric'}):''}">${c.pnl==null?'—':(c.pnl>0?'+':'')+cmpUsd(c.pnl)}</td>
+      <td class="r">${c.score!=null?`<span class="wsc" style="color:${CMPC[c.tag]};border-color:${CMPC[c.tag]}">${c.score}</span><span class="wtg" style="color:${CMPC[c.tag]}">${esc(c.tag).toUpperCase()}</span>`:'<span class="dim" style="font-size:9.5px;letter-spacing:1px">NO REWARD YET</span>'}</td></tr>`).join('')}</tbody></table>`
+    :'<div class="dim" style="font-size:11px">Not among the biggest holders of any tracked coin, so no rewards are tracked for it yet.</div>';
+  const txt=`Wallet ${w.slice(0,4)}…${w.slice(-4)} on stonkfun: compound score ${sc??'—'}${sc!=null?' ('+lbl+')':''} · ${cmpUsd(d.rewards||0)} in rewards from ${earning.length} coin${earning.length===1?'':'s'}`;
+  $('walTweet').href='https://x.com/intent/tweet?text='+encodeURIComponent(txt)+'&url='+encodeURIComponent(link);
+  $('walCopy').onclick=()=>{navigator.clipboard?.writeText(link).then(()=>{$('walCopy').textContent='COPIED';setTimeout(()=>$('walCopy').textContent='COPY LINK',1500)}).catch(()=>{})}}
+function closeWallet(){openWallet.w=null;$('walModal').classList.remove('show');document.body.style.overflow=''}
+$('walX').onclick=closeWallet;$('walModal').addEventListener('click',e=>{if(e.target.id==='walModal')closeWallet()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&openWallet.w)closeWallet()});
+$('walCa').onclick=e=>{e.preventDefault();navigator.clipboard?.writeText(openWallet.w||'').then(()=>{$('walCa').textContent='COPIED'}).catch(()=>{})};
+{const w=new URLSearchParams(location.search).get('w');if(WRE.test(w||''))openWallet(w)}
 
 // ---------- tape ----------
 let seen=new Set(),tapeLoaded=false,tapeMin=0,tapeRaw=[];

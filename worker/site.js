@@ -34,7 +34,8 @@ export default {
   async fetch(req, env) {
     try { const r = domains(req); if (r) return r; } catch (e) {}
     // a token's share card, from the bot but on this domain (X won't show preview images hosted on workers.dev)
-    const card = /^\/card\/([1-9A-HJ-NP-Za-km-z]{32,44})\.png$/.exec(new URL(req.url).pathname);
+    // (and a wallet's: /card/wallet/<address>.png, the token page's wallet window)
+    const card = /^\/card\/((?:wallet\/)?[1-9A-HJ-NP-Za-km-z]{32,44})\.png$/.exec(new URL(req.url).pathname);
     if (card) {
       try {
         const r = await (env.BOT ? env.BOT.fetch(`${BOT}/card/${card[1]}.png`) : fetch(`${BOT}/card/${card[1]}.png`));
@@ -47,9 +48,13 @@ export default {
     try {
       const ca = new URL(req.url).searchParams.get('ca');
       if (!MINT.test(ca || '') || !(res.headers.get('content-type') || '').includes('text/html')) return res;
-      const img = `${new URL(req.url).origin}/card/${ca}.png`;
+      const wal = new URL(req.url).searchParams.get('w');   // a shared wallet window: the wallet's card instead of the token's
+      const img = MINT.test(wal || '') ? `${new URL(req.url).origin}/card/wallet/${wal}.png` : `${new URL(req.url).origin}/card/${ca}.png`;
       let title = null, desc = null;
-      if (CRAWLER.test(req.headers.get('user-agent') || '')) {
+      if (MINT.test(wal || '')) {
+        title = `Wallet ${wal.slice(0, 4)}…${wal.slice(-4)} on Terminal 7`;
+        desc = 'Compound score, rewards and stonkfun holdings for this wallet on Terminal 7.';
+      } else if (CRAWLER.test(req.headers.get('user-agent') || '')) {
         const ask = env.BOT ? env.BOT.fetch(`${BOT}/token/${ca}`) : fetch(`${BOT}/token/${ca}`, { cf: { cacheTtl: 300 } });
         const t = await Promise.race([ask, new Promise((_, no) => setTimeout(() => no(new Error('slow')), 4000))]).then(r => r.json()).catch(() => null);
         if (t && t.symbol) {

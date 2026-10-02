@@ -541,6 +541,16 @@ def summarize(rows):
     return summ
 
 
+def wallets_index():   # every wallet's coins, for the token page's wallet window: compound/wallets/<char code of its first letter>.json
+    mints = sorted(index['tokens']); shards = {}
+    for i, mint in enumerate(mints):
+        for r in (load(f'compound/{mint}.json', None) or {}).get('rows', []):
+            a = r.get('all') or [0, 0, 0, 0, None, None, None, None]   # [coin, % of supply, rewards $, net bought $, score, tag, bought $, sold $] (unscored: no reward yet)
+            shards.setdefault(ord(r['w'][0]), {}).setdefault(r['w'], []).append([i, r['p'], a[0], a[1], a[4], a[5], a[6], a[7]])
+    for c, W in shards.items(): save(f'compound/wallets/{c}.json', {'at': now, 'm': mints, 's': [index['tokens'][m].get('sym') for m in mints],
+                                                                    'since': [index['tokens'][m].get('since') for m in mints], 'w': W})
+
+
 index = load('compound/index.json', {'tokens': {}})
 if '--rescore' in sys.argv:   # the score formula changed: rebuild every token's page from the saved daily numbers, no RPC at all
     for mint, it in index['tokens'].items():
@@ -554,7 +564,7 @@ if '--rescore' in sys.argv:   # the score formula changed: rebuild every token's
         it.update({'score': {k_: summ[k_]['score'] for k_ in WINDOWS}, 'c7': summ['7d']['compounded'], 'r7': summ['7d']['rewards'],
                    'ca': summ['all']['compounded'], 'ra': summ['all']['rewards'], 'wallets': page['wallets'], 'big': bool(T.get('big')), 'low': summ['all']['low']})
     index['rescored'] = now   # the whale job re-baselines compound alerts: a formula change isn't holders doing something
-    save('compound/index.json', index); save('compound-state.json', state); log(f"rescored {len(index['tokens'])} tokens"); sys.exit(0)
+    wallets_index(); save('compound/index.json', index); save('compound-state.json', state); log(f"rescored {len(index['tokens'])} tokens"); sys.exit(0)
 for mint in watch:
     T = ST.setdefault(mint, {})
     if not T.get('v2') and len(T.get('bal') or {}) < MIN_W and not T.get('backfilled'):   # one-off: partial snapshots an earlier run saved
@@ -626,5 +636,5 @@ for mint in watch:
 index['tokens'] = {m: v for m, v in index['tokens'].items() if m in watch}
 for m in [m for m, T in ST.items() if m not in watch and now - T.get('at', 0) > 7 * DAY]: del ST[m]
 index['at'] = now
-save('compound/index.json', index); save('compound-state.json', state)
+wallets_index(); save('compound/index.json', index); save('compound-state.json', state)
 log('calls', CALLS, '· estimated Helius credits', CREDITS[0])
