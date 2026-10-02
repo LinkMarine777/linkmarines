@@ -108,14 +108,15 @@ for t in watch:
 # every Stonk Board coin's pool, for the bot's live big-trade listener (any coin's $2,500+ trades, not just the top 10's):
 # looked up once and kept (re-checked after 3 days), at most 15 new lookups a run
 PO = state.setdefault('poolOf', {}); board_toks = load('board.json', {}).get('tokens', {}); looked = 0
-for m in [m for m in board_toks if m not in pool_of]:
+for m in [m for m in board_toks if m not in pool_of and not (board_toks[m] or {}).get('pool')]:   # (the Stonk Board lists most pools itself)
     if m in PO and now - PO[m][1] < 3 * 86400: continue
     if looked >= 15: break
     looked += 1
     try: PO[m] = [get(SF + m)['data']['token'].get('pool'), now]
     except Exception as e: log('stonkfun pool', m[:6], e)
 pools_all = {m: p for m, p in pool_of.items() if p}
-pools_all.update({m: PO[m][0] for m in board_toks if m in PO and PO[m][0] and m not in pools_all})
+pools_all.update({m: (board_toks[m] or {}).get('pool') or (PO.get(m) or [None])[0] for m in board_toks if m not in pools_all})
+pools_all = {m: p for m, p in pools_all.items() if p}
 H = state.setdefault('holders', {})
 for t in watch:   # top holders straight from the chain, refreshed every 6 h
     h = H.get(t['mint'])
