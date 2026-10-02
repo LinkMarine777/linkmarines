@@ -331,21 +331,29 @@ try:
 except Exception as e: log('scores', e)
 
 # ---------- compound score changes (intel/compound.py's all-time scores, every 6 h: what the site shows) ----------
-# as a 'rewards' alert (♻️ WHALE REWARDS: every page and the stream already show that kind): a token's score crossing a band
-# (weak < 20 · mixed < 40 · healthy < 60 · strong) or moving 10+ points; only tokens whose tracked holders got $500+ of
-# rewards since launch; a token seen for the first time is only remembered; at most 3 a pass (biggest change first, the rest
-# wait for the next pass) and once a day per token
+# as a 'rewards' alert (♻️ WHALE REWARDS on every page and the stream; the trending page spots "compound score" in the text
+# and gives these their own COMPOUND tab): a token's score crossing a band (weak < 20 · mixed < 40 · healthy < 60 · strong) by 3+
+# points, or moving 10+ points; only tokens whose tracked holders got $500+ of rewards since launch; a token seen for the first
+# time is only remembered; a token whose numbers were rebuilt (history refill, or every token after a formula rescore) is
+# re-baselined quietly: that's a recount, not holders doing something; at most 3 a pass (biggest change first, the rest wait
+# for the next pass) and once a day per token
 try:
     ci = load('compound/index.json', {}).get('tokens') or {}
     band = lambda v: 'Weak' if v < 20 else 'Mixed' if v < 40 else 'Healthy' if v < 60 else 'Strong'
     state.pop('compound', None); cprev = state.setdefault('compoundA', {}); cch = []   # all-time from now (7-day baseline dropped)
+    chist = state.setdefault('compoundH', {})   # when each token's history was last rebuilt (compound-state.json)
+    cst = (load('compound-state.json', {}).get('tokens') or {})
+    resc = load('compound/index.json', {}).get('rescored')
+    if resc != state.get('compoundR'): state['compoundR'] = resc; cprev.clear()   # formula rescore: everyone re-baselined
     for m, t in ci.items():
         v = (t.get('score') or {}).get('all'); ra = t.get('ra', t.get('r7'))
         if t.get('low'): continue   # too few wallets / too little in rewards to be news
         if v is None or (ra is not None and ra < 500): continue
+        h = (cst.get(m) or {}).get('history')
+        if chist.get(m) != h: chist[m] = h; cprev[m] = v; continue   # rebuilt (or first seen): a recount, not news
         p = cprev.get(m)
         if p is None: cprev[m] = v; continue
-        if band(v) != band(p) or abs(v - p) >= 10: cch.append((abs(v - p), m, t, p, v))
+        if (band(v) != band(p) and abs(v - p) >= 3) or abs(v - p) >= 10: cch.append((abs(v - p), m, t, p, v))
     for _, m, t, p, v in sorted(cch, key=lambda c: -c[0])[:3]:
         sig_('rewards', f"compound:{m}:{t.get('at') or now}", now,
              f"${t.get('sym') or m[:4]} compound score {p:.0f} → {v:.0f} {'▲' if v > p else '▼'} ({band(p)} → {band(v)})"

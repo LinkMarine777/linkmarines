@@ -542,6 +542,7 @@ if '--rescore' in sys.argv:   # the score formula changed: rebuild every token's
         page['win'] = summ = summarize(page['rows']); save(f'compound/{mint}.json', page)
         it.update({'score': {k_: summ[k_]['score'] for k_ in WINDOWS}, 'c7': summ['7d']['compounded'], 'r7': summ['7d']['rewards'],
                    'ca': summ['all']['compounded'], 'ra': summ['all']['rewards'], 'wallets': page['wallets'], 'big': bool(T.get('big')), 'low': summ['all']['low']})
+    index['rescored'] = now   # the whale job re-baselines compound alerts: a formula change isn't holders doing something
     save('compound/index.json', index); save('compound-state.json', state); log(f"rescored {len(index['tokens'])} tokens"); sys.exit(0)
 for mint in watch:
     T = ST.setdefault(mint, {})
