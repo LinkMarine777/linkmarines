@@ -411,7 +411,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 .mtok{display:none}.ctok:empty{display:none}.pchips{display:none}.pchips span[data-tf]{cursor:pointer}.pchips span[data-tf]:hover{background:rgba(74,122,255,.1)}.pchips span.on{background:rgba(74,122,255,.18);box-shadow:inset 0 -2px 0 var(--blue2)}.tkb .nm small{display:none}.tkb .nm b{font-weight:inherit}.mca{display:none}
 /* desktop: name under the ticker, short copyable address, bigger price, rounded search */
 @media (min-width:1000px){
-  header{flex-wrap:nowrap!important}header .ca{flex:1 1 auto;max-width:620px;margin:0 auto 0 18px}header .ca input{border-radius:17px;height:34px;padding-left:14px}
+  header{flex-wrap:nowrap!important}header .ca{flex:0 1 auto;width:clamp(100px,calc(100vw - 900px),620px);max-width:none;margin:0 auto 0 18px}   /* the same width and place as on the trending page: it doesn't move between pages */header .ca input{border-radius:17px;height:34px;padding-left:14px}
   /* the token (logo, name, address, links) heads its chart */
   .ctok{display:flex;align-items:center;gap:10px;min-width:0}.ctok~h2{display:none}.ctok:empty{display:none}.ctok:empty~h2{display:block}
   .ctok .tkb img{width:32px;height:32px}.ctok .tkb .nm b{font-family:'VT323';font-weight:400;font-size:26px;color:#fff;letter-spacing:1px;line-height:1}.ctok .tkb .nm b .q{font-family:'IBM Plex Mono';font-size:12px;margin-left:3px;letter-spacing:0}
@@ -464,7 +464,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   header{gap:8px!important;padding:8px 10px}header .brand{display:none}header nav{order:-1;margin:0!important}.mnu{left:0;right:auto}
   header .ca{order:2;flex:1 1 0;min-width:0;margin:0;flex-wrap:nowrap}header .ca .srch{flex:1;min-width:0}
   header .ca input{height:36px;border-radius:18px;padding-left:14px;font-size:13px;background:#0a0f1f}
-  .live{order:3;padding:0;border:0;background:none}#liveTxt{display:none}#soundBtn{order:4}#alertBtn{order:5}
+  .live{order:3;width:34px;height:34px;border-radius:50%;justify-content:center;flex:none;padding:0;border:1px solid var(--line);background:none}.live i{width:8px;height:8px}#liveTxt{display:none}#soundBtn{order:4}#alertBtn{order:5}   /* phones: LIVE is a circle like the sound and alert buttons */
   #soundBtn,#alertBtn{width:34px;height:34px;border-radius:50%}#menuBtn{width:36px;height:36px;padding:0;font-size:18px;border:0;background:none}
   .tape-bar .lbl{font-size:14px}.track{padding:4px 0}
   .mtok{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;row-gap:4px;align-items:center;padding:14px 14px 2px}
