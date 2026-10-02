@@ -549,7 +549,9 @@ def px_publish(minutes=float(os.environ.get('PX_MINUTES', 20))):
     only adds the hours since its last point), and compound/px/launches.json = every stonkfun launch and its reward token."""
     qs = sorted({(x.get('quote') or {}).get('mint') for x in G.values()} - {None}); qi = {q: i for i, q in enumerate(qs)}
     save('compound/px/launches.json', {'at': now, 'q': qs, 'm': {m: qi[(x.get('quote') or {}).get('mint')] for m, x in G.items() if (x.get('quote') or {}).get('mint')}})
-    todo = sorted((set(watch) | {(G[m].get('quote') or {}).get('mint') for m in watch} | {SOL}) - STABLE - {None}); done = 0
+    # SOL and the reward tokens first (every coin's trades and payouts are valued through them), then the coins
+    rq = sorted({(G[m].get('quote') or {}).get('mint') for m in watch} - STABLE - {None, SOL})
+    todo = [SOL] + rq + [m for m in watch if m not in rq and m != SOL and m not in STABLE]; done = 0
     for m in todo:
         if time.time() - now > minutes * 60: log(f'px: out of time, {done}/{len(todo)} updated'); break
         f = load(f'compound/px/{m}.json', None) or {}
