@@ -17,6 +17,16 @@ from pda import b58d, b58e, pda, ATA
 DATA = sys.argv[1]; MINTS = sys.argv[2:] or ['F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK']
 KEY = os.environ.get('HELIUS_KEY', '').strip(); URL = os.environ.get('SOLANA_RPC', '').strip()
 RPC = f'https://mainnet.helius-rpc.com/?api-key={KEY}' if KEY else URL   # Helius: getTransactionsForAddress (100 transactions a call)
+VIA = os.environ.get('RPC_VIA', '') == 'backup'   # the owner's backup RPC, through the bot (GitHub's signed OIDC token proves the job)
+if VIA: RPC = 'https://war-room-bot.linkmarine777.workers.dev/rpc-backup'
+OIDC = [None, 0]
+def auth():
+    if not VIA: return {}
+    if time.time() - OIDC[1] > 240:   # GitHub's tokens last ~5-10 min
+        u = os.environ['ACTIONS_ID_TOKEN_REQUEST_URL'] + '&audience=war-room-bot'
+        r = urllib.request.Request(u, headers={'Authorization': 'bearer ' + os.environ['ACTIONS_ID_TOKEN_REQUEST_TOKEN']})
+        OIDC[0] = json.load(urllib.request.urlopen(r, timeout=30))['value']; OIDC[1] = time.time()
+    return {'Authorization': 'Bearer ' + OIDC[0]}
 SOL = 'So11111111111111111111111111111111111111112'
 T22 = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb'
 CREDITS = [0]
@@ -34,7 +44,7 @@ def rpc(m, p, tries=8):
     for i in range(tries):
         try:
             d = json.load(urllib.request.urlopen(urllib.request.Request(RPC, json.dumps({'jsonrpc': '2.0', 'id': 1, 'method': m, 'params': p}).encode(),
-                                                 {'Content-Type': 'application/json', 'User-Agent': 'war-room-audit'}), timeout=120))
+                                                 {'Content-Type': 'application/json', 'User-Agent': 'war-room-audit', **auth()}), timeout=120))
         except Exception as e:
             if i == tries - 1: raise RuntimeError(f"{m}: {type(e).__name__} {getattr(e, 'code', '') or ''}")
             time.sleep(3 * (i + 1)); continue
@@ -53,9 +63,16 @@ def history(addr, since, until):
         sigs += [x['signature'] for x in r if since <= (x.get('blockTime') or 0) <= until and not x.get('err')]
         if len(r) < 1000 or (r[-1].get('blockTime') or 0) < since: break
         before = r[-1]['signature']
-    if len(sigs) <= 10:
-        CREDITS[0] += len(sigs)
-        return [t for t in (rpc('getTransaction', [x, {'encoding': 'jsonParsed', 'maxSupportedTransactionVersion': 1}]) for x in sigs) if t]
+    one = lambda: [t for t in (rpc('getTransaction', [x, {'encoding': 'jsonParsed', 'maxSupportedTransactionVersion': 1}]) for x in sigs) if t]
+    if len(sigs) <= 10 or NO_BATCH[0]: CREDITS[0] += len(sigs); return one()
+    try: return batch(addr, since, until)
+    except RuntimeError: NO_BATCH[0] = True; CREDITS[0] += len(sigs); return one()   # an RPC without Helius' batch call: one by one
+
+
+NO_BATCH = [False]
+
+
+def batch(addr, since, until):
     out, tok = [], None
     while True:
         opts = {'transactionDetails': 'full', 'encoding': 'jsonParsed', 'maxSupportedTransactionVersion': 1, 'sortOrder': 'desc',
