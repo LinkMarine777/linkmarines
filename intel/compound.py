@@ -57,6 +57,7 @@ DAY, KEEP_DAYS, COVER, MIN_W, MAX_W = 86400, 180, 0.8, 20, 600
 BACKFILL_W, BACKFILL_DAYS = int(os.environ.get('BACKFILL_W', 200)), int(os.environ.get('BACKFILL_DAYS', 7))
 HISTORY_BUDGET = int(os.environ.get('HISTORY_BUDGET', 160000))   # credits one history run may spend before it stops starting tokens
 HISTORY_MINUTES = int(os.environ.get('HISTORY_MINUTES', 110))      # ... or minutes (the job has 140); the next run carries on
+WORKERS = int(os.environ.get('WORKERS') or 2)   # wallets read at once in a history fill / backfill (Helius' lower plans refuse bursts)
 REDO_BEFORE = int(os.environ.get('REDO_BEFORE') or 0)   # --history: also redo tokens whose history was filled before this time (unix seconds)
 # trade by trade (off until the Helius plan has room; ~300-500K credits a month estimated: a moving wallet usually costs 2-4): in the 6-hourly update, a wallet whose balance moved
 # has its actual transactions read, so a buy / sell is the real swap at its own time and a plain transfer counts as neither.
@@ -377,7 +378,7 @@ def backfill(mint, quote, T, people, wallets, since):
             ch, signer = deltas(tx, w); t = tx.get('blockTime') or now
             if ch: txs.append({'t': t, 'ch': ch, 'signer': signer, 'trade': trade(tx, w, mint, lambda m, a: usd(m, a, t))})
         return w, sorted(txs, key=lambda x: x['t'])
-    with ThreadPoolExecutor(2) as ex: hist = dict(ex.map(one, wallets))   # 2 at a time: Helius' free plan refuses bursts
+    with ThreadPoolExecutor(WORKERS) as ex: hist = dict(ex.map(one, wallets))
 
     # payouts: reward tokens in, nothing else moved, not signed by the holder; this token's rounds pay every holder at
     # one rate (reward tokens per token held) at one moment, so only payouts at the rate most of a burst agrees on count
@@ -435,7 +436,7 @@ def history_fill(mint, quote, T, people, wallets, since):
         out.sort(key=lambda x: x['t']); bal = people.get(w, 0)
         for x in reversed(out): x['after'] = bal; bal -= x['ch'][mint]; x['before'] = bal
         return w, out
-    with ThreadPoolExecutor(2) as ex: H = dict(ex.map(trades, wallets))
+    with ThreadPoolExecutor(WORKERS) as ex: H = dict(ex.map(trades, wallets))
     def bal_at(w, t):
         L = H.get(w) or []
         i = bisect.bisect_right([x['t'] for x in L], t) - 1
