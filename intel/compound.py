@@ -541,6 +541,36 @@ def summarize(rows):
     return summ
 
 
+def px_publish(minutes=float(os.environ.get('PX_MINUTES', 20))):
+    """For the bot's trade-by-trade wallet reader (the bot can't count on GeckoTerminal, which often refuses Cloudflare):
+    compound/px/<mint>.json = hourly $ closes for every tracked coin, its reward token and SOL (after the first fill, each run
+    only adds the hours since its last point), and compound/px/launches.json = every stonkfun launch and its reward token."""
+    qs = sorted({(x.get('quote') or {}).get('mint') for x in G.values()} - {None}); qi = {q: i for i, q in enumerate(qs)}
+    save('compound/px/launches.json', {'at': now, 'q': qs, 'm': {m: qi[(x.get('quote') or {}).get('mint')] for m, x in G.items() if (x.get('quote') or {}).get('mint')}})
+    todo = sorted((set(watch) | {(G[m].get('quote') or {}).get('mint') for m in watch} | {SOL}) - STABLE - {None}); done = 0
+    for m in todo:
+        if time.time() - now > minutes * 60: log(f'px: out of time, {done}/{len(todo)} updated'); break
+        f = load(f'compound/px/{m}.json', None) or {}
+        try:
+            if not f.get('pool'):   # first time: the token's busiest pool, and its whole history (1,000 hours a call)
+                time.sleep(2.2); p = get(f'https://api.geckoterminal.com/api/v2/networks/solana/tokens/{m}/pools?page=1')
+                pool = p['data'][0]; f = {'pool': pool['attributes']['address'], 'side': 'base' if pool['relationships']['base_token']['data']['id'].endswith(m) else 'quote', 'h': []}
+            last = f['h'][-1][0] if f['h'] else now - KEEP_DAYS * DAY
+            if now - last < 3600: done += 1; continue
+            pts, before = dict(map(tuple, f['h'])), now
+            for _ in range(5):
+                n = min(1000, (before - last) // 3600 + 3)
+                time.sleep(2.2); r = get(f"https://api.geckoterminal.com/api/v2/networks/solana/pools/{f['pool']}/ohlcv/hour?aggregate=1&limit={n}&before_timestamp={before}&token={f['side']}")
+                rows = r['data']['attributes']['ohlcv_list']
+                for x in rows: pts[int(x[0])] = float('%.6g' % float(x[4]))
+                if not rows or len(rows) < n or min(int(x[0]) for x in rows) <= last: break
+                before = min(int(x[0]) for x in rows)
+            f['h'] = sorted([t, v] for t, v in pts.items() if t > now - KEEP_DAYS * DAY); f['s'] = names.get(m); f['at'] = now
+            save(f'compound/px/{m}.json', f); done += 1
+        except Exception as e: log('px', m[:6], e)
+    log(f'px: {done}/{len(todo)} price histories current')
+
+
 def wallets_index():   # every wallet's coins, for the token page's wallet window: compound/wallets/<char code of its first letter>.json
     mints = sorted(index['tokens']); shards = {}
     for i, mint in enumerate(mints):
@@ -568,6 +598,8 @@ if '--rescore' in sys.argv:   # the score formula changed: rebuild every token's
                    'ca': summ['all']['compounded'], 'ra': summ['all']['rewards'], 'wallets': page['wallets'], 'big': bool(T.get('big')), 'low': summ['all']['low']})
     index['rescored'] = now   # the whale job re-baselines compound alerts: a formula change isn't holders doing something
     wallets_index(); save('compound/index.json', index); save('compound-state.json', state); log(f"rescored {len(index['tokens'])} tokens"); sys.exit(0)
+if '--px' in sys.argv:   # just the price histories for the bot's wallet reader (no RPC)
+    px_publish(minutes=60); sys.exit(0)
 for mint in watch:
     T = ST.setdefault(mint, {})
     if not T.get('v2') and len(T.get('bal') or {}) < MIN_W and not T.get('backfilled'):   # one-off: partial snapshots an earlier run saved
@@ -640,4 +672,5 @@ index['tokens'] = {m: v for m, v in index['tokens'].items() if m in watch}
 for m in [m for m, T in ST.items() if m not in watch and now - T.get('at', 0) > 7 * DAY]: del ST[m]
 index['at'] = now
 wallets_index(); save('compound/index.json', index); save('compound-state.json', state)
+px_publish()
 log('calls', CALLS, '· estimated Helius credits', CREDITS[0])

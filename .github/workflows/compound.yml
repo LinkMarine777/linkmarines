@@ -22,6 +22,10 @@ on:
       redo_before:
         description: 'with history: also redo tokens whose history was filled before this time (unix seconds; reuse the same value to carry on)'
         default: ''
+      px:
+        description: "only refresh the price histories for the bot's wallet reader (no RPC)"
+        type: boolean
+        default: false
       rpc:
         description: "which RPC: helius, or the owner's backup (BACKUP_RPC on the bot) to spare Helius credits"
         type: choice
@@ -55,7 +59,7 @@ jobs:
           WORKERS: '8'   # wallets read at once in a history fill (Helius' paid plan takes bursts)
           TRADES: '1'   # trade by trade in the 6-hourly update (actual swaps, transfers aren't trades); capped at TRADES_BUDGET credits a run
         timeout-minutes: 140
-        run: python3 main/intel/compound.py data/terminal ${{ inputs.backfill && '--backfill' || '' }} ${{ inputs.history && '--history' || '' }} ${{ inputs.rescore && '--rescore' || '' }}
+        run: python3 main/intel/compound.py data/terminal ${{ inputs.backfill && '--backfill' || '' }} ${{ inputs.history && '--history' || '' }} ${{ inputs.rescore && '--rescore' || '' }} ${{ inputs.px && '--px' || '' }}
       - name: save to the data branch
         if: always()   # also when the run was cut short: compound.py saves after every token
         working-directory: data
