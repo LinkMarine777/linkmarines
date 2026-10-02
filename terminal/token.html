@@ -298,7 +298,7 @@ html.fit .board.house{padding:0}html.fit .board.house .htag{font-size:13px;paddi
 #walModal .wk{font-size:10px;letter-spacing:2px;color:var(--dim)}
 #walModal h3{font-family:'VT323';font-weight:400;font-size:34px;color:#fff;margin:0;line-height:1}
 #walModal .wl{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;font-size:11px;margin-top:2px}#walModal .wl a{color:var(--blue2)}
-#walKpi{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:14px 0 4px}
+#walKpi{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:14px 0 4px}
 #walKpi>div{background:var(--panel);border:1px solid var(--line);padding:9px 10px;min-width:0}
 #walKpi b{display:block;font-family:'VT323';font-weight:400;font-size:30px;line-height:1;color:#fff}
 #walKpi span{display:block;font-size:9.5px;letter-spacing:1px;color:var(--dim);margin-top:3px}
@@ -311,6 +311,7 @@ html.fit .board.house{padding:0}html.fit .board.house .htag{font-size:13px;paddi
 #walModal td img{width:18px;height:18px;border-radius:50%;object-fit:cover;background:var(--line)}
 #walModal .wsc{display:inline-block;min-width:30px;text-align:center;border:1px solid;padding:0 4px;font-family:'VT323';font-size:18px}
 #walModal .wtg{font-size:9px;letter-spacing:1px;margin-left:6px}#walModal .whd{font-size:8.5px;letter-spacing:1px;margin:1px 0 0 24px}#walModal tr.wcr{cursor:pointer}#walModal tr.wcr:hover td{background:rgba(42,90,218,.06)}
+#walModal .wsum{font-size:10.5px;color:var(--dim);margin:2px 0 6px;white-space:normal;line-height:1.5}#walModal .wsum b{color:var(--txt);font-weight:500}
 #walModal .wtl{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);max-height:220px;overflow-y:auto}
 #walModal .wtl a{display:grid;grid-template-columns:70px 44px 1fr 1fr;gap:8px;padding:5px 8px;background:#0b1122;font-size:11px;color:var(--txt)}#walModal .wtl a:hover{background:#141f36}#walModal .wtl a span:last-child{text-align:right}
 #walCard{display:block;width:100%;aspect-ratio:1200/630;border:1px solid var(--line);background:var(--panel)}
@@ -708,8 +709,9 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
     <button class="btn" id="walSave" type="button">SAVE IMAGE</button><button class="btn" id="walCopy" type="button">COPY LINK</button></div>
   <div class="foot">Rewards, buys, sells and P&amp;L are read from the chain trade by trade: every swap valued at that hour's price, every payout credited to
     the coins held at the time. P&amp;L = value now + sold + rewards − bought; tokens moved in from another wallet aren't counted as bought (* = some at an
-    estimated price). Scores come from each coin's compounding tracker, which follows the wallets holding 80% of its supply (updated every 6 h);
-    overall score = those scores weighted by the rewards each coin paid. Tap a coin for its recent trades.</div>
+    estimated price). Scores: each coin's compound score from this wallet's own history (the site's formula), or the compounding tracker's until the
+    history has been read; overall score = each coin's score weighted by the rewards it paid. Fees paid = each coin's transfer tax on its trades + Solana network fees.
+    Tap a coin for its totals and recent trades.</div>
 </div></div>
 <div id="infoPop" title="Click to close"><div class="k" id="ipK"></div><div class="h" id="ipH"></div><div class="d" id="ipD"></div></div>
 <div id="ttsPop" title="Click to close"><div class="from" id="ttsFrom"></div><div class="msg" id="ttsMsg"></div></div>
@@ -1322,8 +1324,13 @@ async function openWallet(w){if(!WRE.test(w||''))return;openWallet.w=w;walAll=fa
 function walRender(w,d,link){
   const sc=d.score,col=sc==null?'var(--dim)':sc>=40?'var(--green)':sc>=20?'var(--amber)':'var(--red)',lbl=sc==null?'no rewards yet':sc>=60?'Strong':sc>=40?'Healthy':sc>=20?'Mixed':'Weak';
   const earning=d.coins.filter(c=>c.R>0);
+  const T=d.totals||{},pc=v=>v>0?'var(--green)':v<0?'var(--red)':'var(--txt)';
   $('walKpi').innerHTML=`<div style="border-color:${col}"><b style="color:${col}">${sc??'—'}</b><span>COMPOUND SCORE · ${lbl.toUpperCase()}</span></div>
-    <div><b style="color:var(--green)">${cmpUsd(d.rewards||0)}</b><span>TOTAL REWARDS</span></div><div><b>${cmpUsd(d.value||0)}</b><span>STONKFUN HOLDINGS</span></div><div><b>${earning.length}</b><span>COINS EARNING</span></div>`;
+    <div><b style="color:var(--green)">${cmpUsd(d.rewards||0)}</b><span>TOTAL REWARDS</span></div>
+    <div><b style="color:${pc(T.pnl)}">${T.pnl!=null?(T.pnl>0?'+':'')+cmpUsd(T.pnl)+(T.est?'*':''):'—'}</b><span>TOTAL P&amp;L</span></div>
+    <div><b>${cmpUsd(d.value||0)}</b><span>STONKFUN HOLDINGS</span></div>
+    <div><b>${T.tax!=null||T.fees!=null?cmpUsd((T.tax||0)+(T.fees||0)):'—'}</b><span title="transfer tax on its trades + Solana network fees">FEES PAID</span></div>
+    <div><b>${earning.length}</b><span>COINS EARNING</span></div>`;
   // every coin gets a logo: its own, else the Stonk Board's copy, else the helmet
   const coin=(m,s,i)=>`<a href="/terminal/token?ca=${esc(m)}"><img src="${esc(i||'/helmet.png')}" alt="" loading="lazy" data-sb="https://thestonkboard.com/api/logos/${esc(m)}" onerror="if(this.dataset.sb&&this.src!==this.dataset.sb){this.src=this.dataset.sb;this.dataset.sb=''}else{this.onerror=null;this.src='/helmet.png'}">$${esc(String(s||'?').replace(/^\$/,''))}</a>`;
   const amt=n=>n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n>=1?n.toFixed(0):n.toPrecision(2);
@@ -1335,7 +1342,7 @@ function walRender(w,d,link){
       <td class="r">${c.R>0?cmpUsd(c.R):'<span class="dim">—</span>'}</td><td class="r hs2" style="color:${pnlc(c.N)}">${c.N!=null?(c.N>0?'+':'')+cmpUsd(c.N):'—'}</td>
       <td class="r" style="color:${pnlc(c.pnl)}" title="${c.est?'some trades valued at an estimated price':''}">${c.pnl==null?'—':(c.pnl>0?'+':'')+cmpUsd(c.pnl)}${c.est?'*':''}</td>
       <td class="r">${c.score!=null?`<span class="wsc" style="color:${CMPC[c.tag]};border-color:${CMPC[c.tag]}">${c.score}</span><span class="wtg" style="color:${CMPC[c.tag]}">${esc(c.tag).toUpperCase()}</span>`:`<span class="dim" style="font-size:9.5px;letter-spacing:1px" title="scores cover each coin's biggest holders">${c.tracked?'NO REWARD YET':'NOT SCORED'}</span>`}</td></tr>
-      ${c.tr&&c.tr.length?`<tr class="wtr" style="display:none"><td colspan="6"><div class="wtl">${c.tr.map(x=>`<a href="https://solscan.io/tx/${esc(x[4])}" target="_blank" rel="noopener" title="opens the transaction (first 20 characters of its signature)"><span>${dt(x[0])}</span><b style="color:${x[1]==='b'?'var(--green)':'var(--red)'}">${x[1]==='b'?'BUY':'SELL'}</b><span>${amt(x[2])}</span><span>${cmpUsd(x[3])}</span></a>`).join('')}</div></td></tr>`:''}`).join('')}</tbody></table>
+      ${c.tr&&c.tr.length?`<tr class="wtr" style="display:none"><td colspan="6"><div class="wsum">bought <b>${cmpUsd(c.B||0)}</b> · sold <b>${cmpUsd(c.S||0)}</b> · rewards <b>${cmpUsd(c.R||0)}</b> · tax paid <b>${(c.tax||0)<1?'$'+(c.tax||0).toFixed(2):cmpUsd(c.tax)}</b> · network fees <b>${(c.fees||0)<1?'$'+(c.fees||0).toFixed(2):cmpUsd(c.fees)}</b></div><div class="wtl">${c.tr.map(x=>`<a href="https://solscan.io/tx/${esc(x[4])}" target="_blank" rel="noopener" title="opens the transaction (first 20 characters of its signature)"><span>${dt(x[0])}</span><b style="color:${x[1]==='b'?'var(--green)':'var(--red)'}">${x[1]==='b'?'BUY':'SELL'}</b><span>${amt(x[2])}</span><span>${cmpUsd(x[3])}</span></a>`).join('')}</div></td></tr>`:''}`).join('')}</tbody></table>
       ${d.coins.length>25?`<button class="btn" id="walMore" style="margin-top:6px;font-size:11px">${walAll?'SHOW TOP 25':'SHOW ALL '+d.coins.length}</button>`:''}`
     :'<div class="dim" style="font-size:11px">No stonkfun trades or rewards found for this wallet.</div>';
   $('walCoins').querySelectorAll('tr.wcr').forEach(tr=>tr.onclick=e=>{if(e.target.closest('a'))return;const n=tr.nextElementSibling;if(n&&n.classList.contains('wtr'))n.style.display=n.style.display==='none'?'':'none'});
