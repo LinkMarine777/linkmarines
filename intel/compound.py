@@ -15,7 +15,11 @@ Helius credits (getProgramAccountsV2, 1 credit per 10,000 accounts; ~15-30K cred
   - every holder's balance (one getProgramAccounts) and stonkfun's payout total for the token (distributedTokens)
   - rewards since the last run: the payout total's growth x the wallet's share of the eligible supply (wallets worth at
     least stonkfun's minimum holding). Checked against each payout read one by one for $MARINE's top 20: within ~2%.
-  - buying / selling: the change in the wallet's balance (moving tokens between your own wallets looks like a trade)
+  - buying / selling: the change in the wallet's balance (moving tokens between your own wallets looks like a trade), or with
+    TRADES on, its actual trades (trade(): swaps against anything, valued by what was paid or, for a token without a price,
+    by the token itself; a pool sending tokens to / taking them from the wallet while another wallet pays is a router trade;
+    a move between two people's wallets is not a trade). The history fill and backfill always read trades this way, from
+    every account the wallet has for the token (not only the standard one; closed ones too).
   added to the wallet's numbers for that day (UTC), kept 90 days.
 --history: every token's whole history since launch, read the cheap way (each wallet's token account + the 8 biggest
 wallets' reward accounts for the payout rounds; see history_fill), once; resumable, stops at a credit / time limit.
@@ -26,6 +30,7 @@ One-off: ~45K credits for all 11 tokens (two reads per wallet, 10+ credits each)
 
 Score per wallet over a window, counting from its first reward (the buy that got it in isn't compounding):
   R = rewards ($), N = net bought ($), c = min(max(N, 0), R) / R, k = share of reward days with a buy that day or the next
+  (a buy mostly sold back within 7 days doesn't count: in and out is trading; churn = share of buys sold back within 7 days)
   e = buying beyond the rewards: min(1, log2(N / R) / 3) when N > R (2x = 1/3, 4x = 2/3, 8x+ = 1)
   score = 100 x (0.6 c + 0.25 k + 0.15 e), 0 for a net seller · Compounder c >= 50% · Partial 10-50% · Collector < 10% · Seller N < 0
 Token score: the wallets' scores weighted by how much they hold.
@@ -52,12 +57,13 @@ DAY, KEEP_DAYS, COVER, MIN_W, MAX_W = 86400, 180, 0.8, 20, 600
 BACKFILL_W, BACKFILL_DAYS = int(os.environ.get('BACKFILL_W', 200)), int(os.environ.get('BACKFILL_DAYS', 7))
 HISTORY_BUDGET = int(os.environ.get('HISTORY_BUDGET', 160000))   # credits one history run may spend before it stops starting tokens
 HISTORY_MINUTES = int(os.environ.get('HISTORY_MINUTES', 110))      # ... or minutes (the job has 140); the next run carries on
+REDO_BEFORE = int(os.environ.get('REDO_BEFORE') or 0)   # --history: also redo tokens whose history was filled before this time (unix seconds)
 # trade by trade (off until the Helius plan has room, ~1M credits a month): in the 6-hourly update, a wallet whose balance moved
 # has its actual transactions read, so a buy / sell is the real swap at its own time and a plain transfer counts as neither.
 # Off: buys and sells are the balance changes between snapshots. TRADES_BUDGET caps it per run (then balance changes again)
 TRADES = os.environ.get('TRADES', '') == '1'
 TRADES_BUDGET = int(os.environ.get('TRADES_BUDGET', 20000))
-ACCTS = {}   # wallet -> its token accounts for the token being updated (filled by holders())
+ACCTS, ACCTS_MINT = {}, [None]   # wallet -> its token accounts for the token being updated (filled by holders())
 PAGES = int(os.environ.get('PAGES', 80))   # most pages a big token's holder lookup may take (1,000 holders, 10 credits each)
 now = int(time.time()); today = now // DAY
 CALLS, CREDITS = {}, [0]
@@ -149,7 +155,7 @@ def holders(mint, T):
     if 'prog' not in T:
         T['prog'] = rpc('getAccountInfo', [mint, {'encoding': 'base64', 'dataSlice': {'offset': 0, 'length': 0}}])['value']['owner']
         T['dec'] = rpc('getTokenSupply', [mint])['value']['decimals']
-    own = {}; ACCTS.clear()
+    own = {}; ACCTS.clear(); ACCTS_MINT[0] = mint
     if not T.get('big'):
         try:
             accs = rpc('getProgramAccounts', [T['prog'], {'encoding': 'base64', 'dataSlice': {'offset': 32, 'length': 40},
@@ -248,6 +254,61 @@ def deltas(tx, w):
     return {k: v for k, v in ch.items() if abs(v) > 1e-9}, keys[0] == w
 
 
+def moved(tx, mint):
+    """{owner: change} of `mint` across everyone in the transaction."""
+    m = tx['meta']; out = {}
+    for side, sgn in (('preTokenBalances', -1), ('postTokenBalances', 1)):
+        for b in m.get(side) or []:
+            if b['mint'] == mint and b.get('owner'):
+                out[b['owner']] = out.get(b['owner'], 0) + sgn * float((b.get('uiTokenAmount') or {}).get('uiAmountString') or 0)
+    return {o: d for o, d in out.items() if abs(d) > 1e-12}
+
+
+def is_pool(o):   # a pool / program / token account, not a person
+    return o in NOT_WALLETS or bool(KINDS.get(o)) or not on_curve(b58d(o))
+
+
+def trade(tx, w, mint, usd):
+    """What one transaction did to wallet w's position in `mint`, as (bought $, sold $). A swap: the token against anything
+    else, valued by what was paid / received (or by the token at its price when that's a token without a price, e.g. buying
+    with a memecoin). A token-only move whose other side is a pool: a router delivering a buy someone paid for from another
+    wallet, or a sale paid out to another wallet. A move between two people's wallets (or anything else) is (0, 0), so moving
+    your own bags isn't a trade. usd(mint, amount) -> $, 0 when unknown."""
+    ch, _ = deltas(tx, w); dx = ch.get(mint, 0)
+    if not dx: return 0.0, 0.0
+    tok = usd(mint, abs(dx))
+    other = {m: v for m, v in ch.items() if m != mint and not (m == SOL and abs(v) < 0.01)}   # SOL dust = fees / rent
+    if not other:
+        cp = [o for o, d in moved(tx, mint).items() if o != w and d * dx < 0]
+        if not cp or not all(is_pool(o) for o in cp): return 0.0, 0.0
+        return (tok, 0.0) if dx > 0 else (0.0, tok)
+    legs = [usd(m, abs(v)) for m, v in other.items() if (v < 0 if dx > 0 else v > 0)]   # what was paid (a buy) / received (a sale)
+    if not legs: return 0.0, 0.0
+    val = sum(legs) if all(legs) else tok
+    return (val, 0.0) if dx > 0 else (0.0, val)
+
+
+def token_accounts(w, mint, prog):
+    """The wallet's accounts for `mint`: the ones the holder list found (else a lookup) plus its standard one even if closed
+    (a closed account keeps its history; not every wallet uses the standard one)."""
+    if mint == ACCTS_MINT[0]: found = ACCTS.get(w, [])
+    else:
+        found = [a['pubkey'] for a in rpc('getTokenAccountsByOwner', [w, {'mint': mint}, {'encoding': 'base64', 'dataSlice': {'offset': 0, 'length': 0}}])['value']]
+        CREDITS[0] += 1
+    return list(dict.fromkeys(found + [pda([b58d(w), b58d(prog), b58d(mint)], ATA)]))
+
+
+def histories(addrs, since):
+    """Every successful transaction on any of these accounts since `since`, each once."""
+    seen, out = set(), []
+    for a in addrs:
+        for tx in history(a, since):
+            sig = (tx.get('transaction') or {}).get('signatures', [None])[0]
+            if sig in seen or (tx.get('meta') or {}).get('err'): continue
+            seen.add(sig); out.append(tx)
+    return out
+
+
 def find_rounds(ev):
     """Payout events {w, t, rate} -> this token's payout batches. One batch pays every holder at one rate (reward tokens per
     token held) within minutes; a round can be several batches minutes apart at slightly different rates, and other tokens'
@@ -304,30 +365,19 @@ def backfill(mint, quote, T, people, wallets, since):
     px = {m: series(m, since, price.get(m, 0)) for m in (mint, quote, SOL)}; pt = {m: [t for t, _ in s] for m, s in px.items()}   # first: free
     qprog = rpc('getAccountInfo', [quote, {'encoding': 'base64', 'dataSlice': {'offset': 0, 'length': 0}}])['value']['owner']
 
-    def one(w):
-        seen, txs = set(), []
-        for addr in (pda([b58d(w), b58d(T['prog']), b58d(mint)], ATA), pda([b58d(w), b58d(qprog), b58d(quote)], ATA)):
-            for tx in history(addr, since):
-                sig = tx['transaction']['signatures'][0]
-                if sig in seen or (tx.get('meta') or {}).get('err'): continue
-                seen.add(sig); m = tx['meta']; keys = [k['pubkey'] for k in tx['transaction']['message']['accountKeys']]
-                ch = {}
-                for side, sgn in (('preTokenBalances', -1), ('postTokenBalances', 1)):
-                    for b in m.get(side) or []:
-                        if b.get('owner') == w:
-                            ch[b['mint']] = ch.get(b['mint'], 0) + sgn * float((b.get('uiTokenAmount') or {}).get('uiAmountString') or 0)
-                if w in keys:
-                    i = keys.index(w); ch[SOL] = ch.get(SOL, 0) + (m['postBalances'][i] - m['preBalances'][i] + (m.get('fee', 0) if i == 0 else 0)) / 1e9
-                ch = {k: v for k, v in ch.items() if abs(v) > 1e-9}
-                if ch: txs.append({'t': tx.get('blockTime') or now, 'ch': ch, 'signer': keys[0] == w})
-        return w, sorted(txs, key=lambda x: x['t'])
-    with ThreadPoolExecutor(2) as ex: hist = dict(ex.map(one, wallets))   # 2 at a time: Helius' free plan refuses bursts
-
     def usd(m, a, t):
         if m in STABLE: return a
         s = px.get(m)
         if not s: return 0.0
         return a * s[max(bisect.bisect_right(pt[m], t) - 1, 0)][1]
+
+    def one(w):
+        txs = []
+        for tx in histories(token_accounts(w, mint, T['prog']) + token_accounts(w, quote, qprog), since):
+            ch, signer = deltas(tx, w); t = tx.get('blockTime') or now
+            if ch: txs.append({'t': t, 'ch': ch, 'signer': signer, 'trade': trade(tx, w, mint, lambda m, a: usd(m, a, t))})
+        return w, sorted(txs, key=lambda x: x['t'])
+    with ThreadPoolExecutor(2) as ex: hist = dict(ex.map(one, wallets))   # 2 at a time: Helius' free plan refuses bursts
 
     # payouts: reward tokens in, nothing else moved, not signed by the holder; this token's rounds pay every holder at
     # one rate (reward tokens per token held) at one moment, so only payouts at the rate most of a burst agrees on count
@@ -346,14 +396,23 @@ def backfill(mint, quote, T, people, wallets, since):
     T['days'] = {}
     for w, txs in hist.items():
         for tx in txs:
-            t, ch = tx['t'], tx['ch']; day = t // DAY
-            if tx.get('mine'): add(T, w, day, R=usd(quote, ch[quote], t)); continue
-            dx = ch.get(mint, 0)
-            other = {m: v for m, v in ch.items() if m != mint and not (m == SOL and abs(v) < 0.01)}
-            out_ = sum(-usd(m, v, t) for m, v in other.items() if v < 0); in_ = sum(usd(m, v, t) for m, v in other.items() if v > 0)
-            if dx > 0 and out_ > 0: add(T, w, day, B=out_)
-            elif dx < 0 and in_ > 0: add(T, w, day, S=in_)
+            day = tx['t'] // DAY
+            if tx.get('mine'): add(T, w, day, R=usd(quote, tx['ch'][quote], tx['t'])); continue
+            B_, S_ = tx['trade']
+            if B_ or S_: add(T, w, day, B=B_, S=S_)
     log(f"  backfill: {len(events)} payouts, {sum(1 for e in events if e['tx'].get('mine'))} from this token's {rounds} rounds")
+
+
+def swaps(mint, quote, T, w, since, xpx, qpx):
+    """Trade by trade: wallet w's trades of the token since `since` (see trade()), as (day, bought $, sold $), valued at
+    today's prices (the window is 6 h)."""
+    px = {mint: xpx, quote: qpx, SOL: price.get(SOL, 0)}
+    usd = lambda m, a: a * (1.0 if m in STABLE else px.get(m, 0))
+    out = []
+    for tx in histories(token_accounts(w, mint, T['prog']), since):
+        B_, S_ = trade(tx, w, mint, usd)
+        if B_ or S_: out.append(((tx.get('blockTime') or now) // DAY, B_, S_))
+    return out
 
 
 # ---------- whole history since launch (--history) ----------
@@ -361,27 +420,6 @@ def backfill(mint, quote, T, people, wallets, since):
 # read), plus the reward account of the 8 biggest wallets to find every payout round and its rate (reward tokens per token
 # held, the same for everyone in a round). A wallet's reward in a round = the rate x its balance then (if worth $20+).
 # Checked against payouts read one by one for $MARINE's top 20: ~2%. ~1.5K credits a token.
-def swaps(mint, quote, T, w, since, xpx, qpx):
-    """Trade by trade: wallet w's swaps of the token since `since`, as (day, bought $, sold $). A buy is the token coming in
-    while SOL / the reward token / a stable goes out (a sell the reverse); a transfer (nothing else moves) is neither. Valued
-    at today's prices (the window is 6 h); a swap against something unpriced is valued by the token side."""
-    px = {mint: xpx, quote: qpx, SOL: price.get(SOL, 0)}
-    val = lambda m, a: abs(a) * (1.0 if m in STABLE else px.get(m, 0))
-    out, seen = [], set()
-    for acct in ACCTS.get(w) or [pda([b58d(w), b58d(T['prog']), b58d(mint)], ATA)]:   # the wallet's real token accounts (not always the standard one)
-        for tx in history(acct, since):
-            sig = (tx.get('transaction') or {}).get('signatures', [None])[0]
-            if sig in seen or (tx.get('meta') or {}).get('err'): continue
-            seen.add(sig)
-            ch, signer = deltas(tx, w); dx = ch.get(mint, 0)
-            other = {m: v for m, v in ch.items() if m != mint and not (m == SOL and abs(v) < 0.01)}   # SOL dust = fees / rent
-            if not dx or not other: continue                                                        # a transfer: not a trade
-            day = (tx.get('blockTime') or now) // DAY
-            if dx > 0 and any(v < 0 for v in other.values()): out.append((day, sum(val(m, v) for m, v in other.items() if v < 0) or dx * xpx, 0))
-            elif dx < 0 and any(v > 0 for v in other.values()): out.append((day, 0, sum(val(m, v) for m, v in other.items() if v > 0) or -dx * xpx))
-    return out
-
-
 def history_fill(mint, quote, T, people, wallets, since):
     px = {m: series_long(m, since, price.get(m, 0)) for m in (mint, quote, SOL)}; pt = {m: [t for t, _ in s] for m, s in px.items()}
     def at(m, t):
@@ -389,13 +427,11 @@ def history_fill(mint, quote, T, people, wallets, since):
         s = px.get(m)
         return s[max(bisect.bisect_right(pt[m], t) - 1, 0)][1] if s else 0.0
     qprog = rpc('getAccountInfo', [quote, {'encoding': 'base64', 'dataSlice': {'offset': 0, 'length': 0}}])['value']['owner']
-    xata = lambda w: pda([b58d(w), b58d(T['prog']), b58d(mint)], ATA)
-    def trades(w):   # the wallet's token account: every change to its balance since launch, oldest first
+    def trades(w):   # the wallet's token accounts: every change to its balance since launch, oldest first
         out = []
-        for tx in history(xata(w), since):
-            if (tx.get('meta') or {}).get('err'): continue
-            ch, signer = deltas(tx, w)
-            if ch.get(mint): out.append({'t': tx.get('blockTime') or now, 'ch': ch})
+        for tx in histories(token_accounts(w, mint, T['prog']), since):
+            ch, signer = deltas(tx, w); t = tx.get('blockTime') or now
+            if ch.get(mint): out.append({'t': t, 'ch': ch, 'trade': trade(tx, w, mint, lambda m, a: a * at(m, t))})
         out.sort(key=lambda x: x['t']); bal = people.get(w, 0)
         for x in reversed(out): x['after'] = bal; bal -= x['ch'][mint]; x['before'] = bal
         return w, out
@@ -408,8 +444,7 @@ def history_fill(mint, quote, T, people, wallets, since):
     # payout rounds: the biggest wallets' reward accounts; a burst's payouts that agree on one rate are this token's round
     ev = []
     for w in wallets[:8]:
-        for tx in history(pda([b58d(w), b58d(qprog), b58d(quote)], ATA), since):
-            if (tx.get('meta') or {}).get('err'): continue
+        for tx in histories(token_accounts(w, quote, qprog), since):
             ch, signer = deltas(tx, w); a = ch.get(quote, 0); t = tx.get('blockTime') or now; b = bal_at(w, t)
             if a > 0 and not signer and b > 0 and all(abs(v) < 1e-6 for k, v in ch.items() if k != quote): ev.append({'w': w, 't': t, 'rate': a / b})
     rounds = [(b['t'], b['rate']) for b in find_rounds(ev)]
@@ -421,11 +456,8 @@ def history_fill(mint, quote, T, people, wallets, since):
             if b > 0 and b * at(mint, t) >= 20: add(T, w, t // DAY, R=b * r * at(quote, t))
     for w, L in H.items():
         for x in L:
-            t, ch = x['t'], x['ch']; dx = ch[mint]
-            other = {m: v for m, v in ch.items() if m != mint and not (m == SOL and abs(v) < 0.01)}
-            out_ = sum(-v * at(m, t) for m, v in other.items() if v < 0); in_ = sum(v * at(m, t) for m, v in other.items() if v > 0)
-            if dx > 0 and out_ > 0: add(T, w, t // DAY, B=out_)
-            elif dx < 0 and in_ > 0: add(T, w, t // DAY, S=in_)
+            B_, S_ = x['trade']
+            if B_ or S_: add(T, w, x['t'] // DAY, B=B_, S=S_)
     log(f"  history since {time.strftime('%Y-%m-%d', time.gmtime(since))}: {len(rounds)} payout rounds, {sum(len(L) for L in H.values())} trades")
     if os.environ.get('DEBUG'): T['dbg'] = {'rounds': rounds, 'events': [(e['w'][:6], e['t'], e['rate']) for e in ev]}
 
@@ -440,12 +472,24 @@ def score(days, since_day):
     if first is None: return None
     R = sum(v[0] for d, v in ds); ds = [(d, v) for d, v in ds if d >= first]
     B = sum(v[1] for d, v in ds if d != first_ever); S = sum(v[2] for d, v in ds if d != first_ever); N = B - S
-    bought = {d for d, v in ds if v[1] > v[2] and d != first_ever}; rd = [d for d, v in ds if v[0] > 0]   # a day counts when they bought more than they sold
+    # in and out: each day's sells use up the oldest unsold buys (first in, first out); a buy mostly sold back within 7 days
+    # (or the same day) is a trade, not compounding, so it doesn't count as a buy day; churn = share of buys sold back so
+    lots, L, back, Bt = [], [], 0.0, 0.0   # lot: [day, bought, still held, sold back within 7 days]
+    for d, v in ds:
+        if d == first_ever: continue
+        same = min(v[1], v[2]); back += same; Bt += v[1]; ns = v[2] - same
+        if v[1] - same > 0: L.append([d, v[1] - same, v[1] - same, 0.0]); lots.append(L[-1])
+        while ns > 1e-9 and lots:
+            take = min(ns, lots[0][2]); lots[0][2] -= take; ns -= take
+            if d - lots[0][0] <= 7: back += take; lots[0][3] += take
+            if lots[0][2] <= 1e-9: lots.pop(0)
+    bought = {l[0] for l in L if l[3] < l[1] / 2}; rd = [d for d, v in ds if v[0] > 0]   # a day counts when they bought more than they sold, and kept it
+    churn = back / Bt if Bt else 0.0
     c = min(max(N, 0), R) / R if R else 0; k = sum(1 for d in rd if d in bought or d + 1 in bought) / len(rd)
     e = min(1, math.log2(N / R) / 3) if R and N > R else 0   # buying beyond the rewards: 2x = 1/3, 4x = 2/3, 8x+ = all of it
     sc = round(100 * (0.6 * c + 0.25 * k + 0.15 * e)) if N >= 0 else 0
     tag = 'Seller' if N < 0 else 'Compounder' if c >= 0.5 else 'Partial' if c >= 0.1 else 'Collector'
-    return [round(R, 2), round(N, 2), round(c, 3), round(k, 3), sc, tag, round(B, 2), round(S, 2)]   # + bought, sold (the page's detail line)
+    return [round(R, 2), round(N, 2), round(c, 3), round(k, 3), sc, tag, round(B, 2), round(S, 2), round(churn, 2)]   # + bought, sold, churn (the page's detail line)
 
 
 WINDOWS = {'7d': 7, '30d': 30, 'all': KEEP_DAYS}
@@ -508,7 +552,7 @@ for mint in watch:
     # 15 min of slack, tokens updated late in one run were skipped by the next and went 12 h)
     if not BACKFILL and not HISTORY and T.get('at') and T.get('bal') and now - T['at'] < gap - 2 * 3600: continue
     if BACKFILL and (T.get('backfilled') or mint not in backfill_set): continue
-    if HISTORY and (T.get('history') or CREDITS[0] > HISTORY_BUDGET or time.time() - now > HISTORY_MINUTES * 60): continue
+    if HISTORY and (T.get('history', 0) > REDO_BEFORE or CREDITS[0] > HISTORY_BUDGET or time.time() - now > HISTORY_MINUTES * 60): continue
     try:
         rw = G[mint]; quote = (rw.get('quote') or {}).get('mint')
         if not quote: continue
