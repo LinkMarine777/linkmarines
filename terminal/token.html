@@ -310,11 +310,13 @@ html.fit .board.house{padding:0}html.fit .board.house .htag{font-size:13px;paddi
 #walModal td a{color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:6px}#walModal td a:hover{color:var(--blue2)}
 #walModal td img{width:18px;height:18px;border-radius:50%;object-fit:cover;background:var(--line)}
 #walModal .wsc{display:inline-block;min-width:30px;text-align:center;border:1px solid;padding:0 4px;font-family:'VT323';font-size:18px}
-#walModal .wtg{font-size:9px;letter-spacing:1px;margin-left:6px}#walModal .whd{font-size:8.5px;letter-spacing:1px;margin:1px 0 0 24px}
+#walModal .wtg{font-size:9px;letter-spacing:1px;margin-left:6px}#walModal .whd{font-size:8.5px;letter-spacing:1px;margin:1px 0 0 24px}#walModal tr.wcr{cursor:pointer}#walModal tr.wcr:hover td{background:rgba(42,90,218,.06)}
+#walModal .wtl{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);max-height:220px;overflow-y:auto}
+#walModal .wtl a{display:grid;grid-template-columns:70px 44px 1fr 1fr;gap:8px;padding:5px 8px;background:#0b1122;font-size:11px;color:var(--txt)}#walModal .wtl a:hover{background:#141f36}#walModal .wtl a span:last-child{text-align:right}
 #walCard{display:block;width:100%;aspect-ratio:1200/630;border:1px solid var(--line);background:var(--panel)}
 #walModal .acts{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:6px;margin-top:8px}#walModal .acts .btn{text-align:center;text-decoration:none;font-size:11.5px;letter-spacing:1px;padding:9px 4px;white-space:nowrap}
 #walModal .foot{font-size:10px;color:var(--dim);margin-top:10px;line-height:1.5}
-@media (max-width:560px){#walKpi{grid-template-columns:repeat(2,1fr)}#walModal .acts{grid-template-columns:1fr 1fr}#walModal .box{padding:16px 14px}#walModal .hs2{display:none}}
+@media (max-width:560px){#walKpi{grid-template-columns:repeat(2,1fr)}#walModal .acts{grid-template-columns:1fr 1fr}#walModal .wtg{display:none}#walModal .wtl a{grid-template-columns:52px 38px 1fr 1fr;gap:6px}#walModal .box{padding:16px 14px}#walModal .hs2{display:none}}
 #iPrev{display:none;margin-top:8px;max-height:140px;max-width:100%;border:1px solid var(--line)}
 #buyPop{position:fixed;left:50%;bottom:16%;transform:translate(-50%,30px);opacity:0;pointer-events:none;z-index:55;transition:all .35s cubic-bezier(.2,1.4,.4,1);
   background:linear-gradient(135deg,#06240f,#0a0f1f);border:3px solid var(--green);box-shadow:0 0 50px rgba(57,255,106,.4);padding:18px 44px;text-align:center;min-width:600px}
@@ -700,13 +702,14 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
   <div class="wl"><a id="walScan" target="_blank" rel="noopener">SOLSCAN ↗</a><a href="#" id="walCa">COPY ADDRESS</a></div>
   <div id="walKpi"></div>
   <div class="sec">HOLDINGS <span class="dim">stonkfun coins in the wallet now</span></div><div id="walHold"></div>
-  <div class="sec">REWARDS BY COIN <span class="dim">each coin's full history</span></div><div id="walCoins"></div>
+  <div class="sec">REWARDS BY COIN <span class="dim" id="walSt"></span></div><div id="walCoins"></div>
   <div class="sec">SHARE</div><img id="walCard" alt="" onerror="this.onerror=null;this.src='/share-terminal7-v2.png'">
   <div class="acts"><a class="btn primary" id="walTweet" target="_blank" rel="noopener">SHARE AS TWEET</a><button class="btn" id="walImg" type="button">COPY IMAGE</button>
     <button class="btn" id="walSave" type="button">SAVE IMAGE</button><button class="btn" id="walCopy" type="button">COPY LINK</button></div>
-  <div class="foot">Rewards and scores come from each coin's compounding tracker, which follows the wallets holding 80% of its supply
-    (updated every 6 h). Overall score: each coin's score weighted by the rewards it paid this wallet. P&amp;L: value now + sold + rewards − bought,
-    over every trade since the coin launched; tokens moved in from another wallet aren't counted as bought.</div>
+  <div class="foot">Rewards, buys, sells and P&amp;L are read from the chain trade by trade: every swap valued at that hour's price, every payout credited to
+    the coins held at the time. P&amp;L = value now + sold + rewards − bought; tokens moved in from another wallet aren't counted as bought (* = some at an
+    estimated price). Scores come from each coin's compounding tracker, which follows the wallets holding 80% of its supply (updated every 6 h);
+    overall score = those scores weighted by the rewards each coin paid. Tap a coin for its recent trades.</div>
 </div></div>
 <div id="infoPop" title="Click to close"><div class="k" id="ipK"></div><div class="h" id="ipH"></div><div class="d" id="ipD"></div></div>
 <div id="ttsPop" title="Click to close"><div class="from" id="ttsFrom"></div><div class="msg" id="ttsMsg"></div></div>
@@ -1294,13 +1297,24 @@ loadCompound();setInterval(()=>{if(!document.hidden)loadCompound()},30*60e3);
 const WRE=/^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 // the address bar follows the window: the open wallet's link while it's open, the token's link again once it's closed
 const walUrl=w=>{try{const u=new URL(location.href);if(w)u.searchParams.set('w',w);else u.searchParams.delete('w');history.replaceState(history.state,'',u)}catch(e){}};
-async function openWallet(w){if(!WRE.test(w||''))return;openWallet.w=w;walUrl(w);$('walModal').classList.add('show');document.body.style.overflow='hidden';
+let walAll=false;
+async function openWallet(w){if(!WRE.test(w||''))return;openWallet.w=w;walAll=false;walUrl(w);$('walModal').classList.add('show');document.body.style.overflow='hidden';
   $('walAddr').textContent=w.slice(0,4)+'…'+w.slice(-4);$('walScan').href='https://solscan.io/account/'+w;$('walCa').textContent='COPY ADDRESS';
   const link='https://terminal7.xyz/terminal/token?ca='+CA+'&w='+w;$('walCard').src=BOT+'/card/wallet/'+w+'.png';
   $('walKpi').innerHTML='';$('walHold').innerHTML=$('walCoins').innerHTML='<div class="dim" style="font-size:11px">loading…</div>';
+  $('walSt').textContent='';
   let d=null;try{d=await j(BOT+'/wallet/'+w)}catch(e){}
   if(openWallet.w!==w)return;
-  if(!d||d.error){$('walHold').innerHTML=$('walCoins').innerHTML='<div class="dim" style="font-size:11px">couldn\'t load this wallet right now · try again in a minute</div>';return}
+  if(d&&!d.error)walRender(w,d,link);
+  // then its whole history read from the chain, trade by trade (seconds the first time, saved after that)
+  $('walSt').textContent='reading its full history from the chain, trade by trade…';
+  let f=null;try{f=await j(BOT+'/wallet/'+w+'?full=1')}catch(e){}
+  if(openWallet.w!==w)return;
+  if(f&&!f.error){walRender(w,f,link);d=f}
+  if(!d||d.error){$('walSt').textContent='';$('walHold').innerHTML=$('walCoins').innerHTML='<div class="dim" style="font-size:11px">couldn\'t load this wallet right now · try again in a minute</div>';return}
+  const h=d.hist;$('walSt').textContent=!h?'full history unavailable right now · showing the compounding tracker':h.done?`full history from the chain · ${h.txs.toLocaleString('en-US')} transactions`:
+    h.paused?'full history paused for today (daily reading limit)':`read its newest ${h.txs.toLocaleString('en-US')} transactions so far · more each time it's opened`}
+function walRender(w,d,link){
   const sc=d.score,col=sc==null?'var(--dim)':sc>=40?'var(--green)':sc>=20?'var(--amber)':'var(--red)',lbl=sc==null?'no rewards yet':sc>=60?'Strong':sc>=40?'Healthy':sc>=20?'Mixed':'Weak';
   const earning=d.coins.filter(c=>c.R>0);
   $('walKpi').innerHTML=`<div style="border-color:${col}"><b style="color:${col}">${sc??'—'}</b><span>COMPOUND SCORE · ${lbl.toUpperCase()}</span></div>
@@ -1310,11 +1324,17 @@ async function openWallet(w){if(!WRE.test(w||''))return;openWallet.w=w;walUrl(w)
   const amt=n=>n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n>=1?n.toFixed(0):n.toPrecision(2);
   $('walHold').innerHTML=d.holdings.length?`<table><thead><tr><th>COIN</th><th class="r">AMOUNT</th><th class="r">VALUE</th></tr></thead><tbody>${d.holdings.slice(0,30).map(h=>`<tr><td>${coin(h.m,h.s,h.i)}</td><td class="r">${amt(h.amt)}</td><td class="r">${h.usd?cmpUsd(h.usd):'<span class="dim">—</span>'}</td></tr>`).join('')}</tbody></table>`
     :`<div class="dim" style="font-size:11px">${d.live?'No stonkfun coins in this wallet right now.':'Holdings unavailable right now (the chain read failed) · try again in a minute'}</div>`;
-  $('walCoins').innerHTML=d.coins.length?`<table><thead><tr><th>COIN</th><th class="r hs2">HOLDS</th><th class="r">REWARDS</th><th class="r hs2">NET BOUGHT</th><th class="r" title="value now + sold + rewards − bought, over the coin's full history">P&amp;L</th><th class="r">SCORE</th></tr></thead><tbody>${d.coins.map(c=>`<tr><td>${coin(c.m,c.s,c.i)}${c.held==null?'':`<div class="whd" style="color:${c.held?'var(--green)':'var(--dim)'}">${c.held?'HOLDING':'EXITED'}</div>`}</td><td class="r hs2">${c.p.toFixed(2)}%</td>
-      <td class="r">${c.R>0?cmpUsd(c.R):'<span class="dim">—</span>'}</td><td class="r hs2" style="color:${c.N>0?'var(--green)':c.N<0?'var(--red)':'var(--dim)'}">${c.R>0?(c.N>0?'+':'')+cmpUsd(c.N):'—'}</td>
-      <td class="r" style="color:${c.pnl>0?'var(--green)':c.pnl<0?'var(--red)':'var(--dim)'}" title="${c.since?'tracked since '+new Date(c.since*1000).toLocaleDateString('en-US',{month:'short',day:'numeric'}):''}">${c.pnl==null?'—':(c.pnl>0?'+':'')+cmpUsd(c.pnl)}</td>
-      <td class="r">${c.score!=null?`<span class="wsc" style="color:${CMPC[c.tag]};border-color:${CMPC[c.tag]}">${c.score}</span><span class="wtg" style="color:${CMPC[c.tag]}">${esc(c.tag).toUpperCase()}</span>`:'<span class="dim" style="font-size:9.5px;letter-spacing:1px">NO REWARD YET</span>'}</td></tr>`).join('')}</tbody></table>`
-    :'<div class="dim" style="font-size:11px">Not among the biggest holders of any tracked coin, so no rewards are tracked for it yet.</div>';
+  const pnlc=v=>v>0?'var(--green)':v<0?'var(--red)':'var(--dim)',dt=t=>new Date(t*1000).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  $('walCoins').innerHTML=d.coins.length?`<table><thead><tr><th>COIN</th><th class="r hs2">HOLDS</th><th class="r">REWARDS</th><th class="r hs2">NET BOUGHT</th><th class="r" title="value now + sold + rewards − bought, over the coin's full history">P&amp;L</th><th class="r">SCORE</th></tr></thead><tbody>${d.coins.slice(0,walAll?999:25).map((c,k)=>`<tr class="${c.tr&&c.tr.length?'wcr':''}" data-k="${k}"><td>${coin(c.m,c.s,c.i)}<div class="whd" style="color:${c.held?'var(--green)':'var(--dim)'}">${c.held==null?'':c.held?'HOLDING':'EXITED'}${c.n?` · ${c.n} trade${c.n===1?'':'s'} ▾`:''}</div></td>
+      <td class="r hs2">${c.p!=null?c.p.toFixed(2)+'%':'<span class="dim">—</span>'}</td>
+      <td class="r">${c.R>0?cmpUsd(c.R):'<span class="dim">—</span>'}</td><td class="r hs2" style="color:${pnlc(c.N)}">${c.N!=null?(c.N>0?'+':'')+cmpUsd(c.N):'—'}</td>
+      <td class="r" style="color:${pnlc(c.pnl)}" title="${c.est?'some trades valued at an estimated price':''}">${c.pnl==null?'—':(c.pnl>0?'+':'')+cmpUsd(c.pnl)}${c.est?'*':''}</td>
+      <td class="r">${c.score!=null?`<span class="wsc" style="color:${CMPC[c.tag]};border-color:${CMPC[c.tag]}">${c.score}</span><span class="wtg" style="color:${CMPC[c.tag]}">${esc(c.tag).toUpperCase()}</span>`:`<span class="dim" style="font-size:9.5px;letter-spacing:1px" title="scores cover each coin's biggest holders">${c.tracked?'NO REWARD YET':'NOT SCORED'}</span>`}</td></tr>
+      ${c.tr&&c.tr.length?`<tr class="wtr" style="display:none"><td colspan="6"><div class="wtl">${c.tr.map(x=>`<a href="https://solscan.io/tx/${esc(x[4])}" target="_blank" rel="noopener" title="opens the transaction (first 20 characters of its signature)"><span>${dt(x[0])}</span><b style="color:${x[1]==='b'?'var(--green)':'var(--red)'}">${x[1]==='b'?'BUY':'SELL'}</b><span>${amt(x[2])}</span><span>${cmpUsd(x[3])}</span></a>`).join('')}</div></td></tr>`:''}`).join('')}</tbody></table>
+      ${d.coins.length>25?`<button class="btn" id="walMore" style="margin-top:6px;font-size:11px">${walAll?'SHOW TOP 25':'SHOW ALL '+d.coins.length}</button>`:''}`
+    :'<div class="dim" style="font-size:11px">No stonkfun trades or rewards found for this wallet.</div>';
+  $('walCoins').querySelectorAll('tr.wcr').forEach(tr=>tr.onclick=e=>{if(e.target.closest('a'))return;const n=tr.nextElementSibling;if(n&&n.classList.contains('wtr'))n.style.display=n.style.display==='none'?'':'none'});
+  const mb=$('walMore');if(mb)mb.onclick=()=>{walAll=!walAll;walRender(w,d,link)};
   const txt=`Wallet ${w.slice(0,4)}…${w.slice(-4)} on stonkfun: compound score ${sc??'—'}${sc!=null?' ('+lbl+')':''} · ${cmpUsd(d.rewards||0)} in rewards from ${earning.length} coin${earning.length===1?'':'s'}`;
   $('walTweet').href='https://x.com/intent/tweet?text='+encodeURIComponent(txt)+'&url='+encodeURIComponent(link);
   // the card as a file: COPY IMAGE puts it on the clipboard; SAVE IMAGE uses the phone's share sheet (Save to Photos) or downloads it
