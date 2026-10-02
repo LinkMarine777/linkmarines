@@ -41,6 +41,7 @@ jobs:
         env:
           HELIUS_KEY: ${{ secrets.HELIUS_KEY }}
           SOLANA_RPC: ${{ secrets.SOLANA_RPC }}
+          TRADES: '0'   # '1' = trade by trade in the 6-hourly update (about 1M Helius credits a month): on after the plan upgrade
         timeout-minutes: 140
         run: python3 main/intel/compound.py data/terminal ${{ inputs.backfill && '--backfill' || '' }} ${{ inputs.history && '--history' || '' }} ${{ inputs.rescore && '--rescore' || '' }}
       - name: save to the data branch
