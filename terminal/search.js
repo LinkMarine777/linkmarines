@@ -38,13 +38,16 @@
   // the stonkfun tokens the site already tracks (Stonk Board top 100 + stonkfun's top 30): tickers match instantly and still
   // work when Jupiter is slow or busy; Jupiter adds names, the verified tick and anything newer
   const DATA = 'https://war-room-bot.linkmarine777.workers.dev/data/terminal/';
+  // stonkfun's own tokens that weren't launched on stonkfun (so Jupiter doesn't tag them "stonkfun"): $STONK (paired with SPYx)
+  const EXTRA = [{ id: '6GmAFSYs4gk3FDao5FzzySQpPZaWsa4rUJHacpMpUNgx', symbol: 'STONK', name: 'STONK · stonkfun', isVerified: true }];
   let local = null;
   const loadLocal = () => local || (local = Promise.allSettled([fetch(DATA + 'board.json').then(r => r.json()), fetch(DATA + 'tokens.json').then(r => r.json())]).then(([bd, tk]) => {
     const m = new Map();
     for (const [id, t] of Object.entries(bd.value?.tokens || {})) m.set(id, { id, symbol: t.symbol, name: '', mcap: t.mcap, icon: 'https://thestonkboard.com/api/logos/' + id });
     for (const t of tk.value?.tokens || []) m.set(t.mint, { ...(m.get(t.mint) || {}), id: t.mint, symbol: t.symbol, name: '', mcap: t.mcap, icon: t.image || m.get(t.mint)?.icon });
+    for (const t of EXTRA) m.set(t.id, { ...t, ...(m.get(t.id) || {}), isVerified: true });
     return [...m.values()].filter(t => t.symbol);
-  }).catch(() => []));
+  }).catch(() => EXTRA.slice()));
   const rank = L => L.sort((a, b) => (!!b.isVerified - !!a.isVerified) || ((b.mcap || 0) - (a.mcap || 0))).slice(0, 8);
   async function search(q) {
     const n = ++seq, ql = q.toLowerCase();
@@ -52,7 +55,7 @@
     if (n !== seq) return;
     if (mine.length) { list = rank([...mine]); sel = 0; draw(); }
     let jup = [];
-    try { const L = await (await fetch('https://lite-api.jup.ag/tokens/v2/search?query=' + encodeURIComponent(q))).json(); jup = (Array.isArray(L) ? L : []).filter(t => t.launchpad === 'stonkfun'); } catch (e) {}
+    try { const L = await (await fetch('https://lite-api.jup.ag/tokens/v2/search?query=' + encodeURIComponent(q))).json(); jup = (Array.isArray(L) ? L : []).filter(t => t.launchpad === 'stonkfun' || EXTRA.some(x => x.id === t.id)); } catch (e) {}
     if (n !== seq) return;
     const m = new Map(mine.map(t => [t.id, t])); for (const t of jup) m.set(t.id, { ...(m.get(t.id) || {}), ...t });
     list = rank([...m.values()]); sel = 0; draw();
