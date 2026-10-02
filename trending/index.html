@@ -143,6 +143,9 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
 @media (max-width:1099px){.dash{grid-template-columns:1fr}.dash .d-tr{grid-column:auto}.d-al{order:1}.d-tr{order:2}.d-wh{order:3}.d-fl{order:4}.d-side{order:5}.d-side .lpw,.d-side .feed{max-height:330px}}
 .more3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.more3 .panel{display:flex;flex-direction:column;min-width:0}.more3 .src{margin-top:auto}
 @media (max-width:1099px){.more3{grid-template-columns:1fr}}
+@media (min-width:1000px){.dash .d-al .ph,.dash .d-wh .ph,.dash .d-fl .ph{row-gap:10px}.dash .ph .per{margin-left:auto}
+  .dash #fk,.dash #wk,.dash .d-fl .ph .meta{order:3;width:100%;margin-left:0}.dash #wk button{flex:1 1 0}
+  .dash .d-fl .ph .meta{display:flex;align-items:center;min-height:26px}}   /* desktop: alerts, whale radar and flow share one header layout: title + period, then a full-width row */
 .d-al{container-type:inline-size}@container (max-width:470px){#fk{width:100%;margin-left:0;flex-wrap:wrap}#fk button{flex:1 1 calc(25% - 3px);min-width:0;padding-left:2px;padding-right:2px}}   /* alert filters: when the panel's too narrow for one row, four then three instead of running off the edge */
 .lr{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--line);color:inherit;text-decoration:none;font-size:12px}.lr:hover{background:rgba(74,122,255,.06);text-decoration:none}
 .lr img,.lr .ph0{width:22px;height:22px;border-radius:50%;object-fit:cover;background:#0b1a2e;flex:none}.lr .ln{flex:1;min-width:0;overflow:hidden}.lr .ln b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
