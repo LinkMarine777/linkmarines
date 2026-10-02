@@ -563,7 +563,8 @@ save('whales.json', {
 save('whales-state.json', state)
 
 # ---------- the $MARINE chart (chart.json): GeckoTerminal answers GitHub's runners, while the bot's copy from Cloudflare's
-# shared addresses keeps getting rate-limited. Same format as the bot's: 1d (15m closes), 7d (hourly), all (4h), [t, marine $, LINK $]
+# shared addresses keeps getting rate-limited. 1d (15m), 7d (hourly), all (4h): [t, marine close $, LINK $, open, high, low, volume $]
+# (the first three are the bot's old format: pages that read only those still work)
 def ohlcv(tf, agg, side):
     time.sleep(2.5)
     return get(f'https://api.geckoterminal.com/api/v2/networks/solana/pools/{MARINE_POOL}/ohlcv/{tf}?aggregate={agg}&limit=1000&currency=usd&token={side}')
@@ -571,13 +572,16 @@ def series(tf, agg):
     b, q = ohlcv(tf, agg, 'base'), ohlcv(tf, agg, 'quote')
     tok, other = (b, q) if b['meta']['base']['address'] == MARINE else (q, b)
     o = {r[0]: r[4] for r in other['data']['attributes']['ohlcv_list']}
-    return sorted([r[0], r[4], o[r[0]]] for r in tok['data']['attributes']['ohlcv_list'] if r[0] in o)
+    return sorted([r[0], r[4], o[r[0]], r[1], r[2], r[3], r[5]] for r in tok['data']['attributes']['ohlcv_list'] if r[0] in o)
 try:
     assert not FAST or now // 120 % 5 == 0, 'chart every ~10 min in the fast passes'
     m15, h4 = series('minute', 15), series('hour', 4)
     if m15:
         hourly = {}
-        for r in m15: hourly[r[0] // 3600 * 3600] = [r[0] // 3600 * 3600, r[1], r[2]]   # last close in each hour
+        for r in m15:   # hourly candles from the 15m ones: first open, highest high, lowest low, last close, summed volume
+            k = r[0] // 3600 * 3600; c = hourly.get(k)
+            if not c: hourly[k] = [k, r[1], r[2], r[3], r[4], r[5], r[6]]
+            else: c[1], c[2], c[4], c[5], c[6] = r[1], r[2], max(c[4], r[4]), min(c[5], r[5]), c[6] + r[6]
         save('chart.json', {'1d': m15[-96:], '7d': list(hourly.values())[-168:], 'all': h4, 'at': int(time.time())})
         log(f'chart: {len(m15)} 15m, {len(h4)} 4h candles')
 except Exception as e: log('chart', e)
