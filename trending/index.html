@@ -42,6 +42,10 @@ header .ca input:focus{outline:none;border-color:var(--blue2)}
 header .ca input{border-radius:17px;height:34px;padding-left:14px}
 .tkm{position:absolute;right:0;top:100%;margin-top:3px;font-size:11px;color:var(--amber);background:#02030a;border:1px solid var(--line);padding:2px 7px;z-index:5}.tkm:empty{display:none}
 header nav{margin-left:auto;display:flex;gap:10px}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--green);border:1px solid rgba(57,255,106,.35);padding:2px 8px}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.4s infinite}
+.live.stale{color:var(--amber);border-color:rgba(255,210,63,.4)}.live.stale i{background:var(--amber)}
+@keyframes blink{50%{opacity:.2}}@media (max-width:480px){#liveTxt{display:none}.live{gap:0}}   /* the same LIVE badge as the token page (keeps the search bar in the same place on both) */
 .btn{border:1px solid var(--line);padding:6px 12px;color:var(--txt);font:inherit;font-size:12px;background:var(--panel);cursor:pointer;white-space:nowrap}
 .btn:hover{border-color:var(--blue2);text-decoration:none}.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
 main{max-width:1500px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:14px}
@@ -113,7 +117,7 @@ tr.me{background:rgba(42,90,218,.1)}
   header{flex-wrap:nowrap!important;gap:8px!important;padding:8px 10px}header .brand{display:none}header img{width:28px;height:28px}
   header nav{order:-1;margin:0!important}header nav>.btn{display:none!important}.mnu{left:0;right:auto}#menuBtn{width:36px;height:36px;padding:0;font-size:18px;border:0;background:none}
   header .ca{order:2;flex:1 1 0;flex-basis:0!important;min-width:0;margin:0;flex-wrap:nowrap}header .ca input{height:36px;border-radius:18px;font-size:13px;background:#0a0f1f}
-  #soundBtn{order:3}#alertBtn{order:4}#soundBtn,#alertBtn{width:34px;height:34px;border-radius:50%}
+  .live{order:3;width:34px;height:34px;border-radius:50%;justify-content:center;flex:none;padding:0;border:1px solid var(--line);background:none}.live i{width:8px;height:8px}#liveTxt{display:none}#soundBtn{order:4}#alertBtn{order:5}#soundBtn,#alertBtn{width:34px;height:34px;border-radius:50%}
   .per button{min-height:30px;min-width:40px}.tabs button{min-height:32px}   /* easy to hit with a thumb */
 }
 .pin .acts{display:grid;grid-template-columns:1fr;gap:8px}.pin .acts .btn{margin:0;text-align:center;white-space:nowrap}.pin .t{min-width:0;flex:1}.pin .buyJ{border-color:var(--green);color:var(--green)}.pin .cpy{font:inherit;font-size:11px;cursor:pointer;background:none}.pin .cpy.ok{color:var(--green)}
@@ -134,6 +138,7 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
 #infoPop .h{font-family:'VT323',monospace;font-size:40px;color:#fff;line-height:1.05;margin:4px 0}#infoPop .d{font-size:13px;color:var(--txt)}
 #infoPop.buy{border-color:var(--green);box-shadow:0 0 40px rgba(57,255,106,.3)}#infoPop.sell{border-color:var(--red);box-shadow:0 0 40px rgba(255,51,85,.3)}#infoPop.buy .k{color:var(--green)}#infoPop.sell .k{color:var(--red)}
 #soundBtn,#alertBtn{display:inline-flex;align-items:center;justify-content:center;color:var(--blue2)!important;padding:4px 6px!important;font-size:0!important}#soundBtn svg,#alertBtn svg{width:16px;height:16px}#soundBtn.off,#alertBtn.off{color:var(--dim)!important;opacity:1!important}#soundBtn svg,#alertBtn svg{display:block}
+@media (min-width:1000px){header{flex-wrap:nowrap!important}header .ca{flex:0 1 auto;width:clamp(100px,calc(100vw - 900px),620px);max-width:none;margin:0 auto 0 18px}}   /* desktop: the search sits exactly where it does on the token pages */
 .dash{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}.dash .panel{display:flex;flex-direction:column;min-width:0}
 .dash .d-al,.dash .d-wh,.dash .d-fl{align-self:stretch}.dash .src{margin-top:auto}
 .dash .d-tr{grid-column:span 2}@media (min-width:1360px){.dash{grid-template-columns:minmax(0,1.4fr) repeat(2,minmax(0,1fr))}#fk{width:100%;margin-left:0}#fk button{flex:1 1 auto;letter-spacing:.5px;padding-left:6px;padding-right:6px}}   /* desktop: the alerts column is wider so all seven filters fit in one row; whale radar and flow stay even (narrower screens: three even columns, filters four then three, so whale radar isn't cut off) */.d-side{display:flex;flex-direction:column;gap:14px;min-width:0}
@@ -158,6 +163,7 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
 <header>
   <a href="/" title="The Marines HQ"><img src="/helmet.png" alt="Marines"></a>
   <a class="brand" href="/trending/" style="text-decoration:none">THE WAR ROOM<small>TERMINAL 7</small></a>
+  <span class="live" id="live" title="Prices refresh every minute"><i></i><span id="liveTxt">LIVE</span></span>
   <button id="soundBtn" type="button" title="Sound on: click to mute alert sounds" aria-label="Mute sounds"></button>
   <button id="alertBtn" type="button" title="Alerts on: click to choose which alerts you see" aria-label="Alert settings"></button>
   <form id="caForm" class="ca" autocomplete="off">
@@ -500,6 +506,8 @@ async function loadPin(){try{const d=await j('https://api.dexscreener.com/tokens
 setInterval(loadPin,60000);
 load().then(loadQuotes);loadPin();
 setInterval(()=>{if(!document.hidden)load()},300000);setInterval(()=>{if(!document.hidden)loadPin()},30e3);setInterval(()=>{if(!document.hidden)loadQuotes()},60e3);
+// LIVE while prices refreshed in the last 3 minutes (every minute normally), else DELAYED, like the token page's badge
+function liveBadge(){const st=!liveAt||Date.now()-liveAt>180e3;$('live').classList.toggle('stale',st);$('liveTxt').textContent=st?'DELAYED':'LIVE'}setInterval(liveBadge,15e3);setTimeout(liveBadge,20e3);
 // coming back to the tab (timers pause while it's hidden): catch up on everything at once
 let seenAt=Date.now();document.addEventListener('visibilitychange',()=>{if(document.hidden){seenAt=Date.now();return}
   if(Date.now()-seenAt<20e3)return;load().then(loadQuotes);loadPin();loadIntel();loadFlow()});
