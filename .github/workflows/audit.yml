@@ -6,8 +6,14 @@ on:
       mints:
         description: 'token mints, space-separated (default $MARINE)'
         default: ''
+      rpc:
+        description: "which RPC: helius, or the owner's backup (BACKUP_RPC on the bot)"
+        type: choice
+        options: [helius, backup]
+        default: helius
 permissions:
   contents: write
+  id-token: write   # the backup RPC: the bot checks GitHub's signed token for this job
 jobs:
   audit:
     runs-on: ubuntu-latest
@@ -27,6 +33,7 @@ jobs:
         env:
           HELIUS_KEY: ${{ secrets.HELIUS_KEY }}
           SOLANA_RPC: ${{ secrets.SOLANA_RPC }}
+          RPC_VIA: ${{ inputs.rpc }}
         run: python3 main/intel/audit.py data/terminal ${{ inputs.mints }}
       - name: save to the audit-results branch
         run: |

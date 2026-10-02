@@ -22,8 +22,14 @@ on:
       redo_before:
         description: 'with history: also redo tokens whose history was filled before this time (unix seconds; reuse the same value to carry on)'
         default: ''
+      rpc:
+        description: "which RPC: helius, or the owner's backup (BACKUP_RPC on the bot) to spare Helius credits"
+        type: choice
+        options: [helius, backup]
+        default: helius
 permissions:
   contents: write
+  id-token: write   # the backup RPC: the bot checks GitHub's signed token for this job
 concurrency:
   group: compound
   cancel-in-progress: false
@@ -45,6 +51,7 @@ jobs:
           HELIUS_KEY: ${{ secrets.HELIUS_KEY }}
           SOLANA_RPC: ${{ secrets.SOLANA_RPC }}
           REDO_BEFORE: ${{ inputs.redo_before }}
+          RPC_VIA: ${{ inputs.rpc }}
           WORKERS: '2'   # wallets read at once in a history fill: '8' after the Helius plan upgrade
           TRADES: '0'   # '1' = trade by trade in the 6-hourly update (~300-500K Helius credits a month, estimated): on after the plan upgrade
         timeout-minutes: 140

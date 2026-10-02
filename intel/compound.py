@@ -47,6 +47,16 @@ BACKFILL = '--backfill' in sys.argv
 HISTORY = '--history' in sys.argv   # every token's whole history since launch, once (resumable; see history_fill)
 KEY = os.environ.get('HELIUS_KEY', '').strip(); URL = os.environ.get('SOLANA_RPC', '').strip()
 RPC = URL or (f'https://mainnet.helius-rpc.com/?api-key={KEY}' if KEY else 'https://api.mainnet-beta.solana.com')
+VIA = os.environ.get('RPC_VIA', '') == 'backup'   # the owner's backup RPC, through the bot (GitHub's signed OIDC token proves the job)
+if VIA: RPC = 'https://war-room-bot.linkmarine777.workers.dev/rpc-backup'
+OIDC = [None, 0]
+def auth():
+    if not VIA: return {}
+    if time.time() - OIDC[1] > 240:   # GitHub's tokens last ~5-10 min
+        u = os.environ['ACTIONS_ID_TOKEN_REQUEST_URL'] + '&audience=war-room-bot'
+        r = urllib.request.Request(u, headers={'Authorization': 'bearer ' + os.environ['ACTIONS_ID_TOKEN_REQUEST_TOKEN']})
+        OIDC[0] = json.load(urllib.request.urlopen(r, timeout=30))['value']; OIDC[1] = time.time()
+    return {'Authorization': 'Bearer ' + OIDC[0]}
 SF = 'https://www.stonkfun.xyz'
 MARINE = 'F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK'
 SOL = 'So11111111111111111111111111111111111111112'
@@ -91,7 +101,7 @@ def rpc(m, p, tries=6):
     for i in range(tries):
         try:
             r = urllib.request.Request(RPC, json.dumps({'jsonrpc': '2.0', 'id': 1, 'method': m, 'params': p}).encode(),
-                                       {'Content-Type': 'application/json', 'User-Agent': 'war-room-compound'})
+                                       {'Content-Type': 'application/json', 'User-Agent': 'war-room-compound', **auth()})
             d = json.load(urllib.request.urlopen(r, timeout=120))
         except Exception as e:
             code = getattr(e, 'code', None)
