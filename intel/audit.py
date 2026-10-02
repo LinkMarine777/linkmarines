@@ -12,7 +12,7 @@ Usage: audit.py <data dir> [mint ...]   (default $MARINE). ~50 Helius credits a 
 import base64, json, os, struct, sys, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from pda import b58e
+from pda import b58d, b58e, pda, ATA
 
 DATA = sys.argv[1]; MINTS = sys.argv[2:] or ['F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK']
 KEY = os.environ.get('HELIUS_KEY', '').strip(); URL = os.environ.get('SOLANA_RPC', '').strip()
@@ -55,9 +55,14 @@ def history(addr, since, until):
         if not tok or not rows: return out
 
 
+PROG = {}
+
+
 def accounts(w, mint):
+    """The wallet's open token accounts for `mint` plus its standard one even if closed (a closed account keeps its history)."""
+    if mint not in PROG: PROG[mint] = rpc('getAccountInfo', [mint, {'encoding': 'base64', 'dataSlice': {'offset': 0, 'length': 0}}])['value']['owner']
     r = rpc('getTokenAccountsByOwner', [w, {'mint': mint}, {'encoding': 'base64', 'dataSlice': {'offset': 0, 'length': 0}}]); CREDITS[0] += 1
-    return [a['pubkey'] for a in r['value']]
+    return list(dict.fromkeys([a['pubkey'] for a in r['value']] + [pda([b58d(w), b58d(PROG[mint]), b58d(mint)], ATA)]))
 
 
 def holders(mint, prog, dec):
