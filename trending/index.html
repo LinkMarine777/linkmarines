@@ -293,7 +293,7 @@ const SORTS={vol:r=>r.vol??-1,apy:r=>r.apy??-1,paid:r=>r.paid??-1,new:r=>r.bonde
 // compounding (terminal/compound/index.json, every 6 h): each token's all-time compound score; a token whose tracked holders got
 // under $500 of rewards since launch isn't ranked (a handful of trades would decide it)
 let CMPI={};
-const cmpOf=m=>{const t=CMPI[m];if(!t||!t.score||t.score.all==null)return null;if((t.ra??t.r7)!=null&&(t.ra??t.r7)<500)return null;return{s:t.score.all,c:t.ca??t.c7}};
+const cmpOf=m=>{const t=CMPI[m];if(!t||!t.score||t.score.all==null||t.low)return null;if(t.low==null&&(t.ra??t.r7)!=null&&(t.ra??t.r7)<500)return null;return{s:t.score.all,c:t.ca??t.c7}};   // low data: not ranked
 function cmpCell(m){const c=cmpOf(m);if(!c)return'<span class="dim">—</span>';const v=c.s,col=v>=40?'var(--green)':v>=20?'var(--amber)':'var(--red)';
   return`<a class="sc" style="color:${col}" href="${open2(m)}" title="${c.c!=null?Math.round(c.c)+'% of rewards put back in · ':''}since launch · ${v>=60?'Strong':v>=40?'Healthy':v>=20?'Mixed':'Weak'}">${Math.round(v)}</a>`}
 j('https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/compound/index.json').then(d=>{CMPI=(d&&d.tokens)||{};render()}).catch(()=>{});

@@ -341,6 +341,7 @@ try:
     state.pop('compound', None); cprev = state.setdefault('compoundA', {}); cch = []   # all-time from now (7-day baseline dropped)
     for m, t in ci.items():
         v = (t.get('score') or {}).get('all'); ra = t.get('ra', t.get('r7'))
+        if t.get('low'): continue   # too few wallets / too little in rewards to be news
         if v is None or (ra is not None and ra < 500): continue
         p = cprev.get(m)
         if p is None: cprev[m] = v; continue
