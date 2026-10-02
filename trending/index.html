@@ -136,14 +136,14 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
 #soundBtn,#alertBtn{display:inline-flex;align-items:center;justify-content:center;color:var(--blue2)!important;padding:4px 6px!important;font-size:0!important}#soundBtn svg,#alertBtn svg{width:16px;height:16px}#soundBtn.off,#alertBtn.off{color:var(--dim)!important;opacity:1!important}#soundBtn svg,#alertBtn svg{display:block}
 .dash{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}.dash .panel{display:flex;flex-direction:column;min-width:0}
 .dash .d-al,.dash .d-wh,.dash .d-fl{align-self:stretch}.dash .src{margin-top:auto}
-.dash .d-tr{grid-column:span 2}.d-side{display:flex;flex-direction:column;gap:14px;min-width:0}
+.dash .d-tr{grid-column:span 2}@media (min-width:1360px){.dash{grid-template-columns:minmax(0,1.4fr) repeat(2,minmax(0,1fr))}#fk{width:100%;margin-left:0}#fk button{flex:1 1 auto;letter-spacing:.5px;padding-left:6px;padding-right:6px}}   /* desktop: the alerts column is wider so all seven filters fit in one row; whale radar and flow stay even (narrower screens: three even columns, filters four then three, so whale radar isn't cut off) */.d-side{display:flex;flex-direction:column;gap:14px;min-width:0}
 .d-al .ph .meta{display:none}.d-side .lpw{max-height:540px}.d-side .feed{max-height:none}
 .d-tr td{padding:6px 10px}
 @media (min-width:1100px) and (max-width:1449px){.dash .d-tr{grid-column:1/-1}.d-side{grid-column:1/-1;flex-direction:row;align-items:flex-start}.d-side>.panel{flex:1;min-width:0}}
 @media (max-width:1099px){.dash{grid-template-columns:1fr}.dash .d-tr{grid-column:auto}.d-al{order:1}.d-tr{order:2}.d-wh{order:3}.d-fl{order:4}.d-side{order:5}.d-side .lpw,.d-side .feed{max-height:330px}}
 .more3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.more3 .panel{display:flex;flex-direction:column;min-width:0}.more3 .src{margin-top:auto}
 @media (max-width:1099px){.more3{grid-template-columns:1fr}}
-.d-al{container-type:inline-size}@container (max-width:620px){#fk{width:100%;margin-left:0;flex-wrap:wrap}#fk button{flex:1 1 calc(25% - 3px);min-width:0;padding-left:2px;padding-right:2px}}   /* alert filters: when the panel's too narrow for one row, four then three instead of running off the edge */
+.d-al{container-type:inline-size}@container (max-width:470px){#fk{width:100%;margin-left:0;flex-wrap:wrap}#fk button{flex:1 1 calc(25% - 3px);min-width:0;padding-left:2px;padding-right:2px}}   /* alert filters: when the panel's too narrow for one row, four then three instead of running off the edge */
 .lr{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--line);color:inherit;text-decoration:none;font-size:12px}.lr:hover{background:rgba(74,122,255,.06);text-decoration:none}
 .lr img,.lr .ph0{width:22px;height:22px;border-radius:50%;object-fit:cover;background:#0b1a2e;flex:none}.lr .ln{flex:1;min-width:0;overflow:hidden}.lr .ln b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lr small{display:block;color:var(--dim);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lr .r{text-align:right;flex:none}.lr .r b{display:block}.lr .rk2{color:var(--dim);width:22px;text-align:right;flex:none}
