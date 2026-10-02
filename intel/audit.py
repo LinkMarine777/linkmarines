@@ -45,6 +45,17 @@ def rpc(m, p, tries=8):
 
 
 def history(addr, since, until):
+    """The account's transactions in [since, until], cheapest way: list signatures (1 credit), then up to 10 one by one
+    (1 credit each), more with the batch call (10 credits per 100)."""
+    sigs, before = [], None
+    while True:
+        r = rpc('getSignaturesForAddress', [addr, {'limit': 1000, **({'before': before} if before else {})}]); CREDITS[0] += 1
+        sigs += [x['signature'] for x in r if since <= (x.get('blockTime') or 0) <= until and not x.get('err')]
+        if len(r) < 1000 or (r[-1].get('blockTime') or 0) < since: break
+        before = r[-1]['signature']
+    if len(sigs) <= 10:
+        CREDITS[0] += len(sigs)
+        return [t for t in (rpc('getTransaction', [x, {'encoding': 'jsonParsed', 'maxSupportedTransactionVersion': 1}]) for x in sigs) if t]
     out, tok = [], None
     while True:
         opts = {'transactionDetails': 'full', 'encoding': 'jsonParsed', 'maxSupportedTransactionVersion': 1, 'sortOrder': 'desc',
@@ -53,9 +64,6 @@ def history(addr, since, until):
         r = rpc('getTransactionsForAddress', [addr, opts]); rows = r.get('data') or []; out += rows
         CREDITS[0] += max(10, -(-len(rows) // 100) * 10); tok = r.get('paginationToken')
         if not tok or not rows: return out
-
-
-PROG = {}
 
 
 def accounts(w, mint):
