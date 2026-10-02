@@ -32,7 +32,7 @@ Score per wallet over a window, counting from its first reward (the buy that got
   R = rewards ($), N = net bought ($), c = min(max(N, 0), R) / R, k = share of reward days with a buy that day or the next
   (a buy mostly sold back within 7 days doesn't count: in and out is trading; churn = share of buys sold back within 7 days)
   e = buying beyond the rewards: min(1, log2(N / R) / 3) when N > R (2x = 1/3, 4x = 2/3, 8x+ = 1)
-  score = 100 x (0.6 c + 0.25 k + 0.15 e), 0 for a net seller · Compounder c >= 50% · Partial 10-50% · Collector < 10% · Seller N < 0
+  score = 100 x (0.6 c + 0.25 k + 0.15 e), 0 for a net seller · one tag per wallet: Seller N < 0, else Trader (churn >= 50%), else Compounder c >= 50% · Partial 10-50% · Collector < 10%
 Token score: the wallets' scores weighted by how much they hold.
 Never prints the RPC URL.
 """
@@ -499,7 +499,7 @@ def score(days, since_day):
     c = min(max(N, 0), R) / R if R else 0; k = sum(1 for d in rd if d in bought or d + 1 in bought) / len(rd)
     e = min(1, math.log2(N / R) / 3) if R and N > R else 0   # buying beyond the rewards: 2x = 1/3, 4x = 2/3, 8x+ = all of it
     sc = round(100 * (0.6 * c + 0.25 * k + 0.15 * e)) if N >= 0 else 0
-    tag = 'Seller' if N < 0 else 'Compounder' if c >= 0.5 else 'Partial' if c >= 0.1 else 'Collector'
+    tag = 'Seller' if N < 0 else 'Trader' if churn >= 0.5 else 'Compounder' if c >= 0.5 else 'Partial' if c >= 0.1 else 'Collector'   # one per wallet
     return [round(R, 2), round(N, 2), round(c, 3), round(k, 3), sc, tag, round(B, 2), round(S, 2), round(churn, 2)]   # + bought, sold, churn (the page's detail line)
 
 
@@ -537,7 +537,7 @@ def summarize(rows):
                     'rewards': round(sum(r[k_][0] for r in S_)), 'scored': len(S_),
                     'low': len(S_) < MIN_N or RR < MIN_R, 'top1': round(100 * max([r['p'] for r in S_] or [0]) / P_, 1),
                     'tags': {t: [sum(1 for r in S_ if r[k_][5] == t), round(sum(r['p'] for r in S_ if r[k_][5] == t), 2)]
-                             for t in ('Compounder', 'Partial', 'Collector', 'Seller')}}
+                             for t in ('Compounder', 'Partial', 'Collector', 'Trader', 'Seller')}}
     return summ
 
 
