@@ -126,7 +126,7 @@ main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:1px;backg
 #depthLeg{color:inherit;text-decoration:none;white-space:nowrap;transition:opacity .15s}#depthLeg:hover{color:#fff}#depthLeg.off{opacity:.35}#depthLeg.off i{background:var(--dim)!important}
 .chartP .tabs button{min-width:52px}
 .chartP{display:flex;flex-direction:column}
-#chartWrap{position:relative;height:340px}
+#chartWrap{position:relative;height:clamp(340px,24vw,460px)}
 #chart{width:100%;height:100%;display:block}
 #tip{position:absolute;pointer-events:none;background:#000d;border:1px solid var(--line);padding:6px 8px;font-size:11px;display:none;white-space:nowrap}
 
@@ -420,7 +420,8 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .chartP>.ph .pchips:not(:empty){display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
   /* two rows that never move between tokens: [token · key] / [price chips · CANDLES · DEPTH · timeframes] */
   .chartP>.ph .ctok,.chartP>.ph>h2{order:1}.chartP>.ph .legend{order:2;justify-content:flex-end!important}.chartP>.ph .brk{display:block;order:3;flex-basis:100%;height:0}
-  .chartP>.ph .pchips{order:4;margin-right:auto}#ctab{order:5}#dtab{order:6}#tf{order:7}
+  .chartP>.ph .pchips{order:4;margin-right:auto}#dtab{order:5}#ctab{order:6}#tf{order:7}   /* DEPTH first: without depth data its kept place is just more of the open middle, no hole */
+  #depthLeg{order:-1}   /* the key's depth item first too: the token lines stay pinned right */
   #clobrRow{display:grid;column-count:auto;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"liq wh lo" "dc wh lp";align-items:start}
   #liqP{grid-area:liq}#whP{grid-area:wh}#loP{grid-area:lo}#dcP{grid-area:dc}#lpP{grid-area:lp}   /* CLOBr panels: the same spots for every token */
   .chartP>.ph .pchips span{display:flex;align-items:baseline;gap:4px;padding:5px 9px;font-size:11px;white-space:nowrap}.chartP>.ph .pchips span+span{border-left:1px solid var(--line)}
@@ -458,7 +459,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .acc.shut>.ph{margin-bottom:0}.acc.shut>.ph .chev{transform:rotate(-90deg)}
   .acc.shut>:not(.ph){display:none!important}
   .acc.shut>.ph .tabs,.acc.shut>.ph .meta{display:none}
-  #chartWrap{height:230px}
+  #chartWrap{height:clamp(280px,70vw,380px)}   /* phones 280 px, tablets up to 380 */
   #mbList .br,#mbList .bh{grid-template-columns:16px 22px minmax(0,1fr) repeat(3,minmax(0,64px));gap:6px;font-size:12px}#mbList img{width:22px;height:22px}#mbList .sym .q{display:none}#mbList .bh{font-size:9px;letter-spacing:.5px}
   .post .txt{-webkit-line-clamp:3}
   .board{min-height:90px}#slot1{aspect-ratio:1112/358;min-height:0}.slots .board.house,.slots .board.img{aspect-ratio:912/176;min-height:0}.bill .board.sold .head,.board.sold .head{font-size:30px}
@@ -976,11 +977,11 @@ async function loadChart(){
   if(CA===MARINE){try{const d=await j(DATA+'chart.json?'+Date.now()),age=Date.now()/1000-(d.at||0);
     if(d&&d['7d']&&age<5400){['1d','7d','all'].forEach(x=>{if(d[x]&&d[x].length&&(!CH[x]||age<1200)&&(hasOhlc(d[x])||!hasOhlc(CH[x])))CH[x]=d[x]});fresh=age<1200&&!!(d[k]&&d[k].length);if(fresh)CHAT[k]=Date.now();if(tf===k){liveTail();setSeries()}}}catch(e){}}   // 1H / 6H aren't in it: live
   // candles on but the saved copy has closes only: live candles
-  if(!fresh||(candleOn&&!hasOhlc(CH[k]))){try{await loadLive(k);CHAT[k]=Date.now();chartMem(k,CH[k]);loadChart.fails=0}catch(e){if((loadChart.fails=(loadChart.fails||0)+1)<4)setTimeout(loadChart,3000*loadChart.fails)}}
+  if(!fresh||(candleOn&&!hasOhlc(CH[k]))){try{await loadLive(k);CHAT[k]=Date.now();chartMem(k,CH[k]);loadChart.fails=0}catch(e){loadChart.fails=(loadChart.fails||0)+1;if(tf===k&&!CH[k])draw();clearTimeout(loadChart.r);loadChart.r=setTimeout(()=>{if(tf===k)loadChart()},Math.min(20e3,6e3*loadChart.fails))}}   // keeps trying while this timeframe is on (GeckoTerminal refusals pass)
   if(tf===k){liveTail();setSeries()}
   if(!loadChart.pre){loadChart.pre=1;setTimeout(prefetchCharts,8000)}}   // only for a visitor who stays: a quick hop between tokens doesn't spend their GeckoTerminal calls
-// the other timeframes, one every 4 s (GeckoTerminal allows each visitor ~30 calls a minute; the tape uses 3); stops at a refusal
-async function prefetchCharts(){for(const k of ['1d','7d','6h','1h','all']){
+// the two most used other timeframes, one every 4 s (GeckoTerminal allows each visitor ~30 calls a minute; the tape uses 3); stops at a refusal
+async function prefetchCharts(){for(const k of ['1d','1h']){
   if(k===tf||(CH[k]&&Date.now()-(CHAT[k]||0)<120e3&&(!candleOn||hasOhlc(CH[k]))))continue;
   if(CA===MARINE&&['1d','7d','all'].includes(k)&&CH[k]&&(!candleOn||hasOhlc(CH[k])))continue;   // in chart.json already
   try{await loadLive(k);CHAT[k]=Date.now();chartMem(k,CH[k]);if(tf===k){liveTail();setSeries()}}catch(e){return}
@@ -1007,14 +1008,17 @@ function draw(){
   const c=$('chart');if(!c)return;const dpr=(window.devicePixelRatio||1)*Math.max(1,S),W=c.clientWidth,H=c.clientHeight;
   if(!W||!H)return;
   c.width=W*dpr;c.height=H*dpr;const x=c.getContext('2d');x.scale(dpr,dpr);x.clearRect(0,0,W,H);
-  if(!series||series.length<2){x.fillStyle='#5d6a8f';x.font='12px IBM Plex Mono';x.textAlign='center';x.fillText(loadChart.fails>=3?'chart unavailable right now · retrying':'loading chart…',W/2,H/2);return}
+  if(!series||series.length<2){x.fillStyle='#5d6a8f';x.font='12px IBM Plex Mono';x.textAlign='center';x.fillText(loadChart.fails>=2?'GeckoTerminal is busy · retrying…':'loading chart…',W/2,H/2);return}
   const FIT=document.documentElement.classList.contains('fit'),CF=FIT?20:11;
-  const pad={l:CF*7,r:CF*7,t:FIT?14:10,b:CF*2.8},w=W-pad.l-pad.r,hAll=H-pad.t-pad.b;
+  const pad={l:0,r:0,t:FIT?14:10,b:CF*2.8},hAll=H-pad.t-pad.b;
   // volume underneath (always on, when the data has it); candles when chosen and the data has open / high / low
   const CDL=candleOn&&series.ohlc,vmax=Math.max(...series.map(p=>p.v||0)),vh=vmax>0?Math.round(hAll*.18):0,h=hAll-(vh?vh+6:0);
   const ms=CDL?series.flatMap(p=>[p.h,p.lo]):series.map(p=>p.m),ls=series.map(p=>p.l);
   const nt=FIT?Math.max(2,Math.min(5,Math.floor(h/55))):5;
   const A=nice(Math.min(...ms),Math.max(...ms),nt),B=niceN(Math.min(...ls),Math.max(...ls),A.t.length-1);   // both axes' labels on the same lines
+  // side margins as wide as the price labels need (not a fixed 77 px): the plot gets the rest
+  x.font=CF+'px IBM Plex Mono';const lw=(T,s)=>Math.max(...T.t.map(v=>x.measureText(fmtTick(v,T.step)).width));
+  pad.l=Math.ceil(lw(B))+(FIT?20:12);pad.r=Math.ceil(lw(A))+(FIT?20:12);const w=W-pad.l-pad.r;
   let dt=Infinity;for(let i=1;i<series.length;i++){const d=series[i].t-series[i-1].t;if(d>0&&d<dt)dt=d}if(!isFinite(dt))dt=0;   // one candle's span: candles get half of it as room at each end
   const t0=series[0].t-(CDL?dt/2:0),t1=series[series.length-1].t+(CDL?dt/2:0),cw=Math.max(1,Math.min(14,w/series.length*.7,dt/(t1-t0)*w*.7||14));
   const X=t=>pad.l+(t-t0)/(t1-t0)*w,YA=v=>pad.t+h-(v-A.lo)/(A.hi-A.lo)*h,YB=v=>pad.t+h-(v-B.lo)/(B.hi-B.lo)*h;
