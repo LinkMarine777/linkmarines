@@ -559,7 +559,9 @@ recent = [{'t': s['t'], 'w': s['w'][:4], 'who': label(s['w']), 'buy': sym(s['buy
 save('whales.json', {
     'at': now, 'wallets': len(whale), 'tokens': ['$' + t['symbol'] for t in watch],
     'buying': buying, 'selling': selling, 'tx': tx, 'tm': tm,
-    'signals': signals, 'recent': recent, 'lp': lp, 'lp1': lp1, 'marine': marine})
+    'signals': signals, 'recent': recent, 'lp': lp, 'lp1': lp1, 'marine': marine,
+    # the watched tokens' pools: the bot reads their trades straight from the chain for real-time big-trade alerts
+    'pools': [{'m': t['mint'], 's': t['symbol'], 'p': pool_of[t['mint']], 'i': (meta.get(t['mint']) or {}).get('i')} for t in watch if pool_of.get(t['mint'])]})
 save('whales-state.json', state)
 
 # ---------- the $MARINE chart (chart.json): GeckoTerminal answers GitHub's runners, while the bot's copy from Cloudflare's
