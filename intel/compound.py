@@ -500,7 +500,7 @@ def score(days, since_day):
     e = min(1, math.log2(N / R) / 3) if R and N > R else 0   # buying beyond the rewards: 2x = 1/3, 4x = 2/3, 8x+ = all of it
     sc = round(100 * (0.6 * c + 0.25 * k + 0.15 * e)) if N >= 0 else 0
     tag = 'Seller' if N < 0 else 'Trader' if churn >= 0.5 else 'Compounder' if c >= 0.5 else 'Partial' if c >= 0.1 else 'Collector'   # one per wallet
-    return [round(R, 2), round(N, 2), round(c, 3), round(k, 3), sc, tag, round(B, 2), round(S, 2), round(churn, 2)]   # + bought, sold, churn (the page's detail line)
+    return [round(R, 2), round(N, 2), round(c, 3), round(k, 3), sc, tag, round(B, 2), round(S, 2), round(churn, 3)]   # + bought, sold, churn (the page's detail line; 3 decimals so 49.6% doesn't read as 50%, the Trader line)
 
 
 WINDOWS = {'7d': 7, '30d': 30, 'all': KEEP_DAYS}
