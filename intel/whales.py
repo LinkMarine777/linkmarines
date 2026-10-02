@@ -105,6 +105,17 @@ for t in watch:
         d = get(SF + t['mint'])['data']['token']
         quote[t['mint']] = (d.get('quote') or {}).get('mint'); pools.add(d.get('pool')); pool_of[t['mint']] = MARINE_POOL if t['mint'] == MARINE else d.get('pool')
     except Exception as e: log('stonkfun', t['symbol'], e)
+# every Stonk Board coin's pool, for the bot's live big-trade listener (any coin's $2,500+ trades, not just the top 10's):
+# looked up once and kept (re-checked after 3 days), at most 15 new lookups a run
+PO = state.setdefault('poolOf', {}); board_toks = load('board.json', {}).get('tokens', {}); looked = 0
+for m in [m for m in board_toks if m not in pool_of]:
+    if m in PO and now - PO[m][1] < 3 * 86400: continue
+    if looked >= 15: break
+    looked += 1
+    try: PO[m] = [get(SF + m)['data']['token'].get('pool'), now]
+    except Exception as e: log('stonkfun pool', m[:6], e)
+pools_all = {m: p for m, p in pool_of.items() if p}
+pools_all.update({m: PO[m][0] for m in board_toks if m in PO and PO[m][0] and m not in pools_all})
 H = state.setdefault('holders', {})
 for t in watch:   # top holders straight from the chain, refreshed every 6 h
     h = H.get(t['mint'])
@@ -562,7 +573,9 @@ save('whales.json', {
     'buying': buying, 'selling': selling, 'tx': tx, 'tm': tm,
     'signals': signals, 'recent': recent, 'lp': lp, 'lp1': lp1, 'marine': marine,
     # the watched tokens' pools: the bot reads their trades straight from the chain for real-time big-trade alerts
-    'pools': [{'m': t['mint'], 's': t['symbol'], 'p': pool_of[t['mint']], 'i': (meta.get(t['mint']) or {}).get('i')} for t in watch if pool_of.get(t['mint'])]})
+    'pools': [{'m': t['mint'], 's': t['symbol'], 'p': pool_of[t['mint']], 'i': (meta.get(t['mint']) or {}).get('i')} for t in watch if pool_of.get(t['mint'])],
+    # every Stonk Board coin's pool: the bot's live listener reads their trades as they land
+    'poolsAll': [{'m': m, 's': (board_toks.get(m) or {}).get('symbol') or sym(m), 'p': p, 'i': (meta.get(m) or {}).get('i')} for m, p in pools_all.items()]})
 save('whales-state.json', state)
 
 # ---------- the $MARINE chart (chart.json): GeckoTerminal answers GitHub's runners, while the bot's copy from Cloudflare's
