@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Accuracy audit for the compound score (one-off, read-only): rebuilds a token's tracked wallets straight from the chain so it
-can be compared with what compound-state.json holds. Writes audit/<mint>.json; the comparison is done offline.
+can be compared with what compound-state.json holds. Writes audit/<mint>.json.gz; the comparison is done offline.
 
 Per wallet (the ones the 6-hourly job tracks): every transaction on its real token accounts and its real reward-token
 accounts since the job started tracking the token, through its last update:
@@ -9,7 +9,7 @@ accounts since the job started tracking the token, through its last update:
   token's own payout rounds can be told apart from other tokens' paid from the same stonkfun wallet.
 Plus the token's current holders and hourly prices (GeckoTerminal) for the token, the reward token and SOL.
 Usage: audit.py <data dir> [mint ...]   (default $MARINE). ~50 Helius credits a wallet. Never prints the RPC URL."""
-import base64, json, os, struct, sys, time, urllib.request
+import base64, gzip, json, os, struct, sys, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from pda import b58d, b58e, pda, ATA
@@ -176,7 +176,8 @@ def audit(mint):
     out = {'mint': mint, 'quote': quote, 'since': since, 'until': until, 'bal': state['bal'], 'days': {w: state['days'].get(w) for w in W},
            'holders': holders(mint, T, state.get('dec', 6)), 'px': {m: prices(m, since - 86400) for m in (mint, quote, SOL)},
            'wallets': wallets, 'batches': batches}
-    os.makedirs('audit', exist_ok=True); json.dump(out, open(f'audit/{mint}.json', 'w'), separators=(',', ':'))
+    os.makedirs('audit', exist_ok=True)   # gzipped: a token whose reward token many tokens pay (GP / GLDX) is over GitHub's 100 MB a file
+    with gzip.open(f'audit/{mint}.json.gz', 'wt') as f: json.dump(out, f, separators=(',', ':'))
     print(f"  {sum(len(v) for v in wallets.values())} wallet transactions, {len(batches)} payout batches · credits so far {CREDITS[0]}")
 
 
