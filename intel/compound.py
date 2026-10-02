@@ -545,8 +545,11 @@ def wallets_index():   # every wallet's coins, for the token page's wallet windo
     mints = sorted(index['tokens']); shards = {}
     for i, mint in enumerate(mints):
         for r in (load(f'compound/{mint}.json', None) or {}).get('rows', []):
-            a = r.get('all') or [0, 0, 0, 0, None, None, None, None]   # [coin, % of supply, rewards $, net bought $, score, tag, bought $, sold $] (unscored: no reward yet)
-            shards.setdefault(ord(r['w'][0]), {}).setdefault(r['w'], []).append([i, r['p'], a[0], a[1], a[4], a[5], a[6], a[7]])
+            a = r.get('all') or [0, 0, 0, 0, None, None]
+            # P&L needs every trade since tracking began (the score leaves out the entry buy): all-days totals of rewards, bought, sold
+            t = [round(sum(v[j] for v in ((ST.get(mint) or {}).get('days') or {}).get(r['w'], {}).values()), 2) for j in range(3)]
+            # [coin, % of supply, rewards $, net bought $, score, tag, rewards / bought / sold $ over every tracked day] (unscored: no reward yet)
+            shards.setdefault(ord(r['w'][0]), {}).setdefault(r['w'], []).append([i, r['p'], a[0], a[1], a[4], a[5], *t])
     for c, W in shards.items(): save(f'compound/wallets/{c}.json', {'at': now, 'm': mints, 's': [index['tokens'][m].get('sym') for m in mints],
                                                                     'since': [index['tokens'][m].get('since') for m in mints], 'w': W})
 
