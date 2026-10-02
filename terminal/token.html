@@ -121,7 +121,7 @@ main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:1px;backg
 .tabs{display:flex;gap:4px}
 .tabs button{background:transparent;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:11px;padding:3px 9px;cursor:pointer}
 .tabs button.on{color:#fff;border-color:var(--blue2);background:rgba(42,90,218,.2)}
-.legend{display:flex;gap:16px;font-size:11px;margin-bottom:6px}.brk{display:none}
+.legend{display:flex;gap:16px;font-size:11px;margin-bottom:6px}.brk{display:none}.chartP .tabs #candleBtn{min-width:36px;padding-left:8px;padding-right:8px;display:inline-flex;align-items:center;justify-content:center}#candleBtn svg{width:16px;height:16px;display:block}
 .legend i{display:inline-block;width:14px;height:2px;vertical-align:middle;margin-right:6px}
 #depthLeg{color:inherit;text-decoration:none;white-space:nowrap;transition:opacity .15s}#depthLeg:hover{color:#fff}#depthLeg.off{opacity:.35}#depthLeg.off i{background:var(--dim)!important}
 .chartP .tabs button{min-width:52px}
@@ -579,7 +579,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
         <div class="ctok" id="ctok"></div>
         <h2><span class="tkSym">$MARINE</span> × <span class="tkQs">$LINK</span></h2>
         <div class="legend" style="margin:0"><span><i id="baseSw" style="background:var(--blue2)"></i><span class="tkSym">$MARINE</span> (right)</span><span><i style="background:var(--amber)"></i><span class="tkQs">$LINK</span> (left)</span><a id="depthLeg" style="visibility:hidden" target="_blank" rel="noopener" title="CLOBr market depth, delayed up to 1h. Real-time on CLOBr Pro"><i style="background:linear-gradient(90deg,var(--green) 50%,var(--red) 50%)"></i>CLOBr depth <span class="dly">delayed</span></a></div>
-        <div class="tabs" id="ctab"><button id="candleBtn" type="button" title="Candles instead of a line (volume is underneath either way)">CANDLES</button></div>
+        <div class="tabs" id="ctab"><button id="candleBtn" type="button" aria-label="Line or candles"></button></div>
         <div class="tabs" id="dtab" style="visibility:hidden"><button id="depthBtn" class="on" type="button" title="CLOBr market depth for the token: support (green) and resistance (red) liquidity by price">DEPTH</button></div>
         <i class="brk"></i>
         <div class="tabs" id="tf">
@@ -939,10 +939,15 @@ function tape5m(){if(typeof tapeRaw==='undefined'||!tapeRaw||!tapeRaw.length)ret
   for(const a of tapeRaw){const t=Math.floor(Date.parse(a.block_timestamp)/1000),buy=a.to_token_address===CA,pr=+(buy?a.price_to_in_usd:a.price_from_in_usd);if(!(pr>0))continue;
     if(t>=t0)pts.push([t,pr,q,pr,pr,pr,+a.volume_in_usd||0]);else{prev=pr;break}}
   if(!pts.length&&prev==null)return null;pts.reverse();const p0=prev??pts[0][1];pts.unshift([t0,p0,q,p0,p0,p0,0]);if(pts.length<2)pts.push([now,p0,q,p0,p0,p0,0]);return pts}
+// candles from GeckoTerminal (each visitor has their own ~30 calls a minute); when it refuses, the bot's shared copy (cached
+// at the edge, the last good one kept 30 min: GeckoTerminal often refuses Cloudflare itself, so it's the backup, not the source)
+async function ohlcvGet(k,side){try{return await j(`${GT}/ohlcv/${TF[k]}&token=${side}`)}catch(e){
+  const [tp,qs]=TF[k].split('?'),p=new URLSearchParams(qs);if(!POOL)throw e;
+  const d=await j(`${BOT}/ohlcv?pool=${POOL}&tf=${tp}&agg=${p.get('aggregate')}&limit=${p.get('limit')}&token=${side}`);if(d&&d.data)return d;throw e}}
 async function loadLive(k){
   if(k==='5m'){const t=tape5m();if(t){CH[k]=t;return}}
   if(!GT)return;
-  const [qq,bb]=await Promise.all([j(`${GT}/ohlcv/${TF[k]}&token=quote`),j(`${GT}/ohlcv/${TF[k]}&token=base`)]);
+  const [qq,bb]=await Promise.all([ohlcvGet(k,'quote'),ohlcvGet(k,'base')]);
   const [m,l]=bb.meta?.base?.address===CA?[bb,qq]:[qq,bb];
   const L=new Map(l.data.attributes.ohlcv_list.map(c=>[c[0],c[4]]));let last=null;
   const pts=m.data.attributes.ohlcv_list.slice().reverse().map(c=>{if(L.has(c[0]))last=L.get(c[0]);return[c[0],c[4],last,c[1],c[2],c[3],c[5]]});
@@ -958,17 +963,28 @@ let QPX=0;
 function liveTail(){const r=CH[tf];if(!r||!r.length||!marinePx)return;const B=TFB[tf]||3600,t=Math.floor(Date.now()/1000/B)*B,last=r[r.length-1];
   if(t<last[0])return;const q=QPX||last[2];if(t===last[0]){last[1]=marinePx;last[2]=q;if(last.length>=6){last[4]=Math.max(last[4],marinePx);last[5]=Math.min(last[5],marinePx)}}
   else{const o=last[1];r.push([t,marinePx,q,o,Math.max(o,marinePx),Math.min(o,marinePx),0])}}
+const CHAT={};   // when each timeframe was last fetched (this page)
 async function loadChart(){
-  // shows a chart at once: this browser's last copy (kept 6 h) or, for $MARINE, the saved chart.json (the whale job rebuilds it
-  // every 30 min); live candles from GeckoTerminal only when the saved copy is over 20 min old. The last point always follows
-  // the live price (liveTail).
+  // shows a chart at once: what this page already has, or this browser's last copy (kept 6 h), or for $MARINE the saved
+  // chart.json (the whale job rebuilds it every ~10 min); then refreshes in the background, at most every 2 minutes per
+  // timeframe. The last point always follows the live price (liveTail). After the first chart, the other timeframes load
+  // quietly one by one, so switching is instant.
   const k=tf;let fresh=false;
-  if(!CH[k]){const c=chartMem(k);if(c){CH[k]=c;liveTail();setSeries()}}
+  if(!CH[k]){const c=chartMem(k);if(c)CH[k]=c}
+  if(CH[k]){liveTail();setSeries()}else{series=null;hover=null;draw()}   // nothing for this timeframe yet: 'loading', not the last one's chart
+  if(Date.now()-(CHAT[k]||0)<120e3&&(!candleOn||hasOhlc(CH[k])))return;
   if(CA===MARINE){try{const d=await j(DATA+'chart.json?'+Date.now()),age=Date.now()/1000-(d.at||0);
-    if(d&&d['7d']&&age<5400){['1d','7d','all'].forEach(x=>{if(d[x]&&d[x].length&&(!CH[x]||age<1200))CH[x]=d[x]});fresh=age<1200&&!!(d[k]&&d[k].length);if(tf===k){liveTail();setSeries()}}}catch(e){}}   // 1H / 6H aren't in it: live
+    if(d&&d['7d']&&age<5400){['1d','7d','all'].forEach(x=>{if(d[x]&&d[x].length&&(!CH[x]||age<1200)&&(hasOhlc(d[x])||!hasOhlc(CH[x])))CH[x]=d[x]});fresh=age<1200&&!!(d[k]&&d[k].length);if(fresh)CHAT[k]=Date.now();if(tf===k){liveTail();setSeries()}}}catch(e){}}   // 1H / 6H aren't in it: live
   // candles on but the saved copy has closes only: live candles
-  if(!fresh||(candleOn&&!hasOhlc(CH[k]))){try{await loadLive(k);chartMem(k,CH[k]);loadChart.fails=0}catch(e){if((loadChart.fails=(loadChart.fails||0)+1)<4)setTimeout(loadChart,3000*loadChart.fails)}}
-  if(tf===k){liveTail();setSeries()}}
+  if(!fresh||(candleOn&&!hasOhlc(CH[k]))){try{await loadLive(k);CHAT[k]=Date.now();chartMem(k,CH[k]);loadChart.fails=0}catch(e){if((loadChart.fails=(loadChart.fails||0)+1)<4)setTimeout(loadChart,3000*loadChart.fails)}}
+  if(tf===k){liveTail();setSeries()}
+  if(!loadChart.pre){loadChart.pre=1;setTimeout(prefetchCharts,8000)}}   // only for a visitor who stays: a quick hop between tokens doesn't spend their GeckoTerminal calls
+// the other timeframes, one every 4 s (GeckoTerminal allows each visitor ~30 calls a minute; the tape uses 3); stops at a refusal
+async function prefetchCharts(){for(const k of ['1d','7d','6h','1h','all']){
+  if(k===tf||(CH[k]&&Date.now()-(CHAT[k]||0)<120e3&&(!candleOn||hasOhlc(CH[k]))))continue;
+  if(CA===MARINE&&['1d','7d','all'].includes(k)&&CH[k]&&(!candleOn||hasOhlc(CH[k])))continue;   // in chart.json already
+  try{await loadLive(k);CHAT[k]=Date.now();chartMem(k,CH[k]);if(tf===k){liveTail();setSeries()}}catch(e){return}
+  await new Promise(r=>setTimeout(r,4000))}}
 const hasOhlc=r=>!!(r&&r.length>1&&r[0].length>=6&&r[r.length-2].length>=6);   // open / high / low saved (not just closes)
 const chartMem=(k,v)=>{const key='wrChart:'+CA+':'+k;try{if(v){localStorage.setItem(key,JSON.stringify({at:Date.now(),v}));return}
   const c=JSON.parse(localStorage.getItem(key)||'null');return c&&Date.now()-c.at<6*3600e3?c.v:null}catch(e){return null}};
@@ -991,7 +1007,7 @@ function draw(){
   const c=$('chart');if(!c)return;const dpr=(window.devicePixelRatio||1)*Math.max(1,S),W=c.clientWidth,H=c.clientHeight;
   if(!W||!H)return;
   c.width=W*dpr;c.height=H*dpr;const x=c.getContext('2d');x.scale(dpr,dpr);x.clearRect(0,0,W,H);
-  if(!series||series.length<2)return;
+  if(!series||series.length<2){x.fillStyle='#5d6a8f';x.font='12px IBM Plex Mono';x.textAlign='center';x.fillText(loadChart.fails>=3?'chart unavailable right now · retrying':'loading chart…',W/2,H/2);return}
   const FIT=document.documentElement.classList.contains('fit'),CF=FIT?20:11;
   const pad={l:CF*7,r:CF*7,t:FIT?14:10,b:CF*2.8},w=W-pad.l-pad.r,hAll=H-pad.t-pad.b;
   // volume underneath (always on, when the data has it); candles when chosen and the data has open / high / low
@@ -1162,8 +1178,13 @@ async function loadDepth(){if(!FLAGS.CLOBR_ENABLED)return;try{const d=await j(BO
   DEPTH=d&&d.levels&&d.levels.length?d:null}catch(e){}
   $('dtab').style.visibility=DEPTH?'':'hidden';depthLeg();renderClobr();draw()}   // DEPTH keeps its place either way: nothing moves between tokens
 function depthLeg(){const l=$('depthLeg');l.style.display='';l.style.visibility=DEPTH?'':'hidden';l.classList.toggle('off',!depthOn);l.href=clobrUrl()}
-$('candleBtn').classList.toggle('on',candleOn);
-$('candleBtn').onclick=()=>{candleOn=!candleOn;$('candleBtn').classList.toggle('on',candleOn);try{localStorage.setItem('wrCandle',candleOn?'1':'0')}catch(e){}if(candleOn&&!hasOhlc(CH[tf]))loadChart();else if(!setSeries())draw()};
+// one button: shows the chart type you're on (a line, or candles); click to switch
+const ICO_LINE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 4-7 5 5"/><path d="M3 21h18"/></svg>',
+  ICO_CANDLE='<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6"><path d="M7 3v4M7 15v5M17 5v3M17 17v3" fill="none"/><rect x="4.5" y="7" width="5" height="8" rx="1"/><rect x="14.5" y="8" width="5" height="9" rx="1" fill="none"/></svg>';
+function candleIco(){const b=$('candleBtn');b.innerHTML=candleOn?ICO_CANDLE:ICO_LINE;b.title=candleOn?'Candles · click for a line':'Line · click for candles'}
+candleIco();
+$('candleBtn').onclick=e=>{e.stopPropagation();candleOn=!candleOn;candleIco();   // (the icon is swapped mid-click: don't let the phone's fold-away header see it)
+  try{localStorage.setItem('wrCandle',candleOn?'1':'0')}catch(e){}if(candleOn&&!hasOhlc(CH[tf]))loadChart();else if(!setSeries())draw()};
 $('depthBtn').onclick=()=>{depthOn=!depthOn;$('depthBtn').classList.toggle('on',depthOn);depthLeg();
   try{localStorage.setItem('wrDepth',depthOn?'1':'0')}catch(e){}draw()};
 $('depthBtn').classList.toggle('on',depthOn);
