@@ -52,6 +52,12 @@ DAY, KEEP_DAYS, COVER, MIN_W, MAX_W = 86400, 180, 0.8, 20, 600
 BACKFILL_W, BACKFILL_DAYS = int(os.environ.get('BACKFILL_W', 200)), int(os.environ.get('BACKFILL_DAYS', 7))
 HISTORY_BUDGET = int(os.environ.get('HISTORY_BUDGET', 160000))   # credits one history run may spend before it stops starting tokens
 HISTORY_MINUTES = int(os.environ.get('HISTORY_MINUTES', 110))      # ... or minutes (the job has 140); the next run carries on
+# trade by trade (off until the Helius plan has room, ~1M credits a month): in the 6-hourly update, a wallet whose balance moved
+# has its actual transactions read, so a buy / sell is the real swap at its own time and a plain transfer counts as neither.
+# Off: buys and sells are the balance changes between snapshots. TRADES_BUDGET caps it per run (then balance changes again)
+TRADES = os.environ.get('TRADES', '') == '1'
+TRADES_BUDGET = int(os.environ.get('TRADES_BUDGET', 20000))
+ACCTS = {}   # wallet -> its token accounts for the token being updated (filled by holders())
 PAGES = int(os.environ.get('PAGES', 80))   # most pages a big token's holder lookup may take (1,000 holders, 10 credits each)
 now = int(time.time()); today = now // DAY
 CALLS, CREDITS = {}, [0]
@@ -143,7 +149,7 @@ def holders(mint, T):
     if 'prog' not in T:
         T['prog'] = rpc('getAccountInfo', [mint, {'encoding': 'base64', 'dataSlice': {'offset': 0, 'length': 0}}])['value']['owner']
         T['dec'] = rpc('getTokenSupply', [mint])['value']['decimals']
-    own = {}
+    own = {}; ACCTS.clear()
     if not T.get('big'):
         try:
             accs = rpc('getProgramAccounts', [T['prog'], {'encoding': 'base64', 'dataSlice': {'offset': 32, 'length': 40},
@@ -151,7 +157,7 @@ def holders(mint, T):
             for a in accs:
                 raw = base64.b64decode(a['account']['data'][0])
                 if len(raw) < 40: continue
-                o = b58e(raw[:32]); own[o] = own.get(o, 0) + struct.unpack('<Q', raw[32:40])[0] / 10 ** T['dec']
+                o = b58e(raw[:32]); own[o] = own.get(o, 0) + struct.unpack('<Q', raw[32:40])[0] / 10 ** T['dec']; ACCTS.setdefault(o, []).append(a['pubkey'])
         except RuntimeError as e:
             if not re.search(r'Too many accounts|deprioritized|getProgramAccountsV2', str(e)) or not (KEY or 'helius' in URL): raise   # Helius' wording varies
             T['big'] = True; log('  too many accounts for one call: holder lookup by mint from now on (every 24 h)')
@@ -160,7 +166,9 @@ def holders(mint, T):
         while pages < PAGES:
             r = rpc('getTokenAccounts', {'mint': mint, 'limit': 1000, **({'cursor': cur} if cur else {})}); CREDITS[0] += 10; pages += 1
             L = r.get('token_accounts') or []
-            for a in L: own[a['owner']] = own.get(a['owner'], 0) + float(a.get('amount') or 0) / 10 ** T['dec']
+            for a in L:
+                own[a['owner']] = own.get(a['owner'], 0) + float(a.get('amount') or 0) / 10 ** T['dec']
+                if a.get('address'): ACCTS.setdefault(a['owner'], []).append(a['address'])
             cur = r.get('cursor')
             if not L or not cur or len(L) < 1000: done = True; break
         if not done: raise RuntimeError(f'holder list incomplete after {pages} pages')   # never save a partial snapshot
@@ -353,6 +361,27 @@ def backfill(mint, quote, T, people, wallets, since):
 # read), plus the reward account of the 8 biggest wallets to find every payout round and its rate (reward tokens per token
 # held, the same for everyone in a round). A wallet's reward in a round = the rate x its balance then (if worth $20+).
 # Checked against payouts read one by one for $MARINE's top 20: ~2%. ~1.5K credits a token.
+def swaps(mint, quote, T, w, since, xpx, qpx):
+    """Trade by trade: wallet w's swaps of the token since `since`, as (day, bought $, sold $). A buy is the token coming in
+    while SOL / the reward token / a stable goes out (a sell the reverse); a transfer (nothing else moves) is neither. Valued
+    at today's prices (the window is 6 h); a swap against something unpriced is valued by the token side."""
+    px = {mint: xpx, quote: qpx, SOL: price.get(SOL, 0)}
+    val = lambda m, a: abs(a) * (1.0 if m in STABLE else px.get(m, 0))
+    out, seen = [], set()
+    for acct in ACCTS.get(w) or [pda([b58d(w), b58d(T['prog']), b58d(mint)], ATA)]:   # the wallet's real token accounts (not always the standard one)
+        for tx in history(acct, since):
+            sig = (tx.get('transaction') or {}).get('signatures', [None])[0]
+            if sig in seen or (tx.get('meta') or {}).get('err'): continue
+            seen.add(sig)
+            ch, signer = deltas(tx, w); dx = ch.get(mint, 0)
+            other = {m: v for m, v in ch.items() if m != mint and not (m == SOL and abs(v) < 0.01)}   # SOL dust = fees / rent
+            if not dx or not other: continue                                                        # a transfer: not a trade
+            day = (tx.get('blockTime') or now) // DAY
+            if dx > 0 and any(v < 0 for v in other.values()): out.append((day, sum(val(m, v) for m, v in other.items() if v < 0) or dx * xpx, 0))
+            elif dx < 0 and any(v > 0 for v in other.values()): out.append((day, 0, sum(val(m, v) for m, v in other.items() if v > 0) or -dx * xpx))
+    return out
+
+
 def history_fill(mint, quote, T, people, wallets, since):
     px = {m: series_long(m, since, price.get(m, 0)) for m in (mint, quote, SOL)}; pt = {m: [t for t, _ in s] for m, s in px.items()}
     def at(m, t):
@@ -508,7 +537,10 @@ for mint in watch:
                 avg = (b0 + b1) / 2
                 R = dD * avg / E * qpx if avg * xpx >= minusd else 0
                 d = b1 - b0
-                add(T, w, today, R=R, B=max(d, 0) * xpx if b0 > 0 else 0, S=max(-d, 0) * xpx)
+                if TRADES and b0 > 0 and abs(d) * xpx >= 1 and CREDITS[0] < TRADES_BUDGET:
+                    add(T, w, today, R=R)
+                    for day, B_, S_ in swaps(mint, quote, T, w, T['at'], xpx, qpx): add(T, w, day, B=B_, S=S_)
+                else: add(T, w, today, R=R, B=max(d, 0) * xpx if b0 > 0 else 0, S=max(-d, 0) * xpx)
         T.setdefault('since', now)
         T.update({'at': now, 'dist': dist, 'elig': elig, 'sym': sym, 'qsym': qsym, 'v2': True,
                   'bal': {w: round(people.get(w, 0), 6) for w in wallets}})
