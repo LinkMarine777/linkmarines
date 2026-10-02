@@ -1,9 +1,6 @@
 # One-off accuracy audit of the compound score (intel/audit.py): read-only chain reads, results to the audit-results branch.
 name: compound-audit
 on:
-  push:
-    branches: [claude/youthful-ramanujan-wa515v]
-    paths: [intel/audit.py, .github/workflows/audit.yml]
   workflow_dispatch:
     inputs:
       mints:
