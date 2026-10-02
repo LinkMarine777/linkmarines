@@ -354,9 +354,10 @@ try:
         p = cprev.get(m)
         if p is None: cprev[m] = v; continue
         if (band(v) != band(p) and abs(v - p) >= 3) or abs(v - p) >= 10: cch.append((abs(v - p), m, t, p, v))
+    fmt = lambda x, y: f'{x:.1f}' if round(x) == round(y) else f'{x:.0f}'   # 40.4 → 39.6 reads "40.4 → 39.6", not "40 → 40"
     for _, m, t, p, v in sorted(cch, key=lambda c: -c[0])[:3]:
         sig_('rewards', f"compound:{m}:{t.get('at') or now}", now,
-             f"${t.get('sym') or m[:4]} compound score {p:.0f} → {v:.0f} {'▲' if v > p else '▼'} ({band(p)} → {band(v)})"
+             f"${t.get('sym') or m[:4]} compound score {fmt(p, v)} → {fmt(v, p)} {'▲' if v > p else '▼'} ({band(p)} → {band(v)})"
              + (f" · {t['ca']:.0f}% of rewards put back since launch" if t.get('ca') is not None else ''), m, 0)
         cprev[m] = v
 except Exception as e: log('compound alerts', e)
