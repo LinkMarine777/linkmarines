@@ -1292,7 +1292,9 @@ loadCompound();setInterval(()=>{if(!document.hidden)loadCompound()},30*60e3);
 // the wallet window: one holder across stonkfun (the bot's /wallet: coins held now + compounding per coin) and its share card.
 // A shared link (?w=<wallet>) opens it on arrival
 const WRE=/^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-async function openWallet(w){if(!WRE.test(w||''))return;openWallet.w=w;$('walModal').classList.add('show');document.body.style.overflow='hidden';
+// the address bar follows the window: the open wallet's link while it's open, the token's link again once it's closed
+const walUrl=w=>{try{const u=new URL(location.href);if(w)u.searchParams.set('w',w);else u.searchParams.delete('w');history.replaceState(history.state,'',u)}catch(e){}};
+async function openWallet(w){if(!WRE.test(w||''))return;openWallet.w=w;walUrl(w);$('walModal').classList.add('show');document.body.style.overflow='hidden';
   $('walAddr').textContent=w.slice(0,4)+'…'+w.slice(-4);$('walScan').href='https://solscan.io/account/'+w;$('walCa').textContent='COPY ADDRESS';
   const link='https://terminal7.xyz/terminal/token?ca='+CA+'&w='+w;$('walCard').src=BOT+'/card/wallet/'+w+'.png';
   $('walKpi').innerHTML='';$('walHold').innerHTML=$('walCoins').innerHTML='<div class="dim" style="font-size:11px">loading…</div>';
@@ -1324,7 +1326,7 @@ async function openWallet(w){if(!WRE.test(w||''))return;openWallet.w=w;$('walMod
     if(matchMedia('(pointer:coarse)').matches&&navigator.canShare?.({files:[f]})){try{await navigator.share({files:[f]});return}catch(e){if(e.name==='AbortError')return}}
     const u=URL.createObjectURL(f),a=document.createElement('a');a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);say('walSave','SAVED','SAVE IMAGE')};
   $('walCopy').onclick=()=>{navigator.clipboard?.writeText(link).then(()=>{$('walCopy').textContent='COPIED';setTimeout(()=>$('walCopy').textContent='COPY LINK',1500)}).catch(()=>{})}}
-function closeWallet(){openWallet.w=null;$('walModal').classList.remove('show');document.body.style.overflow=''}
+function closeWallet(){openWallet.w=null;walUrl(null);$('walModal').classList.remove('show');document.body.style.overflow=''}
 $('walX').onclick=closeWallet;$('walModal').addEventListener('click',e=>{if(e.target.id==='walModal')closeWallet()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&openWallet.w)closeWallet()});
 $('walCa').onclick=e=>{e.preventDefault();navigator.clipboard?.writeText(openWallet.w||'').then(()=>{$('walCa').textContent='COPIED'}).catch(()=>{})};

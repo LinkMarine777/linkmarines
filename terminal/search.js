@@ -32,7 +32,10 @@
   });
   window.addEventListener('pageshow', () => { inp.value = ''; list = []; show(''); });
   let list = [], sel = 0, seq = 0, timer = null;
-  const show = html => { box.innerHTML = html; box.classList.toggle('open', !!html); };
+  // phones: the search box is narrow, so the results use the screen's full width, just under it
+  const show = html => { box.innerHTML = html; box.classList.toggle('open', !!html);
+    if (html && innerWidth < 600) Object.assign(box.style, { position: 'fixed', left: '10px', right: '10px', top: Math.round(inp.getBoundingClientRect().bottom + 4) + 'px' });
+    else Object.assign(box.style, { position: '', left: '', right: '', top: '' }); };
   const BOT = 'https://war-room-bot.linkmarine777.workers.dev', MARINE = 'F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK';
   const usd = v => v >= 1e3 ? mc(v) : '$' + Math.round(v || 0);
   // a pasted address that isn't a token the site knows: a wallet with stonkfun coins (held now, or tracked by compounding)
@@ -42,8 +45,10 @@
     if ((await loadLocal()).some(t => t.id === a)) return null;
     try { const d = await (await fetch(BOT + '/wallet/' + a)).json(); return d && !d.error && (d.coins?.length || d.holdings?.length) ? d : null; } catch (e) { return null; }
   }
-  const drawWallet = d => show(`<a href="${walletLink(d)}" class="on" role="option"><img src="/helmet.png" alt=""><b>Wallet</b><span class="n">${esc(d.w.slice(0, 4) + '…' + d.w.slice(-4))}` +
-    ` · score ${d.score ?? '—'} · ${usd(d.rewards)} rewards</span><span class="m">${new Set([...d.coins.map(c => c.m), ...d.holdings.map(h => h.m)]).size} coins</span></a>`);
+  // two lines, so it fits the phone's narrow search box: the wallet, then its score / rewards / coins
+  const drawWallet = d => show(`<a href="${walletLink(d)}" class="on" role="option"><img src="/helmet.png" alt=""><span style="display:flex;flex-direction:column;min-width:0;gap:2px">` +
+    `<span><b>Wallet</b> ${esc(d.w.slice(0, 4) + '…' + d.w.slice(-4))}</span><span class="n" style="white-space:normal">score ${d.score ?? '—'} · ${usd(d.rewards)} rewards · ` +
+    `${new Set([...d.coins.map(c => c.m), ...d.holdings.map(h => h.m)]).size} coins</span></span></a>`);
   const draw = () => show(list.length ? list.map((t, i) => `<a href="/terminal/token?ca=${encodeURIComponent(t.id)}" data-i="${i}" class="${i === sel ? 'on' : ''}" role="option">` +
     `<img src="${esc(t.icon || '/helmet.png')}" alt="" loading="lazy" onerror="this.src='/helmet.png'"><b>$${esc(t.symbol)}</b>${t.isVerified ? '<span class="v" title="Verified on Jupiter">✓</span>' : ''}` +
     `<span class="n">${esc(t.name)}</span><span class="m">${mc(t.mcap)}</span></a>`).join('') : '<div class="x">no stonkfun token matches</div>');
