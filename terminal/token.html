@@ -1047,7 +1047,8 @@ function draw(){
         x.fillStyle=sup?'rgba(57,255,106,.16)':'rgba(255,51,85,.16)';x.fillRect(pad.l+w-bw,y,bw,bhh);
         x.fillStyle=sup?'rgba(57,255,106,.75)':'rgba(255,51,85,.75)';x.fillRect(pad.l+w-bw,y,FIT?3:2,bhh)});
     }else bins=null}
-  if(CDL)series.forEach(p=>{const up=p.m>=p.o,cx=X(p.t);x.strokeStyle=x.fillStyle=up?'#4a7aff':'#e8eeff';   // the site's blue up, white down: green / red stay CLOBr depth's, yellow the quote's
+  // no trades in a candle (no volume, no price move: the window's filler points, an idle live minute): nothing drawn there
+  if(CDL)series.forEach(p=>{if(!(p.v>0)&&p.h===p.lo)return;const up=p.m>=p.o,cx=X(p.t);x.strokeStyle=x.fillStyle=up?'#4a7aff':'#e8eeff';   // the site's blue up, white down: green / red stay CLOBr depth's, yellow the quote's
    x.lineWidth=1;
     x.beginPath();x.moveTo(cx,YA(p.h));x.lineTo(cx,YA(p.lo));x.stroke();const y1=YA(Math.max(p.o,p.m));x.fillRect(cx-cw/2,y1,cw,Math.max(1,YA(Math.min(p.o,p.m))-y1))});
   else{const g=x.createLinearGradient(0,pad.t,0,pad.t+h);g.addColorStop(0,'rgba(74,122,255,.35)');g.addColorStop(1,'rgba(74,122,255,0)');
