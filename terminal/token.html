@@ -317,7 +317,7 @@ html.fit #swP{display:none!important}
   --jupiter-plugin-primary:255,210,63;--jupiter-plugin-background:10,15,31;--jupiter-plugin-primaryText:201,211,238;
   --jupiter-plugin-warning:255,210,63;--jupiter-plugin-interactive:26,36,68;--jupiter-plugin-module:15,22,44}
 #jupSwap .ld{padding:40px 0;text-align:center;font-size:12px;color:var(--dim)}
-#swP .foot{font-size:10px;color:var(--dim);margin-top:8px;line-height:1.5}
+#swP .foot{font-size:10px;color:var(--dim);margin-top:2px;line-height:1.45}
 #swP .foot a{color:var(--amber)}
 @media (max-width:999px){
   html.swap #swP{position:fixed;left:0;right:0;bottom:0;z-index:72;max-height:90vh;overflow-y:auto;border-top:2px solid var(--amber);
@@ -689,9 +689,8 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
     <section class="panel" id="swP">
       <div class="ph"><h2><span class="tkSym">$MARINE</span></h2><div class="tabs swTabs"><button type="button" data-v="board">STONK BOARD</button><button type="button" data-v="swap" class="on">BUY/SELL</button></div><span class="meta">routed by Jupiter</span><button class="x" id="swX" type="button" title="Close (back to the Stonk Board)">✕</button></div>
       <div id="jupSwap"><div class="ld">Loading Jupiter…</div></div>
-      <div class="foot">Routed and sent by Jupiter, straight from your own wallet: we never hold your funds and add no fee of our own
-        (you pay Jupiter's usual swap fee, the token's own buy/sell tax and Solana network fees). Not financial advice.
-        <a class="buyTk" href="#" target="_blank" rel="noopener">Open on jup.ag ↗</a></div>
+      <div class="foot">Sent by Jupiter from your own wallet. We add no fee: you pay Jupiter's swap fee, the token's tax and network fees.
+        Not financial advice. <a class="buyTk" href="#" target="_blank" rel="noopener">Open on jup.ag ↗</a></div>
     </section>
     <section class="panel acc" id="sbP" data-acc="apy" data-def="1" style="display:none">
       <div class="ph"><h2><span class="tkSym">$MARINE</span><span class="sbW"> STONK BOARD</span></h2><div class="tabs swTabs"><button type="button" data-v="board" class="on">STONK BOARD</button><button type="button" data-v="swap">BUY/SELL</button></div><a class="meta sbl" id="sbLink" target="_blank" rel="noopener">VIEW ON STONK BOARD ▸</a></div>
@@ -1798,14 +1797,14 @@ function openSwap(){loadSwap();const p=$('swP');
   p.querySelector('[data-v=board]').style.display=$('sbP').style.display==='none'?'none':'';   // a token with no Stonk Board data: no tab to go back to
   if(isPhone()){p.classList.add('open');$('swDim').classList.add('open');return}
   document.documentElement.classList.add('swOpen');fitSwap()}
-// bring the swap into view on desktop while keeping as much of the token's info on screen as fits: the whole page from the
-// top if the swap fits that way, else from the info strip (payouts, pulse, price…), else from the chart; on a short screen,
-// just enough to show the swap's button. Nothing moves when it's all on screen already.
+// bring the swap into view on desktop with the token's info strip (payouts, pulse, price…) at the top of the screen and the
+// whole swap, disclaimer included, below it; if that's too tall for the screen: the strip and the swap's button, else the chart's
+// top and the swap's button, else just enough to show the button.
 function fitSwap(){if(isPhone()||!document.documentElement.classList.contains('swOpen'))return;
-  const w=$('jupSwap').getBoundingClientRect(),r=e=>e.getBoundingClientRect().top+scrollY,need=w.bottom+scrollY;
-  if(w.top>=0&&w.bottom<=innerHeight&&scrollY<=r(document.querySelector('.stats')))return;
-  const y=[0,r(document.querySelector('.stats')),r(document.querySelector('main'))].find(t=>need-t<=innerHeight)??need-innerHeight;
-  scrollTo({top:y,behavior:'smooth'})}
+  const r=e=>e.getBoundingClientRect(),stats=r(document.querySelector('.stats')).top+scrollY,chart=r(document.querySelector('main')).top+scrollY,
+    all=r($('swP')).bottom+scrollY,btn=r($('jupSwap')).bottom+scrollY;
+  const y=[[stats,all],[stats,btn],[chart,btn]].find(([t,b])=>b-t<=innerHeight)?.[0]??btn-innerHeight;
+  if(Math.abs(y-scrollY)>2)scrollTo({top:y,behavior:'smooth'})}
 function closeSwap(){$('swP').classList.remove('open');$('swDim').classList.remove('open');document.documentElement.classList.remove('swOpen')}
 if(SWAP_ON){
   document.querySelectorAll('#mbar .buyTk,header nav .buyTk').forEach(a=>a.addEventListener('click',e=>{
