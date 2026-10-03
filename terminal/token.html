@@ -296,6 +296,29 @@ html.fit .board.house{padding:0}html.fit .board.house .htag{font-size:13px;paddi
 #walModal .x{position:absolute;right:10px;top:10px;background:none;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:13px;width:30px;height:30px;cursor:pointer}
 #walModal .x:hover{color:#fff;border-color:var(--blue2)}
 #walModal .wk{font-size:10px;letter-spacing:2px;color:var(--dim)}
+/* ---- SWAP: Jupiter's swap widget (Jupiter routes and sends the swap from the buyer's own wallet; we add no fee).
+   Desktop: a panel at the top of the right column. Phones: a sheet that slides up from the bottom when BUY is tapped. ---- */
+#swP,#swDim{display:none}
+html.swap #swP{display:block}
+html.fit #swP{display:none!important}
+#swP .x{display:none;background:none;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:13px;width:30px;height:30px;cursor:pointer;flex:none}
+#swP .x:hover{color:#fff;border-color:var(--amber)}
+#swSide button.on[data-s=buy]{color:var(--green);border-color:var(--green);background:rgba(57,255,106,.08)}
+#swSide button.on[data-s=sell]{color:var(--red);border-color:var(--red);background:rgba(255,51,85,.08)}
+#swP .ph h2{margin-right:auto}
+#swP.flash{box-shadow:inset 0 0 0 2px var(--amber);transition:box-shadow .2s}
+#jupSwap{min-height:400px}
+#jupSwap .ld{padding:40px 0;text-align:center;font-size:12px;color:var(--dim)}
+#swP .foot{font-size:10px;color:var(--dim);margin-top:8px;line-height:1.5}
+#swP .foot a{color:var(--amber)}
+@media (max-width:999px){
+  html.swap #swP{position:fixed;left:0;right:0;bottom:0;z-index:72;max-height:90vh;overflow-y:auto;border-top:2px solid var(--amber);
+    box-shadow:0 -20px 60px #000;transform:translateY(105%);transition:transform .25s ease-out;visibility:hidden}
+  html.swap #swP.open{transform:none;visibility:visible}
+  #swP .x{display:block}
+  #swDim{position:fixed;inset:0;background:#000a;z-index:71}
+  #swDim.open{display:block}
+}
 #walModal h3{font-family:'VT323';font-weight:400;font-size:34px;color:#fff;margin:0;line-height:1}
 #walModal .wl{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;font-size:11px;margin-top:2px}#walModal .wl a{color:var(--blue2)}
 #walKpi{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:14px 0 4px}
@@ -656,6 +679,13 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
       <div class="ph"><h2>BILLBOARD</h2><span class="meta">slot 01 · prime</span></div>
       <div class="board" data-slot="1" id="slot1"></div>
     </section>
+    <section class="panel" id="swP">
+      <div class="ph"><h2><span class="tkSym">$MARINE</span></h2><div class="tabs" id="swSide"><button type="button" data-s="buy" class="on">BUY</button><button type="button" data-s="sell">SELL</button></div><span class="meta">routed by Jupiter</span><button class="x" id="swX" type="button" title="Close">✕</button></div>
+      <div id="jupSwap"><div class="ld">Loading Jupiter…</div></div>
+      <div class="foot">Routed and sent by Jupiter, straight from your own wallet: we never hold your funds and add no fee of our own
+        (you pay Jupiter's usual swap fee, the token's own buy/sell tax and Solana network fees). Not financial advice.
+        <a class="buyTk" href="#" target="_blank" rel="noopener">Open on jup.ag ↗</a></div>
+    </section>
     <section class="panel acc" id="sbP" data-acc="apy" data-def="1" style="display:none">
       <div class="ph"><h2><span class="tkSym">$MARINE</span> STONK BOARD</h2><a class="meta sbl" id="sbLink" target="_blank" rel="noopener">VIEW ON STONK BOARD ▸</a></div>
       <div id="mb">
@@ -689,6 +719,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
 
 </div>
 
+<div id="swDim"></div>
 <nav id="mbar"><a class="btn primary buyTk" href="#" target="_blank" rel="noopener">BUY <span class="tkSym">$MARINE</span></a><button class="btn tts" data-buy="t">TTS</button><a class="btn trend" href="/trending/">🔥 TRENDING</a><a class="btn" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ CHAT</a></nav>
 <div id="wModal"><div class="box">
   <h3>CHOOSE A WALLET</h3>
@@ -696,6 +727,10 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
   <div id="wList"></div>
   <div class="foot">On mobile, open themarines.link inside your wallet's browser, or use OPEN IN WALLET APP.
   <br><button class="btn" id="wCancel" style="margin-top:9px">CANCEL</button></div>
+</div></div>
+  <div class="foot">The swap is routed and sent by Jupiter, straight from your own wallet: we never hold your funds and add no fee of our own
+    (you pay Jupiter's usual swap fee, the token's own buy/sell tax and Solana network fees). Nothing here is financial advice.
+    <a class="buyTk" href="#" target="_blank" rel="noopener">Open on jup.ag ↗</a></div>
 </div></div>
 <div id="walModal"><div class="box">
   <button class="x" id="walX" type="button" title="Close">✕</button>
@@ -759,6 +794,9 @@ const MARINE='F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK';
 const DATA='https://war-room-bot.linkmarine777.workers.dev/data/terminal/';
 const BOT='https://war-room-bot.linkmarine777.workers.dev';
 const CA=((new URLSearchParams(location.search).get('ca')||'').trim().match(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/)||[MARINE])[0];
+// BUY → Jupiter's swap widget, TESTING: only with &swap=1 in the address (everyone else still goes to jup.ag). To switch it on for all, make this true.
+const SWAP_ON=new URLSearchParams(location.search).has('swap');
+document.documentElement.classList.toggle('swap',SWAP_ON);
 let TK={mint:CA,symbol:'…',quote:'…',quoteMint:null,image:null},TKR=null,POOL='',GT='',PAIR=null;
 const WHALE=2500;
 const $=id=>document.getElementById(id);
@@ -785,7 +823,7 @@ async function resolveToken(){
   $('mCa').innerHTML=esc(CA.slice(0,4)+'…'+CA.slice(-4))+' <svg viewBox="0 0 24 24"><path d="M8 3h11a2 2 0 012 2v11h-2V5H8zM4 7h11a2 2 0 012 2v11a2 2 0 01-2 2H4a2 2 0 01-2-2V9a2 2 0 012-2zm0 2v11h11V9z"/></svg>';
   $('caIn').value='';   // the box stays empty, ready for the next search (the token's CA is on the copy button)
   // the bare /terminal/token link is $MARINE: show its CA in the address bar so any view can be shared as-is
-  if(new URLSearchParams(location.search).get('ca')!==CA)try{history.replaceState(null,'','?ca='+CA+location.hash)}catch(e){}
+  if(new URLSearchParams(location.search).get('ca')!==CA)try{history.replaceState(null,'','?ca='+CA+(SWAP_ON?'&swap=1':'')+location.hash)}catch(e){}
   $('homeTk').style.display=CA===MARINE?'none':'';
   $('menuBtn').onclick=e=>{e.stopPropagation();const m=$('menuBtn').parentNode,o=!m.classList.contains('open');m.classList.toggle('open',o);$('menuBtn').setAttribute('aria-expanded',o)};
   document.addEventListener('click',e=>{if(!e.target.closest('.menu'))$('menuBtn').parentNode.classList.remove('open')});
@@ -1727,6 +1765,33 @@ $('myToggle').onclick=()=>{myOpen=!myOpen;myShown=3;renderOrders();if(myOpen)loa
 $('ttsClose').onclick=()=>$('ttsModal').classList.remove('show');
 $('ttsModal').onclick=e=>{if(e.target.id==='ttsModal')$('ttsModal').classList.remove('show')};
 $('payLink').onclick=e=>{const m=check();if(m){e.preventDefault();say(m,'err')}else say(kind==='t'?'Approve it in your wallet. It plays a few seconds after it confirms.':'Approve it in your wallet. A mod puts it on screen once it confirms, usually within minutes.','ok')};
+// ---------- BUY: Jupiter's swap widget ----------
+// The swap panel (only with &swap=1 for now): Jupiter's widget, locked to this token, SOL in by default.
+// BUY scrolls to it on desktop and slides it up on phones; the jup.ag link stays as the fallback (ctrl/middle-click, or if the widget can't load).
+const SOL_MINT='So11111111111111111111111111111111111111112',isPhone=()=>innerWidth<1000;
+let swSide='buy';
+const swForm=()=>swSide==='buy'?{initialInputMint:CA===SOL_MINT?undefined:SOL_MINT,initialOutputMint:CA,fixedMint:CA}:{initialInputMint:CA,initialOutputMint:CA===SOL_MINT?undefined:SOL_MINT,fixedMint:CA};
+function loadSwap(){if(loadSwap.ok)return;loadSwap.ok=1;
+  const fail=()=>{loadSwap.ok=0;$('jupSwap').innerHTML='<div class="ld">Jupiter\'s swap didn\'t load. <a href="https://jup.ag/tokens/'+CA+'" target="_blank" rel="noopener">Buy on jup.ag ↗</a></div>'};
+  const sc=document.createElement('script');sc.src='https://plugin.jup.ag/plugin-v1.js';sc.onerror=fail;
+  sc.onload=()=>{try{$('jupSwap').innerHTML='';
+    initSwap()}catch(e){fail()}};
+  document.head.appendChild(sc)}
+function initSwap(){window.Jupiter.init({displayMode:'integrated',integratedTargetId:'jupSwap',formProps:swForm()})}
+// BUY / SELL tabs: re-open Jupiter's widget the other way round (SOL → token, or token → SOL)
+function setSide(v){swSide=v;document.querySelectorAll('#swSide button').forEach(b=>b.classList.toggle('on',b.dataset.s===v));
+  if(window.Jupiter&&loadSwap.ok)try{initSwap()}catch(e){}}
+function openSwap(){if(swSide!=='buy')setSide('buy');loadSwap();const p=$('swP');
+  if(isPhone()){p.classList.add('open');$('swDim').classList.add('open');return}
+  p.scrollIntoView({behavior:'smooth',block:'nearest'});p.classList.add('flash');setTimeout(()=>p.classList.remove('flash'),900)}
+function closeSwap(){$('swP').classList.remove('open');$('swDim').classList.remove('open')}
+if(SWAP_ON){
+  if(!isPhone())loadSwap();
+  document.querySelectorAll('#mbar .buyTk,header nav .buyTk').forEach(a=>a.addEventListener('click',e=>{
+    if(e.ctrlKey||e.metaKey||e.shiftKey||e.button)return;e.preventDefault();openSwap()}));
+  document.querySelectorAll('#swSide button').forEach(b=>b.onclick=()=>setSide(b.dataset.s));
+  $('swX').onclick=closeSwap;$('swDim').onclick=closeSwap;
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSwap()})}
 // ---------- wallet picker: no default, the user chooses ----------
 // Wallets show up two ways: the Wallet Standard (how Phantom, Solflare, Backpack, Jupiter,
 // OKX, Coinbase and most new wallets announce themselves) and older injected window objects.
