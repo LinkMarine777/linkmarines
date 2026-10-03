@@ -76,7 +76,7 @@
     <div class="card">
       <h2>Preview</h2><p class="sub">How the alert looks on stream (the checkered area is transparent).</p>
       <div class="preview"><iframe id="pv" title="Overlay preview"></iframe></div>
-      <div class="row" style="margin-top:12px"><button class="btn" id="pvShow">▶ Preview alert</button></div>
+      <div class="row" style="margin-top:12px"><button class="btn" id="pvShow">▶ Preview alert</button><button class="btn" id="pvSound">🔊 Preview with sound</button></div>
       <h2 style="margin-top:22px">Sound and voice</h2>
       <div class="grid2">
         <div><label class="f" for="sound">Alert sound</label><select id="sound"><option value="chime">Chime</option><option value="coin">Coin</option><option value="url">My own (link to a sound file)</option><option value="none">None</option></select></div>
@@ -168,10 +168,10 @@ function labels() {
   $('voiceNote').textContent = v === 'browser' ? 'The browser voice is free and sounds best when you capture a Chrome window. Inside an OBS browser source pick a neural voice.'
     : CFG.serverTts ? 'Neural voices are made on our server, so they play inside OBS.' : 'Neural voices aren\'t switched on for this service yet, so the browser voice is used for now.';
 }
-function sendPreview(show) {
+function sendPreview(show, sound) {
   if (!pvReady) return; const w = $('pv').contentWindow;
   w.postMessage({ type: 'settings', settings: readForm() }, location.origin);
-  if (show) w.postMessage({ type: 'show', alert: { from: 'cryptodad', text: 'gm chat! this is what a tip looks like 🔊', usd: 10 } }, location.origin);
+  if (show) w.postMessage({ type: 'show', alert: { from: 'cryptodad', text: 'gm chat! this is what a tip looks like 🔊', usd: 10 }, sound: !!sound }, location.origin);
 }
 function renderMe() {
   const m = ME; $('handle').value = m.handle || ''; $('display').value = m.display || ''; $('payout').value = m.payout || '';
@@ -229,7 +229,7 @@ $('rotate').onclick = async () => {
   if (!confirm('Make a new overlay link? The old one stops working, so you\'ll need to paste the new one into OBS.')) return;
   try { ME = await api('/me/rotate', {}); renderMe(); pvReady = false; $('pv').src = ME.overlayUrl.replace(location.origin, '') + '?preview=1'; flash('linkMsg', 'New link made. Paste it into OBS.', 'ok'); }
   catch (e) { msg('linkMsg', esc(e.message), 'err'); } };
-$('pvShow').onclick = () => sendPreview(true);
+$('pvShow').onclick = () => sendPreview(true); $('pvSound').onclick = () => sendPreview(true, true);
 $('out').onclick = async () => { await api('/auth/logout', {}).catch(() => {}); location.href = '/alerts/'; };
 $('addWallet').onclick = async () => { try { if (await MA.signInWallet()) { ME = await api('/me'); renderMe(); flash('idMsg', 'Wallet added.', 'ok'); } }
   catch (e) { msg('idMsg', /reject|cancel/i.test(e.message || '') ? 'Cancelled.' : esc(e.message), 'err'); } };
