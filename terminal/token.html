@@ -971,7 +971,11 @@ function setSeries(){const raw=CH[tf];if(!raw||!raw.length)return false;
   if(tf==='5m'&&candleOn&&s.length>2){const B=15e3,G=new Map();   // 5M is one point per trade: candles of 15 s
     s.forEach(p=>{const k=Math.floor(p.t/B)*B,g=G.get(k);if(!g)G.set(k,{t:k,o:p.m,h:p.m,lo:p.m,m:p.m,l:p.l,v:p.v});else{g.h=Math.max(g.h,p.m);g.lo=Math.min(g.lo,p.m);g.m=p.m;g.l=p.l;g.v+=p.v}});
     s=[...G.values()];for(let i=1;i<s.length;i++){const g=s[i],o=s[i-1].m;g.o=o;g.h=Math.max(g.h,o);g.lo=Math.min(g.lo,o)}}   // each opens at the last close, so a one-trade candle shows the move
-  s.ohlc=ohlc||tf==='5m';series=s;hover=null;draw();
+  s.ohlc=ohlc||tf==='5m';
+  if(candleOn&&s.ohlc&&s.length>1){const B=(tf==='5m'?15:TFB[tf]||3600)*1000,g=[{...s[0],t:Math.floor(s[0].t/B)*B}];   // on the interval grid   // quiet intervals: a flat candle at the last close, not a gap
+    for(let i=1;i<s.length;i++){const a=g[g.length-1];for(let t=a.t+B;t<s[i].t-B/2&&g.length<2000;t+=B)g.push({t,m:a.m,l:a.l,o:a.m,h:a.m,lo:a.m,v:0});g.push(s[i])}
+    g.ohlc=s.ohlc;s=g}
+  series=s;hover=null;draw();
   const lc=series.filter(p=>p.l);if(lc.length>1){const a=lc[0].l,b=lc[lc.length-1].l;$('sLinkChg').innerHTML=pct((b-a)/a*100)+' <span class="dim">'+TFL[tf]+'</span>'}
   renderChg();return true}
 // the token's price change over the chart's timeframe: DexScreener's own for 1H / 6H / 24H, the chart's first-to-last otherwise
@@ -984,7 +988,7 @@ function renderChg(){let c=PC[TFPC[tf]]??(tf==='1d'?chg24:null),lab=TFL[tf];
 function tape5m(){if(typeof tapeRaw==='undefined'||!tapeRaw||!tapeRaw.length)return null;const now=Math.floor(Date.now()/1000),t0=now-300,q=QPX||null,pts=[];let prev=null;
   for(const a of tapeRaw){const t=Math.floor(Date.parse(a.block_timestamp)/1000),buy=a.to_token_address===CA,pr=+(buy?a.price_to_in_usd:a.price_from_in_usd);if(!(pr>0))continue;
     if(t>=t0)pts.push([t,pr,q,pr,pr,pr,+a.volume_in_usd||0]);else{prev=pr;break}}
-  if(!pts.length&&prev==null)return null;pts.reverse();const p0=prev??pts[0][1];pts.unshift([t0,p0,q,p0,p0,p0,0]);if(pts.length<2)pts.push([now,p0,q,p0,p0,p0,0]);return pts}
+  if(!pts.length&&prev==null)return null;pts.reverse();const p0=prev??pts[0][1];pts.unshift([t0,p0,q,p0,p0,p0,0]);const pl=pts[pts.length-1][1];if(pts[pts.length-1][0]<now)pts.push([now,pl,q,pl,pl,pl,0]);return pts}   // runs to now: a quiet coin's chart doesn't stop at its last trade
 // candles from GeckoTerminal (each visitor has their own ~30 calls a minute); when it refuses, the bot's shared copy (cached
 // at the edge, the last good one kept 30 min: GeckoTerminal often refuses Cloudflare itself, so it's the backup, not the source)
 async function ohlcvGet(k,side){try{return await j(`${GT}/ohlcv/${TF[k]}&token=${side}`)}catch(e){
@@ -995,8 +999,11 @@ async function loadLive(k){
   if(!GT)return;
   const [qq,bb]=await Promise.all([ohlcvGet(k,'quote'),ohlcvGet(k,'base')]);
   const [m,l]=bb.meta?.base?.address===CA?[bb,qq]:[qq,bb];
-  const L=new Map(l.data.attributes.ohlcv_list.map(c=>[c[0],c[4]]));let last=null;
-  const pts=m.data.attributes.ohlcv_list.slice().reverse().map(c=>{if(L.has(c[0]))last=L.get(c[0]);return[c[0],c[4],last,c[1],c[2],c[3],c[5]]});
+  const L=new Map(l.data.attributes.ohlcv_list.map(c=>[c[0],c[4]]));let last=null,prevC=null;
+  // GeckoTerminal only returns candles that had trades: the quote's candles where the token had none join as flat token points
+  const M=new Map(m.data.attributes.ohlcv_list.map(c=>[c[0],c]));
+  const pts=[...new Set([...M.keys(),...L.keys()])].sort((a,b)=>a-b).map(t=>{const c=M.get(t);if(L.has(t))last=L.get(t);
+    if(c){prevC=c[4];return[t,c[4],last,c[1],c[2],c[3],c[5]]}return prevC==null?null:[t,prevC,last,prevC,prevC,prevC,0]}).filter(Boolean);
   const f=pts.find(p=>p[2]!=null)?.[2];pts.forEach(p=>{if(p[2]==null)p[2]=f});
   // GeckoTerminal only returns candles that had trades, so N candles can reach back much further than the window on a quiet
   // token: keep the window exactly (5M = the last 5 minutes...), starting from the last price before it
@@ -1060,11 +1067,12 @@ function draw(){
   const CDL=candleOn&&series.ohlc,vmax=Math.max(...series.map(p=>p.v||0)),vh=vmax>0?Math.round(hAll*.18):0,h=hAll-(vh?vh+6:0);
   const ms=CDL?series.flatMap(p=>[p.h,p.lo]):series.map(p=>p.m),ls=series.map(p=>p.l);
   const nt=FIT?Math.max(2,Math.min(5,Math.floor(h/55))):5;
-  const A=nice(Math.min(...ms),Math.max(...ms),nt),B=niceN(Math.min(...ls),Math.max(...ls),A.t.length-1);   // both axes' labels on the same lines
+  const mlo=Math.min(...ms),mhi=Math.max(...ms),mp=(mhi-mlo)*.06;   // a little room above and below: no candle touching the edge
+  const A=nice(mlo-mp,mhi+mp,nt),B=niceN(Math.min(...ls),Math.max(...ls),A.t.length-1);   // both axes' labels on the same lines
   // side margins as wide as the price labels need (not a fixed 77 px): the plot gets the rest
   x.font=CF+'px IBM Plex Mono';const lw=(T,s)=>Math.max(...T.t.map(v=>x.measureText(fmtTick(v,T.step)).width));
   pad.l=Math.ceil(lw(B))+(FIT?20:12);pad.r=Math.ceil(lw(A))+(FIT?20:12);const w=W-pad.l-pad.r;
-  let dt=Infinity;for(let i=1;i<series.length;i++){const d=series[i].t-series[i-1].t;if(d>0&&d<dt)dt=d}if(!isFinite(dt))dt=0;   // one candle's span: candles get half of it as room at each end
+  let dt=Infinity;for(let i=1;i<series.length;i++){const d=series[i].t-series[i-1].t;if(d>0&&d<dt)dt=d}if(!isFinite(dt))dt=0;if(CDL)dt=Math.max(dt,(tf==='5m'?15:TFB[tf]||0)*1000);   // one candle's span: candles get half of it as room at each end
   // candles: some room on the right (6% of the span) so the newest ones clear the edge and the depth bars
   const t0=series[0].t-(CDL?dt/2:0),t1=series[series.length-1].t+(CDL?dt/2+(series[series.length-1].t-series[0].t)*.06:0),cw=Math.max(1,Math.min(14,w/series.length*.7,dt/(t1-t0)*w*.7||14));
   const X=t=>pad.l+(t-t0)/(t1-t0)*w,YA=v=>pad.t+h-(v-A.lo)/(A.hi-A.lo)*h,YB=v=>pad.t+h-(v-B.lo)/(B.hi-B.lo)*h;
@@ -1092,8 +1100,8 @@ function draw(){
         x.fillStyle=sup?'rgba(57,255,106,.16)':'rgba(255,51,85,.16)';x.fillRect(pad.l+w-bw,y,bw,bhh);
         x.fillStyle=sup?'rgba(57,255,106,.75)':'rgba(255,51,85,.75)';x.fillRect(pad.l+w-bw,y,FIT?3:2,bhh)});
     }else bins=null}
-  // no trades in a candle (no volume, no price move: the window's filler points, an idle live minute): nothing drawn there
-  if(CDL)series.forEach(p=>{if(!(p.v>0)&&p.h===p.lo)return;const up=p.m>=p.o,cx=X(p.t);x.strokeStyle=x.fillStyle=up?'#4a7aff':'#e8eeff';   // the site's blue up, white down: green / red stay CLOBr depth's, yellow the quote's
+  // no trades in a candle (no volume, no price move): a thin flat dash at the last price
+  if(CDL)series.forEach(p=>{if(!(p.v>0)&&p.h===p.lo){x.fillStyle='rgba(232,238,255,.35)';x.fillRect(X(p.t)-cw/2,Math.round(YA(p.m)),cw,1);return}const up=p.m>=p.o,cx=X(p.t);x.strokeStyle=x.fillStyle=up?'#4a7aff':'#e8eeff';   // the site's blue up, white down: green / red stay CLOBr depth's, yellow the quote's
    x.lineWidth=1;
     x.beginPath();x.moveTo(cx,YA(p.h));x.lineTo(cx,YA(p.lo));x.stroke();const y1=YA(Math.max(p.o,p.m));x.fillRect(cx-cw/2,y1,cw,Math.max(1,YA(Math.min(p.o,p.m))-y1))});
   else{const g=x.createLinearGradient(0,pad.t,0,pad.t+h);g.addColorStop(0,'rgba(74,122,255,.35)');g.addColorStop(1,'rgba(74,122,255,0)');
@@ -1109,6 +1117,8 @@ function draw(){
       +(bins?(b=>b&&(b[0]||b[1])?'<br>'+[b[0]?'<span style="color:#39ff6a">support '+compact(b[0])+'</span>':'',b[1]?'<span style="color:#ff3355">resist '+compact(b[1])+'</span>':''].filter(Boolean).join(' · '):'')(bins[Math.min(bins.length-1,Math.max(0,Math.floor((pad.t+h-YA(p.m))/bh)))]):'');
     tip.style.left=Math.min(hx+12,W-tip.offsetWidth-4)+'px';tip.style.top='14px';
   }else $('tip').style.display='none';
+  if(tf==='5m'&&!series.some(p=>p.v>0)&&typeof tapeRaw!=='undefined'&&tapeRaw&&tapeRaw[0]){const ls=Date.now()-Date.parse(tapeRaw[0].block_timestamp);   // a quiet coin: say so, not a blank-looking chart
+    x.font=CF+'px IBM Plex Mono';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#8a96b8';const m2=(ls<3600e3?Math.round(ls/60e3)+'m':Math.round(ls/3600e3)+'h')+' ago',t2=x.measureText('no trades in the last 5 min · last trade '+m2).width<w-16?'no trades in the last 5 min · last trade '+m2:'no trades in 5 min · last '+m2;x.fillText(t2,pad.l+w/2,pad.t+h*.25)}
   const sw=$('baseSw');if(sw)sw.style.background=CDL?'linear-gradient(90deg,#4a7aff 50%,#e8eeff 50%)':'var(--blue2)';
   draw.geom={pad,w,t0,t1};
 }
