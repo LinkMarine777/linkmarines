@@ -968,11 +968,12 @@ let candleOn=false;try{candleOn=localStorage.getItem('wrCandle')==='1'}catch(e){
 // points: [t, close, quote close, open, high, low, volume $] (older saved copies have only the first three: drawn as a line)
 function setSeries(){const raw=CH[tf];if(!raw||!raw.length)return false;
   let s=raw.map(([t,m,l,o,h,lo,v])=>({t:t*1000,m,l,o:o??m,h:h??m,lo:lo??m,v:v||0}));const ohlc=raw.length>1&&raw[0].length>=6&&raw[raw.length-2].length>=6;   // the live last point always has them: look at the saved ones
-  if(tf==='5m'&&candleOn&&s.length>2){const B=15e3,G=new Map();   // 5M is one point per trade: candles of 15 s
+  const q5=tf==='5m'&&raw.some(p=>p[7]);   // 5M from Jupiter's minute candles (marked), not the tape's trades
+  if(tf==='5m'&&!q5&&candleOn&&s.length>2){const B=15e3,G=new Map();   // 5M is one point per trade: candles of 15 s
     s.forEach(p=>{const k=Math.floor(p.t/B)*B,g=G.get(k);if(!g)G.set(k,{t:k,o:p.m,h:p.m,lo:p.m,m:p.m,l:p.l,v:p.v});else{g.h=Math.max(g.h,p.m);g.lo=Math.min(g.lo,p.m);g.m=p.m;g.l=p.l;g.v+=p.v}});
     s=[...G.values()];for(let i=1;i<s.length;i++){const g=s[i],o=s[i-1].m;g.o=o;g.h=Math.max(g.h,o);g.lo=Math.min(g.lo,o)}}   // each opens at the last close, so a one-trade candle shows the move
   s.ohlc=ohlc||tf==='5m';
-  if(candleOn&&s.ohlc&&s.length>1){const B=(tf==='5m'?15:TFB[tf]||3600)*1000,g=[{...s[0],t:Math.floor(s[0].t/B)*B}];   // on the interval grid   // quiet intervals: a flat candle at the last close, not a gap
+  if(candleOn&&s.ohlc&&s.length>1){const B=(tf==='5m'?(q5?60:15):TFB[tf]||3600)*1000,g=[{...s[0],t:Math.floor(s[0].t/B)*B}];   // on the interval grid   // quiet intervals: a flat candle at the last close, not a gap
     for(let i=1;i<s.length;i++){const a=g[g.length-1];for(let t=a.t+B;t<s[i].t-B/2&&g.length<2000;t+=B)g.push({t,m:a.m,l:a.l,o:a.m,h:a.m,lo:a.m,v:0});g.push(s[i])}
     g.ohlc=s.ohlc;s=g}
   series=s;hover=null;draw();
@@ -997,7 +998,7 @@ async function ohlcvGet(k,side){try{return await j(`${GT}/ohlcv/${TF[k]}&token=$
 // Jupiter's charts first: one call per coin covering all its pools (fuller than one pool's candles), ~0.3 s, and not counted against
 // the visitor's GeckoTerminal allowance (which the tape uses). The quote line from the quote coin's own chart.
 const JI={'1h':['1_MINUTE',75],'6h':['5_MINUTE',80],'1d':['15_MINUTE',100],'7d':['1_HOUR',170],'all':['4_HOUR',500]};
-async function jupPts(k){const [iv,n]=JI[k],u=m=>`https://datapi.jup.ag/v2/charts/${m}?interval=${iv}&to=${Date.now()}&candles=${n}&type=price&quote=usd`;
+async function jupPts(k,ji=JI[k]){const [iv,n]=ji,u=m=>`https://datapi.jup.ag/v2/charts/${m}?interval=${iv}&to=${Date.now()}&candles=${n}&type=price&quote=usd`;
   const get=async m=>{const r=await fetch(u(m),{signal:AbortSignal.timeout(6000)});if(!r.ok)throw new Error(r.status);return(await r.json()).candles||[]};
   let [c,qc]=await Promise.all([get(CA),TK.quoteMint?get(TK.quoteMint).catch(()=>[]):[]]);if(!c.length)throw new Error('no candles');
   if(!qc.length&&TK.quoteMint)qc=await get(TK.quoteMint).catch(()=>[]);   // the quote coin became known meanwhile (first visit)
@@ -1006,7 +1007,14 @@ async function jupPts(k){const [iv,n]=JI[k],u=m=>`https://datapi.jup.ag/v2/chart
     if(x){prevC=x.close;return[t,x.close,last,x.open,x.high,x.low,x.volume||0]}return prevC==null?null:[t,prevC,last,prevC,prevC,prevC,0]}).filter(Boolean);
   const f=pts.find(p=>p[2]!=null)?.[2]??(QPX||null);pts.forEach(p=>{if(p[2]==null)p[2]=f});return pts}
 async function loadLive(k){
-  if(k==='5m'){const t=tape5m();if(t){CH[k]=t;return}}
+  if(k==='5m'){const t=tape5m();if(t&&t.filter(p=>p[6]>0).length>=3){CH[k]=t;return}   // the tape's trades (one pool), when it has a few
+    // else Jupiter's 1-minute candles (all pools): the last 5 min, or with nothing in them, back to the last active stretch
+    // (its last 10 trading minutes, 15-75 min), so a quiet coin still has a chart
+    try{const pts=await jupPts(k,['1_MINUTE',75]),now=Math.floor(Date.now()/1000),tr=pts.filter(p=>p[6]>0).map(p=>p[0]);
+      if(tr.length){const t0=tr[tr.length-1]>=now-360?now-300:Math.min(now-900,tr[Math.max(0,tr.length-10)]-60),i=pts.findIndex(p=>p[0]>=t0);
+        const kept=(i<0?pts.slice(-1):pts.slice(i>0&&t0===now-300?i-1:Math.max(0,i))).map(p=>[...p,1]),l=kept[kept.length-1];
+        if(l[0]<now-60)kept.push([Math.floor(now/60)*60,l[1],l[2],l[1],l[1],l[1],0,1]);CH[k]=kept;return}}catch(e){}
+    if(t){CH[k]=t;return}}
   let pts=null;if(JI[k])try{pts=await jupPts(k)}catch(e){}
   if(!pts){if(!GT)return;pts=await gtPts(k)}
   // GeckoTerminal only returns candles that had trades, so N candles can reach back much further than the window on a quiet
@@ -1085,7 +1093,7 @@ function draw(){
   // side margins as wide as the price labels need (not a fixed 77 px): the plot gets the rest
   x.font=CF+'px IBM Plex Mono';const lw=(T,s)=>Math.max(0,...T.t.map(v=>x.measureText(fmtTick(v,T.step)).width));
   pad.l=Math.ceil(lw(B))+(FIT?20:12);pad.r=Math.ceil(lw(A))+(FIT?20:12);const w=W-pad.l-pad.r;
-  let dt=Infinity;for(let i=1;i<series.length;i++){const d=series[i].t-series[i-1].t;if(d>0&&d<dt)dt=d}if(!isFinite(dt))dt=0;if(CDL)dt=Math.max(dt,(tf==='5m'?15:TFB[tf]||0)*1000);   // one candle's span: candles get half of it as room at each end
+  let dt=Infinity;for(let i=1;i<series.length;i++){const d=series[i].t-series[i-1].t;if(d>0&&d<dt)dt=d}if(!isFinite(dt))dt=0;if(CDL)dt=Math.max(dt,(tf==='5m'?(series[series.length-1].t-series[0].t>400e3?60:15):TFB[tf]||0)*1000);   // one candle's span: candles get half of it as room at each end
   // candles: some room on the right (6% of the span) so the newest ones clear the edge and the depth bars
   const t0=series[0].t-(CDL?dt/2:0),t1=series[series.length-1].t+(CDL?dt/2+(series[series.length-1].t-series[0].t)*.06:0),cw=Math.max(1,Math.min(14,w/series.length*.7,dt/(t1-t0)*w*.7||14));
   const X=t=>pad.l+(t-t0)/(t1-t0)*w,YA=v=>pad.t+h-(v-A.lo)/(A.hi-A.lo)*h,YB=v=>pad.t+h-(v-B.lo)/(B.hi-B.lo)*h;
@@ -1130,7 +1138,10 @@ function draw(){
       +(bins?(b=>b&&(b[0]||b[1])?'<br>'+[b[0]?'<span style="color:#39ff6a">support '+compact(b[0])+'</span>':'',b[1]?'<span style="color:#ff3355">resist '+compact(b[1])+'</span>':''].filter(Boolean).join(' · '):'')(bins[Math.min(bins.length-1,Math.max(0,Math.floor((pad.t+h-YA(p.m))/bh)))]):'');
     tip.style.left=Math.min(hx+12,W-tip.offsetWidth-4)+'px';tip.style.top='14px';
   }else $('tip').style.display='none';
-  if(tf==='5m'&&!series.some(p=>p.v>0)&&typeof tapeRaw!=='undefined'&&tapeRaw&&tapeRaw[0]){const ls=Date.now()-Date.parse(tapeRaw[0].block_timestamp);   // a quiet coin: say so, not a blank-looking chart
+  if(tf==='5m'&&series[series.length-1].t-series[0].t>400e3){const mn=Math.round((series[series.length-1].t-series[0].t)/60e3);
+    x.font=CF+'px IBM Plex Mono';x.textAlign='center';x.textBaseline='top';x.fillStyle='#8a96b8';const a='no trades in the last 5 min · showing the last '+mn+' min';
+    x.fillText(x.measureText(a).width<w-16?a:'quiet · last '+mn+' min shown',pad.l+w/2,pad.t+4)}
+  else if(tf==='5m'&&!series.some(p=>p.v>0)&&typeof tapeRaw!=='undefined'&&tapeRaw&&tapeRaw[0]){const ls=Date.now()-Date.parse(tapeRaw[0].block_timestamp);   // a quiet coin: say so, not a blank-looking chart
     x.font=CF+'px IBM Plex Mono';x.textAlign='center';x.textBaseline='middle';x.fillStyle='#8a96b8';const m2=(ls<3600e3?Math.round(ls/60e3)+'m':Math.round(ls/3600e3)+'h')+' ago',t2=x.measureText('no trades in the last 5 min · last trade '+m2).width<w-16?'no trades in the last 5 min · last trade '+m2:'no trades in 5 min · last '+m2;x.fillText(t2,pad.l+w/2,pad.t+h*.25)}
   const sw=$('baseSw');if(sw)sw.style.background=CDL?'linear-gradient(90deg,#4a7aff 50%,#e8eeff 50%)':'var(--blue2)';
   draw.geom={pad,w,t0,t1};
