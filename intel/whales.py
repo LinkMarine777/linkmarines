@@ -119,6 +119,24 @@ for m in [m for m in board_toks if m not in pool_of and not (board_toks[m] or {}
 pools_all = {m: p for m, p in pool_of.items() if p}
 pools_all.update({m: (board_toks[m] or {}).get('pool') or (PO.get(m) or [None])[0] for m in board_toks if m not in pools_all})
 pools_all = {m: p for m, p in pools_all.items() if p}
+# each coin's most liquid pool (DexScreener, re-checked every 6 h): for some coins the launch pool above is quiet and the trading
+# happens elsewhere (SI's listed pool had 0 trades in 24 h; MASK trades mostly in another pool), so the listener watches both and
+# the top-10 lists (the bot's 30-s check, this job's trades) use the busiest one
+MP = state.setdefault('mainPool', {}); need = [m for m in pools_all if m != MARINE and not (m in MP and now - MP[m][1] < 6 * 3600)]
+for i in range(0, len(need), 30):
+    try:
+        best = {}
+        for p in get('https://api.dexscreener.com/tokens/v1/solana/' + ','.join(need[i:i + 30])) or []:
+            liq = (p.get('liquidity') or {}).get('usd') or 0; tx = (p.get('txns') or {}).get('h24') or {}
+            for m in {(p.get('baseToken') or {}).get('address'), (p.get('quoteToken') or {}).get('address')} & set(need[i:i + 30]):
+                if liq > best.get(m, (None, -1, 0))[1]: best[m] = (p.get('pairAddress'), liq, (tx.get('buys') or 0) + (tx.get('sells') or 0))
+        for m in need[i:i + 30]:
+            if m in best and best[m][0]: MP[m] = [best[m][0], now, round(best[m][1]), best[m][2]]   # pool, checked at, liquidity $, trades a day
+            elif m in MP: MP[m][1] = now   # nothing new: keep the last one
+    except Exception as e: log('dexscreener main pools', e)
+main_of = {m: MP[m][0] for m in pools_all if m in MP and MP[m][0] and MP[m][2] >= 5000}   # (a real market: $5K+ liquidity)
+for t in watch:
+    if t['mint'] in main_of: pool_of[t['mint']] = main_of[t['mint']]; pools.add(main_of[t['mint']])
 H = state.setdefault('holders', {})
 for t in watch:   # top holders straight from the chain, refreshed every 6 h
     h = H.get(t['mint'])
@@ -578,7 +596,10 @@ save('whales.json', {
     # the watched tokens' pools: the bot reads their trades straight from the chain for real-time big-trade alerts
     'pools': [{'m': t['mint'], 's': t['symbol'], 'p': pool_of[t['mint']], 'i': (meta.get(t['mint']) or {}).get('i')} for t in watch if pool_of.get(t['mint'])],
     # every Stonk Board coin's pool: the bot's live listener reads their trades as they land
-    'poolsAll': [{'m': m, 's': (board_toks.get(m) or {}).get('symbol') or sym(m), 'p': p, 'i': (meta.get(m) or {}).get('i')} for m, p in pools_all.items()]})
+    # launch pool + busiest pool; n = the busiest pool's trades a day (the bot reads the busiest ones in batches)
+    'poolsAll': [{'m': m, 's': (board_toks.get(m) or {}).get('symbol') or sym(m), 'p': p, 'i': (meta.get(m) or {}).get('i'),
+                  **({'n': MP[m][3]} if p == main_of.get(m) and len(MP.get(m) or []) > 3 else {})}
+                 for m, p0 in pools_all.items() for p in dict.fromkeys([p0, main_of.get(m)]) if p]})
 save('whales-state.json', state)
 
 # ---------- the $MARINE chart (chart.json): GeckoTerminal answers GitHub's runners, while the bot's copy from Cloudflare's
