@@ -61,7 +61,7 @@ function ctx() { if (!ac) ac = new (window.AudioContext || window.webkitAudioCon
 function tone(freqs, step, vol) {
   const c = ctx(), t0 = c.currentTime + .02;
   freqs.forEach((f, i) => { const o = c.createOscillator(), g = c.createGain(); o.type = 'triangle'; o.frequency.value = f;
-    g.gain.setValueAtTime(0, t0 + i * step); g.gain.linearRampToValueAtTime(vol * .35, t0 + i * step + .02); g.gain.exponentialRampToValueAtTime(.001, t0 + i * step + .6);
+    g.gain.setValueAtTime(0, t0 + i * step); g.gain.linearRampToValueAtTime(vol * .2, t0 + i * step + .02); g.gain.exponentialRampToValueAtTime(.001, t0 + i * step + .6);
     o.connect(g).connect(c.destination); o.start(t0 + i * step); o.stop(t0 + i * step + .7); });
   return sleep(freqs.length * step * 1000 + 300);
 }
@@ -95,7 +95,7 @@ async function hide(el) { el.className = 'card out ' + S.anim; await sleep(500);
 async function play(a) {
   playing = { a, skip: false, audio: null };
   const el = show(a), t0 = Date.now();
-  await sound(); if (!playing.skip) await speak(a);
+  if (!a.mute) { await sound(); if (!playing.skip) await speak(a); }   // the dashboard's preview is silent unless asked
   while (!playing.skip && Date.now() - t0 < S.duration * 1000) await sleep(200);
   await hide(el); playing = null;
 }
@@ -132,7 +132,7 @@ function connect() {
 if (PREVIEW) {
   addEventListener('message', e => { if (e.origin !== location.origin) return; const m = e.data || {};
     if (m.type === 'settings') apply(m.settings);
-    if (m.type === 'show') { skip(); queue.push({ id: 'test', ...m.alert }); next(); } });
+    if (m.type === 'show') { skip(); queue.push({ id: 'test', ...m.alert, mute: !m.sound }); next(); } });
   load().catch(() => {}).then(() => parent.postMessage({ type: 'ready' }, location.origin));
 } else {
   load().catch(() => {}); connect(); setInterval(() => !gone && load().catch(() => {}), 15000);
