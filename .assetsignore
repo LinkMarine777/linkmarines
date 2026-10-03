@@ -14,3 +14,5 @@ stream/*.py
 stream/__pycache__
 *.md
 worker/
+# the streamer alerts service: its own Worker serves its pages (alerts/public)
+alerts/

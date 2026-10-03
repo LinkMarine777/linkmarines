@@ -1,0 +1,17 @@
+{
+  "name": "tts-alerts",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@solana/spl-token": "^0.4.9",
+    "@solana/web3.js": "^1.98.0",
+    "tweetnacl": "^1.0.3",
+    "wrangler": "^4.147.0"
+  },
+  "type": "module",
+  "private": true
+}

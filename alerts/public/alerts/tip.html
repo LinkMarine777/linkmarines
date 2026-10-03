@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Send a tip</title>
+<meta name="description" content="Send a tip with a message read out on stream. Paid in USDC or SOL, straight to the streamer's wallet.">
+<link rel="icon" href="/alerts/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/alerts/app.css">
+<style>
+.tip{max-width:520px;margin:20px auto 0}
+.who{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.av{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:22px;color:#fff;background:var(--acc);flex:none}
+.who h1{font-size:22px}.who p{color:var(--dim);font-size:14px}
+.amts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.amts button{border:1px solid var(--line);background:#0d1019;color:var(--txt);font:inherit;font-weight:700;padding:11px 0;border-radius:10px;cursor:pointer}
+.amts button.on{border-color:var(--acc);background:#1d1838;color:#fff}
+.cnt{float:right;font-weight:400;text-transform:none;letter-spacing:0}
+.pay{display:grid;gap:8px;margin-top:18px}
+.total{display:flex;justify-content:space-between;align-items:baseline;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.total b{font-size:22px}
+.fine{font-size:12px;color:var(--dim);margin-top:14px;line-height:1.5}
+.done{text-align:center;padding:26px 6px}.done .big{font-size:44px}.done h2{margin:6px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a class="brand" href="/alerts/"><i>🔊</i><span class="bn">Alerts</span></a></div>
+  <div class="tip">
+    <div class="card" id="box">
+      <div class="who"><div class="av" id="av">?</div><div><h1 id="name">Loading…</h1><p id="tag"></p></div></div>
+      <div id="form" style="display:none">
+        <label class="f" for="from">Your name</label><input id="from" maxlength="25" placeholder="anon" autocomplete="nickname">
+        <label class="f" for="text">Message <span class="cnt" id="cnt"></span></label><textarea id="text" placeholder="Say something nice — it gets read out on stream"></textarea>
+        <label class="f">Amount</label>
+        <div class="amts" id="amts"></div>
+        <input id="custom" type="number" inputmode="decimal" step="0.01" placeholder="Other amount (USD)" style="margin-top:8px">
+        <label class="f">Pay with</label>
+        <div class="seg" id="tok"></div>
+        <div class="total"><span class="dim">Total</span><b id="total">—</b></div>
+        <div class="pay"><button class="btn pri" id="payW">Pay with browser wallet</button><button class="btn" id="payP">Pay with phone wallet (QR)</button></div>
+        <div class="msg" id="msg"></div>
+        <p class="fine">The tip goes straight from your wallet to the streamer's, in one transaction. Tips are final and not refunded. A message that breaks the streamer's rules may be held or not read.</p>
+      </div>
+      <div id="closed" class="dim" style="display:none">This streamer isn't taking tips right now.</div>
+    </div>
+    <footer>Get crypto tip alerts for your own stream — <a href="/alerts/">set it up free</a></footer>
+  </div>
+</div>
+<script src="/alerts/wallet.js"></script>
+<script>
+const $ = id => document.getElementById(id), { api, esc } = MA;
+const handle = decodeURIComponent(location.pathname.split('/').filter(Boolean).pop()).replace(/^@/, '');
+let S = null, amt = null, tok = 'usdc', busy = false;
+const say = (h, c) => { $('msg').innerHTML = h; $('msg').className = 'msg ' + (c || ''); };
+function render() {
+  const t = $('text').value.length; $('cnt').textContent = t + '/' + S.maxChars;
+  const custom = parseFloat($('custom').value); const u = custom > 0 ? Math.round(custom * 100) / 100 : amt;
+  [...$('amts').children].forEach(b => b.classList.toggle('on', !(custom > 0) && +b.dataset.u === amt));
+  $('total').textContent = u ? '$' + u.toFixed(2) + (tok === 'sol' ? ' in SOL' : ' USDC') : '—';
+  return u;
+}
+async function start() {
+  try { const c = await api('/config'); document.querySelector('.bn').textContent = c.brand; } catch (e) {}
+  try { S = await api('/s/' + encodeURIComponent(handle)); }
+  catch (e) { $('name').textContent = 'Not found'; $('tag').textContent = 'No streamer goes by @' + handle + '.'; return; }
+  document.title = 'Tip ' + S.display;
+  $('name').textContent = S.display; $('tag').textContent = S.tagline || 'Send a tip with a message read out on stream.';
+  $('av').textContent = (S.display || '?')[0].toUpperCase(); $('av').style.background = S.accent;
+  if (!S.open) { $('closed').style.display = ''; return; }
+  $('form').style.display = ''; $('text').maxLength = S.maxChars;
+  const opts = [...new Set([2, 5, 10, 25, 50, 100].map(v => Math.max(v, S.minUsd)))].slice(0, 4);
+  amt = opts[1] || opts[0];
+  $('amts').innerHTML = opts.map(v => `<button type="button" data-u="${v}">$${v}</button>`).join('');
+  $('amts').onclick = e => { const b = e.target.closest('button'); if (!b) return; amt = +b.dataset.u; $('custom').value = ''; render(); };
+  $('custom').placeholder = `Other amount (min $${S.minUsd})`;
+  tok = S.tokens[0];
+  $('tok').innerHTML = S.tokens.map(t => `<button type="button" data-t="${t}">${t === 'usdc' ? 'USDC' : 'SOL'}</button>`).join('');
+  const segs = () => [...$('tok').children].forEach(b => b.classList.toggle('on', b.dataset.t === tok)); segs();
+  $('tok').onclick = e => { const b = e.target.closest('button'); if (b) { tok = b.dataset.t; segs(); render(); } };
+  ['text', 'custom'].forEach(i => $(i).addEventListener('input', render));
+  try { $('from').value = localStorage.getItem('maFrom') || ''; } catch (e) {}
+  if (MA.isPhone()) { $('payP').classList.add('pri'); $('payW').classList.remove('pri'); $('payW').parentNode.appendChild($('payW')); }
+  render();
+}
+async function pay(how) {
+  if (busy) return; const u = render();
+  if (!u || u < S.minUsd) return say(`The minimum is $${S.minUsd}.`, 'err');
+  if (!$('text').value.trim()) return say('Write a message first.', 'err');
+  busy = true; $('payW').disabled = $('payP').disabled = true; say('Getting your tip ready…');
+  try {
+    try { localStorage.setItem('maFrom', $('from').value); } catch (e) {}
+    const order = await api('/tip', { handle, from: $('from').value, text: $('text').value, usd: u, token: tok });
+    const o = await (how === 'w' ? MA.payWallet(order, say) : MA.payPhone(order, say));
+    if (!o) { say(''); return; }
+    $('box').innerHTML = `<div class="done"><div class="big">🎉</div><h2>Tip sent!</h2><p class="dim">${o.alert === 'held' ? 'Your message is waiting for the streamer to approve it.' : 'Watch the stream — your message is up next.'}</p>
+      ${o.sig ? `<p class="small" style="margin-top:14px"><a href="https://solscan.io/tx/${esc(o.sig)}" target="_blank" rel="noopener">View transaction</a></p>` : ''}
+      <button class="btn" style="margin-top:18px" onclick="location.reload()">Send another</button></div>`;
+  } catch (e) {
+    say(/reject|cancel|denied|closed/i.test(e.message || '') ? 'Cancelled.' : esc(e.message || e), 'err');
+  } finally { busy = false; if ($('payW')) $('payW').disabled = $('payP').disabled = false; }
+}
+$('payW').onclick = () => pay('w'); $('payP').onclick = () => pay('p');
+start();
+</script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard</title>
+<link rel="icon" href="/alerts/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/alerts/app.css">
+<style>
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+.layout .wide{grid-column:1/-1}
+.preview{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line);aspect-ratio:16/9;
+  background:repeating-conic-gradient(#1a1f2e 0% 25%,#141826 0% 50%) 50%/24px 24px}
+.preview iframe{position:absolute;inset:0;width:200%;height:200%;border:0;transform:scale(.5);transform-origin:0 0}
+.tips{width:100%;border-collapse:collapse;font-size:14px}
+.tips td,.tips th{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.tips th{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.tips .t{max-width:380px;word-break:break-word}.tips .acts{white-space:nowrap;text-align:right}
+.stat{display:flex;gap:28px;margin-bottom:12px}.stat b{display:block;font-size:24px}
+.secret{-webkit-text-security:disc}
+.ids li{list-style:none;padding:6px 0;font-size:14px;word-break:break-all}
+#app{display:none}
+@media (max-width:860px){.layout{grid-template-columns:1fr}.tips .hide-sm{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a class="brand" href="/alerts/"><i>🔊</i><span class="bn">Marine Alerts</span></a>
+    <div class="row"><span class="pill" id="planPill"></span><button class="btn sm" id="out">Sign out</button></div></div>
+
+  <div id="app">
+  <div class="layout">
+    <!-- setup -->
+    <div class="card wide" id="setup">
+      <h2>Your page</h2><p class="sub">Your tip page name and the wallet tips are paid to. Tips go straight from the viewer to this wallet.</p>
+      <div class="grid3">
+        <div><label class="f" for="handle">Page name</label><input id="handle" placeholder="yourname" maxlength="24" autocapitalize="off"></div>
+        <div><label class="f" for="display">Display name</label><input id="display" placeholder="Your Name" maxlength="40"></div>
+        <div><label class="f" for="payout">Payout wallet (Solana)</label><input id="payout" placeholder="Solana address" spellcheck="false"></div>
+      </div>
+      <div class="row" style="margin-top:14px"><button class="btn pri" id="saveSetup">Save</button><span class="msg" id="setupMsg" style="margin:0"></span></div>
+    </div>
+
+    <!-- links -->
+    <div class="card wide">
+      <h2>Your links</h2><p class="sub">Add the browser source in OBS / Streamlabs / Meld: Sources → + → Browser, paste the link, width 1920, height 1080. Keep it secret — anyone with it can see your alerts.</p>
+      <label class="f">Browser source (overlay)</label>
+      <div class="copy"><input id="ovUrl" class="secret" readonly><button class="btn" id="ovShow">Show</button><button class="btn pri" id="ovCopy">Copy</button></div>
+      <label class="f">Tip page (share this with viewers)</label>
+      <div class="copy"><input id="tipUrl" readonly placeholder="set your page name above first"><button class="btn" id="tipOpen">Open</button><button class="btn pri" id="tipCopy">Copy</button></div>
+      <div class="row" style="margin-top:14px"><button class="btn" id="test">🔔 Send test alert</button><button class="btn" id="skipNow">⏭ Skip current alert</button><button class="btn bad" id="rotate">Regenerate overlay link</button></div>
+      <div class="msg" id="linkMsg"></div>
+    </div>
+
+    <!-- look and sound -->
+    <div class="card">
+      <h2>Alert look</h2><p class="sub">Changes show in the preview right away. Save to send them to your stream.</p>
+      <label class="f" for="template">Headline (use {name} and {amount})</label><input id="template" maxlength="80">
+      <div class="grid3">
+        <div><label class="f" for="position">Position</label><select id="position"><option value="top">Top</option><option value="center">Middle</option><option value="bottom">Bottom</option></select></div>
+        <div><label class="f" for="anim">Animation</label><select id="anim"><option value="pop">Pop</option><option value="slide">Slide</option><option value="fade">Fade</option></select></div>
+        <div><label class="f" for="font">Font</label><select id="font"></select></div>
+      </div>
+      <div class="grid3">
+        <div><label class="f" for="accent">Accent</label><input type="color" id="accent"></div>
+        <div><label class="f" for="bg">Background</label><input type="color" id="bg"></div>
+        <div><label class="f" for="text">Text</label><input type="color" id="text"></div>
+      </div>
+      <div class="grid2">
+        <div><label class="f" for="opacity">Background opacity <span id="opacityV"></span></label><input type="range" id="opacity" min="0" max="1" step="0.05"></div>
+        <div><label class="f" for="duration">Shows for at least <span id="durationV"></span>s</label><input type="range" id="duration" min="3" max="30" step="1"></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="showAmount"> Show the amount</label>
+    </div>
+    <div class="card">
+      <h2>Preview</h2><p class="sub">How the alert looks on stream (the checkered area is transparent).</p>
+      <div class="preview"><iframe id="pv" title="Overlay preview"></iframe></div>
+      <div class="row" style="margin-top:12px"><button class="btn" id="pvShow">▶ Preview alert</button></div>
+      <h2 style="margin-top:22px">Sound and voice</h2>
+      <div class="grid2">
+        <div><label class="f" for="sound">Alert sound</label><select id="sound"><option value="chime">Chime</option><option value="coin">Coin</option><option value="url">My own (link to a sound file)</option><option value="none">None</option></select></div>
+        <div><label class="f" for="soundVolume">Sound volume</label><input type="range" id="soundVolume" min="0" max="1" step="0.05"></div>
+      </div>
+      <div id="soundUrlRow" style="display:none"><label class="f" for="soundUrl">Sound file link (https, .mp3 / .wav / .ogg)</label><input id="soundUrl" placeholder="https://…"></div>
+      <label class="chk"><input type="checkbox" id="tts"> Read messages out loud (TTS)</label>
+      <div class="grid2">
+        <div><label class="f" for="voice">Voice</label><select id="voice"></select></div>
+        <div><label class="f" for="rate">Speed <span id="rateV"></span>×</label><input type="range" id="rate" min="0.5" max="2" step="0.05"></div>
+        <div><label class="f" for="ttsVolume">Voice volume</label><input type="range" id="ttsVolume" min="0" max="1" step="0.05"></div>
+        <div><label class="f" for="ttsMinUsd">Only read tips from ($)</label><input type="number" id="ttsMinUsd" min="0" step="0.5"></div>
+      </div>
+      <label class="chk"><input type="checkbox" id="readName"> Say the name first ("cryptodad says: …")</label>
+      <p class="dim small" id="voiceNote" style="margin-top:10px"></p>
+    </div>
+
+    <!-- tips and moderation -->
+    <div class="card">
+      <h2>Tips</h2><p class="sub">What viewers can send.</p>
+      <label class="f" for="tagline">Tip page message</label><input id="tagline" maxlength="140" placeholder="Thanks for the support!">
+      <div class="grid2">
+        <div><label class="f" for="minUsd">Minimum tip ($)</label><input type="number" id="minUsd" min="0.5" step="0.5"></div>
+        <div><label class="f" for="maxChars">Max message length</label><input type="number" id="maxChars" min="20" max="300" step="10"></div>
+      </div>
+      <label class="f">Accept</label>
+      <label class="chk"><input type="checkbox" id="tokUsdc"> USDC</label><label class="chk"><input type="checkbox" id="tokSol"> SOL</label>
+    </div>
+    <div class="card">
+      <h2>Moderation</h2><p class="sub">Held tips wait below until you approve them. Tips are never refunded.</p>
+      <label class="chk"><input type="checkbox" id="modQueue"> Hold every tip for me to approve</label>
+      <label class="chk"><input type="checkbox" id="filterLinks"> Hold tips with links or contract addresses</label>
+      <label class="f" for="banned">Hold tips containing these words (one per line)</label><textarea id="banned" spellcheck="false"></textarea>
+    </div>
+    <div class="wide row" style="justify-content:flex-end"><span class="msg" id="saveMsg" style="margin:0"></span><button class="btn pri" id="save">Save settings</button></div>
+
+    <!-- history -->
+    <div class="card wide">
+      <h2>Recent tips</h2>
+      <div class="stat"><div><span class="dim small">Tips</span><b id="nTips">0</b></div><div><span class="dim small">Total</span><b id="sumTips">$0</b></div></div>
+      <div style="overflow-x:auto"><table class="tips"><thead><tr><th>When</th><th>From</th><th>Message</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody id="tipRows"></tbody></table></div>
+      <p class="dim small" id="noTips" style="margin-top:10px">No tips yet. Send a test alert, then share your tip page.</p>
+    </div>
+
+    <!-- plan -->
+    <div class="card">
+      <h2>Plan</h2>
+      <p id="planText" class="sub"></p>
+      <div class="row"><button class="btn pri" id="buyUsdc">Pay with USDC</button><button class="btn" id="buySol">Pay with SOL</button><button class="btn" id="buyPhone">Pay by phone</button></div>
+      <div class="msg" id="planMsg"></div>
+    </div>
+    <div class="card">
+      <h2>Sign-in methods</h2><p class="sub">Add a second way in, so you never lose access.</p>
+      <ul class="ids" id="ids"></ul>
+      <div class="row" style="margin-top:10px"><button class="btn" id="addWallet">Add a wallet</button><div id="gbtn"></div></div>
+      <div class="msg" id="idMsg"></div>
+    </div>
+  </div>
+  </div>
+  <footer>Tips go straight from the viewer's wallet to yours. We never hold your money.</footer>
+</div>
+<script src="/alerts/wallet.js"></script>
+<script>
+const $ = id => document.getElementById(id), { api, esc } = MA;
+let ME = null, CFG = null, S = null, pvReady = false;
+const msg = (el, h, c) => { $(el).innerHTML = h; $(el).className = 'msg ' + (c || ''); };
+const flash = (el, h, c) => { msg(el, h, c); clearTimeout(flash[el]); flash[el] = setTimeout(() => msg(el, ''), 4000); };
+const money = u => '$' + (+u).toFixed(2).replace(/\.00$/, '');
+const FIELDS = ['template', 'position', 'anim', 'font', 'accent', 'bg', 'text', 'opacity', 'duration', 'showAmount', 'sound', 'soundUrl', 'soundVolume',
+  'tts', 'voice', 'rate', 'ttsVolume', 'ttsMinUsd', 'readName', 'tagline', 'minUsd', 'maxChars', 'modQueue', 'filterLinks'];
+const NUM = new Set(['opacity', 'duration', 'soundVolume', 'rate', 'ttsVolume', 'ttsMinUsd', 'minUsd', 'maxChars']);
+
+function readForm() {
+  const s = { ...S };
+  FIELDS.forEach(k => { const el = $(k); s[k] = el.type === 'checkbox' ? el.checked : NUM.has(k) ? +el.value : el.value; });
+  s.tokens = [$('tokUsdc').checked && 'usdc', $('tokSol').checked && 'sol'].filter(Boolean);
+  s.banned = $('banned').value.split('\n').map(w => w.trim()).filter(Boolean);
+  return s;
+}
+function fillForm(s) {
+  FIELDS.forEach(k => { const el = $(k); if (el.type === 'checkbox') el.checked = !!s[k]; else el.value = s[k]; });
+  $('tokUsdc').checked = s.tokens.includes('usdc'); $('tokSol').checked = s.tokens.includes('sol');
+  $('banned').value = s.banned.join('\n'); labels();
+}
+function labels() {
+  $('opacityV').textContent = Math.round($('opacity').value * 100) + '%'; $('durationV').textContent = $('duration').value; $('rateV').textContent = (+$('rate').value).toFixed(2);
+  $('soundUrlRow').style.display = $('sound').value === 'url' ? '' : 'none';
+  const v = $('voice').value;
+  $('voiceNote').textContent = v === 'browser' ? 'The browser voice is free and sounds best when you capture a Chrome window. Inside an OBS browser source pick a neural voice.'
+    : CFG.serverTts ? 'Neural voices are made on our server, so they play inside OBS.' : 'Neural voices aren\'t switched on for this service yet, so the browser voice is used for now.';
+}
+function sendPreview(show) {
+  if (!pvReady) return; const w = $('pv').contentWindow;
+  w.postMessage({ type: 'settings', settings: readForm() }, location.origin);
+  if (show) w.postMessage({ type: 'show', alert: { from: 'cryptodad', text: 'gm chat! this is what a tip looks like 🔊', usd: 10 } }, location.origin);
+}
+function renderMe() {
+  const m = ME; $('handle').value = m.handle || ''; $('display').value = m.display || ''; $('payout').value = m.payout || '';
+  $('ovUrl').value = m.overlayUrl; $('tipUrl').value = m.tipUrl || '';
+  const ready = m.handle && m.payout; $('setup').style.borderColor = ready ? '' : 'var(--warn)';
+  $('planPill').textContent = m.pro ? 'Annual plan' : 'Free plan'; $('planPill').className = 'pill ' + (m.pro ? 'acc' : '');
+  const until = m.proUntil ? new Date(m.proUntil * 1000).toLocaleDateString() : null;
+  $('planText').innerHTML = m.pro ? `You're on the annual plan until <b>${until}</b>: no fee on tips. Paying again adds another year.`
+    : (m.requirePlan ? `Tips need the annual plan: <b>$${m.planUsd}/year</b>, no fee on tips.` : `Free plan: <b>${m.feeBps / 100}%</b> of each tip goes to the service, in the same transaction. The annual plan is <b>$${m.planUsd}/year</b> with no fee.`);
+  $('ids').innerHTML = m.identities.map(i => `<li>${i.provider === 'solana' ? '◆ Wallet' : 'G Google'} · <span class="dim">${esc(i.label)}</span></li>`).join('');
+}
+async function loadTips() {
+  const d = await api('/me/alerts');
+  $('nTips').textContent = d.total.n; $('sumTips').textContent = money(d.total.usd);
+  $('noTips').style.display = d.alerts.length ? 'none' : '';
+  const st = { queued: ['Up next', 'acc'], held: ['Held', 'warn'], played: ['Played', 'ok'], skipped: ['Skipped', ''], rejected: ['Rejected', ''] };
+  const acts = { queued: ['skip'], held: ['approve', 'reject'], played: ['replay'], skipped: ['replay'], rejected: ['replay'] };
+  $('tipRows').innerHTML = d.alerts.map(a => `<tr><td class="dim small">${new Date(a.paid_at * 1000).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</td>
+    <td>${esc(a.from_name)}</td><td class="t">${esc(a.text)}</td><td>${money(a.usd)} <span class="dim small hide-sm">${a.token.toUpperCase()}</span></td>
+    <td><span class="pill ${(st[a.alert] || [])[1] || ''}">${(st[a.alert] || [a.alert])[0]}</span></td>
+    <td class="acts">${(acts[a.alert] || []).map(x => `<button class="btn sm ${x === 'reject' ? 'bad' : x === 'approve' ? 'ok' : ''}" data-a="${x}" data-id="${esc(a.id)}">${x[0].toUpperCase() + x.slice(1)}</button>`).join(' ')}
+    ${a.sig ? `<a class="btn sm" href="https://solscan.io/tx/${esc(a.sig)}" target="_blank" rel="noopener">tx</a>` : ''}</td></tr>`).join('');
+}
+$('tipRows').onclick = async e => { const b = e.target.closest('[data-a]'); if (!b) return;
+  b.disabled = true; try { await api('/me/alerts/' + b.dataset.id, { action: b.dataset.a }); await loadTips(); } catch (x) { alert(x.message); b.disabled = false; } };
+
+async function start() {
+  try { ME = await api('/me'); } catch (e) { if (e.status === 401) return location.replace('/alerts/'); throw e; }
+  CFG = await api('/config');
+  document.querySelectorAll('.bn').forEach(e => e.textContent = CFG.brand); document.title = CFG.brand + ' · Dashboard';
+  $('font').innerHTML = CFG.fonts.map(f => `<option>${esc(f)}</option>`).join('');
+  $('voice').innerHTML = CFG.voices.map(v => `<option value="${esc(v.id)}">${esc(v.name)}</option>`).join('');
+  S = ME.settings; fillForm(S); renderMe(); $('app').style.display = 'block';
+  addEventListener('message', e => { if (e.origin === location.origin && e.data?.type === 'ready') { pvReady = true; sendPreview(true); } });
+  $('pv').src = ME.overlayUrl.replace(location.origin, '') + '?preview=1';
+  document.querySelectorAll('#app input, #app select, #app textarea').forEach(el => el.addEventListener('input', () => { labels(); sendPreview(false); }));
+  if (CFG.googleClientId && !ME.identities.some(i => i.provider === 'google')) MA.googleButton($('gbtn'), CFG.googleClientId, async e => { if (e) return msg('idMsg', esc(e.message), 'err'); ME = await api('/me'); renderMe(); flash('idMsg', 'Google added.', 'ok'); });
+  loadTips().catch(() => {}); setInterval(() => loadTips().catch(() => {}), 15000);
+}
+
+$('saveSetup').onclick = async () => {
+  try { ME = await api('/me', { handle: $('handle').value, display: $('display').value, payout: $('payout').value.trim() }); renderMe(); flash('setupMsg', 'Saved.', 'ok'); }
+  catch (e) { msg('setupMsg', esc(e.message), 'err'); } };
+$('save').onclick = async () => {
+  const s = readForm(); if (!s.tokens.length) return flash('saveMsg', 'Accept at least one of USDC or SOL.', 'err');
+  try { ME = await api('/me', { settings: s }); S = ME.settings; fillForm(S); sendPreview(false); flash('saveMsg', 'Saved — your overlay has it now.', 'ok'); }
+  catch (e) { msg('saveMsg', esc(e.message), 'err'); } };
+const copy = async (id, el) => { try { await navigator.clipboard.writeText($(id).value); flash(el, 'Copied.', 'ok'); } catch (e) { $(id).select(); } };
+$('ovCopy').onclick = () => copy('ovUrl', 'linkMsg'); $('tipCopy').onclick = () => $('tipUrl').value ? copy('tipUrl', 'linkMsg') : flash('linkMsg', 'Set your page name first.', 'err');
+$('ovShow').onclick = () => { const on = $('ovUrl').classList.toggle('secret'); $('ovShow').textContent = on ? 'Show' : 'Hide'; };
+$('tipOpen').onclick = () => $('tipUrl').value ? open($('tipUrl').value, '_blank') : flash('linkMsg', 'Set your page name first.', 'err');
+$('test').onclick = async () => { try { await api('/me/test', {}); flash('linkMsg', 'Test sent to your open overlays.', 'ok'); } catch (e) { msg('linkMsg', esc(e.message), 'err'); } };
+$('skipNow').onclick = async () => { try { await api('/me/skip', {}); flash('linkMsg', 'Skipped.', 'ok'); } catch (e) { msg('linkMsg', esc(e.message), 'err'); } };
+$('rotate').onclick = async () => {
+  if (!confirm('Make a new overlay link? The old one stops working, so you\'ll need to paste the new one into OBS.')) return;
+  try { ME = await api('/me/rotate', {}); renderMe(); pvReady = false; $('pv').src = ME.overlayUrl.replace(location.origin, '') + '?preview=1'; flash('linkMsg', 'New link made. Paste it into OBS.', 'ok'); }
+  catch (e) { msg('linkMsg', esc(e.message), 'err'); } };
+$('pvShow').onclick = () => sendPreview(true);
+$('out').onclick = async () => { await api('/auth/logout', {}).catch(() => {}); location.href = '/alerts/'; };
+$('addWallet').onclick = async () => { try { if (await MA.signInWallet()) { ME = await api('/me'); renderMe(); flash('idMsg', 'Wallet added.', 'ok'); } }
+  catch (e) { msg('idMsg', /reject|cancel/i.test(e.message || '') ? 'Cancelled.' : esc(e.message), 'err'); } };
+async function buyPlan(token, how) {
+  try { msg('planMsg', 'Getting it ready…'); const order = await api('/me/plan', { token });
+    const o = await (how === 'phone' ? MA.payPhone(order, h => msg('planMsg', h)) : MA.payWallet(order, (h, c) => msg('planMsg', h, c)));
+    if (!o) return msg('planMsg', '');
+    ME = await api('/me'); renderMe(); msg('planMsg', '✅ Paid. Thanks — no fee on your tips for the next year.', 'ok'); }
+  catch (e) { msg('planMsg', /reject|cancel|denied/i.test(e.message || '') ? 'Cancelled.' : esc(e.message), 'err'); } }
+$('buyUsdc').onclick = () => buyPlan('usdc'); $('buySol').onclick = () => buyPlan('sol'); $('buyPhone').onclick = () => buyPlan('usdc', 'phone');
+start().catch(e => document.body.insertAdjacentHTML('beforeend', `<p class="wrap bad">Couldn't load the dashboard: ${esc(e.message)}</p>`));
+</script>
+</body>
+</html>

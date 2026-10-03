@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marine Alerts</title>
+<meta name="description" content="Crypto tips with text-to-speech alerts for your stream. Viewers pay in USDC or SOL straight to your wallet. One browser source link for OBS.">
+<link rel="icon" href="/alerts/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/alerts/app.css">
+<style>
+.hero{display:grid;grid-template-columns:1.2fr 1fr;gap:28px;align-items:center;padding:36px 0 24px}
+.hero h1{font-size:clamp(32px,5vw,50px);letter-spacing:-.02em}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--acc2),#00d1ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--dim);font-size:17px;margin-top:14px;max-width:520px}
+.signin .btn{width:100%;margin-top:10px}.signin #gbtn{display:flex;justify-content:center;margin-top:10px;min-height:0}
+.or{display:flex;align-items:center;gap:10px;color:var(--dim);font-size:12px;margin-top:14px}.or::before,.or::after{content:'';flex:1;height:1px;background:var(--line)}
+.demo{margin-top:22px;border:3px solid #ffb000;border-radius:16px;padding:16px 20px;text-align:center;background:#0b1020;box-shadow:0 0 30px #ffb00055}
+.demo b{color:#ffb000;font-size:20px}.demo div{font-size:18px;margin-top:4px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px}
+.steps .card b{display:block;font-size:22px;color:var(--acc2);margin-bottom:6px}
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}
+.plans .price{font-size:32px;font-weight:800;margin:6px 0}.plans ul{list-style:none;color:var(--dim);font-size:14px}.plans li{padding:4px 0}.plans li::before{content:'✓ ';color:var(--ok)}
+.plans .card.pro{border-color:var(--acc)}
+section{margin-top:44px}section>h2{font-size:24px}
+@media (max-width:820px){.hero,.steps,.plans{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a class="brand" href="/alerts/"><i>🔊</i><span class="bn">Marine Alerts</span></a><a class="btn sm" id="dashLink" href="/alerts/dashboard" style="display:none">Dashboard</a></div>
+  <div class="hero">
+    <div>
+      <h1>Crypto tips, read out <em>on your stream</em>.</h1>
+      <p>Viewers send USDC or SOL with a message. It pops up and gets read out live. The money goes straight to your wallet in the same transaction — we never hold it.</p>
+      <div class="demo"><b>cryptodad sent $10</b><div>gm chat, this alert just paid the streamer directly 🔊</div></div>
+    </div>
+    <div class="card signin" id="signin">
+      <h2>Start in a minute</h2>
+      <p class="sub">Sign in, pick your page name and payout wallet, paste one link into OBS.</p>
+      <button class="btn pri" id="wSign">Sign in with a Solana wallet</button>
+      <div id="gWrap" style="display:none"><div class="or">or</div><div id="gbtn"></div></div>
+      <div class="msg" id="msg"></div>
+    </div>
+  </div>
+
+  <section>
+    <h2>How it works</h2>
+    <div class="steps">
+      <div class="card"><b>1</b><h3>Sign in</h3><p class="dim small">With a wallet or Google. Set where tips get paid — any Solana wallet you own.</p></div>
+      <div class="card"><b>2</b><h3>Add the browser source</h3><p class="dim small">Copy your overlay link into OBS, Streamlabs or Meld. Pick colors, font, sound and a voice.</p></div>
+      <div class="card"><b>3</b><h3>Share your tip page</h3><p class="dim small">Put <span class="pill">/alerts/@you</span> in your panels and chat commands. Viewers pay from a browser wallet or by phone (QR).</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Pricing</h2>
+    <div class="plans">
+      <div class="card"><span class="pill">Free</span><div class="price" id="pFree">5% per tip</div>
+        <ul><li>Everything included</li><li>Fee comes out of each tip, in the same transaction</li><li>No signup cost, no card</li></ul></div>
+      <div class="card pro"><span class="pill acc">Annual</span><div class="price" id="pPro">$79 / year</div>
+        <ul><li>No fee on tips — 100% to you</li><li>Pay once in USDC or SOL</li><li>Neural voices, mod queue, custom sounds</li></ul></div>
+    </div>
+  </section>
+  <footer>Tips are paid on Solana, straight from the viewer's wallet to yours.</footer>
+</div>
+<script src="/alerts/wallet.js"></script>
+<script>
+const $ = id => document.getElementById(id), say = (h, c) => { $('msg').innerHTML = h; $('msg').className = 'msg ' + (c || ''); };
+const go = () => location.href = '/alerts/dashboard';
+(async () => {
+  try { await MA.api('/me'); $('dashLink').style.display = ''; $('signin').innerHTML = '<h2>You\'re signed in</h2><p class="sub">Your overlay link and settings are on the dashboard.</p><a class="btn pri block" href="/alerts/dashboard">Open dashboard</a>'; } catch (e) {}
+  try {
+    const c = await MA.api('/config');
+    document.querySelectorAll('.bn').forEach(e => e.textContent = c.brand); document.title = c.brand;
+    $('pFree').textContent = c.requirePlan ? 'Not offered' : (c.feeBps / 100).toFixed(c.feeBps % 100 ? 1 : 0) + '% per tip';
+    $('pPro').textContent = '$' + c.planUsd + ' / year';
+    if (c.googleClientId && $('gbtn')) { $('gWrap').style.display = ''; MA.googleButton($('gbtn'), c.googleClientId, e => e ? say(MA.esc(e.message), 'err') : go()); }
+  } catch (e) {}
+})();
+$('wSign') && ($('wSign').onclick = async () => {
+  try { say('Check your wallet: sign the message (it costs nothing).'); if (await MA.signInWallet()) go(); else say(''); }
+  catch (e) { say(/reject|cancel|denied/i.test(e.message || '') ? 'Cancelled.' : MA.esc(e.message || e), 'err'); }
+});
+</script>
+</body>
+</html>

@@ -10,7 +10,11 @@
   // keep the linkmarines.<account>.workers.dev address (listing routes below switches it off unless this says otherwise)
   "workers_dev": true,
   "preview_urls": true,
-  "services": [{ "binding": "BOT", "service": "war-room-bot" }],
+  "services": [
+    { "binding": "BOT", "service": "war-room-bot" }
+    // the streamer alerts service (alerts/wrangler.jsonc) answers /alerts on both domains. Deploy it first, then uncomment:
+    // , { "binding": "ALERTS", "service": "tts-alerts" }
+  ],
   // the two domains (also set in the dashboard; listed here so a deploy keeps them) and their www names, which the worker
   // redirects to the bare domain (each www has a proxied CNAME to its domain in Cloudflare DNS)
   "routes": [
