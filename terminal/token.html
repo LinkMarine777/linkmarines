@@ -1557,7 +1557,7 @@ function boardStats(mint=TK.mint){if(!board)return null;
 // and last payout live up top). Hidden when the mint isn't on the board; figures come only from board.json.
 function renderApy(){const m=FLAGS.STONKBOARD_ENABLED&&board?boardStats():null,ranked=!!(m&&m.rank);
   // stonkfun tokens that aren't ranked yet get a one-line note instead of an empty column; other tokens hide it
-  $('sbP').style.display=ranked||(FLAGS.STONKBOARD_ENABLED&&board&&(TKR||DESK))?'':'none';$('mb').style.display=ranked?'':'none';$('mbNo').style.display=ranked?'none':'';
+  $('sbP').style.display=ranked||(FLAGS.STONKBOARD_ENABLED&&board&&(TKR||DESK))?'':'none';sbTab();$('mb').style.display=ranked?'':'none';$('mbNo').style.display=ranked?'none':'';
   $('sbLink').href=ranked?'https://thestonkboard.com/coin/'+encodeURIComponent(CA):'https://thestonkboard.com/';$('sbLink').textContent=ranked?'VIEW ON STONK BOARD ▸':'SEE THE BOARD ▸';
   if(!ranked){const sym=esc('$'+String(TK.symbol).replace(/^\$/,''));$('mbNo').innerHTML=`<b>${sym}</b> isn't in the Stonk Board top 100 right now.<br>Its modeled APY, what $100 held earns, and holder stats show here as soon as it ranks.`;return}
   $('mbRank').textContent='#'+m.rank;$('mbA3').textContent=apyFmt(m.apy3d);$('mbA24').textContent=apyFmt(m.apy24h);
@@ -1793,8 +1793,9 @@ function styleSwap(n=0){const h=[...document.querySelectorAll('#jupSwap *')].fin
   const st=document.createElement('style');st.id='swCss';st.textContent=SW_CSS;h.shadowRoot.appendChild(st);
   setTimeout(fitSwap,300)}   // the widget just loaded: it's taller than the loading line, fit it again
 function initSwap(){window.Jupiter.init({displayMode:'integrated',integratedTargetId:'jupSwap',formProps:swForm()});styleSwap()}
-function openSwap(){loadSwap();const p=$('swP');
-  p.querySelector('[data-v=board]').style.display=$('sbP').style.display==='none'?'none':'';   // a token with no Stonk Board data: no tab to go back to
+// a token with no Stonk Board data has no STONK BOARD tab to go back to (re-checked when the board's data lands)
+function sbTab(){const t=document.querySelector('#swP [data-v=board]');if(t)t.style.display=$('sbP').style.display==='none'?'none':''}
+function openSwap(){loadSwap();const p=$('swP');sbTab();
   if(isPhone()){p.classList.add('open');$('swDim').classList.add('open');return}
   document.documentElement.classList.add('swOpen');fitSwap()}
 // bring the swap into view on desktop with the token's info strip (payouts, pulse, price…) at the top of the screen and the
@@ -1812,6 +1813,7 @@ if(SWAP_ON){
     if(!isPhone()&&document.documentElement.classList.contains('swOpen'))closeSwap();else openSwap()}));   // the header BUY toggles on desktop
   document.querySelectorAll('.swTabs button').forEach(b=>b.onclick=e=>{e.stopPropagation();b.dataset.v==='swap'?openSwap():closeSwap()});
   document.querySelectorAll('header nav .buyTk,#mbar .buyTk').forEach(a=>a.firstChild.textContent='BUY/SELL ');
+  if(new URLSearchParams(location.search).has('buy'))openSwap();   // &buy=1 (e.g. BUY $MARINE on the trending page): open with the swap showing
   $('swX').onclick=closeSwap;$('swDim').onclick=closeSwap;
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSwap()})}
 // ---------- wallet picker: no default, the user chooses ----------
