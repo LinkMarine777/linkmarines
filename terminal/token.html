@@ -1798,13 +1798,14 @@ function openSwap(){loadSwap();const p=$('swP');
   p.querySelector('[data-v=board]').style.display=$('sbP').style.display==='none'?'none':'';   // a token with no Stonk Board data: no tab to go back to
   if(isPhone()){p.classList.add('open');$('swDim').classList.add('open');return}
   document.documentElement.classList.add('swOpen');fitSwap()}
-// bring the swap fully into view on desktop with the least cut: the chart panel's top (the token's own header) at the top of the
-// screen, unless the swap is too tall for that, then just enough to show its bottom. Nothing moves when it's all on screen already.
+// bring the swap into view on desktop while keeping as much of the token's info on screen as fits: the whole page from the
+// top if the swap fits that way, else from the info strip (payouts, pulse, price…), else from the chart; on a short screen,
+// just enough to show the swap's button. Nothing moves when it's all on screen already.
 function fitSwap(){if(isPhone()||!document.documentElement.classList.contains('swOpen'))return;
-  const p=$('swP').getBoundingClientRect(),top=document.querySelector('main').getBoundingClientRect().top;
-  if(p.top>=0&&p.bottom<=innerHeight)return;
-  let y=top;if(p.bottom-y>innerHeight)y=Math.min(p.bottom-innerHeight,p.top);
-  scrollTo({top:scrollY+y,behavior:'smooth'})}
+  const w=$('jupSwap').getBoundingClientRect(),r=e=>e.getBoundingClientRect().top+scrollY,need=w.bottom+scrollY;
+  if(w.top>=0&&w.bottom<=innerHeight&&scrollY<=r(document.querySelector('.stats')))return;
+  const y=[0,r(document.querySelector('.stats')),r(document.querySelector('main'))].find(t=>need-t<=innerHeight)??need-innerHeight;
+  scrollTo({top:y,behavior:'smooth'})}
 function closeSwap(){$('swP').classList.remove('open');$('swDim').classList.remove('open');document.documentElement.classList.remove('swOpen')}
 if(SWAP_ON){
   document.querySelectorAll('#mbar .buyTk,header nav .buyTk').forEach(a=>a.addEventListener('click',e=>{
