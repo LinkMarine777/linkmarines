@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Alerts overlay</title>
+<style>
+/* An OBS browser source: transparent, only the alert card shows. The streamer's own colors / font come from their settings. */
+:root{--acc:#ffb000;--bg:#0b1020;--txt:#fff;--op:.92;--font:Inter}
+html,body{margin:0;background:transparent;overflow:hidden;height:100%}
+#stage{position:fixed;inset:0;display:flex;justify-content:center;padding:4vh 4vw;box-sizing:border-box;pointer-events:none}
+#stage.top{align-items:flex-start}#stage.center{align-items:center}#stage.bottom{align-items:flex-end}
+.card{position:relative;max-width:min(1100px,92vw);min-width:min(480px,92vw);padding:22px 32px 26px;border-radius:18px;font-family:var(--font),system-ui,sans-serif;color:var(--txt);
+  border:3px solid var(--acc);box-shadow:0 0 40px color-mix(in srgb,var(--acc) 45%,transparent),0 10px 40px #0008;text-align:center;opacity:0;isolation:isolate}
+.card::before{content:'';position:absolute;inset:0;border-radius:15px;background:var(--bg);opacity:var(--op);z-index:-1}
+.card .head{font-size:clamp(20px,3.2vw,40px);font-weight:800;color:var(--acc);letter-spacing:.01em;text-shadow:0 2px 8px #0009}
+.card .text{font-size:clamp(22px,3.6vw,48px);font-weight:600;line-height:1.2;margin-top:8px;word-break:break-word;text-shadow:0 2px 8px #000a}
+.card.in.pop{animation:pop .5s cubic-bezier(.2,1.5,.4,1) forwards}.card.out.pop{animation:popout .35s ease-in forwards}
+.card.in.slide{animation:slidein .5s cubic-bezier(.2,1,.3,1) forwards}.card.out.slide{animation:slideout .4s ease-in forwards}
+.card.in.fade{animation:fadein .5s ease forwards}.card.out.fade{animation:fadeout .5s ease forwards}
+@keyframes pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}@keyframes popout{to{opacity:0;transform:scale(.8)}}
+@keyframes slidein{from{opacity:0;transform:translateY(-60px)}to{opacity:1;transform:none}}@keyframes slideout{to{opacity:0;transform:translateY(-60px)}}
+#stage.bottom .card.in.slide{animation-name:slideinb}@keyframes slideinb{from{opacity:0;transform:translateY(60px)}to{opacity:1;transform:none}}
+@keyframes fadein{to{opacity:1}}@keyframes fadeout{from{opacity:1}to{opacity:0}}
+#gate{position:fixed;left:12px;bottom:12px;font:13px system-ui,sans-serif;background:#000c;color:#fff;border:1px solid #fff4;padding:8px 12px;border-radius:8px;cursor:pointer;display:none}
+</style>
+</head>
+<body>
+<div id="stage" class="top"></div>
+<div id="gate">Click once to turn on sound (OBS doesn't need this)</div>
+<script>
+// Plays one alert at a time: the card, a sound, then the message read out (an audio file from the server, or the browser's
+// own voice). New tips arrive over a live connection; it also checks every 15 s in case that drops.
+const KEY = location.pathname.split('/').filter(Boolean).pop(), API = '/alerts/api/overlay/' + KEY;
+const PREVIEW = new URLSearchParams(location.search).has('preview');
+const $ = id => document.getElementById(id);
+let S = null, serverTts = false, queue = [], playing = null, gone = false, ac = null;
+const usd = u => '$' + (+u).toFixed(2).replace(/\.00$/, '');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function apply(s) {
+  S = s; const r = document.documentElement.style;
+  r.setProperty('--acc', s.accent); r.setProperty('--bg', s.bg); r.setProperty('--txt', s.text); r.setProperty('--op', s.opacity); r.setProperty('--font', `'${s.font}'`);
+  $('stage').className = s.position;
+  if (s.font !== 'Inter' || !document.getElementById('gf')) {
+    const l = document.getElementById('gf') || Object.assign(document.createElement('link'), { id: 'gf', rel: 'stylesheet' });
+    l.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(s.font)}:wght@400;600;800&display=swap`; document.head.appendChild(l);
+  }
+}
+async function load() {
+  const r = await fetch(API, { cache: 'no-store' });
+  if (r.status === 404) { gone = true; return; }
+  const d = await r.json(); apply(d.settings); serverTts = d.serverTts;
+  for (const a of d.queue) if (!queue.some(q => q.id === a.id) && playing?.a.id !== a.id) queue.push(a);
+  next();
+}
+
+// ---------- sound ----------
+function ctx() { if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume().catch(() => {}); return ac; }
+function tone(freqs, step, vol) {
+  const c = ctx(), t0 = c.currentTime + .02;
+  freqs.forEach((f, i) => { const o = c.createOscillator(), g = c.createGain(); o.type = 'triangle'; o.frequency.value = f;
+    g.gain.setValueAtTime(0, t0 + i * step); g.gain.linearRampToValueAtTime(vol * .35, t0 + i * step + .02); g.gain.exponentialRampToValueAtTime(.001, t0 + i * step + .6);
+    o.connect(g).connect(c.destination); o.start(t0 + i * step); o.stop(t0 + i * step + .7); });
+  return sleep(freqs.length * step * 1000 + 300);
+}
+function playUrl(src, vol) { return new Promise(res => { const a = new Audio(src); a.volume = vol; playing && (playing.audio = a);
+  a.onended = a.onerror = () => res(); a.play().catch(() => res()); setTimeout(res, 30000); }); }
+function sound() {
+  if (S.sound === 'none' || !S.soundVolume) return Promise.resolve();
+  if (S.sound === 'url' && S.soundUrl) return playUrl(S.soundUrl, S.soundVolume);
+  return S.sound === 'coin' ? tone([988, 1319], .09, S.soundVolume) : tone([660, 880, 1320], .12, S.soundVolume);
+}
+// ---------- speech ----------
+async function speak(a) {
+  if (!S.tts || !a.text || a.usd < S.ttsMinUsd) return;
+  if (serverTts) {
+    const q = a.id === 'test' ? `test?${new URLSearchParams({ from: a.from || '', text: a.text, usd: a.usd })}` : a.id;
+    try { const r = await fetch(`${API}/audio/${q}`); if (r.status === 200) { const u = URL.createObjectURL(await r.blob()); await playUrl(u, S.ttsVolume); URL.revokeObjectURL(u); return; } } catch (e) {}
+  }
+  if (!('speechSynthesis' in window)) return;
+  await new Promise(res => { const u = new SpeechSynthesisUtterance(S.readName && a.from ? `${a.from} says: ${a.text}` : a.text);
+    u.rate = S.rate; u.volume = S.ttsVolume; u.onend = u.onerror = () => res(); speechSynthesis.speak(u); setTimeout(res, 45000); });
+}
+// ---------- the card ----------
+function show(a) {
+  const el = document.createElement('div'); el.className = 'card in ' + S.anim;
+  const head = S.template.replace(/\{name\}/g, a.from || 'Someone').replace(/\{amount\}/g, S.showAmount ? usd(a.usd) : '').replace(/\s+/g, ' ').trim();
+  const h = document.createElement('div'); h.className = 'head'; h.textContent = head; el.appendChild(h);
+  if (a.text) { const t = document.createElement('div'); t.className = 'text'; t.textContent = a.text; el.appendChild(t); }
+  $('stage').replaceChildren(el); return el;
+}
+async function hide(el) { el.className = 'card out ' + S.anim; await sleep(500); el.remove(); }
+async function play(a) {
+  playing = { a, skip: false, audio: null };
+  const el = show(a), t0 = Date.now();
+  await sound(); if (!playing.skip) await speak(a);
+  while (!playing.skip && Date.now() - t0 < S.duration * 1000) await sleep(200);
+  await hide(el); playing = null;
+}
+let running = false;
+async function next() {
+  if (running || !S) return; running = true;
+  try {
+    while (queue.length && !gone) {
+      const a = queue.shift();
+      // claim it, so a second overlay (another scene) doesn't play it too; tests and previews aren't saved
+      if (a.id !== 'test' && !PREVIEW) { const r = await fetch(`${API}/played/${a.id}`, { method: 'POST' }).then(r => r.json()).catch(() => ({})); if (!r.claimed) continue; }
+      await play(a); await sleep(800);
+    }
+  } finally { running = false; }
+}
+function skip(id) {
+  queue = queue.filter(a => a.id !== id);
+  if (playing && (!id || playing.a.id === id)) { playing.skip = true; try { speechSynthesis.cancel(); } catch (e) {} try { playing.audio && playing.audio.pause(); } catch (e) {} }
+}
+// ---------- live connection ----------
+function connect() {
+  if (gone) return;
+  const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}${API}/ws`); let ping;
+  ws.onopen = () => { ping = setInterval(() => ws.readyState === 1 && ws.send('ping'), 30000); load().catch(() => {}); };
+  ws.onmessage = e => { if (e.data === 'pong') return; let m; try { m = JSON.parse(e.data); } catch (x) { return; }
+    if (m.type === 'alert') load().catch(() => {});
+    else if (m.type === 'test') { queue.push(m.alert); next(); }
+    else if (m.type === 'skip') skip(m.id);
+    else if (m.type === 'settings') load().catch(() => {});
+    else if (m.type === 'replaced') { gone = true; skip(); ws.close(); } };
+  ws.onclose = () => { clearInterval(ping); if (!gone) setTimeout(connect, 3000); };
+}
+// the dashboard's live preview: settings and sample alerts come from the page around it, nothing is saved or claimed
+if (PREVIEW) {
+  addEventListener('message', e => { if (e.origin !== location.origin) return; const m = e.data || {};
+    if (m.type === 'settings') apply(m.settings);
+    if (m.type === 'show') { skip(); queue.push({ id: 'test', ...m.alert }); next(); } });
+  load().catch(() => {}).then(() => parent.postMessage({ type: 'ready' }, location.origin));
+} else {
+  load().catch(() => {}); connect(); setInterval(() => !gone && load().catch(() => {}), 15000);
+  // in a normal browser tab sound needs a click first; OBS plays it straight away
+  if (!window.obsstudio) { const g = $('gate'); setTimeout(() => { if (ctx().state !== 'running') g.style.display = 'block'; }, 800);
+    g.onclick = () => { ctx(); g.style.display = 'none'; }; }
+}
+</script>
+</body>
+</html>

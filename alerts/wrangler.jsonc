@@ -1,0 +1,41 @@
+// The streamer alerts service: its own Worker, database and deploy, kept apart from the site and the War Room bot.
+// The site's Worker (../worker/site.js) hands it every /alerts request on themarines.link and terminal7.xyz (service binding
+// "ALERTS" in ../wrangler.jsonc). It also answers on its own workers.dev address, same paths, for testing.
+// Setup and deploy steps: README.md in this folder.
+{
+  "name": "marine-alerts",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none",
+    "run_worker_first": true
+  },
+  "d1_databases": [
+    // `npx wrangler d1 create marine-alerts` prints the id to put here
+    { "binding": "DB", "database_name": "marine-alerts", "database_id": "REPLACE_WITH_D1_ID", "migrations_dir": "migrations" }
+  ],
+  "durable_objects": { "bindings": [{ "name": "ROOM", "class_name": "Room" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }],
+  // every minute: catch payments made in a phone wallet after its page closed, expire old orders
+  "triggers": { "crons": ["* * * * *"] },
+  "vars": {
+    "BRAND": "Marine Alerts",
+    // where the fee and the annual plan are paid (the same treasury as the terminal's checkout; change it to keep them apart)
+    "TREASURY": "2NCR5VHESnJnt8VPyTSfuPCaATT5ynDs3Q7KRWrRfDb2",
+    // free plan: this share of every tip goes to the treasury (500 = 5%); the annual plan pays none
+    "FEE_BPS": "500",
+    "PLAN_USD": "79",
+    // "1": only streamers on the annual plan can take tips (no free plan)
+    "REQUIRE_PLAN": "0",
+    "MEMO_PREFIX": "MA",
+    // Google sign-in: the OAuth client id (public; leave empty to show wallet sign-in only)
+    "GOOGLE_CLIENT_ID": ""
+  }
+  // secrets (npx wrangler secret put NAME): SESSION_SECRET (required, any long random string), HELIUS_KEY (optional, a
+  // faster RPC than the public one), GOOGLE_TTS_KEY (optional: neural voices made on the server; without it the overlay
+  // speaks with the browser's voice)
+}
