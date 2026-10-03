@@ -506,7 +506,8 @@ def score(days, since_day):
 
 
 WINDOWS = {'7d': 7, '30d': 30, 'all': KEEP_DAYS}
-NEW_HIST = [0]   # coins new to the site that got their history filled this run (at most 3 a run, to cap credits)
+NEW_HIST = [0]   # coins new to the list that got their history filled this run (NEW_HIST_N a run, ~2K credits each)
+NEW_HIST_N = int(os.environ.get('NEW_HIST_N', 10))   # 10: the coins added with the 200-coin list fill in within a day of 6-hourly runs
 
 
 CAP, MIN_N, MIN_R = 0.15, 10, 2000   # no wallet over 15% of a token's score; under 10 scored wallets or $2K of rewards = low data
@@ -625,7 +626,7 @@ for mint in watch:
         elig = sum(b for b in people.values() if b * xpx >= minusd) if xpx else sum(people.values())
         wallets = top_set(people); total = sum(people.values()) or 1
         log(f"${sym}: {len(people)} holders, {len(wallets)} wallets own {sum(people[w] for w in wallets) / total * 100:.0f}% · eligible {elig:,.0f}")
-        new_coin = not HISTORY and not BACKFILL and not T.get('history') and NEW_HIST[0] < 3   # a coin new to the site gets its
+        new_coin = not HISTORY and not BACKFILL and not T.get('history') and NEW_HIST[0] < NEW_HIST_N   # a coin new to the list gets its
         if new_coin: NEW_HIST[0] += 1                                                            # whole history on its first run
         if HISTORY or new_coin:
             since = calendar.timegm(time.strptime(bonded[mint][:19], '%Y-%m-%dT%H:%M:%S')) if bonded.get(mint) else now - KEEP_DAYS * DAY
