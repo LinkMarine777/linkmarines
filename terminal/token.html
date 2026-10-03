@@ -1018,7 +1018,7 @@ function setSeries(){const raw=CH[tf];if(!raw||!raw.length)return false;
     s.forEach(p=>{const k=Math.floor(p.t/B)*B,g=G.get(k);if(!g)G.set(k,{t:k,o:p.m,h:p.m,lo:p.m,m:p.m,l:p.l,v:p.v});else{g.h=Math.max(g.h,p.m);g.lo=Math.min(g.lo,p.m);g.m=p.m;g.l=p.l;g.v+=p.v}});
     s=[...G.values()];for(let i=1;i<s.length;i++){const g=s[i],o=s[i-1].m;g.o=o;g.h=Math.max(g.h,o);g.lo=Math.min(g.lo,o)}}   // each opens at the last close, so a one-trade candle shows the move
   s.ohlc=ohlc||tf==='5m';
-  if(candleOn&&s.ohlc&&s.length>1){const B=(tf==='5m'?(q5?60:15):TFB[tf]||3600)*1000,g=[{...s[0],t:Math.floor(s[0].t/B)*B}];   // on the interval grid   // quiet intervals: a flat candle at the last close, not a gap
+  if((candleOn&&s.ohlc||tf!=='5m'||q5)&&s.length>1){const B=(tf==='5m'?(q5?60:15):TFB[tf]||3600)*1000,g=[{...s[0],t:Math.floor(s[0].t/B)*B}];   // on the interval grid   // quiet intervals: a flat candle at the last close, not a gap
     for(let i=1;i<s.length;i++){const a=g[g.length-1];for(let t=a.t+B;t<s[i].t-B/2&&g.length<2000;t+=B)g.push({t,m:a.m,l:a.l,o:a.m,h:a.m,lo:a.m,v:0});g.push(s[i])}
     g.ohlc=s.ohlc;s=g}
   series=s;hover=null;draw();
