@@ -304,7 +304,7 @@ html.fit #swP{display:none!important}
 #swP .x{display:block;background:none;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:13px;width:30px;height:30px;cursor:pointer;flex:none}
 #swP .x:hover{color:#fff;border-color:var(--amber)}
 .swTabs{display:none}
-.swTabs button{white-space:nowrap}
+.swTabs{gap:8px}.swTabs button{white-space:nowrap;padding:4px 12px}
 .swTabs button.on{color:#fff;border-color:var(--amber);background:rgba(255,210,63,.1)}
 #swP .ph h2{margin-right:auto}
 /* desktop: one panel, two tabs (STONK BOARD | BUY/SELL); the header's BUY/SELL opens the swap tab, again goes back */
@@ -1791,12 +1791,20 @@ const SW_CSS=`.max-w-\\[360px\\]{max-width:none!important;background:transparent
 function styleSwap(n=0){const h=[...document.querySelectorAll('#jupSwap *')].find(e=>e.shadowRoot);
   if(!h||!h.shadowRoot.getElementById('jupiter-plugin')){if(n<100)setTimeout(()=>styleSwap(n+1),100);return}
   if(h.shadowRoot.getElementById('swCss'))return;
-  const st=document.createElement('style');st.id='swCss';st.textContent=SW_CSS;h.shadowRoot.appendChild(st)}
+  const st=document.createElement('style');st.id='swCss';st.textContent=SW_CSS;h.shadowRoot.appendChild(st);
+  setTimeout(fitSwap,300)}   // the widget just loaded: it's taller than the loading line, fit it again
 function initSwap(){window.Jupiter.init({displayMode:'integrated',integratedTargetId:'jupSwap',formProps:swForm()});styleSwap()}
 function openSwap(){loadSwap();const p=$('swP');
   p.querySelector('[data-v=board]').style.display=$('sbP').style.display==='none'?'none':'';   // a token with no Stonk Board data: no tab to go back to
   if(isPhone()){p.classList.add('open');$('swDim').classList.add('open');return}
-  document.documentElement.classList.add('swOpen');p.scrollIntoView({behavior:'smooth',block:'nearest'})}
+  document.documentElement.classList.add('swOpen');fitSwap()}
+// bring the swap fully into view on desktop with the least cut: the chart panel's top (the token's own header) at the top of the
+// screen, unless the swap is too tall for that, then just enough to show its bottom. Nothing moves when it's all on screen already.
+function fitSwap(){if(isPhone()||!document.documentElement.classList.contains('swOpen'))return;
+  const p=$('swP').getBoundingClientRect(),top=document.querySelector('main').getBoundingClientRect().top;
+  if(p.top>=0&&p.bottom<=innerHeight)return;
+  let y=top;if(p.bottom-y>innerHeight)y=Math.min(p.bottom-innerHeight,p.top);
+  scrollTo({top:scrollY+y,behavior:'smooth'})}
 function closeSwap(){$('swP').classList.remove('open');$('swDim').classList.remove('open');document.documentElement.classList.remove('swOpen')}
 if(SWAP_ON){
   document.querySelectorAll('#mbar .buyTk,header nav .buyTk').forEach(a=>a.addEventListener('click',e=>{
