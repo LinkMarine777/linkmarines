@@ -24,15 +24,15 @@ keys are stored anywhere.
 - `public/alerts/` — the pages; `migrations/` — D1 schema
 
 ## Deploy (once)
-```sh
-cd alerts && npm install
-npx wrangler d1 create marine-alerts             # put the printed database_id in wrangler.jsonc
-npx wrangler d1 migrations apply marine-alerts --remote
-npx wrangler secret put SESSION_SECRET           # any long random string (openssl rand -hex 32)
-npx wrangler secret put HELIUS_KEY               # recommended: the public RPC rate-limits payment checks
-npx wrangler secret put GOOGLE_TTS_KEY           # optional: neural voices in OBS (else the browser voice)
-npx wrangler deploy
-```
+Easiest: Cloudflare dashboard → Workers & Pages → Create → Import a repository → `linkmarines`, with
+project name `marine-alerts`, root directory `alerts`, no build command, and deploy command
+`npx wrangler deploy && npx wrangler d1 migrations apply marine-alerts --remote`. The first deploy creates the database.
+Then, in that Worker's Settings → Variables and Secrets, add `SESSION_SECRET` (any long random string), plus
+`HELIUS_KEY` (recommended: the public RPC rate-limits payment checks) and `GOOGLE_TTS_KEY` (optional). After that it
+redeploys by itself on every merge to main.
+
+From a terminal instead: `npm install`, `npx wrangler secret put SESSION_SECRET`, then the same deploy command.
+
 Then in `../wrangler.jsonc`, uncomment the `ALERTS` service binding and deploy the site. `/alerts` then works on
 themarines.link and terminal7.xyz. Until then it works on `marine-alerts.<account>.workers.dev/alerts/`.
 
