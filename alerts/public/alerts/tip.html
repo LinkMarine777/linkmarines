@@ -26,7 +26,7 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><a class="brand" href="/alerts/"><i>🔊</i><span class="bn">Alerts</span></a></div>
+  <div class="top"><a class="brand" href="/alerts/"><i>🔊</i><span class="bn">Alerts</span></a><button class="btn sm" id="wBtn" type="button">Connect wallet</button></div>
   <div class="tip">
     <div class="card" id="box">
       <div class="who"><div class="av" id="av">?</div><div><h1 id="name">Loading…</h1><p id="tag"></p></div></div>
@@ -101,6 +101,10 @@ async function pay(how) {
     say(/reject|cancel|denied|closed/i.test(e.message || '') ? 'Cancelled.' : esc(e.message || e), 'err');
   } finally { busy = false; if ($('payW')) $('payW').disabled = $('payP').disabled = false; }
 }
+// the wallet button: connect, or show the connected wallet and disconnect it
+const wBtn = () => { const a = MA.address; $('wBtn').textContent = a ? `◆ ${a.slice(0, 4)}…${a.slice(-4)} · Disconnect` : 'Connect wallet'; };
+addEventListener('ma-wallet', wBtn);
+$('wBtn').onclick = async () => { try { if (MA.address) await MA.disconnect(); else await MA.connect(true); } catch (e) { say(/reject|cancel|denied/i.test(e.message || '') ? 'Cancelled.' : esc(e.message || e), 'err'); } };
 $('payW').onclick = () => pay('w'); $('payP').onclick = () => pay('p');
 start();
 </script>
