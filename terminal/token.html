@@ -801,8 +801,8 @@ const MARINE='F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK';
 const DATA='https://war-room-bot.linkmarine777.workers.dev/data/terminal/';
 const BOT='https://war-room-bot.linkmarine777.workers.dev';
 const CA=((new URLSearchParams(location.search).get('ca')||'').trim().match(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/)||[MARINE])[0];
-// BUY → Jupiter's swap widget, TESTING: only with &swap=1 in the address (everyone else still goes to jup.ag). To switch it on for all, make this true.
-const SWAP_ON=new URLSearchParams(location.search).has('swap');
+// BUY/SELL → Jupiter's swap widget on the page, for everyone (&swap=0 in the address turns it off: BUY goes to jup.ag, as before)
+const SWAP_ON=new URLSearchParams(location.search).get('swap')!=='0';
 document.documentElement.classList.toggle('swap',SWAP_ON);
 let TK={mint:CA,symbol:'…',quote:'…',quoteMint:null,image:null},TKR=null,POOL='',GT='',PAIR=null;
 const WHALE=2500;
@@ -830,7 +830,7 @@ async function resolveToken(){
   $('mCa').innerHTML=esc(CA.slice(0,4)+'…'+CA.slice(-4))+' <svg viewBox="0 0 24 24"><path d="M8 3h11a2 2 0 012 2v11h-2V5H8zM4 7h11a2 2 0 012 2v11a2 2 0 01-2 2H4a2 2 0 01-2-2V9a2 2 0 012-2zm0 2v11h11V9z"/></svg>';
   $('caIn').value='';   // the box stays empty, ready for the next search (the token's CA is on the copy button)
   // the bare /terminal/token link is $MARINE: show its CA in the address bar so any view can be shared as-is
-  if(new URLSearchParams(location.search).get('ca')!==CA)try{history.replaceState(null,'','?ca='+CA+(SWAP_ON?'&swap=1':'')+location.hash)}catch(e){}
+  if(new URLSearchParams(location.search).get('ca')!==CA)try{history.replaceState(null,'','?ca='+CA+(SWAP_ON?'':'&swap=0')+location.hash)}catch(e){}
   $('homeTk').style.display=CA===MARINE?'none':'';
   $('menuBtn').onclick=e=>{e.stopPropagation();const m=$('menuBtn').parentNode,o=!m.classList.contains('open');m.classList.toggle('open',o);$('menuBtn').setAttribute('aria-expanded',o)};
   document.addEventListener('click',e=>{if(!e.target.closest('.menu'))$('menuBtn').parentNode.classList.remove('open')});
@@ -1773,7 +1773,7 @@ $('ttsClose').onclick=()=>$('ttsModal').classList.remove('show');
 $('ttsModal').onclick=e=>{if(e.target.id==='ttsModal')$('ttsModal').classList.remove('show')};
 $('payLink').onclick=e=>{const m=check();if(m){e.preventDefault();say(m,'err')}else say(kind==='t'?'Approve it in your wallet. It plays a few seconds after it confirms.':'Approve it in your wallet. A mod puts it on screen once it confirms, usually within minutes.','ok')};
 // ---------- BUY: Jupiter's swap widget ----------
-// The swap panel (only with &swap=1 for now): Jupiter's widget, locked to this token, SOL in by default.
+// The swap panel: Jupiter's widget, locked to this token, SOL in by default.
 // BUY/SELL in the header opens it in the Stonk Board's panel on desktop (tabs or BUY/SELL again go back) and slides it up on phones; the jup.ag link stays as the fallback (ctrl/middle-click, or if the widget can't load).
 const SOL_MINT='So11111111111111111111111111111111111111112',isPhone=()=>innerWidth<1000;
 const swForm=()=>({initialInputMint:CA===SOL_MINT?undefined:SOL_MINT,initialOutputMint:CA,fixedMint:CA});   // selling: Jupiter's own ⇅ flips it
