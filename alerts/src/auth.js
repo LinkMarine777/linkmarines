@@ -6,6 +6,8 @@ const te = new TextEncoder();
 const b64u = u8 => { let s = ''; for (const b of u8) s += String.fromCharCode(b); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
 const unb64u = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)), c => c.charCodeAt(0));
 
+// no SESSION_SECRET (or a short one): nobody can sign in, rather than sessions signed with a guessable key
+const secretOf = env => { const s = env.SESSION_SECRET; if (typeof s !== 'string' || s.length < 16) throw new Error('sign-in is not set up yet (SESSION_SECRET)'); return s; };
 async function hmac(secret, data) {
   const k = await crypto.subtle.importKey('raw', te.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   return b64u(new Uint8Array(await crypto.subtle.sign('HMAC', k, te.encode(data))));
@@ -17,14 +19,15 @@ export const COOKIE = 'ma_s';
 const DAYS = 30;
 export async function sessionCookie(env, uid) {
   const body = b64u(te.encode(JSON.stringify({ uid, exp: Math.floor(Date.now() / 1000) + DAYS * 86400 })));
-  return `${COOKIE}=${body}.${await hmac(env.SESSION_SECRET, body)}; Path=/alerts; Max-Age=${DAYS * 86400}; HttpOnly; Secure; SameSite=Lax`;
+  return `${COOKIE}=${body}.${await hmac(secretOf(env), body)}; Path=/alerts; Max-Age=${DAYS * 86400}; HttpOnly; Secure; SameSite=Lax`;
 }
 export const clearCookie = () => `${COOKIE}=; Path=/alerts; Max-Age=0; HttpOnly; Secure; SameSite=Lax`;
 export async function sessionUser(env, req) {
   const m = new RegExp(`(?:^|;\\s*)${COOKIE}=([^;]+)`).exec(req.headers.get('cookie') || '');
   if (!m) return null;
   const [body, sig] = m[1].split('.');
-  if (!body || !sig || !same(sig, await hmac(env.SESSION_SECRET, body))) return null;
+  let secret; try { secret = secretOf(env); } catch (e) { return null; }
+  if (!body || !sig || !same(sig, await hmac(secret, body))) return null;
   try { const s = JSON.parse(new TextDecoder().decode(unb64u(body))); return s.exp > Date.now() / 1000 ? s.uid : null; } catch (e) { return null; }
 }
 

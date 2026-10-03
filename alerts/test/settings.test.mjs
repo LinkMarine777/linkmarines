@@ -20,3 +20,14 @@ test('what gets held', () => {
   assert.equal(held(settingsOf({ filterLinks: false }), { text: 'https://x.com' }), false);
   assert.equal(held(settingsOf({ modQueue: true }), { text: 'hi' }), true);
 });
+
+test('no sessions without a real SESSION_SECRET', async () => {
+  const A = await import('../src/auth.js');
+  await assert.rejects(A.sessionCookie({}, 'u1'));
+  await assert.rejects(A.sessionCookie({ SESSION_SECRET: 'short' }, 'u1'));
+  const env = { SESSION_SECRET: 'a-long-enough-secret-123' }, c = (await A.sessionCookie(env, 'u1')).split(';')[0];
+  const req = cookie => new Request('https://x/alerts/', { headers: { cookie } });
+  assert.equal(await A.sessionUser(env, req(c)), 'u1');
+  assert.equal(await A.sessionUser({}, req(c)), null);
+  assert.equal(await A.sessionUser({ SESSION_SECRET: 'another-long-secret-456' }, req(c)), null);
+});
