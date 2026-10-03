@@ -553,8 +553,9 @@ def px_publish(minutes=float(os.environ.get('PX_MINUTES', 20))):
     # SOL and the reward tokens first (every coin's trades and payouts are valued through them), then the coins
     rq = sorted({(G[m].get('quote') or {}).get('mint') for m in watch} - STABLE - {None, SOL})
     todo = [SOL] + rq + [m for m in watch if m not in rq and m != SOL and m not in STABLE]; done = 0
+    t0 = time.time()   # (its own minutes: counted from the run's start, a 200-coin run left it none)
     for m in todo:
-        if time.time() - now > minutes * 60: log(f'px: out of time, {done}/{len(todo)} updated'); break
+        if time.time() - t0 > minutes * 60: log(f'px: out of time, {done}/{len(todo)} updated'); break
         f = load(f'compound/px/{m}.json', None) or {}
         try:
             if not f.get('pool'):   # first time: the token's busiest pool, and its whole history (1,000 hours a call)
