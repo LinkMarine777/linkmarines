@@ -1,5 +1,5 @@
 {
-  "name": "marine-alerts",
+  "name": "tts-alerts",
   "version": "1.0.0",
   "scripts": {
     "test": "node --test test/*.test.mjs",

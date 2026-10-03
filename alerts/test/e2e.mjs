@@ -16,7 +16,7 @@ async function call(path, body, method) {
   return { status: r.status, d };
 }
 const ok = (r, what) => { assert.equal(r.status, 200, `${what}: ${r.status} ${JSON.stringify(r.d)}`); return r.d; };
-const sql = q => execSync(`npx wrangler d1 execute marine-alerts --local --command "${q}"`, { stdio: 'pipe' }).toString();
+const sql = q => execSync(`npx wrangler d1 execute tts-alerts --local --command "${q}"`, { stdio: 'pipe' }).toString();
 
 const streamer = Keypair.generate(), viewer = Keypair.generate();
 const cfg = ok(await call('/config'), 'config');

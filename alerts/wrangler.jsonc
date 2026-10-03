@@ -3,7 +3,7 @@
 // "ALERTS" in ../wrangler.jsonc). It also answers on its own workers.dev address, same paths, for testing.
 // Setup and deploy steps: README.md in this folder.
 {
-  "name": "marine-alerts",
+  "name": "tts-alerts",
   "main": "src/index.js",
   "compatibility_date": "2026-09-01",
   "workers_dev": true,
@@ -16,7 +16,7 @@
   },
   "d1_databases": [
     // no id: the first deploy creates the database (by this name) and finds it again on later deploys
-    { "binding": "DB", "database_name": "marine-alerts", "migrations_dir": "migrations" }
+    { "binding": "DB", "database_name": "tts-alerts", "migrations_dir": "migrations" }
   ],
   "durable_objects": { "bindings": [{ "name": "ROOM", "class_name": "Room" }] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }],

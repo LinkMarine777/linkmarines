@@ -25,8 +25,8 @@ keys are stored anywhere.
 
 ## Deploy (once)
 Easiest: Cloudflare dashboard → Workers & Pages → Create → Import a repository → `linkmarines`, with
-project name `marine-alerts`, root directory `alerts`, no build command, and deploy command
-`npx wrangler deploy && npx wrangler d1 migrations apply marine-alerts --remote`. The first deploy creates the database.
+project name `tts-alerts`, root directory `alerts`, no build command, and deploy command
+`npx wrangler deploy && npx wrangler d1 migrations apply tts-alerts --remote`. The first deploy creates the database.
 Then, in that Worker's Settings → Variables and Secrets, add `SESSION_SECRET` (any long random string), plus
 `HELIUS_KEY` (recommended: the public RPC rate-limits payment checks) and `GOOGLE_TTS_KEY` (optional). After that it
 redeploys by itself on every merge to main.
@@ -34,7 +34,7 @@ redeploys by itself on every merge to main.
 From a terminal instead: `npm install`, `npx wrangler secret put SESSION_SECRET`, then the same deploy command.
 
 Then in `../wrangler.jsonc`, uncomment the `ALERTS` service binding and deploy the site. `/alerts` then works on
-themarines.link and terminal7.xyz. Until then it works on `marine-alerts.<account>.workers.dev/alerts/`.
+themarines.link and terminal7.xyz. Until then it works on `tts-alerts.<account>.workers.dev/alerts/`.
 
 **Google sign-in (optional):** Google Cloud console → APIs & Services → Credentials → OAuth client ID (Web). Add the
 domains as authorized JavaScript origins, then put the client id in `GOOGLE_CLIENT_ID` in `wrangler.jsonc`.
@@ -46,7 +46,7 @@ Settings in `wrangler.jsonc` vars: `TREASURY` (fee and plan wallet; it's the ter
 ## Local
 ```sh
 printf 'SESSION_SECRET=dev\n' > .dev.vars
-npx wrangler d1 migrations apply marine-alerts --local
+npx wrangler d1 migrations apply tts-alerts --local
 npx wrangler dev            # http://localhost:8787/alerts/
 npm test                    # unit tests
 node test/e2e.mjs           # end-to-end against wrangler dev
