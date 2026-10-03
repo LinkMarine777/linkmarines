@@ -93,8 +93,9 @@
     const w = await pick(title); if (!w) return null;
     const p = w.make(), a = await p.connect();
     if (prov && prov !== p) await prov.disconnect();
-    prov = p; addr = a; return { prov, addr };
+    prov = p; addr = a; dispatchEvent(new Event('ma-wallet')); return { prov, addr };
   }
+  async function disconnect() { if (prov) await prov.disconnect(); prov = null; addr = null; dispatchEvent(new Event('ma-wallet')); }
 
   // ---------- sign in with a wallet ----------
   async function signInWallet() {
@@ -153,6 +154,6 @@
     return null;
   }
 
-  window.MA = { api, esc, connect, signInWallet, googleButton, payWallet, payPhone, modal,
+  window.MA = { api, esc, connect, disconnect, signInWallet, googleButton, payWallet, payPhone, modal,
     get address() { return addr; }, isPhone: () => matchMedia('(pointer:coarse)').matches };
 })();

@@ -31,12 +31,29 @@ const cfg = env => ({
   memo: env.MEMO_PREFIX || 'MA',
 });
 const isPro = u => (u.pro_until || 0) > now();
-const rpcUrl = env => env.HELIUS_KEY ? `https://mainnet.helius-rpc.com/?api-key=${env.HELIUS_KEY}` : (env.RPC_URL || 'https://api.mainnet-beta.solana.com');
+// Helius when HELIUS_KEY is set (the key alone, or the whole Helius URL pasted in), else the public RPC. If Helius refuses
+// (a wrong or spent key), the public one is tried, so payments keep working; the error says which key to fix.
+// publicnode first (what the terminal's checkout uses; it keeps recent history, enough to find a payment within the
+// order's 30 minutes), then Solana's own (which turns away some cloud servers)
+const PUBLIC_RPC = ['https://solana-rpc.publicnode.com', 'https://api.mainnet-beta.solana.com'];
+function rpcUrls(env) {
+  let k = String(env.HELIUS_KEY || '').trim();
+  const pub = env.RPC_URL ? [env.RPC_URL, ...PUBLIC_RPC] : PUBLIC_RPC;
+  if (/^https?:\/\//.test(k)) { try { const u = new URL(k); k = u.searchParams.get('api-key') || ''; if (!k) return [env.HELIUS_KEY.trim(), ...pub]; } catch (e) { k = ''; } }
+  return k ? [`https://mainnet.helius-rpc.com/?api-key=${encodeURIComponent(k)}`, ...pub] : pub;
+}
 async function rpc(env, method, params) {
-  const r = await fetch(rpcUrl(env), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) });
-  const d = await r.json();
-  if (d.error) throw new Error(d.error.message || 'rpc error');
-  return d.result;
+  let last;
+  for (const url of rpcUrls(env)) {
+    try {
+      const r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) });
+      const t = await r.text(); let d;
+      try { d = JSON.parse(t); } catch (e) { throw new Error(`Solana RPC answered ${r.status} ${t.slice(0, 60)}${url.includes('helius') ? ' (check the HELIUS_KEY secret)' : ''}`); }
+      if (d.error) { if (/api.key|unauthori/i.test(d.error.message || '')) throw new Error('Solana RPC refused the HELIUS_KEY'); throw Object.assign(new Error(d.error.message || 'rpc error'), { final: true }); }
+      return d.result;
+    } catch (e) { if (e.final) throw e; last = e; console.log('rpc', method, e.message); }
+  }
+  throw last;
 }
 let solPx = null, solPxAt = 0;
 async function solPrice() {
