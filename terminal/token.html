@@ -303,11 +303,14 @@ html.swap #swP{display:block}
 html.fit #swP{display:none!important}
 #swP .x{display:block;background:none;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:13px;width:30px;height:30px;cursor:pointer;flex:none}
 #swP .x:hover{color:#fff;border-color:var(--amber)}
-#swSide button.on[data-s=buy]{color:var(--green);border-color:var(--green);background:rgba(57,255,106,.08)}
-#swSide button.on[data-s=sell]{color:var(--red);border-color:var(--red);background:rgba(255,51,85,.08)}
+.swTabs{display:none}
+.swTabs button{white-space:nowrap}
+.swTabs button.on{color:#fff;border-color:var(--amber);background:rgba(255,210,63,.1)}
 #swP .ph h2{margin-right:auto}
-/* desktop: BUY in the header swaps the Stonk Board for the swap panel in the same spot, ✕ swaps it back */
+/* desktop: one panel, two tabs (STONK BOARD | BUY/SELL); the header's BUY/SELL opens the swap tab, again goes back */
 @media (min-width:1000px){html.swap:not(.swOpen) #swP{display:none}html.swOpen #sbP{display:none!important}
+  html.swap .swTabs{display:flex}html.swap #sbP .sbW,#swP .x{display:none}
+  html.swap #sbLink{font-size:0}html.swap #sbLink::after{content:'OPEN ↗';font-size:11px}   /* room for the tabs on one line */
   html.swOpen header nav .buyTk{box-shadow:inset 0 0 0 2px var(--amber)}}
 #jupSwap{min-height:330px;
   /* Jupiter's own colour hooks (r, g, b), set to the terminal's palette */
@@ -684,14 +687,14 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
       <div class="board" data-slot="1" id="slot1"></div>
     </section>
     <section class="panel" id="swP">
-      <div class="ph"><h2><span class="tkSym">$MARINE</span></h2><div class="tabs" id="swSide"><button type="button" data-s="buy" class="on">BUY</button><button type="button" data-s="sell">SELL</button></div><span class="meta">routed by Jupiter</span><button class="x" id="swX" type="button" title="Close (back to the Stonk Board)">✕</button></div>
+      <div class="ph"><h2><span class="tkSym">$MARINE</span></h2><div class="tabs swTabs"><button type="button" data-v="board">STONK BOARD</button><button type="button" data-v="swap" class="on">BUY/SELL</button></div><span class="meta">routed by Jupiter</span><button class="x" id="swX" type="button" title="Close (back to the Stonk Board)">✕</button></div>
       <div id="jupSwap"><div class="ld">Loading Jupiter…</div></div>
       <div class="foot">Routed and sent by Jupiter, straight from your own wallet: we never hold your funds and add no fee of our own
         (you pay Jupiter's usual swap fee, the token's own buy/sell tax and Solana network fees). Not financial advice.
         <a class="buyTk" href="#" target="_blank" rel="noopener">Open on jup.ag ↗</a></div>
     </section>
     <section class="panel acc" id="sbP" data-acc="apy" data-def="1" style="display:none">
-      <div class="ph"><h2><span class="tkSym">$MARINE</span> STONK BOARD</h2><a class="meta sbl" id="sbLink" target="_blank" rel="noopener">VIEW ON STONK BOARD ▸</a></div>
+      <div class="ph"><h2><span class="tkSym">$MARINE</span><span class="sbW"> STONK BOARD</span></h2><div class="tabs swTabs"><button type="button" data-v="board" class="on">STONK BOARD</button><button type="button" data-v="swap">BUY/SELL</button></div><a class="meta sbl" id="sbLink" target="_blank" rel="noopener">VIEW ON STONK BOARD ▸</a></div>
       <div id="mb">
         <div class="mbg">
           <div><label>BOARD RANK</label><b id="mbRank">—</b></div>
@@ -1771,10 +1774,9 @@ $('ttsModal').onclick=e=>{if(e.target.id==='ttsModal')$('ttsModal').classList.re
 $('payLink').onclick=e=>{const m=check();if(m){e.preventDefault();say(m,'err')}else say(kind==='t'?'Approve it in your wallet. It plays a few seconds after it confirms.':'Approve it in your wallet. A mod puts it on screen once it confirms, usually within minutes.','ok')};
 // ---------- BUY: Jupiter's swap widget ----------
 // The swap panel (only with &swap=1 for now): Jupiter's widget, locked to this token, SOL in by default.
-// The header BUY swaps it in for the Stonk Board on desktop (BUY again or ✕ swaps back) and slides it up on phones; the jup.ag link stays as the fallback (ctrl/middle-click, or if the widget can't load).
+// BUY/SELL in the header opens it in the Stonk Board's panel on desktop (tabs or BUY/SELL again go back) and slides it up on phones; the jup.ag link stays as the fallback (ctrl/middle-click, or if the widget can't load).
 const SOL_MINT='So11111111111111111111111111111111111111112',isPhone=()=>innerWidth<1000;
-let swSide='buy';
-const swForm=()=>swSide==='buy'?{initialInputMint:CA===SOL_MINT?undefined:SOL_MINT,initialOutputMint:CA,fixedMint:CA}:{initialInputMint:CA,initialOutputMint:CA===SOL_MINT?undefined:SOL_MINT,fixedMint:CA};
+const swForm=()=>({initialInputMint:CA===SOL_MINT?undefined:SOL_MINT,initialOutputMint:CA,fixedMint:CA});   // selling: Jupiter's own ⇅ flips it
 function loadSwap(){if(loadSwap.ok)return;loadSwap.ok=1;
   const fail=()=>{loadSwap.ok=0;$('jupSwap').innerHTML='<div class="ld">Jupiter\'s swap didn\'t load. <a href="https://jup.ag/tokens/'+CA+'" target="_blank" rel="noopener">Buy on jup.ag ↗</a></div>'};
   const sc=document.createElement('script');sc.src='https://plugin.jup.ag/plugin-v1.js';sc.onerror=fail;
@@ -1791,10 +1793,8 @@ function styleSwap(n=0){const h=[...document.querySelectorAll('#jupSwap *')].fin
   if(h.shadowRoot.getElementById('swCss'))return;
   const st=document.createElement('style');st.id='swCss';st.textContent=SW_CSS;h.shadowRoot.appendChild(st)}
 function initSwap(){window.Jupiter.init({displayMode:'integrated',integratedTargetId:'jupSwap',formProps:swForm()});styleSwap()}
-// BUY / SELL tabs: re-open Jupiter's widget the other way round (SOL → token, or token → SOL)
-function setSide(v){swSide=v;document.querySelectorAll('#swSide button').forEach(b=>b.classList.toggle('on',b.dataset.s===v));
-  if(window.Jupiter&&loadSwap.ok)try{initSwap()}catch(e){}}
-function openSwap(){if(swSide!=='buy')setSide('buy');loadSwap();const p=$('swP');
+function openSwap(){loadSwap();const p=$('swP');
+  p.querySelector('[data-v=board]').style.display=$('sbP').style.display==='none'?'none':'';   // a token with no Stonk Board data: no tab to go back to
   if(isPhone()){p.classList.add('open');$('swDim').classList.add('open');return}
   document.documentElement.classList.add('swOpen');p.scrollIntoView({behavior:'smooth',block:'nearest'})}
 function closeSwap(){$('swP').classList.remove('open');$('swDim').classList.remove('open');document.documentElement.classList.remove('swOpen')}
@@ -1802,7 +1802,8 @@ if(SWAP_ON){
   document.querySelectorAll('#mbar .buyTk,header nav .buyTk').forEach(a=>a.addEventListener('click',e=>{
     if(e.ctrlKey||e.metaKey||e.shiftKey||e.button)return;e.preventDefault();
     if(!isPhone()&&document.documentElement.classList.contains('swOpen'))closeSwap();else openSwap()}));   // the header BUY toggles on desktop
-  document.querySelectorAll('#swSide button').forEach(b=>b.onclick=()=>setSide(b.dataset.s));
+  document.querySelectorAll('.swTabs button').forEach(b=>b.onclick=e=>{e.stopPropagation();b.dataset.v==='swap'?openSwap():closeSwap()});
+  document.querySelectorAll('header nav .buyTk,#mbar .buyTk').forEach(a=>a.firstChild.textContent='BUY/SELL ');
   $('swX').onclick=closeSwap;$('swDim').onclick=closeSwap;
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSwap()})}
 // ---------- wallet picker: no default, the user chooses ----------
