@@ -570,6 +570,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 #infoPop .k{font-size:12px;letter-spacing:2px;color:var(--blue2);text-transform:uppercase}#infoPop .h{font-family:'VT323';font-size:44px;color:#fff;line-height:1.05;margin:4px 0}#infoPop .d{font-size:13px;color:var(--txt)}
 html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #infoPop .k{font-size:20px}html.fit #infoPop .h{font-size:64px}html.fit #infoPop .d{font-size:22px}
 #audioGate{display:none!important}
+.was{opacity:.55;font-weight:400;margin-right:2px}.off{font-size:.72em;letter-spacing:1px;color:var(--green);border:1px solid var(--green);padding:0 4px;border-radius:3px;margin-left:4px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -677,7 +678,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
           <div class="board" data-slot="2" id="slot2"></div>
           <div class="board" data-slot="3" id="slot3"></div>
         </div>
-        <div class="priceline"><span>🔊 TTS on stream <b class="am" id="ttsPrice">$3</b></span><button class="btn tts" data-buy="t">BUY TTS</button></div>
+        <div class="priceline"><span>🔊 TTS on stream <b class="am" id="ttsPrice">$1</b></span><button class="btn tts" data-buy="t">BUY TTS</button></div>
       </section>
     </div>
   </div>
@@ -1691,9 +1692,11 @@ addEventListener('pointerdown',unlockAudio,{once:true});addEventListener('keydow
 let PAY=null,ADS={slots:{}},kind='t',solPx=null,web3=null;
 const TOKEN='TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',ATAP='ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',MEMO='MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr';
 const SLOTN={'1':'SLOT 01 · PRIME','2':'SLOT 02','3':'SLOT 03'};
+// a discount (pay.json "was": the old prices): the old price struck through, then the new one and how much off
+const WAS=(o,n)=>o&&+o>+n?'<s class="was">$'+o+'</s> ':'',OFF=(o,n)=>o&&+o>+n?' <span class="off">'+Math.round(100-100*n/o)+'% OFF</span>':'';
 const BADC=/(https?:\/\/|www\.|\.(com|xyz|io|net|org|gg|fun|app|link|ly|me|so)\b|t\.me|discord\.gg|\b[1-9A-HJ-NP-Za-km-z]{32,44}\b)/i;
 const fld=v=>v.replace(/[|\n\r]/g,'/').replace(/\s+/g,' ').trim();
-async function loadPay(){try{PAY=await j(DATA+'pay.json?'+Date.now());$('ttsPrice').textContent='$'+PAY.prices.tts;renderAds()}catch(e){}}
+async function loadPay(){try{PAY=await j(DATA+'pay.json?'+Date.now());$('ttsPrice').innerHTML=WAS(PAY.was?.tts,PAY.prices.tts)+'$'+PAY.prices.tts+OFF(PAY.was?.tts,PAY.prices.tts);renderAds()}catch(e){}}
 async function loadAds(){try{const a=await j(DATA+'ads.json?'+Date.now()),f=await botFeed();
   if(f&&f.slots)for(const k in f.slots){const have=new Set((a.slots[k]||[]).map(x=>x.id));a.slots[k]=[...(a.slots[k]||[]),...f.slots[k].filter(x=>!have.has(x.id))]}
   ADS=a;renderAds()}catch(e){}}
@@ -1723,11 +1726,12 @@ function fillers(k){return [...(HOUSE[k]||[]).map(n=>({house:n})),...(SPONSOR[k]
 function houseAd(k,pr){
   const L=fillers(k);if(!L.length)return'';
   const f=L[Math.floor(Date.now()/20000+ +k)%L.length];
-  if(f.house)return `<img src="/terminal/house/${f.house}.png" alt="ad space open"><span class="htag">${PAY?'$'+PAY.prices.slots[k]+'/'+PAY.blockMinutes+'M · ':''}BUY ▸</span>`;
+  if(f.house)return `<img src="/terminal/house/${f.house}.png" alt="ad space open"><span class="htag">${PAY?WAS(PAY.was?.slots?.[k],PAY.prices.slots[k])+'$'+PAY.prices.slots[k]+'/'+PAY.blockMinutes+'M · ':''}BUY ▸</span>`;
   return `<a class="sp" href="${esc(f.href)}" target="_blank" rel="noopener sponsored"><img src="${esc(f.img)}" alt=""><span class="htag">${esc(f.tag)}</span></a>`}
-function fillSlotSel(){if(!PAY)return;$('fSlot').innerHTML=['1','2','3'].map(k=>`<option value="${k}">${SLOTN[k]} · $${PAY.prices.slots[k]}/${PAY.blockMinutes}m</option>`).join('');
+function fillSlotSel(){if(!PAY)return;$('fSlot').innerHTML=['1','2','3'].map(k=>`<option value="${k}">${SLOTN[k]} · $${PAY.prices.slots[k]}/${PAY.blockMinutes}m${PAY.was?.slots?.[k]>PAY.prices.slots[k]?' (was $'+PAY.was.slots[k]+')':''}</option>`).join('');
   $('fBlocks').innerHTML=Array.from({length:PAY.maxBlocks},(_,i)=>`<option value="${i+1}">${(i+1)*PAY.blockMinutes} min</option>`).join('')}
 let imgId=null,imgBusy=false;
+function wasTotal(){const W=PAY&&PAY.was;if(!W)return 0;return kind==='t'?+W.tts||0:(+(W.slots||{})[$('fSlot').value]||0)*(+$('fBlocks').value||1)}
 function usdTotal(){if(!PAY)return 0;return kind==='t'?PAY.prices.tts:PAY.prices.slots[$('fSlot').value]*(+$('fBlocks').value||1)}
 async function getSolPx(){try{const d=await j('https://lite-api.jup.ag/price/v3?ids=So11111111111111111111111111111111111111112');solPx=d['So11111111111111111111111111111111111111112'].usdPrice}catch(e){}}
 function amount(){const u=usdTotal();if($('fTok').value==='usdc')return{ui:u,txt:'$'+u+' USDC'};
@@ -1741,7 +1745,7 @@ function check(){if(kind!=='t'&&!xHandle($('fFrom').value))return'enter your X h
   const txt=kind==='t'?$('ttsText').value:$('fHead').value+' '+$('fSub').value;
   if(!(kind==='t'?$('ttsText').value.trim():$('fHead').value.trim()))return kind==='t'?'write a message':'write a headline';
   if(BADC.test(txt+' '+$('fFrom').value))return'no links or contract addresses';return''}
-function refresh(){const a=amount();$('fTotal').textContent=a?a.txt:'…';
+function refresh(){const a=amount();{const wt=wasTotal(),ut=usdTotal();$('fTotal').innerHTML=a?WAS(wt,ut)+esc(a.txt)+OFF(wt,ut):'…'}
   if(kind!=='t'&&PAY){const k=$('fSlot').value,w=queueEnd(k)-Date.now()/1000;$('slotQ').textContent=w>30?'Slot is booked for '+Math.ceil(w/60)+' more min. Yours starts right after.':'Slot is open. Yours starts as soon as payment confirms.'}
   const L=$('payLink');if(PAY&&PAY.treasury&&a){L.href=`solana:${PAY.treasury}?amount=${a.ui}${$('fTok').value==='usdc'?'&spl-token='+PAY.usdcMint:''}&memo=${encodeURIComponent(memo())}&label=${encodeURIComponent('The War Room')}&message=${encodeURIComponent(kind==='t'?'TTS on stream':'Billboard')}`}
   const off=!PAY||!PAY.treasury;$('payBtn').disabled=off;L.style.display=off||!(coarse()||!detected().length)?'none':'';
