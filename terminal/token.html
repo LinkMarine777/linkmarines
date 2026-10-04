@@ -326,6 +326,7 @@ html.fit #swP{display:none!important}
   #swDim{position:fixed;inset:0;background:#000a;z-index:71}
   #swDim.open{display:block}
 }
+#walKol{margin:4px 0 2px;font-size:12px;color:var(--txt)}#walKol a{color:var(--blue2)}#walKol .dim{font-size:10.5px}.kolN{color:var(--blue2)!important;font-weight:700}
 #walModal h3{font-family:'VT323';font-weight:400;font-size:34px;color:#fff;margin:0;line-height:1}
 #walModal .wl{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;font-size:11px;margin-top:2px}#walModal .wl a{color:var(--blue2)}
 #walKpi{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:14px 0 4px}
@@ -740,7 +741,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
 </div></div>
 <div id="walModal"><div class="box">
   <button class="x" id="walX" type="button" title="Close">✕</button>
-  <div class="wk">STONKFUN WALLET</div><h3 id="walAddr"></h3>
+  <div class="wk">STONKFUN WALLET</div><h3 id="walAddr"></h3><div id="walKol"></div>
   <div class="wl"><a id="walScan" target="_blank" rel="noopener">SOLSCAN ↗</a><a href="#" id="walCa">COPY ADDRESS</a></div>
   <div id="walKpi"></div>
   <div class="sec">HOLDINGS <span class="dim">stonkfun coins in the wallet now</span></div><div id="walHold"></div>
@@ -1363,6 +1364,11 @@ function renderCompound(){if(!CMP)return;const W=CMP.win[cmpW]||{},sc=W.score,sy
     ${CMP.rows.length>20?`<button class="btn cmpMore" id="cmpMore">${cmpAll?'SHOW TOP 20':'SHOW ALL '+CMP.rows.length}</button>`:''}`;
   const m=$('cmpMore');if(m)m.onclick=()=>{cmpAll=!cmpAll;renderCompound()};
   $('cmpBody').querySelectorAll('a.walA').forEach(a=>a.onclick=e=>{e.preventDefault();e.stopPropagation();openWallet(a.dataset.w)});
+  // known traders' names next to their wallets (shown rows, 25 a request)
+  {const as=[...$('cmpBody').querySelectorAll('a.walA')],ws=as.map(a=>a.dataset.w);
+    (async()=>{for(let i=0;i<ws.length;i+=25)await kolGet(ws.slice(i,i+25));
+      as.forEach(a=>{const k=KOL[a.dataset.w];if(!k)return;a.textContent=k.name;a.classList.add('kolN');
+        a.title=`${a.dataset.w}${k.f?' · '+kolFol(k.f)+' followers':''} · ${k.how} (name via KOLlector)`})})()}
   $('cmpBody').querySelectorAll('tr.cmpRow').forEach(tr=>tr.onclick=e=>{if(e.target.closest('a'))return;const d=tr.nextElementSibling;if(d&&d.classList.contains('cmpDet'))d.style.display=d.style.display==='none'?'':'none'})}
 // desktop keeps every panel in the same place for every token: a panel with nothing for this token says so instead of
 // disappearing (phones still fold empty ones away)
@@ -1378,7 +1384,16 @@ const WRE=/^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 // the address bar follows the window: the open wallet's link while it's open, the token's link again once it's closed
 const walUrl=w=>{try{const u=new URL(location.href);if(w)u.searchParams.set('w',w);else u.searchParams.delete('w');history.replaceState(history.state,'',u)}catch(e){}};
 let walAll=false;
+// who's who: wallets KOLlector (dethective.com/kollector) ties to known traders, through the bot (kept a week there)
+const KOL={};async function kolGet(ws){const need=ws.filter(w=>!(w in KOL)).slice(0,25);
+  if(need.length)try{const d=await j(BOT+'/kol?w='+need.join(',')),p=new Set(d&&d._p||[]);need.forEach(w=>{if(!p.has(w))KOL[w]=d&&d[w]||null})}catch(e){}   // (_p: not looked up yet, asked again later)
+  return ws.filter(w=>KOL[w])}
+const kolUrl=k=>k.x?'https://x.com/'+encodeURIComponent(k.x):k.p?'https://pump.fun/profile/'+encodeURIComponent(k.p):'https://dethective.com/kollector/';
+const kolFol=n=>n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':String(n);
 async function openWallet(w){if(!WRE.test(w||''))return;openWallet.w=w;walAll=false;walUrl(w);$('walModal').classList.add('show');document.body.style.overflow='hidden';
+  // a known trader: their name in place of the address
+  $('walKol').innerHTML='';kolGet([w]).then(()=>{const k=KOL[w];if(!k||openWallet.w!==w)return;$('walAddr').textContent=k.name;
+    $('walKol').innerHTML=`<span class="dim">${esc(w.slice(0,4))}…${esc(w.slice(-4))} · <a href="${kolUrl(k)}" target="_blank" rel="noopener">${k.x?'@'+esc(k.x):k.p?'pump.fun':'KOLlector'}</a>${k.f?` · ${kolFol(k.f)} followers`:''} · <span title="${esc(k.how)}">name via <a href="https://dethective.com/kollector/" target="_blank" rel="noopener">KOLlector</a></span></span>`});
   $('walAddr').textContent=w.slice(0,4)+'…'+w.slice(-4);$('walScan').href='https://solscan.io/account/'+w;$('walCa').textContent='COPY ADDRESS';
   const link='https://terminal7.xyz/terminal/token?ca='+CA+'&w='+w;$('walCard').src=BOT+'/card/wallet/'+w+'.png';
   $('walKpi').innerHTML='';$('walHold').innerHTML=$('walCoins').innerHTML='<div class="dim" style="font-size:11px">loading…</div>';
@@ -1455,7 +1470,9 @@ function renderTape(){
     return`<tr class="${v>=WHALE?'whale':''}"${fresh&&tapeLoaded?'':' style="animation:none"'}><td class="dim">${ago(Date.parse(a.block_timestamp))}</td>
       <td class="${buy?'up':'dn'}">${buy?'BUY':'SELL'}${v>=WHALE?'<span class="tag">LARGE</span>':''}</td>
       <td class="r">${usd(v)}</td><td class="r">${compact(amt,'')}</td><td class="r dim fx">${px(price)}</td>
-      <td class="r hide-sm"><a href="https://solscan.io/tx/${a.tx_hash}" target="_blank" rel="noopener">${(a.tx_from_address||'').slice(0,4)}</a></td></tr>`});
+      <td class="r hide-sm"><a href="https://solscan.io/tx/${a.tx_hash}" target="_blank" rel="noopener"${KOL[a.tx_from_address]?` class="kolN" title="${esc(a.tx_from_address)}"`:''}>${KOL[a.tx_from_address]?esc(KOL[a.tx_from_address].name.slice(0,14)):(a.tx_from_address||'').slice(0,4)}</a></td></tr>`});
+  if(Date.now()-(renderTape.k||0)>30000){renderTape.k=Date.now();const ws=[...new Set(tapeRaw.map(a=>a.tx_from_address).filter(w=>WRE.test(w||'')&&!(w in KOL)))].slice(0,25);
+    if(ws.length)kolGet(ws).then(f=>{if(f.length)renderTape()})}
   tapeLoaded=true;$('trades').tBodies[0].innerHTML=list.join('')||`<tr><td colspan="6" class="dim">quiet on the line${tapeMin?' (no $'+tapeMin+'+ trades in the last 300)':''}</td></tr>`;
   if(wide)fitTape()}
 // on desktop the tape shows as many whole rows as its panel has room for (it never grows the panel)
