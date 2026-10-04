@@ -56,7 +56,10 @@ export default {
       const img = MINT.test(wal || '') ? `${new URL(req.url).origin}/card/wallet/${wal}.png` : `${new URL(req.url).origin}/card/${ca}.png`;
       let title = null, desc = null;
       if (MINT.test(wal || '')) {
-        title = `Wallet ${wal.slice(0, 4)}…${wal.slice(-4)} on Terminal 7`;
+        // a known trader (who's who, the bot's /kol): their name in the title, like the X-Ray and the card
+        const ask = env.BOT ? env.BOT.fetch(`${BOT}/kol?w=${wal}`) : fetch(`${BOT}/kol?w=${wal}`);
+        const k = CRAWLER.test(req.headers.get('user-agent') || '') ? await Promise.race([ask, new Promise((_, no) => setTimeout(() => no(new Error('slow')), 3000))]).then(r => r.json()).then(d => d && d[wal]).catch(() => null) : null;
+        title = k ? `${k.name}${k.x ? ' (@' + k.x + ')' : ''} on Terminal 7` : `Wallet ${wal.slice(0, 4)}…${wal.slice(-4)} on Terminal 7`;
         desc = 'Compound score, rewards and stonkfun holdings for this wallet on Terminal 7.';
       } else if (CRAWLER.test(req.headers.get('user-agent') || '')) {
         const ask = env.BOT ? env.BOT.fetch(`${BOT}/token/${ca}`) : fetch(`${BOT}/token/${ca}`, { cf: { cacheTtl: 300 } });
