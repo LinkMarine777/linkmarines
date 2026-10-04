@@ -1805,6 +1805,7 @@ function loadSwap(){if(loadSwap.ok)return;loadSwap.ok=1;
 // shrink to its content (no empty black block under the button), square-ish corners
 const SW_CSS=`.max-w-\\[360px\\]{max-width:none!important;background:transparent!important;border-radius:0!important}
   .h-\\[550px\\]{height:auto!important;min-height:330px}
+  .h-\\[550px\\]:has(input[placeholder='Search']){height:550px!important}   /* the token picker's list needs the full height */
   #jupiter-plugin .rounded-xl,#jupiter-plugin .rounded-lg,#jupiter-plugin .rounded-2xl{border-radius:2px!important}`;
 function styleSwap(n=0){const h=[...document.querySelectorAll('#jupSwap *')].find(e=>e.shadowRoot);
   if(!h||!h.shadowRoot.getElementById('jupiter-plugin')){if(n<100)setTimeout(()=>styleSwap(n+1),100);return}
