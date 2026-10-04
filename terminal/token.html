@@ -1442,7 +1442,7 @@ function walRender(w,d,link){
     :'<div class="dim" style="font-size:11px">No stonkfun trades or rewards found for this wallet.</div>';
   $('walCoins').querySelectorAll('tr.wcr').forEach(tr=>tr.onclick=e=>{if(e.target.closest('a'))return;const n=tr.nextElementSibling;if(n&&n.classList.contains('wtr'))n.style.display=n.style.display==='none'?'':'none'});
   const mb=$('walMore');if(mb)mb.onclick=()=>{walAll=!walAll;walRender(w,d,link)};
-  const txt=`Wallet ${w.slice(0,4)}…${w.slice(-4)} on stonkfun: compound score ${sc??'—'}${sc!=null?' ('+lbl+')':''} · ${cmpUsd(d.rewards||0)} in rewards from ${earning.length} coin${earning.length===1?'':'s'}`;
+  const txt=`${KOL[w]?KOL[w].name+(KOL[w].x?' (@'+KOL[w].x+')':''):'Wallet '+w.slice(0,4)+'…'+w.slice(-4)} on stonkfun: compound score ${sc??'—'}${sc!=null?' ('+lbl+')':''} · ${cmpUsd(d.rewards||0)} in rewards from ${earning.length} coin${earning.length===1?'':'s'}`;
   $('walTweet').href='https://x.com/intent/tweet?text='+encodeURIComponent(txt)+'&url='+encodeURIComponent(link);
   // the card as a file: COPY IMAGE puts it on the clipboard; SAVE IMAGE uses the phone's share sheet (Save to Photos) or downloads it
   const cardFile=async()=>{const r=await fetch($('walCard').src.startsWith(BOT)?$('walCard').src:BOT+'/card/wallet/'+w+'.png');if(!r.ok)throw new Error(r.status);return new File([await r.blob()],'terminal7-wallet-'+w.slice(0,4)+'.png',{type:'image/png'})};
