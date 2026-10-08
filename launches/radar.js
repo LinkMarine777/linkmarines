@@ -76,7 +76,7 @@ ROOT.innerHTML = `
 const DR = document.createElement('div'); DR.id = 'lr-dr'; DR.innerHTML = '<div class="box" id="lr-drBox"></div>'; document.body.appendChild(DR);
 
 async function load() {
-  for (const u of SRC) { try { const r = await fetch(u + '?t=' + Math.floor(Date.now() / 60000), { cache: 'no-store' }); if (!r.ok) continue; D = await r.json(); render(); return; } catch (e) {} }
+  for (const u of SRC) { try { const r = await fetch(u + '?t=' + Math.floor(Date.now() / 60000), { cache: 'no-store' }); if (!r.ok) continue; D = await r.json(); window.LRS_CEX = D.cex; window.LRS_SVC = D.svc; render(); return; } catch (e) {} }
   if (!D) $('rows').innerHTML = '<tr><td class="l dim" colspan="13">the radar hasn\'t written its first pass yet: back in a few minutes</td></tr>';
 }
 function render() {

@@ -13,3 +13,6 @@
 .lrscan .note{font-size:11px;margin-top:6px}
 .lrscan .bfb{border:1px solid var(--line);padding:10px 12px;margin-bottom:10px;font-size:12px}.lrscan .bfb b{display:block;font-size:10.5px;letter-spacing:1.5px;color:#fff;margin-bottom:6px}
 .lrscan .bfb ul{margin:0;padding:0}.lrscan .bfb li{list-style:none;padding:2px 0}.lrscan .bfb li.r::before{content:'✕ ';color:var(--red)}.lrscan .bfb li.a::before{content:'! ';color:var(--amber)}.lrscan .bfb li.g::before{content:'✓ ';color:var(--green)}
+.lrscan .bmh{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lrscan .bmb{background:none;border:1px solid var(--blue2);color:var(--blue2);font:inherit;font-size:10.5px;letter-spacing:1px;padding:3px 8px;cursor:pointer;white-space:nowrap}.lrscan .bmb:hover{background:rgba(74,122,255,.12);color:#fff}
+.lrscan .tile.bmt{cursor:pointer}.lrscan .tile.bmt:hover{border-color:var(--blue2)}

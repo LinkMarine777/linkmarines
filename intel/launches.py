@@ -95,7 +95,7 @@ def assets(mints):
 
 state = load('launches-state.json', {})
 for k in ('devs', 'bf', 'vrfd', 'subs', 'vrfdLast', 'verified'): state.pop(k, None)   # the first version's on-chain VRFD feed + dev backfill
-for k, v in (('pairs', {}), ('live', {}), ('rw', {}), ('fired', {}), ('vr', {}), ('sun', {}), ('sf', {}), ('fan', {}), ('scan', {})):
+for k, v in (('pairs', {}), ('live', {}), ('rw', {}), ('fired', {}), ('vr', {}), ('sun', {}), ('sf', {}), ('fan', {}), ('scan', {}), ('busy', {})):
     state.setdefault(k, v)
 FULL = os.environ.get('FULL') == '1' or now - state.get('fullAt', 0) > 1800   # Jupiter's verified list: every 30 min
 signals = []
@@ -261,6 +261,23 @@ for t in cand[:150]:
     except Exception as e: log('rewards', t['symbol'], e)
 
 
+RPC = 'https://solana-rpc.publicnode.com'
+def busy(f):
+    """An app or exchange wallet (Fomo, pump.fun, onramps, hot wallets) funds thousands of strangers: its last 100 transactions
+    span hours. A private bundler's span days or weeks. Checked on chain, remembered a day."""
+    c = state['busy'].get(f)
+    if c and now - c[1] < 86400: return c[0]
+    try:
+        q = urllib.request.Request(RPC, data=json.dumps({'jsonrpc': '2.0', 'id': 1, 'method': 'getSignaturesForAddress', 'params': [f, {'limit': 100}]}).encode(),
+                                   headers={'Content-Type': 'application/json', 'User-Agent': 'war-room-radar'})
+        r = json.load(urllib.request.urlopen(q, timeout=20))
+        sg = r['result']
+    except Exception as e: log('busy', f[:6], e); return False
+    b = len(sg) >= 100 and (sg[0].get('blockTime') or 0) - (sg[-1].get('blockTime') or 0) < 2 * 86400
+    state['busy'][f] = [b, now]; time.sleep(0.25)
+    return b
+
+
 def holder_scan(m, a, created):
     """The bundle scan: jup.ag's top 100 holders, who funded each, Jupiter's sniper / insider tags."""
     H = get(f'{DAPI}/holders/{m}').get('holders') or []
@@ -269,10 +286,11 @@ def holder_scan(m, a, created):
     pct = lambda x: x['amount'] / supply * 100
     H = [x for x in H if not any(k in (t.get('id') or '') for t in x.get('tags') or [] for k in ('Pool', 'Bonding Curve', 'Vault'))]
     tagged = lambda tag: round(sum(pct(x) for x in H if tag in (x.get('holderTags') or [])), 2)
-    by_f, src, fresh = {}, {}, 0
+    by_f, src, sp, fresh = {}, {}, {}, 0
+    def add(k, p): src[k] = src.get(k, 0) + 1; sp[k] = sp.get(k, 0) + p
     for x in H:
         ai = x.get('addressInfo') or {}; f = ai.get('fundingAddress')
-        if not f: src['unknown'] = src.get('unknown', 0) + 1; continue
+        if not f: add('unknown', pct(x)); continue
         if created and ts(ai.get('fundingBlockTime')) >= created - 2 * 86400: fresh += 1   # a wallet made for this launch
         fan = state['fan'].setdefault(f, [])
         if m not in fan and len(fan) < FAN_OUT + 1: fan.append(m)
@@ -280,12 +298,13 @@ def holder_scan(m, a, created):
     clusters = []
     for f, xs in by_f.items():
         name = EXCHANGES.get(f) or ('exchange / service' if len(state['fan'].get(f, [])) >= FAN_OUT else None)
-        if name: src[name] = src.get(name, 0) + len(xs); continue
-        if len(xs) >= 2: clusters.append([f, len(xs), round(sum(pct(x) for x in xs), 2)])
-        else: src['independent'] = src.get('independent', 0) + 1
+        if name: [add(name, pct(x)) for x in xs]; continue
+        if len(xs) >= 2 and busy(f): [add('app / exchange wallet', pct(x)) for x in xs]; continue   # not a link
+        if len(xs) >= 2: clusters.append([f, len(xs), round(sum(pct(x) for x in xs), 2)]); [add('linked', pct(x)) for x in xs]
+        else: add('independent', pct(xs[0]))
     clusters.sort(key=lambda c: -c[2])
-    src['linked'] = sum(c[1] for c in clusters)
-    return {'sn': tagged('sniper'), 'in': tagged('insider'), 'lk': round(sum(c[2] for c in clusters), 2), 'cl': clusters[:5],
+    return {'sn': tagged('sniper'), 'in': tagged('insider'), 'lk': round(sum(c[2] for c in clusters), 2), 'cl': clusters[:6], 'nc': len(clusters),
+            'sp': {k: round(v, 2) for k, v in sp.items()},
             'src': {k: v for k, v in sorted(src.items(), key=lambda kv: -kv[1]) if v}, 'fresh': fresh, 'n': len(H), 'at': now}
 
 rows, hot, scanned = [], {}, 0
@@ -351,6 +370,7 @@ for t in feed:
 for h in hot.values(): h['v'] = round(h['v']); h['new'] = state['pairs'].get(h['qm']) or 0
 hot = sorted(hot.values(), key=lambda h: (-h['real'], -h['v']))[:40]
 rows.sort(key=lambda r: (-r['score'], -r['v']))
+state['busy'] = {f: v for f, v in state['busy'].items() if v[0] or now - v[1] < 86400}   # the quiet ones only a day
 if len(state['fan']) > 60000: state['fan'] = {f: v for f, v in state['fan'].items() if len(v) >= FAN_OUT}   # keep the services
 stats = {'launches': len(feed), 'graduated': sum(1 for t in feed if t.get('status') == 'graduated'), 'scored': len(rows),
          'real': sum(r['vd'] == 'REAL' for r in rows), 'farm': sum(r['vd'] == 'FARM' for r in rows),
@@ -371,7 +391,7 @@ for r in vrfd: r.pop('ck', None)
 save('launches.json', {'at': now, 'stats': stats, 'pairs': len(pairs) or len(state['pairs']), 'newPairs': new_pairs, 'vrfd': vrfd,
                        'next': nxt, 'sunListed': state.get('sunListed'), 'issListed': state.get('issListed'), 'hot': hot, 'launches': rows[:200], 'signals': signals[:120],
                        # for the token page's own bundle scan of any coin: who funds wallets across many coins
-                       'cex': EXCHANGES, 'svc': sorted(f for f, v in state['fan'].items() if len(v) >= FAN_OUT)})
+                       'cex': EXCHANGES, 'svc': sorted({f for f, v in state['fan'].items() if len(v) >= FAN_OUT} | {f for f, v in state['busy'].items() if v[0]})})
 save('launches-state.json', state)
 log(f"done{' (full)' if FULL else ''}: {stats['launches']} launches in 24 h, {stats['real']} REAL, {stats['farm']} FARM, {stats['bundled']} bundled, "
     f"{scanned} holder scans, {len(vrfd)} stonkfun coins in VRFD, {len(nxt)} next pairs, {len(signals)} signals")
