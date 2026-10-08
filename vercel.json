@@ -17,6 +17,10 @@
     {
       "source": "/tts/checkout",
       "destination": "/tts/checkout.html"
+    },
+    {
+      "source": "/launches/",
+      "destination": "/trending/index.html"
     }
   ],
   "redirects": [
@@ -48,6 +52,11 @@
     {
       "source": "/flywheel",
       "destination": "/flywheel/",
+      "permanent": false
+    },
+    {
+      "source": "/launches",
+      "destination": "/launches/",
       "permanent": false
     }
   ]

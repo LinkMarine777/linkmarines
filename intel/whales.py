@@ -180,7 +180,7 @@ for w in sorted(whale, key=lambda w: min(x['rank'] for x in whale[w])):
         bots.add(w); log('skipping busy wallet (bot or pool)', w[:6]); continue
     for s in fresh[:budget]:
         budget -= 1
-        try: tx = rpc('getTransaction', [s['signature'], {'encoding': 'jsonParsed', 'maxSupportedTransactionVersion': 0}])
+        try: tx = rpc('getTransaction', [s['signature'], {'encoding': 'jsonParsed', 'maxSupportedTransactionVersion': 1}])
         except Exception as e: log('tx', s['signature'][:8], e); continue
         if not tx or (tx.get('meta') or {}).get('err'): continue
         m = tx['meta']; keys = [k['pubkey'] for k in tx['transaction']['message']['accountKeys']]
@@ -551,6 +551,10 @@ for x in lp: x.pop('id', None); x.pop('rate', None)
 if FAST: lp, lp1 = load('whales.json', {}).get('lp', []), load('whales.json', {}).get('lp1', [])
 else: lp, lp1 = sorted(lp, key=lambda x: -x['d'])[:20], sorted([x for x in lp if x.get('fee1')], key=lambda x: -x['d1'])[:20]
 
+# the launch radar's alerts (intel/launches.py: new stonkfun pairs, VRFD submissions, newly verified stocks, REAL launches)
+# go out with ours, so the bot records them like any other alert
+for s in load('launches.json', {}).get('signals', []):
+    if s['t'] > now - 3600 and s['id'] not in {x['id'] for x in signals}: signals.append(s)
 old = {s['id']: s['t'] for s in load('whales.json', {}).get('signals', [])}
 for s in signals: s['t'] = old.get(s['id'], s['t'])            # a signal keeps the time it first fired
 for s in load('whales.json', {}).get('signals', []):   # history: signals from earlier runs stay for 3 days

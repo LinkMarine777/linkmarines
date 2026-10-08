@@ -119,7 +119,7 @@ export async function buildPayment({ payer, token, legs, reference, memo, blockh
 }
 
 // ---------- checking a paid transaction ----------
-// `tx` is getTransaction(sig, {encoding:'json'|'jsonParsed', maxSupportedTransactionVersion:0}). Paid means: it succeeded, it
+// `tx` is getTransaction(sig, {encoding:'json'|'jsonParsed', maxSupportedTransactionVersion:1}). Paid means: it succeeded, it
 // carries the order's reference, and every receiver's balance went up by at least its share (balance changes, so it holds
 // whatever instructions the wallet wrapped around ours).
 export function checkPayment(tx, { token, legs, reference }) {

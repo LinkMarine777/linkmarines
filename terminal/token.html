@@ -579,6 +579,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
     <div class="menu"><button class="btn" id="menuBtn" type="button" aria-haspopup="true" aria-expanded="false" title="More">☰</button>
       <div class="mnu" id="mnu" role="menu">
         <a href="/trending/">🔥 Trending tokens</a>
+        <a href="/launches/">🧪 New launches: real or farm</a>
         <a id="homeTk" href="?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">⚓ $MARINE terminal</a>
         <a href="/stream/">📺 The War Room (stream)</a>
         <a href="/flywheel/">♻️ How $LINK rewards work</a>
@@ -786,16 +787,21 @@ let TK={mint:CA,symbol:'…',quote:'…',quoteMint:null,image:null},TKR=null,POO
 const WHALE=2500;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-// Who is who: the token (base) and its stonkfun quote token. The pool is the most liquid DexScreener
-// pair of the token against that quote (else its most liquid pair).
-async function resolveToken(){
-  let t=null;try{t=await j(BOT+'/token/'+CA)}catch(e){}
-  if(t&&!t.error){TK={mint:CA,symbol:t.symbol,name:t.name,image:t.image,quote:t.quote?.symbol||'?',quoteMint:t.quote?.mint||null,tax:t.transferTaxBps};TKR=t.rewards;TK.sf=1}
-  let pairs=[];try{pairs=((await j('https://api.dexscreener.com/latest/dex/tokens/'+CA)).pairs||[]).filter(p=>p.chainId==='solana')}catch(e){}
+// the token's pool: its most liquid DexScreener pair against its quote token (else its most liquid pair)
+let PAIRS=[];   // the token's DexScreener pairs (its links come from them too)
+async function findPool(){
+  const pairs=PAIRS=((await j('https://api.dexscreener.com/latest/dex/tokens/'+CA)).pairs||[]).filter(p=>p.chainId==='solana');
   const other=p=>p.baseToken.address===CA?p.quoteToken:p.baseToken;
   pairs.sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0));
   PAIR=(TK.quoteMint&&pairs.find(p=>other(p).address===TK.quoteMint))||pairs[0]||null;
-  if(PAIR){POOL=PAIR.pairAddress;GT='https://api.geckoterminal.com/api/v2/networks/solana/pools/'+POOL;
+  if(PAIR){POOL=PAIR.pairAddress;GT='https://api.geckoterminal.com/api/v2/networks/solana/pools/'+POOL}}
+// Who is who: the token (base) and its stonkfun quote token, and its pool
+async function resolveToken(){
+  let t=null;try{t=await j(BOT+'/token/'+CA)}catch(e){}
+  if(t&&!t.error){TK={mint:CA,symbol:t.symbol,name:t.name,image:t.image,quote:t.quote?.symbol||'?',quoteMint:t.quote?.mint||null,tax:t.transferTaxBps};TKR=t.rewards;TK.sf=1}
+  try{await findPool()}catch(e){}
+  const other=p=>p.baseToken.address===CA?p.quoteToken:p.baseToken;
+  if(PAIR){
     if(!t||t.error){const me=PAIR.baseToken.address===CA?PAIR.baseToken:PAIR.quoteToken,o=other(PAIR);TK={mint:CA,symbol:me.symbol,quote:o.symbol,quoteMint:o.address,image:PAIR.info?.imageUrl||null}}}
   if(CA===MARINE)TK.image='/terminal/img/marine.webp';   // the current logo (stonkfun keeps the launch image)
   $('tkMsg').textContent=t&&!t.error?'':t&&t.temporary?'stonkfun is down right now: market data only until it\'s back':PAIR?'not a stonkfun token: market data only':'no market found for that address';
@@ -814,7 +820,7 @@ async function resolveToken(){
   document.addEventListener('click',e=>{if(!e.target.closest('.menu'))$('menuBtn').parentNode.classList.remove('open')});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')$('menuBtn').parentNode.classList.remove('open')});
   document.title=sym+' · WAR ROOM TERMINAL 7';
-  renderLinks(pairs);
+  renderLinks(PAIRS);
 }
 // The token's own links as DexScreener lists them (X, website, Telegram), plus a live X search for its cashtag
 const ICO={x:'<path d="M18.9 2H22l-7.6 8.7L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8.1-9.3L1 2h7l4.8 6.3zm-1.2 18h1.9L7.4 4H5.4z"/>',
@@ -962,10 +968,17 @@ function tickLast(){if(rewards&&rewards.lastPayoutAt)$('pLast').textContent='las
 
 // ---------- market (DexScreener) ----------
 let marinePx=null;
+// DexScreener is the only source of both prices (the token's and its quote's): when it refuses (rate limit, outage) both
+// froze, and a page opened during one never found its pool (no prices until a reload). Now Jupiter's prices fill in, and
+// the pool is looked for again every 2 min.
+async function jupMarket(){const ids=[CA,TK.quoteMint].filter(Boolean);
+  try{const d=await j('https://lite-api.jup.ag/price/v3?ids='+ids.join(',')),b=d[CA]?.usdPrice,q=TK.quoteMint&&d[TK.quoteMint]?.usdPrice;
+    if(b>0){marinePx=b;$('sPrice').textContent=px(b)}if(q>0){$('sLink').textContent=px(q);QPX=q}}catch(e){}}
 async function loadMarket(){
+  if(!POOL&&Date.now()-(loadMarket.poolAt||0)>120e3){loadMarket.poolAt=Date.now();try{await findPool()}catch(e){}}
   try{
-    if(!POOL)return;const d=await j('https://api.dexscreener.com/latest/dex/pairs/solana/'+POOL);
-    const p=d.pair||(d.pairs||[])[0];if(!p)return;const flip=p.baseToken.address!==CA;
+    if(!POOL)return jupMarket();const d=await j('https://api.dexscreener.com/latest/dex/pairs/solana/'+POOL);
+    const p=d.pair||(d.pairs||[])[0];if(!p)return jupMarket();const flip=p.baseToken.address!==CA;
     marinePx=flip?(+p.priceUsd/+p.priceNative):+p.priceUsd;
     $('sPrice').textContent=px(marinePx);chg24=p.priceChange?.h24;renderChg();
     const pc=p.priceChange||{};PC=flip?{}:pc;const ct={m5:'5m',h1:'1h',h6:'6h',h24:'1d'};   // tap 1h / 6h / 24h: the chart switches to it
@@ -980,7 +993,7 @@ async function loadMarket(){
     const linkPx=flip?+p.priceUsd:marinePx/(+p.priceNative);
     if(isFinite(linkPx)){$('sLink').textContent=px(linkPx);QPX=linkPx}
     if(hover==null&&CH[tf]){liveTail();setSeries()}
-  }catch(e){}
+  }catch(e){jupMarket()}
 }
 
 // ---------- chart ----------
@@ -1930,6 +1943,7 @@ $('infoPop').addEventListener('click',closeInfo);
 const DB_HEAD=x=>{const k=x.kind,sd=x.side;
   if(k==='buy'&&/whale watch/i.test(x.text))return['🐋 WHALE WATCH','buy'];
   return({convergence:['🐋 WHALES PILING IN','buy'],dumping:['🐋 WHALES DUMPING','sell'],rotation:['🔄 WHALE ROTATION'],exit:['🚪 WHALE EXIT','sell'],
+    newpair:['🆕 NEW STONKFUN PAIR','buy'],vrfd:['⚡ JUPITER VRFD'],sunrise:['🌅 NEXT STONKFUN PAIR','buy'],launch:['🧪 REAL LAUNCH','buy'],
     dip:['🩸 WHALES BUYING THE DIP','buy'],rewards:['♻️ WHALE REWARDS'],score:['🧱 CLOBr SCORE'],board:['📋 STONK BOARD'],top10:['🚀 STONKFUN TOP 10'],
     milestone:['🏆 MILESTONE'],payout:['💸 HOLDER PAYOUT'],pulse:['⚡ PULSE INCOMING'],link:[sd==='down'?'🔗 $LINK DIPPING':'🔗 $LINK PUMPING'],
     mover:[sd==='down'?'📉 BIG MOVER':'📈 BIG MOVER'],bigtrade:[sd==='sell'?'🐳 BIG SELL':'🐳 BIG BUY',sd==='sell'?'sell':'buy']})[k]||['🐋 WHALE RADAR']};
