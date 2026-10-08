@@ -17,6 +17,12 @@
 <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/terminal7.webmanifest">
+<meta name="theme-color" content="#04060f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Terminal 7">
 <script>/* old token links (/trending/?ca=...) open the token view */
 if(new URLSearchParams(location.search).get('ca'))location.replace('/terminal/token'+location.search+location.hash)</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -168,6 +174,7 @@ main.lrOn>:not(.vt):not(#lr){display:none!important}
 /* sort: tap the one that's on to turn it around */
 #sort button.on::after{content:' ▼';font-size:8px}#sort button.on.asc::after{content:' ▲'}
 </style>
+<link rel="stylesheet" href="../launches/scan.css">
 <link rel="stylesheet" href="../launches/radar.css">
 </head>
 <body>
@@ -197,6 +204,7 @@ main.lrOn>:not(.vt):not(#lr){display:none!important}
         <a href="/bridge/">🌉 New to Solana? Bridge &amp; buy</a>
         <a href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ War Room chat</a>
         <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener">𝕏 @TheMarinesX</a>
+        <a href="#" onclick="return wrWelcome()">👋 Welcome &amp; tips</a>
         <a href="/">🏠 HQ</a>
       </div></div>
   </nav>
@@ -561,6 +569,8 @@ addEventListener('touchend',()=>{try{unlockAudio()}catch(e){}},{once:true});
   addEventListener('popstate',()=>setView(viewOf(),false));
   setView(viewOf(),false)})();
 </script>
+<script src="../launches/scan.js" defer></script>
 <script src="../launches/radar.js" defer></script>
+<script src="../terminal/welcome.js" defer></script>
 </body>
 </html>

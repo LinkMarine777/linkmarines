@@ -60,15 +60,6 @@
 #lr-dr .box{position:absolute;right:0;top:0;bottom:0;width:min(460px,100%);background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;padding:16px;font-size:13px}
 #lr-dr .top{display:flex;align-items:center;gap:10px}#lr-dr .top img,#lr-dr .top .ph0{width:40px;height:40px;border-radius:50%;object-fit:cover;background:#0b1a2e;display:block}#lr-dr .top b{font-size:18px;color:#fff}#lr-dr .top small{display:block;color:var(--dim)}
 #lr-dr .x{margin-left:auto;background:none;border:1px solid var(--line);color:var(--txt);font:inherit;padding:4px 10px;cursor:pointer}
-#lr-dr h3{font-size:11px;letter-spacing:1.5px;color:#fff;margin:16px 0 8px;font-weight:600}
-#lr-dr .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
-#lr-dr .tile{border:1px solid var(--line);border-radius:6px;padding:8px 4px;text-align:center}#lr-dr .tile b{display:block;font-size:14px;color:var(--txt)}
-#lr-dr .tile b.g{color:#3ee08f}#lr-dr .tile b.r{color:var(--red)}#lr-dr .tile span{font-size:10.5px;color:var(--dim);text-decoration:underline dotted;text-underline-offset:3px}
-#lr-dr .lr-src{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;font-size:12px}#lr-dr .lr-src i{font-style:normal;color:var(--dim)}
-#lr-dr .sbar{grid-column:1/-1;height:5px;background:#141c36;margin-bottom:4px}#lr-dr .sbar s{display:block;height:100%;background:var(--blue2)}#lr-dr .sbar.lk s{background:var(--red)}#lr-dr .sbar.ex s{background:#c7f284}
-#lr-dr .cl{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px 12px;font-size:12px;padding:6px 0;border-bottom:1px solid var(--line)}
 #lr-dr .lr-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
-#lr-dr .bfb{border:1px solid var(--line);padding:10px 12px;margin-bottom:10px;font-size:12px}#lr-dr .bfb b{display:block;font-size:10.5px;letter-spacing:1.5px;color:#fff;margin-bottom:6px}
-#lr-dr .bfb ul{margin:0;padding:0}#lr-dr .bfb li{list-style:none;padding:2px 0}#lr-dr .bfb li.r::before{content:'✕ ';color:var(--red)}#lr-dr .bfb li.a::before{content:'! ';color:var(--amber)}#lr-dr .bfb li.g::before{content:'✓ ';color:var(--green)}
 #lr-dr .buyb{background:var(--green);color:#04060f;border:0;font:inherit;font-size:11px;font-weight:600;letter-spacing:1px;padding:4px 12px;cursor:pointer;margin-left:10px}#lr-dr .buyb:hover{filter:brightness(1.1)}
 #lr-swap{min-height:330px;border:1px solid var(--line)}#lr-swap .ld{padding:40px 0;text-align:center;font-size:12px;color:var(--dim)}
