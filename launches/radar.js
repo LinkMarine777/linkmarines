@@ -106,7 +106,7 @@ function renderHot() {
   const H = (D.hot || []).slice().sort(cmp(hk, hd));
   ROOT.querySelectorAll('th[data-hk]').forEach(t => { t.classList.toggle('on', t.dataset.hk === hk); t.classList.toggle('asc', t.dataset.hk === hk && hd > 0); });
   $('hot').innerHTML = H.map(h => `<tr data-q="${esc(h.qm)}" class="${h.qm === pq ? 'on' : ''}"><td class="l"><b style="color:#fff">${sy(h.q)}</b> <span class="lr-tag">${esc(h.qc || '')}</span>${h.new && Date.now() / 1000 - h.new < 7 * 86400 ? '<span class="lr-tag new">NEW PAIR</span>' : ''}</td>
-    <td>${num(h.n)}</td><td>${compact(h.v)}</td><td class="${h.real ? 'up' : 'dim'}">${num(h.real)}</td><td class="l">${h.best ? `<a href="#" data-coin="${esc(h.best[2])}">${sy(h.best[0])}</a> <span class="dim">${h.best[1]}</span>` : '<span class="dim">—</span>'}</td></tr>`).join('');
+    <td>${num(h.n)}</td><td>${compact(h.v)}</td><td class="${h.real ? 'up' : 'dim'}">${num(h.real)}</td><td class="l">${h.best ? `<a href="${tok(h.best[2])}">${sy(h.best[0])}</a> <span class="dim">${h.best[1]}</span>` : '<span class="dim">—</span>'}</td></tr>`).join('');
 }
 function fbCell(r) {
   if (r.fb == null) return '<span class="dim" title="no holder payouts to check (standard mode)">—</span>';
@@ -124,7 +124,7 @@ function renderRows() {
   $('nRows').textContent = L.length;
   $('rows').innerHTML = L.length ? L.map(r => `<tr data-m="${esc(r.m)}">
     <td class="l"><span class="vd v-${r.vd}"><i>${r.score}</i>${r.vd}</span></td>
-    <td class="l"><div class="coin">${pic(r.i)}<div><b>${sy(r.s)}</b>${r.st === 'graduated' ? '<span class="chip ok">GRAD</span>' : ''}${(r.flags || []).includes('BUNDLED') ? '<span class="chip bad">BUNDLED</span>' : ''}${r.vr ? `<span class="chip ${r.vr.st === 'verified' ? 'ok' : 'warn'}" title="Jupiter VRFD: ${esc(r.vr.st)} (${esc(r.vr.lane)} lane)">${r.vr.lane === 'express' ? '⚡ ' : ''}VRFD</span>` : ''}<small>${esc(r.n)}</small></div></div></td>
+    <td class="l"><div class="coin">${pic(r.i)}<div><b>${sy(r.s)}</b><button type="button" class="infob" data-coin="${esc(r.m)}" title="more info: its score, bundle scan and who funded its holders, without leaving the page">ⓘ INFO</button>${r.st === 'graduated' ? '<span class="chip ok">GRAD</span>' : ''}${(r.flags || []).includes('BUNDLED') ? '<span class="chip bad">BUNDLED</span>' : ''}${r.vr ? `<span class="chip ${r.vr.st === 'verified' ? 'ok' : 'warn'}" title="Jupiter VRFD: ${esc(r.vr.st)} (${esc(r.vr.lane)} lane)">${r.vr.lane === 'express' ? '⚡ ' : ''}VRFD</span>` : ''}<small>${esc(r.n)}</small></div></div></td>
     <td class="l">${sy(r.q)}${r.qc ? `<span class="lr-tag">${esc(r.qc)}</span>` : ''}</td>
     <td class="dim">${ago(r.c)}</td>
     <td>${compact(r.mc)}<small class="dim" style="display:block;font-size:10px">peak ${compact(r.pk)}</small></td>
@@ -188,8 +188,10 @@ ROOT.addEventListener('click', e => {
   const so = e.target.closest('th[data-k]'); if (so) return setSort(so.dataset.k);
   const hs = e.target.closest('th[data-hk]'); if (hs) { const k = hs.dataset.hk; hd = hk === k ? -hd : -1; hk = k; if (D) renderHot(); return; }
   const pr = e.target.closest('#lr-hot tr[data-q]'); if (pr) return setPair(pr.dataset.q === pq ? null : pr.dataset.q);
-  if (e.target.closest('a')) return;   // OPEN ↗ goes to the terminal; the rest of a row opens the coin's panel
-  const tr = e.target.closest('#lr-rows tr[data-m]'); if (tr) openCoin(tr.dataset.m);
+  if (e.target.closest('a')) return;
+  // a coin's row opens its terminal (like OPEN ↗; ⌘ / ctrl-click: a new tab); MORE INFO opens its panel here
+  const tr = e.target.closest('#lr-rows tr[data-m]');
+  if (tr) { const u = tok(tr.dataset.m); if (e.metaKey || e.ctrlKey) open(u, '_blank', 'noopener'); else location.href = u; }
 });
 
 // the data: read a few seconds after the trending page opens, so the first switch to this view is instant; then fresh
