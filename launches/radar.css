@@ -41,13 +41,6 @@
 #lr .bar s{position:absolute;left:0;top:0;bottom:0;background:var(--green)}#lr .bar.lo s{background:var(--red)}#lr .bar.mid s{background:var(--amber)}
 #lr .lr-tabs{display:flex;gap:4px;flex-wrap:wrap;margin:0;width:auto}#lr .lr-tabs button{flex:none;background:none;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:11px;padding:3px 10px;cursor:pointer;letter-spacing:1px}
 #lr .lr-tabs button.on{color:#fff;border-color:var(--blue2)}#lr .lr-tabs button:hover{color:#fff}
-/* sort: the same buttons as trending's; tapping the one that's on turns it around */
-#lr .lr-sort{display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:8px 14px;border-bottom:1px solid var(--line)}
-#lr .lr-sort>span{font-size:10px;letter-spacing:1.5px;color:var(--dim);margin-right:4px}
-#lr .lr-sort button{background:none;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:11px;padding:3px 9px;cursor:pointer;letter-spacing:.8px;white-space:nowrap}
-#lr .lr-sort button:hover{color:#fff}#lr .lr-sort button.on{color:#fff;border-color:var(--blue2);background:rgba(74,122,255,.1)}
-#lr .lr-sort button.on::after{content:' ▼';font-size:8px}#lr .lr-sort button.on.asc::after{content:' ▲'}
-@media (max-width:640px){#lr .lr-sort{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}#lr .lr-sort::-webkit-scrollbar{display:none}}
 #lr details.how{padding:12px 14px;font-size:12px;line-height:1.6}#lr details.how summary{cursor:pointer;color:#fff;letter-spacing:1.5px;font-size:11px}
 #lr details.how p,#lr details.how li{color:var(--txt);margin-top:6px}#lr details.how ul{padding-left:18px}#lr details.how code{color:var(--amber)}
 #lr .lr-foot{text-align:center;color:var(--dim);font-size:11px;padding:6px 16px 10px}

@@ -21,10 +21,9 @@ const stPill = s => s === 'verified' ? '<span class="pill ok">✓ Verified</span
 const lanePill = l => l === 'express' ? '<span class="pill ex">⚡ Express</span>' : '';
 const bundOf = r => Math.max(r.bpk || 0, (r.scan && r.scan.lk) || 0);
 
-// the sorts, each with the way it usually reads (-1: biggest first; BUNDLED and AGE: least / newest first)
-const SORTS = [['score', 'SCORE', -1], ['c', 'NEWEST', -1], ['bund', 'BUNDLED', 1], ['v', 'VOLUME', -1], ['fb', 'FEE-BACKED', -1],
-  ['ob', 'ORG BUYERS', -1], ['h', 'HOLDERS', -1], ['mc', 'MC', -1], ['fees', 'FEES PAID', -1]];
-const DIR = Object.fromEntries(SORTS.map(([k, , d]) => [k, d]));
+// sorting: tap a column's label; first tap the way it usually reads (biggest first; BUNDLED least first, AGE newest first,
+// COIN / PAIR A-Z), a second tap turns it around
+const DIR = { score: -1, c: -1, bund: 1, v: -1, fb: -1, ob: -1, h: -1, mc: -1, fees: -1, dg: -1, s: 1, q: 1 };
 let D = null, vf = 'REAL', sk = 'score', sd = -1, pq = null, hk = 'real', hd = -1;   // pq: the pair the launches are filtered to
 try { vf = localStorage.getItem('lrTab') || 'REAL'; const s = JSON.parse(localStorage.getItem('lrSort') || 'null'); if (s && s[0] in DIR) [sk, sd] = s; } catch (e) {}
 
@@ -41,7 +40,6 @@ ROOT.innerHTML = `
     <div class="lr-ph"><h2>LAUNCHES · LAST 24H</h2><span class="n" id="lr-nRows"></span>
       <div class="lr-tabs" id="lr-tabs">${['REAL', 'WATCH', 'FARM', 'BUNDLED', 'THIN', 'ALL'].map(v => `<button type="button" data-v="${v}">${v}</button>`).join('')}</div>
       <span id="lr-pf"></span><span class="hint">tap a coin for its bundle scan · <span id="lr-upd"></span></span></div>
-    <div class="lr-sort" id="lr-sort"><span>SORT</span>${SORTS.map(([k, n]) => `<button type="button" data-k="${k}">${n}</button>`).join('')}</div>
     <div class="lr-tw"><table><thead><tr>
       <th class="l" data-k="score">SCORE</th><th class="l" data-k="s">COIN</th><th class="l" data-k="q">PAIR</th><th data-k="c">AGE</th>
       <th data-k="mc">MC</th><th data-k="v">24H VOL</th><th data-k="fees" title="priority fees + tips traders paid (Jupiter's Fees Paid), and per trade">FEES PAID</th>
@@ -123,7 +121,7 @@ function renderRows() {
   ROOT.querySelectorAll('#lr-hot tr[data-q]').forEach(t => t.classList.toggle('on', t.dataset.q === pq));
   L = L.slice().sort(cmp(sk, sd));
   ROOT.querySelectorAll('#lr-tabs button').forEach(b => b.classList.toggle('on', b.dataset.v === vf));
-  ROOT.querySelectorAll('#lr-sort button, th[data-k]').forEach(t => { t.classList.toggle('on', t.dataset.k === sk); t.classList.toggle('asc', t.dataset.k === sk && sd > 0); });
+  ROOT.querySelectorAll('th[data-k]').forEach(t => { t.classList.toggle('on', t.dataset.k === sk); t.classList.toggle('asc', t.dataset.k === sk && sd > 0); });
   $('nRows').textContent = L.length;
   $('rows').innerHTML = L.length ? L.map(r => `<tr data-m="${esc(r.m)}">
     <td class="l"><span class="vd v-${r.vd}"><i>${r.score}</i>${r.vd}</span></td>
@@ -141,7 +139,7 @@ function renderRows() {
     <td><a class="openb" href="${tok(r.m)}" title="open ${sy(r.s)} in the terminal">OPEN ↗</a></td>
   </tr>`).join('') : `<tr><td class="l dim" colspan="13">no ${vf} launches${pq ? ' on this pair' : ''} right now${pq && vf !== 'ALL' ? ' · <a href="#" data-act="all">see ALL</a>' : ''}</td></tr>`;
 }
-function setSort(k) { sd = sk === k ? -sd : (DIR[k] ?? (k === 's' || k === 'q' ? 1 : -1)); sk = k; try { localStorage.setItem('lrSort', JSON.stringify([sk, sd])); } catch (e) {} if (D) renderRows(); }
+function setSort(k) { sd = sk === k ? -sd : (DIR[k] ?? -1); sk = k; try { localStorage.setItem('lrSort', JSON.stringify([sk, sd])); } catch (e) {} if (D) renderRows(); }
 
 // the coin's Token Info (like jup.ag's) and its bundle scan: who funded the top 100 holders
 function tile(v, label, bad) { return `<div class="tile"><b class="${bad == null ? '' : bad ? 'r' : 'g'}">${v}</b><span>${label}</span></div>`; }
@@ -212,7 +210,7 @@ ROOT.addEventListener('click', e => {
   if (act) { e.preventDefault(); if (act.dataset.act === 'unpair') setPair(null); else if (act.dataset.act === 'all') { vf = 'ALL'; renderRows(); } return; }
   const coin = e.target.closest('[data-coin]'); if (coin) { e.preventDefault(); return openCoin(coin.dataset.coin); }
   const tab = e.target.closest('#lr-tabs button'); if (tab) { vf = tab.dataset.v; try { localStorage.setItem('lrTab', vf); } catch (x) {} if (D) renderRows(); return; }
-  const so = e.target.closest('#lr-sort button, th[data-k]'); if (so) return setSort(so.dataset.k);
+  const so = e.target.closest('th[data-k]'); if (so) return setSort(so.dataset.k);
   const hs = e.target.closest('th[data-hk]'); if (hs) { const k = hs.dataset.hk; hd = hk === k ? -hd : -1; hk = k; if (D) renderHot(); return; }
   const pr = e.target.closest('#lr-hot tr[data-q]'); if (pr) return setPair(pr.dataset.q === pq ? null : pr.dataset.q);
   if (e.target.closest('a')) return;   // OPEN ↗ goes to the terminal; the rest of a row opens the coin's panel
