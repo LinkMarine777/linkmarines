@@ -369,7 +369,9 @@ new_pairs = sorted([{'m': m, 's': (pairs.get(m) or {}).get('symbol'), 'n': (pair
 vrfd = sorted([dict(r, m=m) for m, r in state['vr'].items()], key=lambda r: -r['t'])[:40]
 for r in vrfd: r.pop('ck', None)
 save('launches.json', {'at': now, 'stats': stats, 'pairs': len(pairs) or len(state['pairs']), 'newPairs': new_pairs, 'vrfd': vrfd,
-                       'next': nxt, 'sunListed': state.get('sunListed'), 'issListed': state.get('issListed'), 'hot': hot, 'launches': rows[:200], 'signals': signals[:120]})
+                       'next': nxt, 'sunListed': state.get('sunListed'), 'issListed': state.get('issListed'), 'hot': hot, 'launches': rows[:200], 'signals': signals[:120],
+                       # for the token page's own bundle scan of any coin: who funds wallets across many coins
+                       'cex': EXCHANGES, 'svc': sorted(f for f, v in state['fan'].items() if len(v) >= FAN_OUT)})
 save('launches-state.json', state)
 log(f"done{' (full)' if FULL else ''}: {stats['launches']} launches in 24 h, {stats['real']} REAL, {stats['farm']} FARM, {stats['bundled']} bundled, "
     f"{scanned} holder scans, {len(vrfd)} stonkfun coins in VRFD, {len(nxt)} next pairs, {len(signals)} signals")

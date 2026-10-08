@@ -315,13 +315,16 @@ html.fit #swP{display:none!important}
 html.swap #mbar .buyTk .tkSym{display:none}   /* phones' bottom bar: just BUY/SELL (the token name didn't fit) */
 #swP .x{display:block;background:none;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:13px;width:30px;height:30px;cursor:pointer;flex:none}
 #swP .x:hover{color:#fff;border-color:var(--amber)}
-.swTabs{display:none}
-.swTabs{gap:8px}.swTabs button{white-space:nowrap;padding:4px 12px}
-.swTabs button.on{color:#fff;border-color:var(--amber);background:rgba(255,210,63,.1)}
+/* STONK BOARD | TOKEN INFO | BUY/SELL: one tab bar on each of the three panels, one panel showing (rtabs() in the script) */
+.rtb{display:none}html.rtabs .rtb{display:flex;gap:6px;flex-wrap:wrap}.rtb button{white-space:nowrap;padding:4px 10px}
+.rtb button.on{color:#fff;border-color:var(--amber);background:rgba(255,210,63,.1)}
+html.rtabs[data-rt=board] #radarP,html.rtabs[data-rt=info] #sbP{display:none!important}
+html.rtabs #sbP .ph h2,html.rtabs #swP .ph h2,html.rtabs #radarP .ph h2,html.rtabs #radarMeta,html.rtabs #swP .ph .meta{display:none}
+html.rtabs #sbP .ph,html.rtabs #swP .ph,html.rtabs #radarP .ph{flex-wrap:wrap;gap:8px}
 #swP .ph h2{margin-right:auto}
 /* desktop: one panel, two tabs (STONK BOARD | BUY/SELL); the header's BUY/SELL opens the swap tab, again goes back */
-@media (min-width:1000px){html.swap:not(.swOpen) #swP{display:none}html.swOpen #sbP{display:none!important}
-  html.swap .swTabs{display:flex}html.swap #sbP .sbW,#swP .x{display:none}
+@media (min-width:1000px){html.swap:not(.swOpen) #swP{display:none}html.swOpen #sbP,html.swOpen #radarP{display:none!important}
+  html.swap #sbP .sbW,#swP .x{display:none}
   html.swap #sbLink{font-size:0}html.swap #sbLink::after{content:'OPEN ↗';font-size:11px}   /* room for the tabs on one line */
   html.swOpen header nav .buyTk{box-shadow:inset 0 0 0 2px var(--amber)}}
 #jupSwap{min-height:330px;
@@ -501,7 +504,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .stats .xtra{display:none}.stats.open .xtra{display:block}
   .moreStats{display:block;grid-column:span 2;background:transparent;border:0;border-bottom:1px solid var(--line);color:var(--blue2);font:inherit;font-size:11px;letter-spacing:1.5px;padding:8px;cursor:pointer}
   main{display:flex;flex-direction:column}.col,.lower{display:contents}
-  .chartP{order:1}.tapeP{order:2}#radarP{order:3}.bill{order:4}#sbP{order:5}.ads{order:6}   /* chart, tape / holders, launch radar, billboard, Stonk Board, the two ads */
+  .chartP{order:1}.tapeP{order:2}#sbP,#radarP{order:3}.bill{order:4}.ads{order:6}   /* chart, tape / holders, Stonk Board | Token Info (tabs), billboard, the two ads */
   .ads .slots{gap:6px}
   .panel{padding:10px 12px}
   .acc>.ph{cursor:pointer;margin-bottom:8px;flex-wrap:nowrap;user-select:none;-webkit-tap-highlight-color:transparent}
@@ -570,7 +573,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
 #scoresStat .half>span{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}#scoresStat .half>.dly{position:absolute;top:2px;right:8px;max-width:none;font-size:0!important;color:var(--amber)}#scoresStat .half>.dly::after{font-size:12px}
 #scoresStat #sScoreWhy{display:none!important}#scoresStat .half{position:relative}
 #sRadarMsg i{font-style:normal;font-weight:600;letter-spacing:1px}#sRadarMsg .v-REAL{color:var(--green)}#sRadarMsg .v-WATCH{color:var(--blue2)}#sRadarMsg .v-THIN{color:var(--dim)}#sRadarMsg .v-FARM{color:var(--red)}
-/* LAUNCH RADAR (launches/token-radar.js): a stonkfun launch's score with CLOBr / Compound, the panel, BEFORE YOU BUY above the swap */
+/* TOKEN INFO (launches/token-radar.js): every coin's Token Info, a scored launch's radar score with CLOBr / Compound, BEFORE YOU BUY above the swap */
 #sRadar.v-REAL{color:var(--green)}#sRadar.v-WATCH{color:var(--blue2)}#sRadar.v-THIN{color:var(--dim)}#sRadar.v-FARM{color:var(--red)}
 #radarP .rtop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px}#radarP .rtop .vd i{font-size:28px}
 #radarP .rstats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:10px}#radarP .rstats>div:last-child:nth-child(odd){grid-column:1/-1}
@@ -699,13 +702,13 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
       <div class="board" data-slot="1" id="slot1"></div>
     </section>
     <section class="panel" id="swP">
-      <div class="ph"><h2><span class="tkSym">$MARINE</span></h2><div class="tabs swTabs"><button type="button" data-v="board">STONK BOARD</button><button type="button" data-v="swap" class="on">BUY/SELL</button></div><span class="meta">routed by Jupiter</span><button class="x" id="swX" type="button" title="Close (back to the Stonk Board)">✕</button></div>
+      <div class="ph"><h2><span class="tkSym">$MARINE</span></h2><div class="tabs rtb"></div><span class="meta">routed by Jupiter</span><button class="x" id="swX" type="button" title="Close (back to the Stonk Board)">✕</button></div>
       <div id="jupSwap"><div class="ld">Loading Jupiter…</div></div>
       <div class="foot">Sent by Jupiter from your own wallet. We add no fee: you pay Jupiter's swap fee, the token's tax and network fees.
         Not financial advice. <a class="buyTk" href="#" target="_blank" rel="noopener">Open on jup.ag ↗</a></div>
     </section>
     <section class="panel acc" id="sbP" data-acc="apy" data-def="1" style="display:none">
-      <div class="ph"><h2><span class="tkSym">$MARINE</span><span class="sbW"> STONK BOARD</span></h2><div class="tabs swTabs"><button type="button" data-v="board" class="on">STONK BOARD</button><button type="button" data-v="swap">BUY/SELL</button></div><a class="meta sbl" id="sbLink" target="_blank" rel="noopener">VIEW ON STONK BOARD ▸</a></div>
+      <div class="ph"><h2><span class="tkSym">$MARINE</span><span class="sbW"> STONK BOARD</span></h2><div class="tabs rtb"></div><a class="meta sbl" id="sbLink" target="_blank" rel="noopener">VIEW ON STONK BOARD ▸</a></div>
       <div id="mb">
         <div class="mbg">
           <div><label>BOARD RANK</label><b id="mbRank">—</b></div>
@@ -718,7 +721,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
       <div id="mbNo" class="empty" style="display:none"></div>
     </section>
     <section class="panel acc" id="radarP" data-acc="radar" data-def="1" style="display:none">
-      <div class="ph"><h2>LAUNCH RADAR</h2><span class="meta" id="radarMeta"></span></div>
+      <div class="ph"><h2>TOKEN INFO</h2><div class="tabs rtb"></div><span class="meta" id="radarMeta"></span></div>
       <div id="radarBody"></div>
     </section>
   </div>
@@ -1527,8 +1530,8 @@ function boardStats(mint=TK.mint){if(!board)return null;
 // Stonk Board card: only what the header doesn't already show (holders, payouts sent, min hold, amount paid out
 // and last payout live up top). Hidden when the mint isn't on the board; figures come only from board.json.
 function renderApy(){const m=FLAGS.STONKBOARD_ENABLED&&board?boardStats():null,ranked=!!(m&&m.rank);
-  // stonkfun tokens that aren't ranked yet get a one-line note instead of an empty column; other tokens hide it
-  $('sbP').style.display=ranked||(FLAGS.STONKBOARD_ENABLED&&board&&(TKR||DESK))?'':'none';sbTab();$('mb').style.display=ranked?'':'none';$('mbNo').style.display=ranked?'none':'';
+  // only ranked tokens: TOKEN INFO and BUY/SELL hold the column for the rest (no tab with just "not on the board")
+  $('sbP').style.display=ranked?'':'none';sbTab();$('mb').style.display=ranked?'':'none';$('mbNo').style.display=ranked?'none':'';
   $('sbLink').href=ranked?'https://thestonkboard.com/coin/'+encodeURIComponent(CA):'https://thestonkboard.com/';$('sbLink').textContent=ranked?'VIEW ON STONK BOARD ▸':'SEE THE BOARD ▸';
   if(!ranked){const sym=esc('$'+String(TK.symbol).replace(/^\$/,''));$('mbNo').innerHTML=`<b>${sym}</b> isn't in the Stonk Board top 100 right now.<br>Its modeled APY, what $100 held earns, and holder stats show here as soon as it ranks.`;return}
   $('mbRank').textContent='#'+m.rank;$('mbA3').textContent=apyFmt(m.apy3d);$('mbA24').textContent=apyFmt(m.apy24h);
@@ -1769,10 +1772,20 @@ function styleSwap(n=0){const h=[...document.querySelectorAll('#jupSwap *')].fin
   setTimeout(fitSwap,300)}   // the widget just loaded: it's taller than the loading line, fit it again
 function initSwap(){window.Jupiter.init({displayMode:'integrated',integratedTargetId:'jupSwap',formProps:swForm()});styleSwap()}
 // a token with no Stonk Board data has no STONK BOARD tab to go back to (re-checked when the board's data lands)
-function sbTab(){const t=document.querySelector('#swP [data-v=board]');if(t)t.style.display=$('sbP').style.display==='none'?'none':''}
+function sbTab(){rtabs()}
+// the right column, one panel at a time: STONK BOARD | TOKEN INFO | BUY/SELL (each only when the coin has it: not every coin is on
+// the Stonk Board). Desktop: the swap takes the panel's spot; phones: BUY/SELL opens the swap sheet over the page.
+let RTV=null,RTU=false;const RTN={board:'STONK BOARD',info:'TOKEN INFO',swap:'BUY/SELL'};   // RTU: the visitor picked a tab (until then the Stonk Board first, when the coin has one)
+function rtabs(){const av={board:$('sbP').style.display!=='none',info:$('radarP').style.display!=='none',swap:SWAP_ON},H=document.documentElement;
+  if(!RTU||!av[RTV])RTV=av.board?'board':'info';
+  const ks=Object.keys(av).filter(k=>av[k]),cur=H.classList.contains('swOpen')?'swap':RTV;H.classList.toggle('rtabs',ks.length>1);H.dataset.rt=RTV;
+  document.querySelectorAll('.rtb').forEach(t=>t.innerHTML=ks.map(k=>`<button type="button" data-v="${k}"${k===cur?' class="on"':''}>${RTN[k]}</button>`).join(''))}
+function rtab(v){if(v==='swap'){openSwap();return}RTV=v;RTU=true;closeSwap();rtabs()}
+window.rtab=rtab;window.rtabs=rtabs;
+document.addEventListener('click',e=>{const b=e.target.closest('.rtb button');if(b){e.stopPropagation();rtab(b.dataset.v)}});
 function openSwap(){loadSwap();const p=$('swP');sbTab();
   if(isPhone()){p.classList.add('open');$('swDim').classList.add('open');return}
-  document.documentElement.classList.add('swOpen');fitSwap()}
+  document.documentElement.classList.add('swOpen');rtabs();fitSwap()}
 // bring the swap into view on desktop with the token's info strip (payouts, pulse, price…) at the top of the screen and the
 // whole swap, disclaimer included, below it; if that's too tall for the screen: the strip and the swap's button, else the chart's
 // top and the swap's button, else just enough to show the button.
@@ -1781,12 +1794,11 @@ function fitSwap(){if(isPhone()||!document.documentElement.classList.contains('s
     all=r($('swP')).bottom+scrollY,btn=r($('jupSwap')).bottom+scrollY;
   const y=[[stats,all],[stats,btn],[chart,btn]].find(([t,b])=>b-t<=innerHeight)?.[0]??btn-innerHeight;
   if(Math.abs(y-scrollY)>2)scrollTo({top:y,behavior:'smooth'})}
-function closeSwap(){$('swP').classList.remove('open');$('swDim').classList.remove('open');document.documentElement.classList.remove('swOpen')}
+function closeSwap(){$('swP').classList.remove('open');$('swDim').classList.remove('open');document.documentElement.classList.remove('swOpen');rtabs()}
 if(SWAP_ON){
   document.querySelectorAll('#mbar .buyTk,header nav .buyTk').forEach(a=>a.addEventListener('click',e=>{
     if(e.ctrlKey||e.metaKey||e.shiftKey||e.button)return;e.preventDefault();
     if(!isPhone()&&document.documentElement.classList.contains('swOpen'))closeSwap();else openSwap()}));   // the header BUY toggles on desktop
-  document.querySelectorAll('.swTabs button').forEach(b=>b.onclick=e=>{e.stopPropagation();b.dataset.v==='swap'?openSwap():closeSwap()});
   document.querySelectorAll('header nav .buyTk,#mbar .buyTk').forEach(a=>a.firstChild.textContent='BUY/SELL ');
   if(new URLSearchParams(location.search).has('buy'))openSwap();   // &buy=1 (e.g. BUY $MARINE on the trending page): open with the swap showing
   $('swX').onclick=closeSwap;$('swDim').onclick=closeSwap;

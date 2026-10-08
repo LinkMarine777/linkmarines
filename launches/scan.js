@@ -44,5 +44,32 @@ window.LRS = (() => {
     if (r.ob < 5) F.push(['a', 'only ' + num(r.ob) + ' organic buyers in 24 h']);
     return `<div class="bfb"><b>BEFORE YOU BUY</b><ul>${F.length ? F.map(([c, t]) => `<li class="${c}">${t}</li>`).join('') : '<li class="g">no red flags in the data above (not a guarantee)</li>'}</ul></div>`;
   }
-  return { esc, num, short, SITE, bnow, bundOf, vd, tiles, funding, beforeBuy };
+  // the bundle scan of any coin, in the browser, as intel/launches.py's holder_scan does it: Jupiter's top 100 holders (pools
+  // left out), who first funded each, the clusters one private wallet funded. cex / svc: the radar's exchanges and the
+  // funders it saw behind 4+ coins (services, not links). Fresh: a wallet first funded since 2 days before a launch, for an
+  // older coin in the last 7 days.
+  const CEX = { '5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9': 'Binance', 'H8sMJSCQxfKiFTCfDR3DUMLPwcRbM61LGFJ8N4dK3WjS': 'Coinbase', 'GJRs4FwHtemZ5ZE9x3FNvJ8TMwitKTh21yxdRPqn7npE': 'Coinbase', '5VCwKtCXgCJ6kit5FybXjvriW3xELsFDhYrPSqtJNmcD': 'OKX', 'AC5RDfQFmDS1deWZos921JfqscXdByf8BKHs5ACWjtW2': 'Bybit', 'ASTyfSima4LLAdDgoFGkgqoKowG1LZFDr9fAQrg7iaJZ': 'MEXC' };   // intel/launches.py's EXCHANGES
+  function scanHolders(H, supply, created, cex = CEX, svc = []) {
+    if (!supply || !H) return null;
+    cex = { ...CEX, ...(cex || {}) }; const S = new Set(svc || []), pct = x => x.amount / supply * 100, t = s => s ? Date.parse(s) / 1000 : 0;
+    H = H.filter(x => !(x.tags || []).some(g => /Pool|Bonding Curve|Vault/.test(g.id || '')));
+    const since = created > Date.now() / 1000 - 3 * 86400 ? created - 2 * 86400 : Date.now() / 1000 - 7 * 86400;
+    const byF = {}, src = {}; let fresh = 0;
+    for (const x of H) {
+      const f = x.addressInfo && x.addressInfo.fundingAddress;
+      if (!f) { src.unknown = (src.unknown || 0) + 1; continue; }
+      if (t(x.addressInfo.fundingBlockTime) >= since) fresh++;
+      (byF[f] = byF[f] || []).push(x);
+    }
+    const cl = [];
+    for (const [f, xs] of Object.entries(byF)) {
+      const name = cex[f] || (S.has(f) ? 'exchange / service' : null);
+      if (name) { src[name] = (src[name] || 0) + xs.length; continue; }
+      if (xs.length >= 2) cl.push([f, xs.length, +xs.reduce((a, x) => a + pct(x), 0).toFixed(2)]); else src.independent = (src.independent || 0) + 1;
+    }
+    cl.sort((a, b) => b[2] - a[2]); src.linked = cl.reduce((a, c) => a + c[1], 0);
+    return { lk: +cl.reduce((a, c) => a + c[2], 0).toFixed(2), cl: cl.slice(0, 5), fresh, n: H.length,
+      src: Object.fromEntries(Object.entries(src).filter(([, v]) => v).sort((a, b) => b[1] - a[1])) };
+  }
+  return { esc, num, short, SITE, bnow, bundOf, scanHolders, vd, tiles, funding, beforeBuy };
 })();
