@@ -47,11 +47,10 @@
 .xr .wtl{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);max-height:220px;overflow-y:auto}
 .xr .wtl a{display:grid;grid-template-columns:70px 44px 1fr 1fr;gap:8px;padding:5px 8px;background:#0b1122;font-size:11px;color:var(--txt)}.xr .wtl a:hover{background:#141f36}.xr .wtl a span:last-child{text-align:right}
 .xr .wctl{display:flex;flex-direction:column;gap:5px;margin-bottom:6px}
-.xr .wchips{display:flex;gap:4px;flex-wrap:wrap;align-items:center}.xr .wchips>span{font-size:9px;letter-spacing:1.5px;color:var(--dim);min-width:46px}
+.xr .wchips{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
 .xr .wchips button{font:inherit;font-size:10px;letter-spacing:1px;padding:3px 7px;background:#050914;border:1px solid var(--line);color:var(--dim);cursor:pointer}
 .xr .wchips button:hover{color:#fff;border-color:var(--blue2)}.xr .wchips button.on{color:#fff;border-color:var(--blue2);background:rgba(74,122,255,.16)}
 .xr .wchips button i{font-style:normal;opacity:.7;margin-left:4px}
-.xr .wchips select{font:inherit;font-size:10px;letter-spacing:1px;padding:3px 4px;background:#050914;border:1px solid var(--line);color:var(--txt);cursor:pointer}.xr .wchips select:hover,.xr .wchips select:focus,.xr .wchips select.on{border-color:var(--blue2);outline:none}.xr .wchips select.on{color:#fff;background:rgba(74,122,255,.16)}
 #walCard{display:block;width:100%;aspect-ratio:1200/630;border:1px solid var(--line);background:var(--panel)}
 .xr .acts{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:6px;margin-top:8px}.xr .acts .btn{text-align:center;text-decoration:none;font-size:11.5px;letter-spacing:1px;padding:9px 4px;white-space:nowrap}
 .xr .foot{font-size:10px;color:var(--dim);margin-top:10px;line-height:1.5}
@@ -65,19 +64,18 @@
   <div class="sec">SHARE</div><img id="walCard" alt="" onerror="this.onerror=null;this.src='/share-terminal7-v2.png'">
   <div class="acts"><a class="btn primary" id="walTweet" target="_blank" rel="noopener">SHARE AS TWEET</a><button class="btn" id="walImg" type="button">COPY IMAGE</button>
     <button class="btn" id="walSave" type="button">SAVE IMAGE</button><button class="btn" id="walCopy" type="button">COPY LINK</button></div>
-  <div class="foot">Every stonkfun coin this wallet holds now or has traded or earned from, in one list: sort by any column, filter by what it holds
-    and by tag. Rewards, buys, sells and P&amp;L are read from the chain trade by trade: every swap valued at that hour's price, every payout
+  <div class="foot">Every stonkfun coin this wallet holds now or has traded or earned from, in one list: tap a column to sort by it (again to flip it), or
+    show only what it holds now or has exited. Rewards, buys, sells and P&amp;L are read from the chain trade by trade: every swap valued at that hour's price, every payout
     credited to the coins held at the time. P&amp;L = value now + sold + rewards − bought; tokens moved in from another wallet aren't counted
     as bought (* = some at an estimated price). Scores: each coin's compound score from this wallet's own history (the site's formula), or the
     compounding tracker's until the history has been read; overall score = each coin's score weighted by the rewards it paid. Fees paid =
     each coin's transfer tax on its trades + Solana network fees. Tap a coin for its totals and recent trades.</div>`;
 
   // the coins list: sort (column, direction) and filters, remembered on this browser
-  const SORTS = [['v', 'VALUE'], ['pnl', 'P&L'], ['R', 'REWARDS'], ['N', 'NET BOUGHT'], ['score', 'SCORE'], ['p', '% HELD'], ['n', 'TRADES']];
-  const TAGS = [['Compounder', 'COMPOUNDERS'], ['Partial', 'PARTIAL'], ['Collector', 'COLLECTORS'], ['Trader', 'TRADERS'], ['Seller', 'SELLERS'], ['none', 'NOT SCORED']];
-  let view = { k: 'v', dir: -1, st: '', tag: '' };   // sort column + direction, held / exited, tag
+  const SORTS = [['v', 'VALUE'], ['pnl', 'P&L'], ['R', 'REWARDS'], ['N', 'NET BOUGHT'], ['score', 'SCORE'], ['p', '% HELD']];   // (the columns that sort)
+  let view = { k: 'v', dir: -1, st: '' };   // sort column + direction, held / exited
   try { const s = JSON.parse(localStorage.getItem('xrView') || 'null');
-    if (s && SORTS.some(x => x[0] === s.k)) view = { k: s.k, dir: s.dir === 1 ? 1 : -1, st: ['held', 'exited'].includes(s.st) ? s.st : '', tag: TAGS.some(x => x[0] === s.tag) ? s.tag : '' }; } catch (e) {}
+    if (s && SORTS.some(x => x[0] === s.k)) view = { k: s.k, dir: s.dir === 1 ? 1 : -1, st: ['held', 'exited'].includes(s.st) ? s.st : '' }; } catch (e) {}
   const keep = () => { try { localStorage.setItem('xrView', JSON.stringify(view)); } catch (e) {} };
 
   let cur = null, all = false, last = null, isPage = false;
@@ -90,9 +88,8 @@
     for (const h of d.holdings || []) if (!seen.has(h.m)) out.push({ m: h.m, s: h.s, i: h.i, v: h.usd || 0, amt: h.amt, held: true, p: null, R: 0, N: null, pnl: null, score: null, tag: null, n: 0, tr: [] });
     return out;
   }
-  const fkey = c => c.score != null && c.tag ? c.tag : 'none';
   const stOf = c => c.held === false ? 'exited' : 'held';
-  const pick = list => list.filter(c => (!view.st || stOf(c) === view.st) && (!view.tag || fkey(c) === view.tag));
+  const pick = list => list.filter(c => !view.st || stOf(c) === view.st);
   function order(list) {
     const k = view.k, dir = view.dir;
     return list.slice().sort((a, b) => { const x = a[k], y = b[k];
@@ -161,15 +158,11 @@
   function drawCoins(d) {
     const list = rows(d);
     if (!list.length) { $('walCtl').innerHTML = ''; $('walCoins').innerHTML = `<div class="dim" style="font-size:11px">${d.live === false ? 'Holdings unavailable right now (the chain read failed) · try again in a minute' : 'No stonkfun coins, trades or rewards found for this wallet.'}</div>`; return; }
-    // one row: ALL / HOLDING / EXITED, a tag menu (tags it has, with counts) and a sort menu (the column headers sort too)
-    const n = f => list.filter(f).length, opt = (v, t, on) => `<option value="${v}"${on ? ' selected' : ''}>${t}</option>`;
-    $('walCtl').innerHTML = `<div class="wchips">${[['', 'ALL', list.length], ['held', 'HOLDING', n(c => stOf(c) === 'held')], ['exited', 'EXITED', n(c => stOf(c) === 'exited')]]
-      .map(([k, t, c]) => `<button type="button" data-st="${k}" class="${view.st === k ? 'on' : ''}">${t}<i>${c}</i></button>`).join('')}
-      <select id="walTag" aria-label="tag" class="${view.tag ? 'on' : ''}">${opt('', 'ANY TAG', !view.tag)}${TAGS.map(([k, t]) => [k, t, n(c => fkey(c) === k)]).filter(x => x[2] || x[0] === view.tag).map(([k, t, c]) => opt(k, `${t} (${c})`, view.tag === k)).join('')}</select>
-      <select id="walSort" aria-label="sort">${SORTS.flatMap(([k, t]) => [-1, 1].map(d => opt(k + ':' + d, `${t} ${d < 0 ? '↓' : '↑'}`, view.k === k && view.dir === d))).join('')}</select></div>`;
+    // ALL / HOLDING / EXITED (the column headers sort)
+    const n = st => list.filter(c => stOf(c) === st).length;
+    $('walCtl').innerHTML = `<div class="wchips">${[['', 'ALL', list.length], ['held', 'HOLDING', n('held')], ['exited', 'EXITED', n('exited')]]
+      .map(([k, t, c]) => `<button type="button" data-st="${k}" class="${view.st === k ? 'on' : ''}">${t}<i>${c}</i></button>`).join('')}</div>`;
     $('walCtl').querySelectorAll('button[data-st]').forEach(b => b.onclick = () => { view.st = b.dataset.st; all = false; keep(); drawCoins(last); });
-    $('walTag').onchange = e => { view.tag = e.target.value; all = false; keep(); drawCoins(last); };
-    $('walSort').onchange = e => { const [k, d] = e.target.value.split(':'); view = { ...view, k, dir: +d }; keep(); drawCoins(last); };
 
     const shown = order(pick(list));
     // every coin gets a logo: its own, else the Stonk Board's copy, else the helmet
