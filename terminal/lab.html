@@ -231,7 +231,7 @@ async function quoteFor(to){if(!Q)return;try{(await bars(Q.mint,to)).forEach(b=>
 function fit(){const L=chart.getDataList().length,w=(chart.getSize('candle_pane','main')||chart.getSize('candle_pane')||{}).width||800;   // ALL: every candle loaded on screen; else the usual candle width
   chart.setBarSpace(TF[4]===0&&L>1?Math.max(1,Math.min(50,(w-30)/(L+1))):8);chart.scrollToRealTime()}
 chart.setDataLoader({getBars:async({type,timestamp,callback})=>{
-  try{if(type==='init'){QMAP=new Map();const [d]=await Promise.all([bars(CA,Date.now()),quoteFor(Date.now())]);callback(d,{forward:d.length>=500,backward:d.length>=500});setTimeout(fit,0);return}
+  try{if(type==='init'){QMAP=new Map();const [d]=await Promise.all([bars(CA,Date.now()),quoteFor(Date.now())]);callback(d,{forward:d.length>=500,backward:d.length>=500});setTimeout(()=>{fit();restoreDraw()},0);return}
     // more history when the chart is dragged past its oldest candle (whichever direction name the library gives it)
     const first=(chart.getDataList()[0]||{}).timestamp;
     if(timestamp&&first&&timestamp<=first){const [d0]=await Promise.all([bars(CA,timestamp-1),quoteFor(timestamp-1)]),d=d0.filter(b=>b.timestamp<timestamp),more=d.length>=499;
@@ -267,9 +267,22 @@ const ok=new Set(klinecharts.getSupportedOverlays());
 $('draw').innerHTML=DRAW.filter(([n])=>ok.has(n)).map(([n,l,ic])=>`<button type="button" data-o="${n}" title="${l}" aria-label="${l}">${ic}</button>`).join('')
   +'<hr><button type="button" id="clr" title="Remove every drawing" aria-label="Remove every drawing">'+SV('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>')+'</button>';
 $('draw').onclick=e=>{const b=e.target.closest('button');if(!b)return;
-  if(b.id==='clr'){chart.removeOverlay();document.querySelectorAll('#draw button').forEach(x=>x.classList.remove('on'));return}
-  chart.createOverlay({name:b.dataset.o,onDrawEnd:()=>{b.classList.remove('on');return false}});document.querySelectorAll('#draw button').forEach(x=>x.classList.toggle('on',x===b));
+  if(b.id==='clr'){chart.removeOverlay();SEL=null;saveDraw();document.querySelectorAll('#draw button').forEach(x=>x.classList.remove('on'));return}
+  mkOverlay(b.dataset.o,null,b);document.querySelectorAll('#draw button').forEach(x=>x.classList.toggle('on',x===b));
   say(b.title+': click the chart to place its points')};
+
+// drawings are kept per token in this browser (by time and price, so they sit right on any candle size); click one to
+// select it, Delete or Backspace removes it
+const DKEY='wrLabDraw:'+CA;let SEL=null;
+function saveDraw(){const L=chart.getOverlays().filter(o=>o.currentStep===-1&&o.points.length).map(o=>({name:o.name,points:o.points.map(p=>({timestamp:p.timestamp,value:p.value}))}));
+  store(DKEY,JSON.stringify(L))}
+const later=f=>()=>{setTimeout(f,0);return false};
+function mkOverlay(name,points,btn){return chart.createOverlay({name,...(points?{points}:{}),
+  onDrawEnd:()=>{if(btn)btn.classList.remove('on');setTimeout(saveDraw,0);return false},onPressedMoveEnd:later(saveDraw),onRemoved:later(saveDraw),
+  onSelected:e=>{SEL=e.overlay.id;return false},onDeselected:e=>{if(SEL===e.overlay.id)SEL=null;return false}})}
+function restoreDraw(){if(restoreDraw.done)return;restoreDraw.done=1;let L=[];try{L=JSON.parse(store(DKEY)||'[]')}catch(e){}
+  L.forEach(o=>{if(o&&o.name&&Array.isArray(o.points))mkOverlay(o.name,o.points)})}
+document.addEventListener('keydown',e=>{if((e.key==='Delete'||e.key==='Backspace')&&SEL&&!e.target.closest('input,textarea')){e.preventDefault();chart.removeOverlay({id:SEL});SEL=null;saveDraw()}});
 
 // ---------- indicators: on the price, or in their own pane below ----------
 const IND=[['ICHIMOKU','Ichimoku',true],['MA','MA',true],['EMA','EMA',true],['BOLL','Bollinger',true],['RSI','RSI',false],['MACD','MACD',false]];
@@ -283,9 +296,11 @@ function toggleInd(n){const [,,onPrice]=IND.find(x=>x[0]===n),b=document.querySe
   if(live[n]){chart.removeIndicator({id:live[n]});delete live[n];b.classList.remove('on')}
   else{live[n]=chart.createIndicator(onPrice?{name:n,paneId:'candle_pane'}:n,onPrice);b.classList.add('on')}
   const cnt=Object.keys(live).length;$('indN').textContent=cnt?'('+cnt+')':'';
+  store('wrLabInd',Object.keys(live).join(','));   // the same indicators next time, on any token
   chart.setOffsetRightDistance(live.ICHIMOKU?160:20)}   // room for the Ichimoku cloud's 26 bars ahead
 $('ind').onclick=e=>{const b=e.target.closest('button');if(b)toggleInd(b.dataset.i)};
 chart.setOffsetRightDistance(20);
+(store('wrLabInd')||'').split(',').forEach(n=>{if(IND.some(x=>x[0]===n))toggleInd(n)});
 
 // ---------- chart snapshot: the chart with the token, timeframe, time and the terminal7.xyz link on it; download, copy, or share on X ----------
 const LINK='https://terminal7.xyz/terminal/token?ca='+CA;
