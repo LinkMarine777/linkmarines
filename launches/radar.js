@@ -84,9 +84,10 @@ function render() {
   $('kR').textContent = num(s.real); $('kF').textContent = num(s.farm); $('kB').textContent = num(s.bundled);
   const up = 'updated ' + ago(D.at) + ' ago' + (Date.now() / 1000 - D.at > 1200 ? ' (delayed)' : ''); $('upd').textContent = up; $('upd2').textContent = ago(D.at) + ' ago';
   // stonkfun coins in VRFD (rows like VRFD's own list)
-  const V = D.vrfd || []; $('vrfd').innerHTML = V.length ? V.map(v => `<a class="it" href="https://verified.jup.ag/dashboard/${esc(v.m)}" target="_blank" rel="noopener">${pic(v.i)}
-    <span class="lr-nm"><b>${sy(v.s)}</b><small>${esc(short(v.m))} · ${ago(v.t)} · MC ${compact(v.mc)}</small></span>
-    <span class="pills">${stPill(v.st)}${lanePill(v.lane)}</span></a>`).join('') : '<div class="empty">no stonkfun coin has asked VRFD in the last 2 weeks</div>';
+  // a row opens the coin's terminal; VRFD ↗ its request on Jupiter's verification dashboard
+  const V = D.vrfd || []; $('vrfd').innerHTML = V.length ? V.map(v => `<div class="it go" data-go="${tok(v.m)}">${pic(v.i)}
+    <span class="lr-nm"><a href="${tok(v.m)}"><b>${sy(v.s)}</b></a><small>${esc(short(v.m))} · ${ago(v.t)} · MC ${compact(v.mc)}</small></span>
+    <span class="pills">${stPill(v.st)}${lanePill(v.lane)}<a class="vdl" href="https://verified.jup.ag/dashboard/${esc(v.m)}" target="_blank" rel="noopener" title="its request on Jupiter's verification dashboard">VRFD ↗</a></span></div>`).join('') : '<div class="empty">no stonkfun coin has asked VRFD in the last 2 weeks</div>';
   // next pairs: the stocks of every issuer stonkfun pairs with (Sunrise, xStock, PreStock, Tessera) that no pair trades yet
   const IL = D.issListed || (D.sunListed ? { Sunrise: D.sunListed } : null);
   $('sunHint').textContent = IL ? Object.entries(IL).map(([k, v]) => k + ' ' + v[0] + '/' + v[1]).join(' · ') + ' paired' : '';
@@ -189,6 +190,7 @@ ROOT.addEventListener('click', e => {
   const hs = e.target.closest('th[data-hk]'); if (hs) { const k = hs.dataset.hk; hd = hk === k ? -hd : -1; hk = k; if (D) renderHot(); return; }
   const pr = e.target.closest('#lr-hot tr[data-q]'); if (pr) return setPair(pr.dataset.q === pq ? null : pr.dataset.q);
   if (e.target.closest('a')) return;
+  const go = e.target.closest('[data-go]'); if (go) { if (e.metaKey || e.ctrlKey) open(go.dataset.go, '_blank', 'noopener'); else location.href = go.dataset.go; return; }
   // a coin's row opens its terminal (like OPEN ↗; ⌘ / ctrl-click: a new tab); MORE INFO opens its panel here
   const tr = e.target.closest('#lr-rows tr[data-m]');
   if (tr) { const u = tok(tr.dataset.m); if (e.metaKey || e.ctrlKey) open(u, '_blank', 'noopener'); else location.href = u; }
