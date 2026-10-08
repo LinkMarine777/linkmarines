@@ -100,6 +100,8 @@ footer{text-align:center;color:var(--dim);font-size:11px;padding:20px 16px 30px}
 .sbar{grid-column:1/-1;height:5px;background:#141c36;margin-bottom:4px}.sbar s{display:block;height:100%;background:var(--blue2)}.sbar.lk s{background:var(--red)}.sbar.ex s{background:#c7f284}
 .cl{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px 12px;font-size:12px;padding:6px 0;border-bottom:1px solid var(--line)}
 #dr .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.pfc{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#fff;border:1px solid var(--blue2);padding:2px 4px 2px 8px}.pfc button{background:none;border:0;color:var(--dim);font:inherit;cursor:pointer;padding:0 4px}.pfc button:hover{color:#fff}
+#hot tr.on{background:rgba(74,122,255,.08)}
 .openb{display:inline-block;border:1px solid var(--line);color:var(--txt);font-size:11px;letter-spacing:1px;padding:4px 10px;white-space:nowrap}.openb:hover{border-color:var(--blue2);color:#fff;text-decoration:none}
 .bfb{border:1px solid var(--line);padding:10px 12px;margin-bottom:10px;font-size:12px}.bfb b{display:block;font-size:10.5px;letter-spacing:1.5px;color:#fff;margin-bottom:6px}
 .bfb li{list-style:none;padding:2px 0}.bfb li.r::before{content:'✕ ';color:var(--red)}.bfb li.a::before{content:'! ';color:var(--amber)}.bfb li.g::before{content:'✓ ';color:var(--green)}
@@ -127,19 +129,10 @@ footer{text-align:center;color:var(--dim);font-size:11px;padding:20px 16px 30px}
     <div><label>Bundled</label><b class="am" id="kB">…</b><span class="s">20%+ in bundles or linked wallets</span></div>
   </section>
 
-  <section class="pipe">
-    <div class="panel"><div class="ph"><h2>STONKFUN COINS IN JUPITER VRFD</h2><span class="hint">⚡ express = paid 1,000 JUP</span></div>
-      <div class="list" id="vrfd"><div class="empty">loading…</div></div></div>
-    <div class="panel"><div class="ph"><h2>NEXT PAIRS · SUNRISE</h2><span class="hint" id="sunHint"></span></div>
-      <div class="list" id="next"><div class="empty">loading…</div></div></div>
-    <div class="panel"><div class="ph"><h2>NEW STONKFUN PAIRS</h2><span class="hint" id="pairsN"></span></div>
-      <div class="list" id="pairs"><div class="empty">loading…</div></div></div>
-  </section>
-
   <section class="panel">
     <div class="ph"><h2>LAUNCHES · LAST 24H</h2><span class="n" id="nRows"></span>
       <div class="tabs" id="tabs"><button data-v="REAL" class="on">REAL</button><button data-v="WATCH">WATCH</button><button data-v="FARM">FARM</button><button data-v="BUNDLED">BUNDLED</button><button data-v="THIN">THIN</button><button data-v="ALL">ALL</button></div>
-      <span class="hint">tap a coin for its bundle scan</span></div>
+      <span id="pf"></span><span class="hint">tap a coin for its bundle scan</span></div>
     <div class="tw"><table><thead><tr>
       <th class="l" data-k="score">SCORE</th><th class="l" data-k="s">COIN</th><th class="l" data-k="q">PAIR</th><th data-k="c">AGE</th>
       <th data-k="mc">MC</th><th data-k="v">24H VOL</th><th data-k="fees" title="priority fees + tips traders paid (Jupiter's Fees Paid), and per trade">FEES PAID</th>
@@ -150,9 +143,18 @@ footer{text-align:center;color:var(--dim);font-size:11px;padding:20px 16px 30px}
   </section>
 
   <section class="panel">
-    <div class="ph"><h2>WHERE THE REAL LAUNCHES ARE · PAIRS</h2><span class="hint">launches against each pair in 24 h</span></div>
+    <div class="ph"><h2>WHERE THE REAL LAUNCHES ARE · PAIRS</h2><span class="hint">tap a pair to see its launches</span></div>
     <div class="tw"><table><thead><tr><th class="l">PAIR</th><th>LAUNCHES</th><th>24H VOL</th><th>REAL</th><th class="l">BEST LAUNCH</th></tr></thead>
       <tbody id="hot"></tbody></table></div>
+  </section>
+
+  <section class="pipe">
+    <div class="panel"><div class="ph"><h2>STONKFUN COINS IN JUPITER VRFD</h2><span class="hint">⚡ express = paid 1,000 JUP</span></div>
+      <div class="list" id="vrfd"><div class="empty">loading…</div></div></div>
+    <div class="panel"><div class="ph"><h2>NEXT PAIRS · SUNRISE</h2><span class="hint" id="sunHint"></span></div>
+      <div class="list" id="next"><div class="empty">loading…</div></div></div>
+    <div class="panel"><div class="ph"><h2>NEW STONKFUN PAIRS</h2><span class="hint" id="pairsN"></span></div>
+      <div class="list" id="pairs"><div class="empty">loading…</div></div></div>
   </section>
 
   <section class="panel"><details class="how"><summary>HOW THE SCORE WORKS</summary>
@@ -189,7 +191,7 @@ const pic=u=>u?`<img src="${esc(u)}" alt="" loading="lazy" onerror="this.replace
 const stPill=s=>s==='verified'?'<span class="pill ok">✓ Verified</span>':s==='rejected'?'<span class="pill no">Rejected</span>':s==='needs_info'?'<span class="pill info">! Needs info</span>':'<span class="pill wait">• Pending</span>';
 const lanePill=l=>l==='express'?'<span class="pill ex">⚡ Express</span>':'';
 const bundOf=r=>Math.max(r.bpk||0,(r.scan&&r.scan.lk)||0);
-let D=null,vf='REAL',sk='score',sd=-1;
+let D=null,vf='REAL',sk='score',sd=-1,pq=null;   // pq: the pair the launches are filtered to
 try{vf=localStorage.getItem('lrTab')||'REAL'}catch(e){}
 
 async function load(){
@@ -215,14 +217,17 @@ function render(){
     <span class="nm"><b>${sy(p.s)}</b><span class="tag">${esc(p.cat||'')}</span><small>${esc(p.n)}</small></span>
     <span class="r"><b>${ago(p.t)}</b>ago</span></a>`).join(''):'<div class="empty">no new pair since the radar started. The next one pops here and as an alert on every page.</div>';
   renderRows();
-  $('hot').innerHTML=(D.hot||[]).map(h=>`<tr onclick="${h.best?`location.href='${tok(h.best[2])}'`:''}"><td class="l"><b style="color:#fff">${sy(h.q)}</b> <span class="tag">${esc(h.qc||'')}</span>${h.new&&Date.now()/1000-h.new<7*86400?'<span class="tag new">NEW PAIR</span>':''}</td>
-    <td>${num(h.n)}</td><td>${compact(h.v)}</td><td class="${h.real?'up':'dim'}">${num(h.real)}</td><td class="l">${h.best?`<a href="${tok(h.best[2])}">${sy(h.best[0])}</a> <span class="dim">${h.best[1]}</span>`:'<span class="dim">—</span>'}</td></tr>`).join('');
+  $('hot').innerHTML=(D.hot||[]).map(h=>`<tr data-q="${esc(h.qm)}" class="${h.qm===pq?'on':''}"><td class="l"><b style="color:#fff">${sy(h.q)}</b> <span class="tag">${esc(h.qc||'')}</span>${h.new&&Date.now()/1000-h.new<7*86400?'<span class="tag new">NEW PAIR</span>':''}</td>
+    <td>${num(h.n)}</td><td>${compact(h.v)}</td><td class="${h.real?'up':'dim'}">${num(h.real)}</td><td class="l">${h.best?`<a href="#" data-coin="${esc(h.best[2])}">${sy(h.best[0])}</a> <span class="dim">${h.best[1]}</span>`:'<span class="dim">—</span>'}</td></tr>`).join('');
 }
 function fbCell(r){if(r.fb==null)return'<span class="dim" title="no holder payouts to check (standard mode)">—</span>';
   const c=r.fb>=0.6?'':r.fb>=0.45?' mid':' lo';return`${r.fb.toFixed(2)}<span class="bar${c}"><s style="width:${Math.min(100,r.fb*100)}%"></s></span>`}
 const devCell=r=>r.dn>2000?`<span class="dim" title="a launch tool's wallet: ${num(r.dn)} coins">tool</span>`:r.dn?`<span class="${r.dg/r.dn>=0.2?'up':r.dn>=5&&r.dg/r.dn<0.05?'dn':''}">👑 ${num(r.dg)}</span><small class="dim" style="display:block;font-size:10px">of ${num(r.dn)}</small>`:'<span class="dim">first coin</span>';
 function renderRows(){
-  let L=(D.launches||[]).map(r=>(r.bund=bundOf(r),r)).filter(r=>vf==='ALL'||(vf==='BUNDLED'?r.flags&&r.flags.includes('BUNDLED'):r.vd===vf));
+  let L=(D.launches||[]).map(r=>(r.bund=bundOf(r),r)).filter(r=>(!pq||r.qm===pq)&&(vf==='ALL'||(vf==='BUNDLED'?r.flags&&r.flags.includes('BUNDLED'):r.vd===vf)));
+  const ph=pq&&(D.hot||[]).find(h=>h.qm===pq);
+  $('pf').innerHTML=pq?`<span class="pfc">${ph?sy(ph.q):'one'} pair<button type="button" title="all pairs" onclick="setPair(null)">✕</button></span>`:'';
+  document.querySelectorAll('#hot tr[data-q]').forEach(t=>t.classList.toggle('on',t.dataset.q===pq));
   L=L.slice().sort((a,b)=>{const x=a[sk],y=b[sk];if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return-1;return(typeof x==='string'?x.localeCompare(y):x-y)*sd});
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===vf));
   document.querySelectorAll('th[data-k]').forEach(t=>t.classList.toggle('on',t.dataset.k===sk));
@@ -241,7 +246,7 @@ function renderRows(){
     <td class="${r.bund>=20?'dn':r.bund>=10?'am':''}">${r.bund?r.bund.toFixed(1)+'%':'0%'}<small class="dim" style="display:block;font-size:10px">${r.bn?r.bn+' bundles':''}${r.scan&&r.scan.cl&&r.scan.cl.length?(r.bn?' · ':'')+r.scan.cl.length+' linked':''}</small></td>
     <td>${devCell(r)}</td>
     <td><a class="openb" href="${tok(r.m)}" title="open ${sy(r.s)} in the terminal">OPEN ↗</a></td>
-  </tr>`).join(''):`<tr><td class="l dim" colspan="13">no ${vf} launches right now</td></tr>`;
+  </tr>`).join(''):`<tr><td class="l dim" colspan="13">no ${vf} launches${pq?' on this pair':''} right now${pq&&vf!=='ALL'?' · <a href="#" onclick="vf=\'ALL\';renderRows();return false">see ALL</a>':''}</td></tr>`;
 }
 // the coin's Token Info (like jup.ag's) and its bundle scan: who funded the top 100 holders
 function tile(v,label,bad){return`<div class="tile"><b class="${bad==null?'':bad?'r':'g'}">${v}</b><span>${label}</span></div>`}
@@ -292,6 +297,10 @@ function styleSwap(n=0){const h=[...document.querySelectorAll('#jupSwap *')].fin
   const st=document.createElement('style');st.id='swCss';st.textContent=SW_CSS;h.shadowRoot.appendChild(st)}
 function closeCoin(){$('dr').classList.remove('on')}
 $('dr').addEventListener('click',e=>{if(e.target.id==='dr')closeCoin()});addEventListener('keydown',e=>{if(e.key==='Escape')closeCoin()});
+// a pair: the launches table shows just its coins (the pair is many coins), scrolled into view; its best launch opens that coin's panel
+function setPair(q){pq=q;if(D)renderRows();if(q)document.querySelector('#tabs').closest('section').scrollIntoView({behavior:'smooth',block:'start'})}
+$('hot').addEventListener('click',e=>{const c=e.target.closest('[data-coin]');if(c){e.preventDefault();return openCoin(c.dataset.coin)}
+  const tr=e.target.closest('tr[data-q]');if(tr)setPair(tr.dataset.q===pq?null:tr.dataset.q)});
 $('rows').addEventListener('click',e=>{if(e.target.closest('a'))return;const tr=e.target.closest('tr[data-m]');if(tr)openCoin(tr.dataset.m)});   // OPEN ↗ goes to the terminal, the rest of the row opens the panel
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;vf=b.dataset.v;try{localStorage.setItem('lrTab',vf)}catch(e){}if(D)renderRows()});
 document.querySelectorAll('th[data-k]').forEach(t=>t.addEventListener('click',()=>{const k=t.dataset.k;sd=sk===k?-sd:(k==='s'||k==='q'?1:-1);sk=k;if(D)renderRows()}));
