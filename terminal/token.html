@@ -142,6 +142,7 @@ td.r,th.r{text-align:right}
 tr.whale td{background:rgba(74,122,255,.08)}
 .tag{font-size:9px;border:1px solid var(--blue2);color:var(--blue2);padding:0 4px;margin-left:6px;letter-spacing:1px}
 #trades tbody tr{animation:fade .5s}
+#trades .txA{color:inherit}#trades .txA:hover{color:var(--blue2)}
 @keyframes fade{from{background:rgba(74,122,255,.25)}}
 
 .board{border:1px dashed #2a3a6a;padding:14px;text-align:center;background:repeating-linear-gradient(45deg,#0a0f1f,#0a0f1f 10px,#0b1224 10px,#0b1224 20px);display:flex;flex-direction:column;justify-content:center;cursor:pointer;position:relative;color:var(--txt);min-height:110px}
@@ -292,10 +293,9 @@ html.fit .board.house{padding:0}html.fit .board.house .htag{font-size:13px;paddi
 /* the wallet window (a holder clicked in HOLDERS): its stonkfun coins, score, rewards per coin, share card */
 #walModal{position:fixed;inset:0;background:#000b;backdrop-filter:blur(3px);z-index:72;display:none;align-items:center;justify-content:center;padding:12px}
 #walModal.show{display:flex}
-#walModal .box{position:relative;background:#070c18;border:2px solid var(--blue2);box-shadow:0 0 60px #000;padding:18px 20px;width:min(600px,100%);max-height:calc(100vh - 24px);overflow-y:auto}
+#walModal .box{position:relative;background:#070c18;border:2px solid var(--blue2);box-shadow:0 0 60px #000;padding:18px 20px;width:min(720px,100%);max-height:calc(100vh - 24px);overflow-y:auto}
 #walModal .x{position:absolute;right:10px;top:10px;background:none;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:13px;width:30px;height:30px;cursor:pointer}
 #walModal .x:hover{color:#fff;border-color:var(--blue2)}
-#walModal .wk{font-size:10px;letter-spacing:2px;color:var(--dim)}
 /* ---- SWAP: Jupiter's swap widget (Jupiter routes and sends the swap from the buyer's own wallet; we add no fee).
    Desktop: takes the Stonk Board's spot while open (header BUY toggles it). Phones: a sheet that slides up from the bottom. ---- */
 #swP,#swDim{display:none}
@@ -328,28 +328,7 @@ html.swap #mbar .buyTk .tkSym{display:none}   /* phones' bottom bar: just BUY/SE
   #swDim.open{display:block}
 }
 #walKol{margin:4px 0 2px;font-size:12px;color:var(--txt)}#walKol a{color:var(--blue2)}#walKol .dim{font-size:10.5px}.kolN{color:var(--blue2)!important;font-weight:700}
-#walModal h3{font-family:'VT323';font-weight:400;font-size:34px;color:#fff;margin:0;line-height:1}
-#walModal .wl{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;font-size:11px;margin-top:2px}#walModal .wl a{color:var(--blue2)}
-#walKpi{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:14px 0 4px}
-#walKpi>div{background:var(--panel);border:1px solid var(--line);padding:9px 10px;min-width:0}
-#walKpi b{display:block;font-family:'VT323';font-weight:400;font-size:30px;line-height:1;color:#fff}
-#walKpi span{display:block;font-size:9.5px;letter-spacing:1px;color:var(--dim);margin-top:3px}
-#walModal .sec{font-size:10.5px;letter-spacing:2px;color:#fff;margin:16px 0 6px;display:flex;gap:8px;align-items:baseline}#walModal .sec .dim{letter-spacing:0;font-size:10px}
-#walModal table{width:100%;border-collapse:collapse;font-size:12px}
-#walModal td,#walModal th{padding:6px 5px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
-#walModal th{font-size:9.5px;letter-spacing:1px;color:var(--dim);font-weight:400}
-#walModal .r{text-align:right}
-#walModal td a{color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:6px}#walModal td a:hover{color:var(--blue2)}
-#walModal td img{width:18px;height:18px;border-radius:50%;object-fit:cover;background:var(--line)}
-#walModal .wsc{display:inline-block;min-width:30px;text-align:center;border:1px solid;padding:0 4px;font-family:'VT323';font-size:18px}
-#walModal .wtg{font-size:9px;letter-spacing:1px;margin-left:6px}#walModal .whd{font-size:8.5px;letter-spacing:1px;margin:1px 0 0 24px}#walModal tr.wcr{cursor:pointer}#walModal tr.wcr:hover td{background:rgba(42,90,218,.06)}
-#walModal .wsum{font-size:10.5px;color:var(--dim);margin:2px 0 6px;white-space:normal;line-height:1.5}#walModal .wsum b{color:var(--txt);font-weight:500}
-#walModal .wtl{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);max-height:220px;overflow-y:auto}
-#walModal .wtl a{display:grid;grid-template-columns:70px 44px 1fr 1fr;gap:8px;padding:5px 8px;background:#0b1122;font-size:11px;color:var(--txt)}#walModal .wtl a:hover{background:#141f36}#walModal .wtl a span:last-child{text-align:right}
-#walCard{display:block;width:100%;aspect-ratio:1200/630;border:1px solid var(--line);background:var(--panel)}
-#walModal .acts{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:6px;margin-top:8px}#walModal .acts .btn{text-align:center;text-decoration:none;font-size:11.5px;letter-spacing:1px;padding:9px 4px;white-space:nowrap}
-#walModal .foot{font-size:10px;color:var(--dim);margin-top:10px;line-height:1.5}
-@media (max-width:560px){#walKpi{grid-template-columns:repeat(2,1fr)}#walModal .acts{grid-template-columns:1fr 1fr}#walModal .wtg{display:none}#walModal .wtl a{grid-template-columns:52px 38px 1fr 1fr;gap:6px}#walModal .box{padding:16px 14px}#walModal .hs2{display:none}}
+@media (max-width:560px){#walModal .box{padding:16px 14px}}
 #iPrev{display:none;margin-top:8px;max-height:140px;max-width:100%;border:1px solid var(--line)}
 #buyPop{position:fixed;left:50%;bottom:16%;transform:translate(-50%,30px);opacity:0;pointer-events:none;z-index:55;transition:all .35s cubic-bezier(.2,1.4,.4,1);
   background:linear-gradient(135deg,#06240f,#0a0f1f);border:3px solid var(--green);box-shadow:0 0 50px rgba(57,255,106,.4);padding:18px 44px;text-align:center;min-width:600px}
@@ -741,22 +720,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
     (you pay Jupiter's usual swap fee, the token's own buy/sell tax and Solana network fees). Nothing here is financial advice.
     <a class="buyTk" href="#" target="_blank" rel="noopener">Open on jup.ag ↗</a></div>
 </div></div>
-<div id="walModal"><div class="box">
-  <button class="x" id="walX" type="button" title="Close">✕</button>
-  <div class="wk">STONKFUN WALLET</div><h3 id="walAddr"></h3><div id="walKol"></div>
-  <div class="wl"><a id="walScan" target="_blank" rel="noopener">SOLSCAN ↗</a><a href="#" id="walCa">COPY ADDRESS</a></div>
-  <div id="walKpi"></div>
-  <div class="sec">HOLDINGS <span class="dim">stonkfun coins in the wallet now</span></div><div id="walHold"></div>
-  <div class="sec">REWARDS BY COIN <span class="dim" id="walSt"></span></div><div id="walCoins"></div>
-  <div class="sec">SHARE</div><img id="walCard" alt="" onerror="this.onerror=null;this.src='/share-terminal7-v2.png'">
-  <div class="acts"><a class="btn primary" id="walTweet" target="_blank" rel="noopener">SHARE AS TWEET</a><button class="btn" id="walImg" type="button">COPY IMAGE</button>
-    <button class="btn" id="walSave" type="button">SAVE IMAGE</button><button class="btn" id="walCopy" type="button">COPY LINK</button></div>
-  <div class="foot">Rewards, buys, sells and P&amp;L are read from the chain trade by trade: every swap valued at that hour's price, every payout credited to
-    the coins held at the time. P&amp;L = value now + sold + rewards − bought; tokens moved in from another wallet aren't counted as bought (* = some at an
-    estimated price). Scores: each coin's compound score from this wallet's own history (the site's formula), or the compounding tracker's until the
-    history has been read; overall score = each coin's score weighted by the rewards it paid. Fees paid = each coin's transfer tax on its trades + Solana network fees.
-    Tap a coin for its totals and recent trades.</div>
-</div></div>
+<div id="walModal"><div class="box" id="walBox"><button class="x" id="walX" type="button" title="Close">✕</button></div></div>
 <div id="infoPop" title="Click to close"><div class="k" id="ipK"></div><div class="h" id="ipH"></div><div class="d" id="ipD"></div></div>
 <div id="ttsPop" title="Click to close"><div class="from" id="ttsFrom"></div><div class="msg" id="ttsMsg"></div></div>
 <div id="buyPop" title="Click to close"><div class="t" id="bpT">NEW RECRUIT</div><div class="v" id="bpV"></div><div class="w" id="bpW"></div></div>
@@ -796,6 +760,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
   </div>
 </div></div>
 
+<script src="/terminal/xray.js"></script>
 <script>
 // ---------- Terminal 7: any stonk token, picked by ?ca=<mint> (default $MARINE) ----------
 // Shared site data (board, tickers, ads, TTS, prices) comes from /terminal/, the same files 1.0 uses.
@@ -1359,13 +1324,13 @@ function renderCompound(){if(!CMP)return;const W=CMP.win[cmpW]||{},sc=W.score,sy
       const why=v?`${t} · score ${s_} = 60% × ${Math.round(c*100)}% of rewards bought back in + 25% × bought after ${Math.round(k*100)}% of payout days + 15% × buying beyond rewards (${mult>1?mult.toFixed(1)+'× rewards':'none'})`:'';
       const det=v?`<tr class="cmpDet" style="display:none"><td></td><td colspan="6">Rewards <b>${cmpUsd(R)}</b> · bought <b>${B!=null?cmpUsd(B):'—'}</b> · sold <b>${S!=null?cmpUsd(S):'—'}</b> · net <b>${N>0?'+':''}${cmpUsd(N)}</b><br>
         ${Math.round(c*100)}% of rewards bought back in${mult>1?` + ${(mult-1).toFixed(1)}× more on top`:''} · bought after ${Math.round(k*100)}% of payout days · score ${s_} (${t})${ch!=null?`<br>Sold back ${ch<.5?Math.min(49,Math.round(ch*100)):Math.round(ch*100)}% of what they bought within 7 days${trd?' (trader: in and out)':''}`:''}</td></tr>`:'';
-      return`<tr class="${v?'cmpRow':''}" title="${v?'tap for details':''}"><td class="dim">${i+1}</td><td><a href="https://solscan.io/account/${esc(r.w)}" class="walA" data-w="${esc(r.w)}" title="open this wallet">${esc(r.w.slice(0,4))}…${esc(r.w.slice(-4))}</a>${v?`<div class="ctg"><span style="color:${CMPC[t]||'var(--dim)'}">${esc(t).toUpperCase()}</span></div>`:'<div class="ctg dim">NO REWARD YET</div>'}</td>
+      return`<tr class="${v?'cmpRow':''}" title="${v?'tap for details':''}"><td class="dim">${i+1}</td><td><a href="/wallet/${esc(r.w)}" class="walA" data-w="${esc(r.w)}" title="open this wallet">${esc(r.w.slice(0,4))}…${esc(r.w.slice(-4))}</a>${v?`<div class="ctg"><span style="color:${CMPC[t]||'var(--dim)'}">${esc(t).toUpperCase()}</span></div>`:'<div class="ctg dim">NO REWARD YET</div>'}</td>
       <td class="r">${r.p.toFixed(2)}%</td><td class="r hs">${x==null?dash:x===0?'<span class="dim">0</span>':pct(x)}</td>
       ${v?`<td class="r hs">${cmpUsd(R)}</td><td class="r" style="color:${N>0?'var(--green)':N<0?'var(--red)':'var(--dim)'}">${N>0?'+':''}${cmpUsd(N)}</td>
       <td class="r"><span class="cmpSc" title="${why}" style="color:${CMPC[t]};border-color:${CMPC[t]}">${s_}</span></td>`:`<td class="r hs">${dash}</td><td class="r">${dash}</td><td class="r">${dash}</td>`}</tr>${det}`}).join('')}</tbody></table>
     ${CMP.rows.length>20?`<button class="btn cmpMore" id="cmpMore">${cmpAll?'SHOW TOP 20':'SHOW ALL '+CMP.rows.length}</button>`:''}`;
   const m=$('cmpMore');if(m)m.onclick=()=>{cmpAll=!cmpAll;renderCompound()};
-  $('cmpBody').querySelectorAll('a.walA').forEach(a=>a.onclick=e=>{e.preventDefault();e.stopPropagation();openWallet(a.dataset.w)});
+  $('cmpBody').querySelectorAll('a.walA').forEach(a=>a.onclick=e=>{if(e.metaKey||e.ctrlKey||e.shiftKey||e.button)return;e.preventDefault();e.stopPropagation();openWallet(a.dataset.w)});
   // known traders' names next to their wallets (shown rows, 25 a request)
   {const as=[...$('cmpBody').querySelectorAll('a.walA')],ws=as.map(a=>a.dataset.w);
     (async()=>{for(let i=0;i<ws.length;i+=25)await kolGet(ws.slice(i,i+25));
@@ -1380,85 +1345,16 @@ function syncScores(){const a=$('scoreStat').style.display!=='none',b=$('cmpStat
 $('cmpStat').onclick=()=>{setTapeView('holders');document.querySelector('.tapeP').scrollIntoView({behavior:'smooth',block:'start'})};
 $('cmpWin').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();cmpW=b.dataset.w;[...$('cmpWin').children].forEach(x=>x.classList.toggle('on',x===b));renderCompound()});
 loadCompound();setInterval(()=>{if(!document.hidden)loadCompound()},30*60e3);
-// the wallet window: one holder across stonkfun (the bot's /wallet: coins held now + compounding per coin) and its share card.
+// the wallet window: the Wallet X-Ray (terminal/xray.js, also the full page at /wallet/<address>) over this page.
 // A shared link (?w=<wallet>) opens it on arrival
-const WRE=/^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+const WRE=Xray.WRE,KOL=Xray.KOL,kolGet=Xray.kolGet,kolUrl=Xray.kolUrl,kolFol=Xray.kolFol;
+Xray.mount($('walBox'));
 // the address bar follows the window: the open wallet's link while it's open, the token's link again once it's closed
 const walUrl=w=>{try{const u=new URL(location.href);if(w)u.searchParams.set('w',w);else u.searchParams.delete('w');history.replaceState(history.state,'',u)}catch(e){}};
-let walAll=false;
-// who's who: wallets KOLlector (dethective.com/kollector) ties to known traders, through the bot (kept a week there)
-const KOL={};async function kolGet(ws){const need=ws.filter(w=>!(w in KOL)).slice(0,25);
-  if(need.length)try{const d=await j(BOT+'/kol?w='+need.join(',')),p=new Set(d&&d._p||[]);need.forEach(w=>{if(!p.has(w))KOL[w]=d&&d[w]||null})}catch(e){}   // (_p: not looked up yet, asked again later)
-  return ws.filter(w=>KOL[w])}
-const kolUrl=k=>k.x?'https://x.com/'+encodeURIComponent(k.x):k.p?'https://pump.fun/profile/'+encodeURIComponent(k.p):'https://dethective.com/kollector/';
-const kolFol=n=>n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':String(n);
-async function openWallet(w){if(!WRE.test(w||''))return;openWallet.w=w;walAll=false;walUrl(w);$('walModal').classList.add('show');document.body.style.overflow='hidden';
-  // a known trader: their name in place of the address
-  $('walKol').innerHTML='';kolGet([w]).then(()=>{const k=KOL[w];if(!k||openWallet.w!==w)return;$('walAddr').textContent=k.name;
-    $('walKol').innerHTML=`<span class="dim">${esc(w.slice(0,4))}…${esc(w.slice(-4))} · <a href="${kolUrl(k)}" target="_blank" rel="noopener">${k.x?'@'+esc(k.x):k.p?'pump.fun':'KOLlector'}</a>${k.f?` · ${kolFol(k.f)} followers`:''} · <span title="${esc(k.how)}">name via <a href="https://dethective.com/kollector/" target="_blank" rel="noopener">KOLlector</a></span></span>`});
-  $('walAddr').textContent=w.slice(0,4)+'…'+w.slice(-4);$('walScan').href='https://solscan.io/account/'+w;$('walCa').textContent='COPY ADDRESS';
-  const link='https://terminal7.xyz/terminal/token?ca='+CA+'&w='+w;$('walCard').src=BOT+'/card/wallet/'+w+'.png';
-  $('walKpi').innerHTML='';$('walHold').innerHTML=$('walCoins').innerHTML='<div class="dim" style="font-size:11px">loading…</div>';
-  $('walSt').textContent='';
-  let d=null;try{d=await j(BOT+'/wallet/'+w)}catch(e){}
-  if(openWallet.w!==w)return;
-  if(d&&!d.error)walRender(w,d,link);
-  // then its whole history read from the chain, trade by trade (seconds the first time, saved after that)
-  $('walSt').textContent='reading its full history from the chain, trade by trade…';
-  // a wallet with a long history takes several reads (~20 s each): keep asking while the window is open, up to 30 rounds
-  for(let k=0;k<30;k++){
-    let f=null;try{f=await j(BOT+'/wallet/'+w+'?full=1')}catch(e){}
-    if(openWallet.w!==w)return;
-    if(f&&!f.error){walRender(w,f,link);d=f}
-    const h=f&&f.hist;if(!h||h.done||h.paused||h.stale)break;
-    $('walSt').textContent=`reading its full history from the chain · ${h.txs.toLocaleString('en-US')} transactions so far…`;
-  }
-  // the share card opened before the history read finished: draw it again with the whole history (the bot keeps an unfinished one a minute)
-  if(d&&d.hist&&d.hist.done)$('walCard').src=BOT+'/card/wallet/'+w+'.png?h='+d.hist.txs;
-  if(!d||d.error){$('walSt').textContent='';$('walHold').innerHTML=$('walCoins').innerHTML='<div class="dim" style="font-size:11px">couldn\'t load this wallet right now · try again in a minute</div>';return}
-  const h=d.hist;$('walSt').textContent=!h?'full history unavailable right now · showing the compounding tracker':h.stale?`couldn't reach the chain just now · showing the ${h.txs.toLocaleString('en-US')} transactions read before`:h.done?`full history from the chain · ${h.txs.toLocaleString('en-US')} transactions`:
-    h.paused?'full history paused for today (daily reading limit)':`read its newest ${h.txs.toLocaleString('en-US')} transactions so far · the rest next time it's opened`}
-function walRender(w,d,link){
-  const sc=d.score,col=sc==null?'var(--dim)':sc>=40?'var(--green)':sc>=20?'var(--amber)':'var(--red)',lbl=sc==null?'no rewards yet':sc>=60?'Strong':sc>=40?'Healthy':sc>=20?'Mixed':'Weak';
-  const earning=d.coins.filter(c=>c.R>0);
-  const T=d.totals||{},pc=v=>v>0?'var(--green)':v<0?'var(--red)':'var(--txt)';
-  $('walKpi').innerHTML=`<div style="border-color:${col}"><b style="color:${col}">${sc??'—'}</b><span>COMPOUND SCORE · ${lbl.toUpperCase()}</span></div>
-    <div><b style="color:var(--green)">${cmpUsd(d.rewards||0)}</b><span>TOTAL REWARDS</span></div>
-    <div><b style="color:${pc(T.pnl)}">${T.pnl!=null?(T.pnl>0?'+':'')+cmpUsd(T.pnl)+(T.est?'*':''):'—'}</b><span>TOTAL P&amp;L</span></div>
-    <div><b>${cmpUsd(d.value||0)}</b><span>STONKFUN HOLDINGS</span></div>
-    <div><b>${T.tax!=null||T.fees!=null?cmpUsd((T.tax||0)+(T.fees||0)):'—'}</b><span title="transfer tax on its trades + Solana network fees">FEES PAID</span></div>
-    <div><b>${earning.length}</b><span>COINS EARNING</span></div>`;
-  // every coin gets a logo: its own, else the Stonk Board's copy, else the helmet
-  const coin=(m,s,i)=>`<a href="/terminal/token?ca=${esc(m)}"><img src="${esc(i||'/helmet.png')}" alt="" loading="lazy" data-sb="https://thestonkboard.com/api/logos/${esc(m)}" onerror="if(this.dataset.sb&&this.src!==this.dataset.sb){this.src=this.dataset.sb;this.dataset.sb=''}else{this.onerror=null;this.src='/helmet.png'}">$${esc(String(s||'?').replace(/^\$/,''))}</a>`;
-  const amt=n=>n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n>=1?n.toFixed(0):n.toPrecision(2);
-  $('walHold').innerHTML=d.holdings.length?`<table><thead><tr><th>COIN</th><th class="r">AMOUNT</th><th class="r">VALUE</th></tr></thead><tbody>${d.holdings.slice(0,30).map(h=>`<tr><td>${coin(h.m,h.s,h.i)}</td><td class="r">${amt(h.amt)}</td><td class="r">${h.usd?(h.usd<1?'<span class="dim" title="dust: worth under $1">&lt;$1</span>':cmpUsd(h.usd)):'<span class="dim">—</span>'}</td></tr>`).join('')}</tbody></table>`
-    :`<div class="dim" style="font-size:11px">${d.live?'No stonkfun coins in this wallet right now.':'Holdings unavailable right now (the chain read failed) · try again in a minute'}</div>`;
-  const pnlc=v=>v>0?'var(--green)':v<0?'var(--red)':'var(--dim)',dt=t=>new Date(t*1000).toLocaleDateString('en-US',{month:'short',day:'numeric'});
-  $('walCoins').innerHTML=d.coins.length?`<table><thead><tr><th>COIN</th><th class="r hs2">HOLDS</th><th class="r">REWARDS</th><th class="r hs2">NET BOUGHT</th><th class="r" title="value now + sold + rewards − bought, over the coin's full history">P&amp;L</th><th class="r">SCORE</th></tr></thead><tbody>${d.coins.slice(0,walAll?999:25).map((c,k)=>`<tr class="${c.tr&&c.tr.length?'wcr':''}" data-k="${k}"><td>${coin(c.m,c.s,c.i)}<div class="whd" style="color:${c.held?'var(--green)':'var(--dim)'}">${c.held==null?'':c.held?'HOLDING':'EXITED'}${c.n?` · ${c.n} trade${c.n===1?'':'s'} ▾`:''}</div></td>
-      <td class="r hs2">${c.p!=null?c.p.toFixed(2)+'%':'<span class="dim">—</span>'}</td>
-      <td class="r">${c.R>0?cmpUsd(c.R):'<span class="dim">—</span>'}</td><td class="r hs2" style="color:${pnlc(c.N)}">${c.N!=null?(c.N>0?'+':'')+cmpUsd(c.N):'—'}</td>
-      <td class="r" style="color:${pnlc(c.pnl)}" title="${c.est?'some trades valued at an estimated price':''}">${c.pnl==null?'—':(c.pnl>0?'+':'')+cmpUsd(c.pnl)}${c.est?'*':''}</td>
-      <td class="r">${c.score!=null?`<span class="wsc" style="color:${CMPC[c.tag]};border-color:${CMPC[c.tag]}">${c.score}</span><span class="wtg" style="color:${CMPC[c.tag]}">${esc(c.tag).toUpperCase()}</span>`:`<span class="dim" style="font-size:9.5px;letter-spacing:1px" title="scores cover each coin's biggest holders">${c.tracked?'NO REWARD YET':'NOT SCORED'}</span>`}</td></tr>
-      ${c.tr&&c.tr.length?`<tr class="wtr" style="display:none"><td colspan="6"><div class="wsum">bought <b>${cmpUsd(c.B||0)}</b> · sold <b>${cmpUsd(c.S||0)}</b> · rewards <b>${cmpUsd(c.R||0)}</b> · tax paid <b>${(c.tax||0)<1?'$'+(c.tax||0).toFixed(2):cmpUsd(c.tax)}</b> · network fees <b>${(c.fees||0)<1?'$'+(c.fees||0).toFixed(2):cmpUsd(c.fees)}</b></div><div class="wtl">${c.tr.map(x=>`<a href="https://solscan.io/tx/${esc(x[4])}" target="_blank" rel="noopener" title="opens the transaction (first 20 characters of its signature)"><span>${dt(x[0])}</span><b style="color:${x[1]==='b'?'var(--green)':'var(--red)'}">${x[1]==='b'?'BUY':'SELL'}</b><span>${amt(x[2])}</span><span>${cmpUsd(x[3])}</span></a>`).join('')}</div></td></tr>`:''}`).join('')}</tbody></table>
-      ${d.coins.length>25?`<button class="btn" id="walMore" style="margin-top:6px;font-size:11px">${walAll?'SHOW TOP 25':'SHOW ALL '+d.coins.length}</button>`:''}`
-    :'<div class="dim" style="font-size:11px">No stonkfun trades or rewards found for this wallet.</div>';
-  $('walCoins').querySelectorAll('tr.wcr').forEach(tr=>tr.onclick=e=>{if(e.target.closest('a'))return;const n=tr.nextElementSibling;if(n&&n.classList.contains('wtr'))n.style.display=n.style.display==='none'?'':'none'});
-  const mb=$('walMore');if(mb)mb.onclick=()=>{walAll=!walAll;walRender(w,d,link)};
-  const txt=`${KOL[w]?KOL[w].name+(KOL[w].x?' (@'+KOL[w].x+')':''):'Wallet '+w.slice(0,4)+'…'+w.slice(-4)} on stonkfun: compound score ${sc??'—'}${sc!=null?' ('+lbl+')':''} · ${cmpUsd(d.rewards||0)} in rewards from ${earning.length} coin${earning.length===1?'':'s'}`;
-  $('walTweet').href='https://x.com/intent/tweet?text='+encodeURIComponent(txt)+'&url='+encodeURIComponent(link);
-  // the card as a file: COPY IMAGE puts it on the clipboard; SAVE IMAGE uses the phone's share sheet (Save to Photos) or downloads it
-  const cardFile=async()=>{const r=await fetch($('walCard').src.startsWith(BOT)?$('walCard').src:BOT+'/card/wallet/'+w+'.png');if(!r.ok)throw new Error(r.status);return new File([await r.blob()],'terminal7-wallet-'+w.slice(0,4)+'.png',{type:'image/png'})};
-  const say=(id,t,back)=>{$(id).textContent=t;setTimeout(()=>$(id).textContent=back,1800)};
-  $('walImg').onclick=async()=>{try{await navigator.clipboard.write([new ClipboardItem({'image/png':cardFile().then(f=>f)})]);say('walImg','COPIED','COPY IMAGE')}
-    catch(e){say('walImg',matchMedia('(pointer:coarse)').matches?'HOLD THE IMAGE':'USE SAVE IMAGE','COPY IMAGE')}};
-  $('walSave').onclick=async()=>{let f;try{f=await cardFile()}catch(e){say('walSave','TRY AGAIN','SAVE IMAGE');return}
-    if(matchMedia('(pointer:coarse)').matches&&navigator.canShare?.({files:[f]})){try{await navigator.share({files:[f]});return}catch(e){if(e.name==='AbortError')return}}
-    const u=URL.createObjectURL(f),a=document.createElement('a');a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);say('walSave','SAVED','SAVE IMAGE')};
-  $('walCopy').onclick=()=>{navigator.clipboard?.writeText(link).then(()=>{$('walCopy').textContent='COPIED';setTimeout(()=>$('walCopy').textContent='COPY LINK',1500)}).catch(()=>{})}}
-function closeWallet(){openWallet.w=null;walUrl(null);$('walModal').classList.remove('show');document.body.style.overflow=''}
+function openWallet(w){if(!WRE.test(w||''))return;walUrl(w);$('walModal').classList.add('show');document.body.style.overflow='hidden';Xray.open(w)}
+function closeWallet(){Xray.close();walUrl(null);$('walModal').classList.remove('show');document.body.style.overflow=''}
 $('walX').onclick=closeWallet;$('walModal').addEventListener('click',e=>{if(e.target.id==='walModal')closeWallet()});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&openWallet.w)closeWallet()});
-$('walCa').onclick=e=>{e.preventDefault();navigator.clipboard?.writeText(openWallet.w||'').then(()=>{$('walCa').textContent='COPIED'}).catch(()=>{})};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&Xray.w)closeWallet()});
 {const w=new URLSearchParams(location.search).get('w');if(WRE.test(w||''))openWallet(w)}
 
 // ---------- tape ----------
@@ -1469,13 +1365,14 @@ function renderTape(){
     const buy=a.to_token_address===CA;
     const amt=+(buy?a.to_token_amount:a.from_token_amount),price=+(buy?a.price_to_in_usd:a.price_from_in_usd),v=+a.volume_in_usd;
     const fresh=!seen.has(a.tx_hash);seen.add(a.tx_hash);
-    return`<tr class="${v>=WHALE?'whale':''}"${fresh&&tapeLoaded?'':' style="animation:none"'}><td class="dim">${ago(Date.parse(a.block_timestamp))}</td>
+    return`<tr class="${v>=WHALE?'whale':''}"${fresh&&tapeLoaded?'':' style="animation:none"'}><td class="dim"><a class="txA" href="https://solscan.io/tx/${a.tx_hash}" target="_blank" rel="noopener" title="the transaction on Solscan">${ago(Date.parse(a.block_timestamp))}</a></td>
       <td class="${buy?'up':'dn'}">${buy?'BUY':'SELL'}${v>=WHALE?'<span class="tag">LARGE</span>':''}</td>
       <td class="r">${usd(v)}</td><td class="r">${compact(amt,'')}</td><td class="r dim fx">${px(price)}</td>
-      <td class="r hide-sm"><a href="https://solscan.io/tx/${a.tx_hash}" target="_blank" rel="noopener"${KOL[a.tx_from_address]?` class="kolN" title="${esc(a.tx_from_address)}"`:''}>${KOL[a.tx_from_address]?esc(KOL[a.tx_from_address].name.slice(0,14)):(a.tx_from_address||'').slice(0,4)}</a></td></tr>`});
+      <td class="r hide-sm"><a href="/wallet/${esc(a.tx_from_address)}" class="walA${KOL[a.tx_from_address]?' kolN':''}" data-w="${esc(a.tx_from_address)}" title="${esc(a.tx_from_address)} · open its Wallet X-Ray">${KOL[a.tx_from_address]?esc(KOL[a.tx_from_address].name.slice(0,14)):(a.tx_from_address||'').slice(0,4)}</a></td></tr>`});
   if(Date.now()-(renderTape.k||0)>30000){renderTape.k=Date.now();const ws=[...new Set(tapeRaw.map(a=>a.tx_from_address).filter(w=>WRE.test(w||'')&&!(w in KOL)))].slice(0,25);
     if(ws.length)kolGet(ws).then(f=>{if(f.length)renderTape()})}
   tapeLoaded=true;$('trades').tBodies[0].innerHTML=list.join('')||`<tr><td colspan="6" class="dim">quiet on the line${tapeMin?' (no $'+tapeMin+'+ trades in the last 300)':''}</td></tr>`;
+  $('trades').querySelectorAll('a.walA').forEach(a=>a.onclick=ev=>{if(ev.metaKey||ev.ctrlKey||ev.shiftKey||ev.button)return;ev.preventDefault();openWallet(a.dataset.w)});
   if(wide)fitTape()}
 // on desktop the tape shows as many whole rows as its panel has room for (it never grows the panel)
 function fitTape(){const tw=document.querySelector('.tapeP .tw');if(!tw||innerWidth<1000)return;const H=tw.clientHeight;

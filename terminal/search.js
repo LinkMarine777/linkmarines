@@ -1,7 +1,7 @@
 // Token search for the terminal's search box (#caIn in #caForm): paste a CA as before, or type a $TICKER / name.
 // Names come from Jupiter's token search, stonkfun launches only (launchpad "stonkfun"), Jupiter-verified first, then by
 // market cap. Enter opens the top match; arrows + Enter or a click pick another. A pasted CA is left to the page's own handler,
-// unless it's a wallet that holds or traded stonkfun coins (the bot's /wallet): then it offers that wallet's window.
+// unless it's a wallet that holds or traded stonkfun coins (the bot's /wallet): then it offers that wallet's X-Ray page.
 (() => {
   const form = document.getElementById('caForm'), inp = document.getElementById('caIn'); if (!form || !inp) return;
   const CA = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/, open = m => { location.href = '/terminal/token?ca=' + encodeURIComponent(m); };
@@ -36,11 +36,11 @@
   const show = html => { box.innerHTML = html; box.classList.toggle('open', !!html);
     if (html && innerWidth < 600) Object.assign(box.style, { position: 'fixed', left: '10px', right: '10px', top: Math.round(inp.getBoundingClientRect().bottom + 4) + 'px' });
     else Object.assign(box.style, { position: '', left: '', right: '', top: '' }); };
-  const BOT = 'https://war-room-bot.linkmarine777.workers.dev', MARINE = 'F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK';
+  const BOT = 'https://war-room-bot.linkmarine777.workers.dev';
   const usd = v => v >= 1e3 ? mc(v) : '$' + Math.round(v || 0);
   // a pasted address that isn't a token the site knows: a wallet with stonkfun coins (held now, or tracked by compounding)
-  // opens its wallet window on its biggest coin's page; anything else stays the page's own CA handling
-  const walletLink = d => '/terminal/token?ca=' + encodeURIComponent(d.coins[0]?.m || d.holdings[0]?.m || MARINE) + '&w=' + encodeURIComponent(d.w);
+  // opens its Wallet X-Ray page (/wallet/<address>); anything else stays the page's own CA handling
+  const walletLink = d => '/wallet/' + encodeURIComponent(d.w);
   async function walletOf(a) {
     if ((await loadLocal()).some(t => t.id === a)) return null;
     try { const d = await (await fetch(BOT + '/wallet/' + a)).json(); return d && !d.error && (d.coins?.length || d.holdings?.length) ? d : null; } catch (e) { return null; }
