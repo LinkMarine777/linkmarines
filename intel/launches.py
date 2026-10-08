@@ -305,8 +305,8 @@ for t in cand:
     farm = vol >= 20000 and (fb < 0.45 and (ob < 20 or holders < 60) if fb is not None else ob < 5)   # payouts lag: a coin with real buyers isn't a farm
     bundled = bund >= 20
     verdict = 'FARM' if farm else 'REAL' if score >= 60 and not bundled else 'WATCH' if score >= 35 else 'THIN'
-    q = t.get('quote') or {}; tw = a.get('primaryTwitter') or {}
-    flags = (['BUNDLED'] if bundled else []) + ([f"@{tw['handle']}"] if (tw.get('followerCount') or 0) >= 1e6 else [])   # a big account's post as its X link
+    q = t.get('quote') or {}
+    flags = ['BUNDLED'] if bundled else []
     vr = state['vr'].get(m)
     row = {'m': m, 's': t.get('symbol'), 'n': t.get('name'), 'i': img(t.get('imageUrl')), 'c': ts(t.get('createdAt')),
            'q': q.get('symbol'), 'qm': q.get('mint'), 'qc': q.get('categoryLabel'), 'mode': t.get('mode'), 'st': t.get('status'),

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LAUNCH RADAR · Terminal 7 · real or farm, next stonkfun pairs</title>
+<title>WAR ROOM TERMINAL 7 · new launches: real or farm</title>
 <meta name="description" content="Every stonkfun launch of the last 24 h scored REAL or FARM from the fees it actually paid, organic buyers and its dev's record; bundles and linked wallets, and the coins in Jupiter VRFD.">
 <meta property="og:title" content="Launch Radar · Terminal 7">
 <meta property="og:site_name" content="Terminal 7">
@@ -24,10 +24,6 @@ html,body{background:var(--bg);color:var(--txt);font:13px/1.4 'IBM Plex Mono',mo
 body{min-height:100vh;background-image:linear-gradient(rgba(42,90,218,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(42,90,218,.05) 1px,transparent 1px);background-size:28px 28px}
 a{color:var(--blue2);text-decoration:none}a:hover{text-decoration:underline}
 .up{color:var(--green)}.dn{color:var(--red)}.dim{color:var(--dim)}.am{color:var(--amber)}
-header{display:flex;align-items:center;gap:14px;padding:9px 16px;border-bottom:1px solid var(--line);background:rgba(4,6,15,.92);flex-wrap:wrap}
-header img{width:40px;height:40px;object-fit:contain}
-.brand{font-family:'VT323';font-size:34px;line-height:1;color:#fff}.brand small{display:block;font-size:17px;color:var(--blue2)}
-header nav{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
 .btn{border:1px solid var(--line);padding:6px 12px;color:var(--txt);font:inherit;font-size:12px;background:var(--panel);cursor:pointer;white-space:nowrap}
 .btn:hover{border-color:var(--blue2);text-decoration:none}.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
 .live{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--green);border:1px solid rgba(57,255,106,.35);padding:2px 8px}
@@ -78,8 +74,32 @@ tbody tr{cursor:pointer}tbody tr:hover{background:rgba(255,255,255,.03)}
 details.how{padding:12px 14px;font-size:12px;line-height:1.6}details.how summary{cursor:pointer;color:#fff;letter-spacing:1.5px;font-size:11px}
 details.how p,details.how li{color:var(--txt);margin-top:6px}details.how ul{padding-left:18px}details.how code{color:var(--amber)}
 footer{text-align:center;color:var(--dim);font-size:11px;padding:20px 16px 30px}
-@media (max-width:600px){main{padding:10px}header{padding:8px 12px}.brand{font-size:28px}.ph .hint{margin-left:0;width:100%}}
+@media (max-width:600px){main{padding:10px}.ph .hint{margin-left:0;width:100%}}
 
+/* the header: the same as the trending page's (search, $MARINE, BUY TTS, BUY $MARINE, ☰), desktop and phones */
+header{display:flex;align-items:center;gap:18px;padding:9px 16px;border-bottom:1px solid var(--line);background:rgba(4,6,15,.92)}
+header img{width:40px;height:40px;object-fit:contain}
+.brand{font-family:'VT323';font-size:34px;line-height:1;color:#fff}.brand small{display:block;font-size:17px;color:var(--blue2)}
+header .ca{display:flex;gap:6px;flex:1;max-width:620px;margin:0 8px;position:relative}
+header .ca input{flex:1;min-width:120px;background:#050914;border:1px solid var(--line);color:#fff;font:inherit;font-size:12px;padding:7px 9px}
+header .ca input:focus{outline:none;border-color:var(--blue2)}
+.srch{position:relative;flex:1 1 150px;min-width:120px;display:flex}.srch input{flex:1;min-width:0;padding-right:34px!important}
+.srch button{position:absolute;right:1px;top:1px;bottom:1px;width:32px;border:0;background:none;color:var(--dim);cursor:pointer;display:grid;place-items:center}.srch button:hover{color:#fff}.srch svg{width:15px;height:15px;fill:currentColor}
+header .ca input{border-radius:17px;height:34px;padding-left:14px}
+.tkm{position:absolute;right:0;top:100%;margin-top:3px;font-size:11px;color:var(--amber);background:#02030a;border:1px solid var(--line);padding:2px 7px;z-index:5}.tkm:empty{display:none}
+header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center}.btn.tts{border-color:var(--amber);color:var(--amber)}
+.menu{position:relative}#menuBtn{font-size:15px;padding:5px 11px;line-height:1}
+.mnu{display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:60;min-width:230px;background:var(--panel2);border:1px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,.5);padding:6px 0}
+.menu.open .mnu{display:block}.mnu a{display:block;padding:8px 14px;color:var(--txt);font-size:12px;text-decoration:none;white-space:nowrap}.mnu a:hover{background:rgba(74,122,255,.12);color:#fff}
+@media (min-width:1000px){header{flex-wrap:nowrap!important}header .ca{flex:0 1 auto;width:clamp(100px,calc(100vw - 900px),620px);max-width:none;margin:0 auto 0 114px}}   /* 114 = trending's 18 + its sound and alert buttons: the search doesn't move when you switch pages */
+@media (max-width:999px){
+  header{flex-wrap:nowrap!important;gap:8px!important;padding:8px 10px}header .brand{display:none}header img{width:28px;height:28px}
+  header nav{order:-1;margin:0!important}header nav>.btn{display:none!important}.mnu{left:0;right:auto}#menuBtn{width:36px;height:36px;padding:0;font-size:18px;border:0;background:none}
+  header .ca{order:2;flex:1 1 0;flex-basis:0!important;min-width:0;margin:0;flex-wrap:nowrap}header .ca input{height:36px;border-radius:18px;font-size:13px;background:#0a0f1f}
+  .live{order:3;width:34px;height:34px;border-radius:50%;justify-content:center;flex:none;padding:0;border:1px solid var(--line);background:none}.live i{width:8px;height:8px}#liveTxt{display:none}}
+/* TRENDING | NEW LAUNCHES: the same switch on both pages */
+.vt{display:flex;width:max-content;max-width:100%;border:1px solid var(--line);background:var(--panel)}.vt a{padding:8px 18px;font-size:12px;letter-spacing:1.5px;color:var(--dim);text-decoration:none;white-space:nowrap}
+.vt a:hover{color:#fff;text-decoration:none}.vt a.on{background:var(--blue);color:#fff}
 /* Jupiter-style pills (VRFD) and Token Info tiles (jup.ag) */
 .pill{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--dim);white-space:nowrap}
 .pill.ok{color:#c7f284;border-color:rgba(199,242,132,.4);background:rgba(199,242,132,.08)}.pill.no{color:var(--red);border-color:rgba(255,51,85,.4);background:rgba(255,51,85,.08)}
@@ -111,15 +131,35 @@ footer{text-align:center;color:var(--dim);font-size:11px;padding:20px 16px 30px}
 </head>
 <body>
 <header>
-  <a href="/trending/"><img src="/helmet.png" alt=""></a>
-  <div class="brand">LAUNCH RADAR<small>TERMINAL 7 · REAL OR FARM</small></div>
-  <span class="live" id="live"><i></i><span id="liveTxt">LIVE</span></span>
+  <a href="/" title="The Marines HQ"><img src="/helmet.png" alt="Marines"></a>
+  <a class="brand" href="/trending/" style="text-decoration:none">THE WAR ROOM<small>TERMINAL 7</small></a>
+  <span class="live" id="live" title="The radar updates every ~5 min"><i></i><span id="liveTxt">LIVE</span></span>
+  <form id="caForm" class="ca" autocomplete="off">
+    <span class="srch"><input id="caIn" placeholder="Paste any stonk token CA…" spellcheck="false" aria-label="Token contract address"><button type="submit" title="Open this token" aria-label="Open token"><svg viewBox="0 0 24 24"><path d="M10 2a8 8 0 016.3 12.9l5.4 5.4-1.4 1.4-5.4-5.4A8 8 0 1110 2zm0 2a6 6 0 100 12 6 6 0 000-12z"/></svg></button></span>
+    <span id="tkMsg" class="tkm"></span>
+  </form>
   <nav>
-    <a class="btn" href="/trending/">🔥 TRENDING</a>
-    <a class="btn primary" href="/terminal/token?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">⚓ $MARINE TERMINAL</a>
+    <a class="btn" href="/terminal/token?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">⚓ $MARINE TERMINAL</a>
+    <a class="btn tts" href="/tts/checkout?k=t" onclick="return wrCheckout('t')">BUY TTS</a>
+    <a class="btn primary" href="/terminal/token?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK&amp;buy=1">BUY $MARINE</a>
+    <div class="menu"><button class="btn" id="menuBtn" type="button" aria-haspopup="true" aria-expanded="false" title="More">☰</button>
+      <div class="mnu" id="mnu" role="menu">
+        <a href="/trending/">🔥 Trending tokens</a>
+        <a href="/launches/">🧪 New launches: real or farm</a>
+        <a href="/terminal/token?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">⚓ $MARINE terminal</a>
+        <a href="/terminal/token?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK&amp;buy=1">🟢 Buy $MARINE</a>
+        <a href="/tts/checkout?k=t" onclick="return wrCheckout('t')">📢 Buy TTS on the stream</a>
+        <a href="/stream/">📺 The War Room (stream)</a>
+        <a href="/flywheel/">♻️ How $LINK rewards work</a>
+        <a href="/bridge/">🌉 New to Solana? Bridge &amp; buy</a>
+        <a href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ War Room chat</a>
+        <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener">𝕏 @TheMarinesX</a>
+        <a href="/">🏠 HQ</a>
+      </div></div>
   </nav>
 </header>
 <main>
+  <nav class="vt" aria-label="View"><a href="/trending/">🔥 TRENDING</a><a href="/launches/" class="on" aria-current="page">🧪 NEW LAUNCHES</a></nav>
   <section class="hero">
     <div class="intro"><h1>Real or farm?</h1>
       <p>Every stonkfun launch of the last 24 h checked against the <b>fees it actually paid</b>, Jupiter's organic buyers, bundles, the dev's record and <b>who funded its top holders</b>. Tap a coin for its bundle scan.</p></div>
@@ -234,7 +274,7 @@ function renderRows(){
   $('nRows').textContent=L.length;
   $('rows').innerHTML=L.length?L.map(r=>`<tr data-m="${esc(r.m)}">
     <td class="l"><span class="vd v-${r.vd}"><i>${r.score}</i>${r.vd}</span></td>
-    <td class="l"><div class="coin">${pic(r.i)}<div><b>${sy(r.s)}</b>${r.st==='graduated'?'<span class="chip ok">GRAD</span>':''}${(r.flags||[]).map(f=>f==='BUNDLED'?'<span class="chip bad">BUNDLED</span>':`<span class="chip warn" title="its X link is a post by ${esc(f)}, a big account it doesn't belong to">X: ${esc(f)}</span>`).join('')}${r.vr?`<span class="chip ${r.vr.st==='verified'?'ok':'warn'}" title="Jupiter VRFD: ${esc(r.vr.st)} (${esc(r.vr.lane)} lane)">${r.vr.lane==='express'?'⚡ ':''}VRFD</span>`:''}<small>${esc(r.n)}</small></div></div></td>
+    <td class="l"><div class="coin">${pic(r.i)}<div><b>${sy(r.s)}</b>${r.st==='graduated'?'<span class="chip ok">GRAD</span>':''}${(r.flags||[]).includes('BUNDLED')?'<span class="chip bad">BUNDLED</span>':''}${r.vr?`<span class="chip ${r.vr.st==='verified'?'ok':'warn'}" title="Jupiter VRFD: ${esc(r.vr.st)} (${esc(r.vr.lane)} lane)">${r.vr.lane==='express'?'⚡ ':''}VRFD</span>`:''}<small>${esc(r.n)}</small></div></div></td>
     <td class="l">${sy(r.q)}${r.qc?`<span class="tag">${esc(r.qc)}</span>`:''}</td>
     <td class="dim">${ago(r.c)}</td>
     <td>${compact(r.mc)}<small class="dim" style="display:block;font-size:10px">peak ${compact(r.pk)}</small></td>
@@ -274,7 +314,6 @@ function beforeBuy(r){const sc=r.scan||{},F=[],bund=bundOf(r);
   if(sc.sn>5)F.push(['a','snipers hold '+sc.sn.toFixed(1)+'%']);if(sc.in>5)F.push(['a','insiders hold '+sc.in.toFixed(1)+'%']);
   if(r.top>30)F.push(['a','top 10 holders hold '+r.top+'%']);
   if(r.dn>=5&&r.dn<=2000&&r.dg/r.dn<0.05)F.push(['r','serial launcher: '+num(r.dg)+' of '+num(r.dn)+' other coins graduated']);
-  (r.flags||[]).filter(f=>f[0]==='@').forEach(f=>F.push(['a','its X link is a post by '+esc(f)+', a big account it doesn\'t belong to']));
   if(r.vr&&r.vr.st==='rejected')F.push(['r','Jupiter VRFD rejected its verification']);
   if(r.ob<5)F.push(['a','only '+num(r.ob)+' organic buyers in 24 h']);
   return`<div class="bfb"><b>BEFORE YOU BUY</b><ul>${F.length?F.map(([c,t])=>`<li class="${c}">${t}</li>`).join(''):'<li class="g">no red flags in the data above (not a guarantee)</li>'}</ul></div>`}
@@ -304,7 +343,15 @@ $('hot').addEventListener('click',e=>{const c=e.target.closest('[data-coin]');if
 $('rows').addEventListener('click',e=>{if(e.target.closest('a'))return;const tr=e.target.closest('tr[data-m]');if(tr)openCoin(tr.dataset.m)});   // OPEN ↗ goes to the terminal, the rest of the row opens the panel
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;vf=b.dataset.v;try{localStorage.setItem('lrTab',vf)}catch(e){}if(D)renderRows()});
 document.querySelectorAll('th[data-k]').forEach(t=>t.addEventListener('click',()=>{const k=t.dataset.k;sd=sk===k?-sd:(k==='s'||k==='q'?1:-1);sk=k;if(D)renderRows()}));
+// the header, as on the trending page: a pasted CA opens its terminal (names and tickers: search.js), the ☰ menu, BUY TTS
+$('caForm').addEventListener('submit',e=>{e.preventDefault();const v=$('caIn').value.trim();
+  if(!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(v)){$('tkMsg').textContent='that is not a Solana token address';return}location.href=tok(v)});
+function wrCheckout(k){location.href=SITE+'/tts/checkout?k='+k;return false}
+$('menuBtn').onclick=e=>{e.stopPropagation();const m=$('menuBtn').parentNode,o=!m.classList.contains('open');m.classList.toggle('open',o);$('menuBtn').setAttribute('aria-expanded',o)};
+document.addEventListener('click',e=>{if(!e.target.closest('.menu'))$('menuBtn').parentNode.classList.remove('open')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('menuBtn').parentNode.classList.remove('open')});
 load();setInterval(load,60e3);
 </script>
+<script src="/terminal/search.js"></script>
 </body>
 </html>

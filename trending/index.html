@@ -160,6 +160,9 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
 .lr small{display:block;color:var(--dim);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lr .r{text-align:right;flex:none}.lr .r b{display:block}.lr .rk2{color:var(--dim);width:22px;text-align:right;flex:none}
 #audioGate{position:fixed;right:12px;bottom:40px;z-index:40;font-size:11px;background:#000c;border:1px solid var(--amber,#ffb000);color:var(--amber,#ffb000);padding:5px 9px;cursor:pointer;display:none}
 #audioGate{display:none!important}
+/* TRENDING | NEW LAUNCHES: the same switch on both pages */
+.vt{display:flex;width:max-content;max-width:100%;border:1px solid var(--line);background:var(--panel)}.vt a{padding:8px 18px;font-size:12px;letter-spacing:1.5px;color:var(--dim);text-decoration:none;white-space:nowrap}
+.vt a:hover{color:#fff;text-decoration:none}.vt a.on{background:var(--blue);color:#fff}
 </style>
 </head>
 <body>
@@ -180,7 +183,7 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
     <div class="menu"><button class="btn" id="menuBtn" type="button" aria-haspopup="true" aria-expanded="false" title="More">☰</button>
       <div class="mnu" id="mnu" role="menu">
         <a href="/trending/">🔥 Trending tokens</a>
-        <a href="/launches/">🧪 Launch radar: real or farm, next pairs</a>
+        <a href="/launches/">🧪 New launches: real or farm</a>
         <a href="/terminal/token?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">⚓ $MARINE terminal</a>
         <a href="/terminal/token?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK&amp;buy=1">🟢 Buy $MARINE</a>
         <a href="/tts/checkout?k=t" onclick="return wrCheckout('t')">📢 Buy TTS on the stream</a>
@@ -198,6 +201,7 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
 </header>
 
 <main>
+  <nav class="vt" aria-label="View"><a href="/trending/" class="on" aria-current="page">🔥 TRENDING</a><a href="/launches/">🧪 NEW LAUNCHES</a></nav>
   <section class="hero">
     <div class="pin" id="pin">
       <div class="pt"><img id="pinImg" alt="" src="/helmet.png"><div class="t"><label>Home of the terminal</label><b>$MARINE</b><span class="nm">LINK MARINES · <button class="pca" id="pinCopy" type="button" title="Copy the $MARINE contract address">F8Sc…STNK <svg viewBox="0 0 24 24"><path d="M8 3h11a2 2 0 012 2v11h-2V5H8zM4 7h11a2 2 0 012 2v11a2 2 0 01-2 2H4a2 2 0 01-2-2V9a2 2 0 012-2zm0 2v11h11V9z"/></svg></button></span></div></div>
