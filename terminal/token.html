@@ -481,7 +481,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .chartP>.ph .pchips:not(:empty){display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
   /* two rows that never move between tokens: [token · key] / [price chips · CANDLES · DEPTH · timeframes] */
   .chartP>.ph .ctok,.chartP>.ph>h2{order:1}.chartP>.ph .legend{order:2;justify-content:flex-end!important}.chartP>.ph .brk{display:block;order:3;flex-basis:100%;height:0}
-  .chartP>.ph .pchips{order:4;margin-right:auto}#dtab{order:5}#ctab{order:6}#tf{order:7}   /* DEPTH first: without depth data its kept place is just more of the open middle, no hole */
+  .chartP>.ph .pchips{order:4;margin-right:auto}#dtab{order:5;margin-left:auto}#ctab{order:6}#tf{order:7}   /* DEPTH first: without depth data its kept place is just more of the open middle, no hole; DEPTH, line/candles and the timeframes stay together on the right with or without the chips */
   #depthLeg{order:-1}   /* the key's depth item first too: the token lines stay pinned right */
   #clobrRow{display:grid;column-count:auto;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"liq wh lo" "dc wh lp";align-items:start}
   #liqP{grid-area:liq}#whP{grid-area:wh}#loP{grid-area:lo}#dcP{grid-area:dc}#lpP{grid-area:lp}   /* CLOBr panels: the same spots for every token */
