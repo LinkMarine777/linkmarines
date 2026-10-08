@@ -25,7 +25,7 @@
 
   const CSS = `
 .xr .wk{font-size:10px;letter-spacing:2px;color:var(--dim)}
-.xr h3{font-family:'VT323';font-weight:400;font-size:34px;color:#fff;margin:0;line-height:1}
+.xr{min-width:0;overflow-wrap:anywhere}.xr h3{font-family:'VT323';font-weight:400;font-size:34px;color:#fff;margin:0;line-height:1}
 .xr .wl{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;font-size:11px;margin-top:2px}.xr .wl a{color:var(--blue2)}
 #walKpi{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:14px 0 4px}
 #walKpi>div{background:var(--panel);border:1px solid var(--line);padding:9px 10px;min-width:0}
