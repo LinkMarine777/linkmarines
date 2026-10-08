@@ -147,7 +147,12 @@ def moved(tx, mint):
 
 def audit(mint):
     state = json.load(open(os.path.join(DATA, 'compound-state.json')))['tokens'][mint]
-    rw = {x['mint']: x for x in get('https://www.stonkfun.xyz/api/public/v1/rewards')['data']['launches']}[mint]
+    rw = None   # (stonkfun pages its launch list since 2026-10-07: look through every page for this coin)
+    for pg in range(1, 101):
+        d = get(f'https://www.stonkfun.xyz/api/public/v1/rewards?pageSize=1000&page={pg}')['data']
+        rw = next((x for x in d.get('launches') or [] if x['mint'] == mint), None)
+        if rw or pg >= ((d.get('launchesPagination') or {}).get('totalPages') or 1): break
+    if rw is None: raise SystemExit(f'{mint}: not in stonkfun launch list')
     quote = rw['quote']['mint']; since, until = state['since'], state['at']; W = list(state['bal'])
     print(f"${state.get('sym')}: {len(W)} wallets, reward token {rw['quote'].get('symbol')}, {time.strftime('%Y-%m-%d', time.gmtime(since))} .. {time.strftime('%Y-%m-%d %H:%M', time.gmtime(until))}")
     batches = {}
