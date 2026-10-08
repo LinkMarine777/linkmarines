@@ -788,8 +788,9 @@ const WHALE=2500;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // the token's pool: its most liquid DexScreener pair against its quote token (else its most liquid pair)
+let PAIRS=[];   // the token's DexScreener pairs (its links come from them too)
 async function findPool(){
-  const pairs=((await j('https://api.dexscreener.com/latest/dex/tokens/'+CA)).pairs||[]).filter(p=>p.chainId==='solana');
+  const pairs=PAIRS=((await j('https://api.dexscreener.com/latest/dex/tokens/'+CA)).pairs||[]).filter(p=>p.chainId==='solana');
   const other=p=>p.baseToken.address===CA?p.quoteToken:p.baseToken;
   pairs.sort((a,b)=>(b.liquidity?.usd||0)-(a.liquidity?.usd||0));
   PAIR=(TK.quoteMint&&pairs.find(p=>other(p).address===TK.quoteMint))||pairs[0]||null;
@@ -819,7 +820,7 @@ async function resolveToken(){
   document.addEventListener('click',e=>{if(!e.target.closest('.menu'))$('menuBtn').parentNode.classList.remove('open')});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')$('menuBtn').parentNode.classList.remove('open')});
   document.title=sym+' · WAR ROOM TERMINAL 7';
-  renderLinks(pairs);
+  renderLinks(PAIRS);
 }
 // The token's own links as DexScreener lists them (X, website, Telegram), plus a live X search for its cashtag
 const ICO={x:'<path d="M18.9 2H22l-7.6 8.7L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8.1-9.3L1 2h7l4.8 6.3zm-1.2 18h1.9L7.4 4H5.4z"/>',
