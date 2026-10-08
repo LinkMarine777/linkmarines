@@ -13,8 +13,9 @@
   // the score, with CLOBr's and Compound's (the page's scores box); a click opens the panel
   function score() {
     const r = row, el = document.getElementById('radarStat'); if (!el) return;
-    const b = document.getElementById('sRadar'); b.className = 'v-' + r.vd; b.textContent = r.score + ' ' + r.vd;
-    document.getElementById('sRadarMsg').textContent = r.vd === 'REAL' ? 'fees + buyers back it' : r.vd === 'FARM' ? 'farmed volume' : r.vd === 'WATCH' ? 'partly backed' : 'thin';
+    const b = document.getElementById('sRadar'); b.className = 'v-' + r.vd; b.textContent = r.score;
+    const m = document.getElementById('sRadarMsg'); m.innerHTML = `<i class="v-${esc(r.vd)}">${esc(r.vd)}</i>`;
+    m.title = r.vd === 'REAL' ? 'fees + buyers back it' : r.vd === 'FARM' ? 'farmed volume' : r.vd === 'WATCH' ? 'partly backed' : 'thin';
     el.style.display = ''; if (window.syncScores) syncScores();
     el.onclick = () => { P.classList.remove('shut'); P.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
   }

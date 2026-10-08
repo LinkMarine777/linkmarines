@@ -41,7 +41,7 @@ ROOT.innerHTML = `
       <th class="l" data-k="score">SCORE</th><th class="l" data-k="s">COIN</th><th class="l" data-k="q">PAIR</th><th data-k="c">AGE</th>
       <th data-k="mc">MC</th><th data-k="v">24H VOL</th><th data-k="fees" title="priority fees + tips traders paid (Jupiter's Fees Paid), and per trade">FEES PAID</th>
       <th data-k="fb" title="what the coin paid its holders ÷ its tax rate, against the volume it reports: real trading lands near 1.0">FEE-BACKED</th>
-      <th data-k="ob">ORG BUYERS</th><th data-k="h">HOLDERS</th><th data-k="bund" title="the bigger of bundlers' peak share (Jupiter) and holders linked by one private funder">BUNDLED</th>
+      <th data-k="ob">ORG BUYERS</th><th data-k="h">HOLDERS</th><th data-k="bund" title="held now: the bigger of what bundlers hold (Jupiter's Bundlers H.) and holders linked by one private funder">BUNDLED</th>
       <th data-k="dg" title="the dev's other coins: 👑 graduated · launched (Jupiter)">DEV</th><th></th>
     </tr></thead><tbody id="lr-rows"><tr><td class="l dim" colspan="13">loading…</td></tr></tbody></table></div>
   </section>
@@ -63,7 +63,7 @@ ROOT.innerHTML = `
     <ul>
       <li><b>Organic buyers (25)</b>: distinct wallets Jupiter counts as organic buyers in 24 h. Bots and wash wallets are filtered out.</li>
       <li><b>Fee-backed volume (20)</b>: what the coin paid its holders, divided by its tax rate, against the volume it reports. Every taxed trade pays, so real trading comes out near <code>1.0</code>. Washed volume comes out far below: farms measure 0.15–0.45.</li>
-      <li><b>Bundles (15)</b>: the bigger of the bundlers' peak share of the supply (Jupiter) and <b>linked holders</b>: top-100 holders funded by one private wallet. An exchange (Binance, Coinbase, OKX, Bybit, MEXC) or any service that funds holders across many coins doesn't count as a link.</li>
+      <li><b>Bundles (15)</b>: what's held <b>now</b>, the bigger of the bundlers' share of the supply (Jupiter's Bundlers H.) and <b>linked holders</b>: top-100 holders funded by one private wallet. An exchange (Binance, Coinbase, OKX, Bybit, MEXC) or any service that funds holders across many coins doesn't count as a link.</li>
       <li><b>Dev (15)</b>: the deployer's other coins, 👑 graduated out of launched (Jupiter). 1 in 5 graduated gives the full 15. A serial launcher (5+ coins, under 1 in 20 graduated) gets 0. A wallet with 2,000+ coins is a launch tool shared by many people, so it counts as neutral.</li>
       <li><b>Holders (10)</b>, <b>top 10 holders' share (5)</b>, <b>organic share of volume (5)</b>.</li>
       <li><b>Fees per trade (5)</b>: priority fees and tips traders paid per trade (Jupiter's Fees Paid). Farm bots pay to land their bundles: farms measured 2.3–5 mSOL a trade, real coins 0.7–2.7.</li>

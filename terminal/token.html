@@ -562,6 +562,14 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #infoPop .k{font-size:20px}html.fit #infoPop .h{font-size:64px}html.fit #infoPop .d{font-size:22px}
 #audioGate{display:none!important}
 .was{opacity:.55;font-weight:400;margin-right:2px}.off{font-size:.72em;letter-spacing:1px;color:var(--green);border:1px solid var(--green);padding:0 4px;border-radius:3px;margin-left:4px;vertical-align:middle}
+/* the scores (Compound · CLOBr · Radar) side by side in one tile: label, the number, a short word under it */
+#scoresStat{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:0;padding-left:4px;padding-right:4px;align-items:start}
+#scoresStat .half{flex-direction:column;align-items:flex-start;gap:3px;padding:2px 10px;border-left:1px solid var(--line)}#scoresStat .half.f{border-left:0}
+#scoresStat.both .half+.half{border-top:0;padding-top:2px}
+#scoresStat .half label{flex:none!important;width:auto;display:flex;align-items:center;gap:4px}#scoresStat .half b{font-size:30px;line-height:1}
+#scoresStat .half>span{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}#scoresStat .half>.dly{position:absolute;top:2px;right:8px;max-width:none;font-size:0!important;color:var(--amber)}#scoresStat .half>.dly::after{font-size:12px}
+#scoresStat #sScoreWhy{display:none!important}#scoresStat .half{position:relative}
+#sRadarMsg i{font-style:normal;font-weight:600;letter-spacing:1px}#sRadarMsg .v-REAL{color:var(--green)}#sRadarMsg .v-WATCH{color:var(--blue2)}#sRadarMsg .v-THIN{color:var(--dim)}#sRadarMsg .v-FARM{color:var(--red)}
 /* LAUNCH RADAR (launches/token-radar.js): a stonkfun launch's score with CLOBr / Compound, the panel, BEFORE YOU BUY above the swap */
 #sRadar.v-REAL{color:var(--green)}#sRadar.v-WATCH{color:var(--blue2)}#sRadar.v-THIN{color:var(--dim)}#sRadar.v-FARM{color:var(--red)}
 #radarP .rtop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px}#radarP .rtop .vd i{font-size:28px}
@@ -1384,8 +1392,9 @@ function renderCompound(){if(!CMP)return;const W=CMP.win[cmpW]||{},sc=W.score,sy
 // desktop keeps every panel in the same place for every token: a panel with nothing for this token says so instead of
 // disappearing (phones still fold empty ones away)
 const DESK=matchMedia('(min-width:1000px)').matches;
-if(DESK)setTimeout(()=>{if($('cmpStat').style.display==='none'){$('cmpStat').style.display='';$('sCmp').style.color='var(--dim)';$('sCmpMsg').textContent='not tracked'}syncScores()},0);
-function syncScores(){const v=['cmpStat','scoreStat','radarStat'].filter(id=>$(id).style.display!=='none').length;$('scoresStat').style.display=v?'':'none';$('scoresStat').classList.toggle('both',v>1)}
+if(DESK)setTimeout(()=>{if($('cmpStat').style.display==='none'){$('cmpStat').style.display='';$('sCmp').style.color='var(--dim)';$('sCmpMsg').textContent='no data'}syncScores()},0);
+function syncScores(){const v=['cmpStat','scoreStat','radarStat'].filter(id=>$(id).style.display!=='none');$('scoresStat').style.display=v.length?'':'none';$('scoresStat').classList.toggle('both',v.length>1);
+  ['cmpStat','scoreStat','radarStat'].forEach(id=>$(id).classList.toggle('f',id===v[0]))}   // the first one shown: no divider
 $('cmpStat').onclick=()=>{setTapeView('holders');document.querySelector('.tapeP').scrollIntoView({behavior:'smooth',block:'start'})};
 $('cmpWin').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();cmpW=b.dataset.w;[...$('cmpWin').children].forEach(x=>x.classList.toggle('on',x===b));renderCompound()});
 loadCompound();setInterval(()=>{if(!document.hidden)loadCompound()},30*60e3);
