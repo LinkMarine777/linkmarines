@@ -7,53 +7,74 @@
 <title>Chart Lab · Terminal 7</title>
 <link rel="icon" href="/favicon-64.png">
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<!-- TEST PAGE, not linked from anywhere: the token page's chart rebuilt on KLineChart (open source, Apache-2.0, pinned below)
-     to try drag / zoom, drawing tools, indicators (Ichimoku included) and a screenshot button before any of it goes live. -->
+<!-- TEST PAGE, not linked from anywhere: the token page's chart rebuilt on KLineChart (open source, Apache-2.0, pinned below),
+     looking like the live one (token line or candles on the right scale, the pair token's dashed line on its own left scale,
+     volume along the bottom, CLOBr depth on the right edge) plus drag / zoom, drawing tools, indicators and a screenshot button. -->
 <style>
 :root{--bg:#04060f;--panel:#0a0f1f;--line:#1a2444;--dim:#5d6a8f;--txt:#c9d3ee;--blue2:#4a7aff;--green:#39ff6a;--red:#ff3355;--amber:#ffd23f}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
 body{display:flex;flex-direction:column}
-header{display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
-header .tk{display:flex;align-items:center;gap:8px;margin-right:auto;min-width:0}
-header .tk img{width:28px;height:28px;border-radius:50%;background:#111}
-header .tk b{font-family:'VT323';font-weight:400;font-size:26px;color:#fff;letter-spacing:1px}
-header .tk .lab{font-size:9px;letter-spacing:2px;color:var(--amber);border:1px solid var(--amber);padding:1px 6px}
-header a{color:var(--dim);text-decoration:none}header a:hover{color:#fff}
-.bar{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
-.bar label{font-size:9px;letter-spacing:1.5px;color:var(--dim);margin:0 4px 0 8px}
-.bar button{background:transparent;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:11px;padding:4px 9px;cursor:pointer;white-space:nowrap}
-.bar button:hover{color:#fff;border-color:var(--blue2)}
-.bar button.on{color:#fff;border-color:var(--blue2);background:rgba(42,90,218,.2)}
-.bar button.shot{border-color:var(--amber);color:var(--amber)}
-#tools{padding:6px 14px;border-bottom:1px solid var(--line);background:var(--panel)}
-#chart{flex:1;min-height:360px}
+a{color:inherit;text-decoration:none}
+.top{display:flex;align-items:center;gap:10px;padding:6px 16px;border-bottom:1px solid var(--line);font-size:10px;letter-spacing:1.5px;color:var(--dim)}
+.top .lab{color:var(--amber);border:1px solid var(--amber);padding:1px 6px}.top a:hover{color:#fff}
+.panel{background:var(--panel);display:flex;flex-direction:column;flex:1;min-height:0}
+.ph{display:flex;align-items:center;flex-wrap:wrap;gap:10px;row-gap:8px;padding:12px 16px 6px}
+.tkb{display:flex;align-items:center;gap:10px;min-width:0}
+.tkb img{width:32px;height:32px;border-radius:50%;background:#111;flex:none}
+.tkb b{font-family:'VT323';font-weight:400;font-size:26px;color:#fff;letter-spacing:1px;line-height:1}
+.tkb .q{font-family:'IBM Plex Mono';font-size:12px;color:var(--dim);margin-left:3px;letter-spacing:0}
+.tkb .ca{font-size:11px;color:var(--dim);margin-left:8px}
+.legend{display:flex;gap:16px;align-items:center;margin-left:auto;font-size:12px;white-space:nowrap}
+.legend span{display:flex;align-items:center;gap:6px}.legend i{display:inline-block;width:14px;height:2px}
+.legend .dq{background:repeating-linear-gradient(90deg,var(--amber) 0 4px,transparent 4px 7px)}
+.legend .dep i{width:12px;background:linear-gradient(90deg,var(--green) 50%,var(--red) 50%)}
+.legend .dly{font-size:9px;letter-spacing:1px;color:#ff8c3f;border:1px solid #ff8c3f;padding:0 4px}
+.legend .off{opacity:.4}
+.brk{flex-basis:100%;height:0}
+.tabs{display:flex;gap:4px}
+.tabs button{background:transparent;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:11px;padding:4px 12px;cursor:pointer;white-space:nowrap}
+.tabs button:hover{color:#fff;border-color:var(--blue2)}
+.tabs button.on{color:#fff;border-color:var(--blue2);background:rgba(42,90,218,.2)}
+#dtab{margin-left:auto}#ctab button{padding:3px 10px;display:grid;place-items:center}#ctab svg{width:18px;height:18px}
+.tools{display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:4px 16px 8px;border-bottom:1px solid var(--line)}
+.tools label{font-size:9px;letter-spacing:1.5px;color:var(--dim);margin:0 4px 0 8px}.tools label:first-child{margin-left:0}
+.tools button{background:transparent;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:10.5px;padding:3px 8px;cursor:pointer;white-space:nowrap}
+.tools button:hover{color:#fff;border-color:var(--blue2)}.tools button.on{color:#fff;border-color:var(--blue2);background:rgba(42,90,218,.2)}
+.tools .shot{border-color:var(--amber);color:var(--amber);margin-left:auto}
+#chart{flex:1;min-height:380px}
 #msg{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#070c18;border:1px solid var(--amber);color:#fff;padding:8px 14px;display:none;z-index:9}
-@media (max-width:700px){header .tk b{font-size:22px}.bar button{padding:4px 7px}}
+@media (max-width:700px){.legend{margin-left:0;flex-wrap:wrap;gap:10px}.tabs button{padding:4px 8px}.tools .shot{margin-left:0}}
 </style>
 </head>
 <body>
-<header>
-  <div class="tk"><img id="tkImg" alt=""><b id="tkSym">…</b><span class="lab">CHART LAB · TEST</span><a id="back" href="/terminal/token">← token page</a></div>
-  <div class="bar" id="tf"></div>
-</header>
-<div id="tools">
-  <div class="bar"><label>DRAW</label><span id="draw"></span><button id="clr" type="button" title="Remove every drawing">CLEAR</button>
-    <label>INDICATORS</label><span id="ind"></span>
+<div class="top"><span class="lab">CHART LAB · TEST</span><span>not live: the token page's chart, rebuilt to try new tools</span><a id="back" href="/terminal/token" style="margin-left:auto">← TOKEN PAGE</a></div>
+<div class="panel">
+  <div class="ph">
+    <div class="tkb"><img id="tkImg" alt=""><b><span id="tkSym">…</span><span class="q" id="tkQ"></span></b><span class="ca" id="tkCa"></span></div>
+    <div class="legend"><a class="dep" id="depLeg" target="_blank" rel="noopener" style="display:none" title="CLOBr market depth, delayed up to 1h"><span><i></i>CLOBr depth <span class="dly">delayed</span></span></a>
+      <span><i style="background:var(--blue2)"></i><span id="lgB">$TOKEN</span> (right)</span><span id="lgQw" style="display:none"><i class="dq"></i><span id="lgQ"></span> (left)</span></div>
+    <i class="brk"></i>
+    <div class="tabs" id="dtab" style="visibility:hidden"><button id="depthBtn" class="on" type="button" title="CLOBr market depth: support (green) and resistance (red) liquidity by price">DEPTH</button></div>
+    <div class="tabs" id="ctab"><button id="candleBtn" type="button" aria-label="Line or candles"></button></div>
+    <div class="tabs" id="tf"></div>
+  </div>
+  <div class="tools"><label>DRAW</label><span class="tabs" id="draw"></span><button id="clr" type="button" title="Remove every drawing">CLEAR</button>
+    <label>INDICATORS</label><span class="tabs" id="ind"></span>
     <button class="shot" id="shot" type="button" title="Save the chart as an image, with the terminal7.xyz link on it">📷 SCREENSHOT</button></div>
+  <div id="chart"></div>
 </div>
-<div id="chart"></div>
 <div id="msg"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/klinecharts@10.0.3/dist/umd/klinecharts.min.js"></script>
 <script>
-const MARINE='F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK';
+const MARINE='F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK',BOT='https://war-room-bot.linkmarine777.workers.dev';
 const CA=((new URLSearchParams(location.search).get('ca')||'').trim().match(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/)||[MARINE])[0];
 const $=id=>document.getElementById(id);
 const say=(t,ms=2500)=>{const m=$('msg');m.textContent=t;m.style.display='block';clearTimeout(say.t);say.t=setTimeout(()=>m.style.display='none',ms)};
-$('back').href='/terminal/token?ca='+CA;
-let SYM='TOKEN';
-
+const store=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
+$('back').href='/terminal/token?ca='+CA;$('tkCa').textContent=CA.slice(0,4)+'…'+CA.slice(-4);
+let SYM='TOKEN',Q=null;   // Q: the pair token {mint, sym}
 // ---------- Ichimoku (9 / 26 / 52): conversion, base, the cloud (leading spans A and B, 26 bars ahead, shaded green / red), lagging span ----------
 klinecharts.registerIndicator({
   name:'ICHIMOKU',shortName:'Ichimoku',series:'price',precision:10,calcParams:[9,26,52],shouldOhlc:false,
@@ -91,41 +112,90 @@ klinecharts.registerOverlay({
       ...[[0,'#ffd23f'],[.382,'#4a7aff'],[.5,'#39ff6a'],[.618,'#4a7aff'],[1,'#ffd23f']].map(([f,col])=>ray(p,at(f),col)).filter(Boolean)]}
 });
 
-// ---------- the chart ----------
-const chart=klinecharts.init('chart',{styles:{
-  grid:{horizontal:{color:'#121a33'},vertical:{color:'#121a33'}},
-  candle:{bar:{upColor:'#4a7aff',downColor:'#e8eeff',noChangeColor:'#5d6a8f',upBorderColor:'#4a7aff',downBorderColor:'#e8eeff',upWickColor:'#4a7aff',downWickColor:'#e8eeff'},
-    priceMark:{last:{upColor:'#4a7aff',downColor:'#e8eeff'}},tooltip:{text:{color:'#c9d3ee'}}},
-  xAxis:{axisLine:{color:'#1a2444'},tickText:{color:'#5d6a8f'}},yAxis:{axisLine:{color:'#1a2444'},tickText:{color:'#5d6a8f'}},
-  separator:{color:'#1a2444'},crosshair:{horizontal:{text:{backgroundColor:'#2a5ada',family:'IBM Plex Mono'}},vertical:{text:{backgroundColor:'#2a5ada',family:'IBM Plex Mono'}}}}});
-// the terminal's font in the chart's text, and room on the right for the Ichimoku cloud's 26 bars ahead
-const F='IBM Plex Mono';
-chart.setStyles({candle:{tooltip:{title:{family:F,color:'#c9d3ee'},legend:{family:F,color:'#c9d3ee'}},priceMark:{last:{text:{family:'IBM Plex Mono'}},high:{textFamily:'IBM Plex Mono'},low:{textFamily:'IBM Plex Mono'}}},
-  indicator:{tooltip:{title:{family:F},legend:{family:F}}},overlay:{text:{family:F},rectText:{family:F}},xAxis:{tickText:{family:'IBM Plex Mono'}},yAxis:{tickText:{family:'IBM Plex Mono'}}});
-chart.setOffsetRightDistance(160);
+// ---------- the pair token's line (e.g. $LINK): dashed amber on its own scale on the left, like the live chart ----------
+let QMAP=new Map();   // candle time -> the pair token's close
+klinecharts.registerIndicator({name:'QUOTE',shortName:'',series:'normal',precision:4,
+  figures:[{key:'q',title:'',type:'line'}],
+  calc:d=>{let last=null;return d.map(k=>{const v=QMAP.get(k.timestamp);if(v!=null)last=v;return{q:v??last}})},
+  styles:{lines:[{color:'rgba(255,210,63,.8)',size:1.25,style:'dashed',dashedValue:[4,3]}]}});
+const fmtQ=v=>v>=1000?v.toFixed(0):v>=1?v.toFixed(2):+v>=.01?v.toFixed(4):(+v).toPrecision(3);
+const fmtP=v=>{v=+v;if(!v)return'0';const d=Math.max(2,Math.ceil(-Math.log10(Math.abs(v)))+2);return v.toFixed(Math.min(12,d)).replace(/(\.\d*?[1-9])0+$/,'$1')};
 
-// candles from Jupiter (all pools, USD): 500 at a time; dragging left loads older ones
-const TFS=[['1m','1_MINUTE',{type:'minute',span:1}],['5m','5_MINUTE',{type:'minute',span:5}],['15m','15_MINUTE',{type:'minute',span:15}],
-  ['1h','1_HOUR',{type:'hour',span:1}],['4h','4_HOUR',{type:'hour',span:4}],['1D','1_DAY',{type:'day',span:1}]];
-let IV='1_HOUR';
-async function bars(to){const r=await fetch(`https://datapi.jup.ag/v2/charts/${CA}?interval=${IV}&to=${to}&candles=500&type=price&quote=usd`);
+// ---------- volume along the bottom of the chart (blue up, grey down), like the live chart ----------
+klinecharts.registerIndicator({name:'VOLB',shortName:'',series:'normal',figures:[],calc:d=>d.map(()=>({})),
+  draw:({ctx,chart,bounding,xAxis})=>{const L=chart.getDataList(),vr=chart.getVisibleRange(),from=Math.max(0,vr.from),to=Math.min(L.length,vr.to);
+    let mx=0;for(let i=from;i<to;i++)mx=Math.max(mx,L[i].volume||0);if(!mx)return true;
+    const vh=bounding.height*.18,yb=bounding.height,w=Math.max(1,chart.getBarSpace().gapBar||chart.getBarSpace().bar*.8||3);
+    for(let i=from;i<to;i++){const k=L[i],h=(k.volume||0)/mx*vh;if(h<.5)continue;ctx.fillStyle=k.close>=k.open?'rgba(74,122,255,.4)':'rgba(232,238,255,.28)';
+      ctx.fillRect(xAxis.convertToPixel(i)-w/2,yb-h,w,h)}return true}});
+
+// ---------- CLOBr depth on the right edge: liquidity per price band on the token's scale, green support / red resistance ----------
+let DEPTH=null,depthOn=store('wrDepth')!=='0';
+klinecharts.registerIndicator({name:'DEPTHB',shortName:'',series:'normal',figures:[],calc:d=>d.map(()=>({})),
+  draw:({ctx,bounding,yAxis})=>{if(!depthOn||!DEPTH)return true;const h=bounding.height,w=bounding.width,rows=Math.max(12,Math.min(140,Math.floor(h/5))),bh=h/rows;
+    const bins=Array.from({length:rows},()=>[0,0]);
+    DEPTH.forEach(([p,su,re])=>{const y=yAxis.convertToPixel(p);if(y<0||y>h)return;const i=Math.min(rows-1,Math.max(0,Math.floor((h-y)/bh)));bins[i][0]+=su;bins[i][1]+=re});
+    const mx=Math.max(...bins.map(b=>b[0]+b[1]));if(!(mx>0))return true;const maxW=w*.26;
+    bins.forEach(([su,re],i)=>{const v=su+re;if(!v)return;const bw=Math.max(2,v/mx*maxW),y=h-(i+1)*bh+1,bhh=Math.max(1,bh-2),sup=su>=re;
+      ctx.fillStyle=sup?'rgba(57,255,106,.16)':'rgba(255,51,85,.16)';ctx.fillRect(w-bw,y,bw,bhh);
+      ctx.fillStyle=sup?'rgba(57,255,106,.75)':'rgba(255,51,85,.75)';ctx.fillRect(w-bw,y,2,bhh)});return true}});
+
+// ---------- the chart ----------
+const F='IBM Plex Mono';
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmtD=({timestamp:t,type})=>{const d=new Date(t),h=d.getHours(),hm=(h%12||12)+(d.getMinutes()?':'+String(d.getMinutes()).padStart(2,'0'):'')+(h<12?' AM':' PM');
+  return type==='xAxis'?(TF[2].includes('MINUTE')&&TF[0]!=='1d'?hm:MON[d.getMonth()]+' '+d.getDate()+' '+hm):MON[d.getMonth()]+' '+d.getDate()+', '+hm};
+const chart=klinecharts.init('chart',{decimalFold:{threshold:99},formatter:{formatDate:fmtD},layout:{yAxis:{gap:{top:.08,bottom:.25}}},styles:{
+  grid:{horizontal:{color:'#121a33'},vertical:{show:false}},
+  candle:{bar:{upColor:'#4a7aff',downColor:'#e8eeff',noChangeColor:'#5d6a8f',upBorderColor:'#4a7aff',downBorderColor:'#e8eeff',upWickColor:'#4a7aff',downWickColor:'#e8eeff'},
+    area:{lineSize:2,lineColor:'#4a7aff',smooth:false,value:'close',backgroundColor:[{offset:0,color:'rgba(74,122,255,0)'},{offset:1,color:'rgba(74,122,255,.35)'}]},
+    priceMark:{high:{show:false},low:{show:false},last:{upColor:'#4a7aff',downColor:'#4a7aff',line:{style:'dashed'},text:{family:F}}},
+    tooltip:{showRule:'follow_cross',title:{family:F,color:'#c9d3ee'},legend:{family:F,color:'#c9d3ee'}}},
+  indicator:{tooltip:{showRule:'follow_cross',title:{family:F},legend:{family:F}},lastValueMark:{show:false}},overlay:{text:{family:F},rectText:{family:F}},
+  xAxis:{axisLine:{color:'#1a2444'},tickLine:{show:false},tickText:{color:'#5d6a8f',family:F}},
+  yAxis:{axisLine:{show:false},tickLine:{show:false},tickText:{color:'#4a7aff',family:F}},
+  separator:{color:'#1a2444'},crosshair:{horizontal:{text:{backgroundColor:'#2a5ada',family:F}},vertical:{text:{backgroundColor:'#2a5ada',family:F}}}}});
+// the token's scale on the right ($, no trailing zeros); the pair token's on the left, in amber
+chart.overrideYAxis({paneId:'candle_pane',createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtP(t.value)}))});
+const QAX=chart.createYAxis({id:'quote_axis',paneId:'candle_pane',position:'left',gap:{top:.08,bottom:.25},
+  createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtQ(+t.value)}))});
+['VOLB','DEPTHB'].forEach(n=>chart.createIndicator({name:n,paneId:'candle_pane'},true));
+
+// line (the live chart's default) or candles: one button showing the type you're on
+const ICO_LINE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 4-7 5 5"/><path d="M3 21h18"/></svg>',
+  ICO_CANDLE='<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6"><path d="M7 3v4M7 15v5M17 5v3M17 17v3" fill="none"/><rect x="4.5" y="7" width="5" height="8" rx="1"/><rect x="14.5" y="8" width="5" height="9" rx="1" fill="none"/></svg>';
+let candleOn=store('wrCandle')==='1';
+function setType(){chart.setStyles({candle:{type:candleOn?'candle_solid':'area'}});$('candleBtn').innerHTML=candleOn?ICO_CANDLE:ICO_LINE;$('candleBtn').title=candleOn?'Candles (click for the line)':'Line (click for candles)'}
+$('candleBtn').onclick=()=>{candleOn=!candleOn;store('wrCandle',candleOn?'1':'0');setType()};setType();
+$('depthBtn').onclick=()=>{depthOn=!depthOn;store('wrDepth',depthOn?'1':'0');$('depthBtn').classList.toggle('on',depthOn);$('depLeg').classList.toggle('off',!depthOn);chart.resize()};
+$('depthBtn').classList.toggle('on',depthOn);
+
+// timeframes like the live chart; each loads candles of a fitting size and fits that window on screen, the rest of the
+// history is there to drag back to (older candles load as you go)
+const TFS=[['5m','5M','1_MINUTE',{type:'minute',span:1},15],['1h','1H','1_MINUTE',{type:'minute',span:1},60],['6h','6H','5_MINUTE',{type:'minute',span:5},72],
+  ['1d','24H','15_MINUTE',{type:'minute',span:15},96],['7d','7D','1_HOUR',{type:'hour',span:1},168],['all','ALL','4_HOUR',{type:'hour',span:4},0]];
+let TF=TFS.find(t=>t[0]===store('wrLabTf'))||TFS[4];
+const IV=()=>TF[2];
+async function bars(m,to,n=500){const r=await fetch(`https://datapi.jup.ag/v2/charts/${m}?interval=${IV()}&to=${to}&candles=${n}&type=price&quote=usd`);
   if(!r.ok)throw new Error(r.status);return((await r.json()).candles||[]).map(c=>({timestamp:c.time*1000,open:+c.open,high:+c.high,low:+c.low,close:+c.close,volume:+c.volume||0}))}
+async function quoteFor(to){if(!Q)return;try{(await bars(Q.mint,to)).forEach(b=>QMAP.set(b.timestamp,b.close))}catch(e){}}
+function fit(){const n=TF[4],L=chart.getDataList().length,w=(chart.getSize('candle_pane')||{}).width||800,k=n?Math.min(n,L):L;if(k>1)chart.setBarSpace(Math.max(1,Math.min(50,(w-20)/k)));chart.scrollToRealTime()}
 chart.setDataLoader({getBars:async({type,timestamp,callback})=>{
-  try{if(type==='init'){const d=await bars(Date.now());callback(d,{forward:d.length>=500,backward:d.length>=500});return}
+  try{if(type==='init'){QMAP=new Map();const [d]=await Promise.all([bars(CA,Date.now()),quoteFor(Date.now())]);callback(d,{forward:d.length>=500,backward:d.length>=500});setTimeout(fit,0);return}
     // more history when the chart is dragged past its oldest candle (whichever direction name the library gives it)
     const first=(chart.getDataList()[0]||{}).timestamp;
-    if(timestamp&&first&&timestamp<=first){const d=(await bars(timestamp-1)).filter(b=>b.timestamp<timestamp),more=d.length>=499;
+    if(timestamp&&first&&timestamp<=first){const [d0]=await Promise.all([bars(CA,timestamp-1),quoteFor(timestamp-1)]),d=d0.filter(b=>b.timestamp<timestamp),more=d.length>=499;
       callback(d,{forward:type==='forward'?more:true,backward:type==='backward'?more:true});return}
     callback([],{forward:type!=='forward',backward:type!=='backward'})}catch(e){say('Couldn\'t load candles ('+e.message+')');callback([],false)}}});
 const prec=p=>p>0?Math.min(12,Math.max(2,Math.ceil(-Math.log10(p))+3)):2;
-
-$('tf').innerHTML=TFS.map(([l,iv])=>`<button type="button" data-iv="${iv}"${iv===IV?' class="on"':''}>${l}</button>`).join('');
-$('tf').onclick=e=>{const b=e.target.closest('button');if(!b)return;IV=b.dataset.iv;$('tf').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
-  chart.setPeriod(TFS.find(t=>t[1]===IV)[2])};
+$('tf').innerHTML=TFS.map(t=>`<button type="button" data-k="${t[0]}"${t===TF?' class="on"':''}>${t[1]}</button>`).join('');
+$('tf').onclick=e=>{const b=e.target.closest('button');if(!b)return;const was=TF;TF=TFS.find(t=>t[0]===b.dataset.k);store('wrLabTf',TF[0]);
+  $('tf').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+  if(was[2]===TF[2])fit();else chart.setPeriod(TF[3])};   // same candle size (5M / 1H): just refit
 
 // ---------- drawing tools ----------
 const DRAW=[['segment','Trend line'],['rayLine','Ray'],['horizontalStraightLine','Horizontal'],['parallelStraightLine','Parallel'],
-  ['priceChannelLine','Channel'],['fibonacciLine','Fib retracement'],['pitchfan','Pitchfan']];
+  ['priceChannelLine','Channel'],['fibonacciLine','Fib'],['pitchfan','Pitchfan']];
 const ok=new Set(klinecharts.getSupportedOverlays());
 $('draw').innerHTML=DRAW.filter(([n])=>ok.has(n)).map(([n,l])=>`<button type="button" data-o="${n}">${l}</button>`).join('');
 $('draw').onclick=e=>{const b=e.target.closest('button');if(!b)return;chart.createOverlay({name:b.dataset.o,
@@ -134,34 +204,41 @@ $('draw').onclick=e=>{const b=e.target.closest('button');if(!b)return;chart.crea
 $('clr').onclick=()=>{chart.removeOverlay();document.querySelectorAll('#draw button').forEach(x=>x.classList.remove('on'))};
 
 // ---------- indicators: on the price, or in their own pane below ----------
-const IND=[['ICHIMOKU','Ichimoku',true],['MA','MA',true],['EMA','EMA',true],['BOLL','Bollinger',true],['VOL','Volume',false],['RSI','RSI',false],['MACD','MACD',false]];
+const IND=[['ICHIMOKU','Ichimoku',true],['MA','MA',true],['EMA','EMA',true],['BOLL','Bollinger',true],['RSI','RSI',false],['MACD','MACD',false]];
 const live={};
 $('ind').innerHTML=IND.map(([n,l])=>`<button type="button" data-i="${n}">${l}</button>`).join('');
 function toggleInd(n){const [,,onPrice]=IND.find(x=>x[0]===n),b=document.querySelector(`#ind [data-i="${n}"]`);
-  if(live[n]){chart.removeIndicator({id:live[n]});delete live[n];b.classList.remove('on');return}
-  live[n]=chart.createIndicator(onPrice?{name:n,paneId:'candle_pane'}:n,onPrice);b.classList.add('on')}
+  if(live[n]){chart.removeIndicator({id:live[n]});delete live[n];b.classList.remove('on')}
+  else{live[n]=chart.createIndicator(onPrice?{name:n,paneId:'candle_pane'}:n,onPrice);b.classList.add('on')}
+  chart.setOffsetRightDistance(live.ICHIMOKU?160:20)}   // room for the Ichimoku cloud's 26 bars ahead
 $('ind').onclick=e=>{const b=e.target.closest('button');if(b)toggleInd(b.dataset.i)};
-toggleInd('VOL');
+chart.setOffsetRightDistance(20);
 
 // ---------- screenshot: the chart with the token, timeframe, time and the terminal7.xyz link on it ----------
 $('shot').onclick=async()=>{
   const src=chart.getConvertPictureUrl(true,'png','#0a0f1f'),img=new Image();img.src=src;await img.decode();
   const pad=44,c=document.createElement('canvas');c.width=img.width;c.height=img.height+pad*2;const x=c.getContext('2d');
   x.fillStyle='#04060f';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,pad);
-  x.fillStyle='#fff';x.font='28px VT323, monospace';x.textBaseline='middle';x.fillText('$'+SYM+' · '+$('tf').querySelector('.on').textContent,14,pad/2);
+  x.fillStyle='#fff';x.font='28px VT323, monospace';x.textBaseline='middle';x.fillText('$'+SYM+(Q?' / $'+Q.sym:'')+' · '+TF[1],14,pad/2);
   x.font='12px "IBM Plex Mono", monospace';x.fillStyle='#5d6a8f';x.textAlign='right';x.fillText(new Date().toUTCString().replace(' GMT',' UTC'),c.width-14,pad/2);
   x.textAlign='left';x.fillStyle='#ffd23f';x.font='600 15px "IBM Plex Mono", monospace';x.fillText('terminal7.xyz',14,img.height+pad*1.5);
   x.fillStyle='#5d6a8f';x.font='12px "IBM Plex Mono", monospace';x.textAlign='right';x.fillText('terminal7.xyz/terminal/token?ca='+CA,c.width-14,img.height+pad*1.5);
   c.toBlob(async b=>{let copied=false;try{await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);copied=true}catch(e){}
-    const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`${SYM}-${$('tf').querySelector('.on').textContent}-terminal7.png`;a.click();
+    const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`${SYM}-${TF[1]}-terminal7.png`;a.click();
     say(copied?'Saved, and copied to your clipboard':'Saved')},'image/png')};
 
-// ---------- the token ----------
-// name, logo and price first (the price sets how many decimals the axis shows); the symbol is set once: setting it again reloads the chart
-fetch('https://lite-api.jup.ag/tokens/v2/search?query='+CA).then(r=>r.json()).then(L=>{const t=(L||[]).find(t=>t.id===CA);if(!t)return 8;
-  SYM=String(t.symbol||'TOKEN').replace(/^\$/,'');$('tkSym').textContent='$'+SYM;document.title='$'+SYM+' · Chart Lab';if(t.icon)$('tkImg').src=t.icon;
-  return prec(+t.usdPrice||0)}).catch(()=>8)
-  .then(pp=>{chart.setSymbol({ticker:SYM,pricePrecision:pp||8,volumePrecision:0});chart.setPeriod(TFS.find(t=>t[1]===IV)[2])});
+// ---------- the token, its pair token and CLOBr depth; the symbol is set once (setting it again reloads the chart) ----------
+const tokenInfo=fetch('https://lite-api.jup.ag/tokens/v2/search?query='+CA).then(r=>r.json()).then(L=>(L||[]).find(t=>t.id===CA)).catch(()=>null);
+const pairInfo=fetch('https://api.dexscreener.com/latest/dex/tokens/'+CA).then(r=>r.json()).then(d=>{
+  const P=(d.pairs||[]).filter(p=>p.chainId==='solana').sort((a,b)=>((b.liquidity||{}).usd||0)-((a.liquidity||{}).usd||0))[0];if(!P)return null;
+  const o=P.baseToken.address===CA?P.quoteToken:P.baseToken;return{mint:o.address,sym:String(o.symbol||'').replace(/^\$/,'')}}).catch(()=>null);
+Promise.all([tokenInfo,pairInfo]).then(([t,q])=>{
+  if(t){SYM=String(t.symbol||'TOKEN').replace(/^\$/,'');if(t.icon)$('tkImg').src=t.icon}
+  $('tkSym').textContent='$'+SYM;$('lgB').textContent='$'+SYM;document.title='$'+SYM+' · Chart Lab';
+  if(q&&q.mint){Q=q;chart.createIndicator({name:'QUOTE',shortName:'$'+q.sym,paneId:'candle_pane',yAxisId:'quote_axis'},true);$('tkQ').textContent='/$'+q.sym;$('lgQ').textContent='$'+q.sym;$('lgQw').style.display=''}
+  chart.setSymbol({ticker:SYM,pricePrecision:prec(t&&+t.usdPrice||0)||8,volumePrecision:0});chart.setPeriod(TF[3])});
+fetch(BOT+'/depth?mint='+CA+'&d=1').then(r=>r.json()).then(d=>{if(!d||!d.levels||!d.levels.length)return;DEPTH=d.levels;
+  $('dtab').style.visibility='';const l=$('depLeg');l.style.display='';l.href='https://clobr.io/token/'+encodeURIComponent(CA);l.classList.toggle('off',!depthOn);chart.resize()}).catch(()=>{});
 addEventListener('resize',()=>chart.resize());
 </script>
 </body>
