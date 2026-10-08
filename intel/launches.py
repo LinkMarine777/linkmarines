@@ -11,8 +11,9 @@ shows: fees paid, bundlers, dev record, holders and who funded them); Jupiter VR
 
 Alerts (each fires once):
   vrfd      a stonkfun coin asks Jupiter VRFD for verification (⚡ express = paid 1,000 JUP), or VRFD verifies it
-  sunrise   Sunrise asks VRFD to verify a stock / VRFD verifies it, and no stonkfun pair trades that stock yet:
-            stonkfun lists Sunrise's stocks as pairs (WLD: express at 21:09, verified 21:30, a pair that evening)
+  sunrise   a stock issuer stonkfun pairs with (Sunrise, xStocks, PreStocks, Tessera) issues a stock, or Sunrise asks VRFD to
+            verify one / VRFD verifies it, and no stonkfun pair trades that stock yet (WLD: express at 21:09, verified
+            21:30, a pair that evening)
   newpair   stonkfun's pair list gains a quote token: coins can launch against it now
   launch    a launch from the last 24 h scores REAL (below), the first time it does
 
@@ -117,8 +118,10 @@ if pairs and len(pairs) >= len(state['pairs']) / 2:   # a list far shorter than 
 cat_of = {m: p.get('categoryLabel') or p.get('category') for m, p in pairs.items()}
 
 
-def stock_keys(sym, name, xstock=False):
-    """What identifies the stock behind a token, to spot a stock that already has a pair (Sunrise's SPCX vs the SPCXX xStock)."""
+def stock_keys(sym, name, xstock=False, tessera=False):
+    """What identifies the stock behind a token, to spot a stock that already has a pair (Sunrise's SPCX vs the SPCXX xStock,
+    Tessera's tSpaceX vs the SPACEX PreStock)."""
+    if tessera: sym = re.sub(r'^t-?', '', sym or ''); name = re.sub(r'(?i)^t-', '', name or '')
     s = re.sub(r'[^A-Z0-9]', '', (sym or '').upper())
     if xstock and len(s) > 2 and s.endswith('X'): s = s[:-1]
     n = re.sub(r'\b(xstocks?|prestocks?|backpack securities|tokenized|inc|corp|class [a-c])\b', '', (name or '').lower().split(' - ')[0])
@@ -126,7 +129,7 @@ def stock_keys(sym, name, xstock=False):
 paired_stock = set()
 for p in pairs.values():
     if p.get('category') in ('xstock', 'prestock', 'backpack', 'tessera'):
-        paired_stock |= stock_keys(p.get('symbol'), p.get('name'), p.get('category') == 'xstock')
+        paired_stock |= stock_keys(p.get('symbol'), p.get('name'), p.get('category') == 'xstock', p.get('category') == 'tessera')
 
 # ---------- the last 24 h of launches (stonkfun's newest first) ----------
 feed, page = [], 1
@@ -190,32 +193,46 @@ try:
         for m in [m for m, r in state[k].items() if r['t'] < now - 14 * 86400]: state[k].pop(m)
 except Exception as e: log('vrfd', e)
 
-# ---------- next pairs: Sunrise's stocks with no stonkfun pair for that stock yet ----------
+# ---------- next pairs: every issuer's stocks with no stonkfun pair for that stock yet ----------
+# stonkfun pairs stocks from four issuers, each with its own Jupiter tag. Most of the issuers' tokens are left out: Sunrise
+# lists nearly all of its stocks as pairs, xStocks only its busiest (24 of 1,274), so an xStock shows here only when it
+# trades, is new, or went to VRFD. A stock stonkfun already pairs in any wrapper is left out (it never pairs two).
+ISSUERS = {'backpack': 'Sunrise', 'xstocks': 'xStock', 'prestocks': 'PreStock', 'tessera': 'Tessera'}
 nxt = load('launches.json', {}).get('next', [])
 if FULL:
     try:
         V = get('https://lite-api.jup.ag/tokens/v2/tag?query=verified')
-        stocky = {x['id']: x for x in V if STOCKY & set(x.get('tags') or [])}
-        # Sunrise's issuers: the deployers of Sunrise pairs on stonkfun, plus whatever Sunrise sent to VRFD
-        sun_devs = {x.get('dev') for m, x in stocky.items() if m in pairs and cat_of.get(m) == 'Sunrise'} - {None}
-        cand = {m for m, x in stocky.items() if x.get('dev') in sun_devs} | set(state['sun'])
-        meta = {**{m: stocky[m] for m in cand if m in stocky}, **assets([m for m in cand if m not in stocky])}
-        listed = sum(1 for m in cand if m in pairs)
+        iss = {}
+        for x in V:
+            lab = next((l for t, l in ISSUERS.items() if t in (x.get('tags') or [])), None)
+            if lab: iss[x['id']] = (lab, x)
+        for m in set(state['sun']) - set(iss): iss[m] = ('Sunrise', None)   # Sunrise's VRFD requests, verified or not
+        meta = assets([m for m, (l, x) in iss.items() if x is None])
+        listed = {}
+        for m, (lab, x) in iss.items(): listed.setdefault(lab, [0, 0]); listed[lab][1] += 1; listed[lab][0] += m in pairs
+        first_iss = 'iss' not in state; seen = state.setdefault('iss', {})
         nxt = []
-        for m in cand - set(pairs):
-            x = meta.get(m) or {}
-            if stock_keys(x.get('symbol'), x.get('name')) & paired_stock: continue   # an xStock / PreStock of it trades already
-            r = state['sun'].get(m) or {}
-            nxt.append({'m': m, 's': x.get('symbol'), 'n': x.get('name'), 'i': x.get('icon'), 'liq': round(x.get('liquidity') or 0),
-                        'h': x.get('holderCount') or 0, 'ver': bool(x.get('isVerified')) or r.get('st') == 'verified',
-                        'lane': r.get('lane'), 'st': r.get('st'), 'req': r.get('t'), 'c': ts(x.get('createdAt'))})
-            key = f"{m}:{'verified' if nxt[-1]['ver'] else 'asked'}"
-            if r and key not in state['fired'] and not first_v:
+        for m, (lab, x) in iss.items():
+            if m in pairs: continue
+            x = x or meta.get(m) or {}
+            if stock_keys(x.get('symbol'), x.get('name'), lab == 'xStock', lab == 'Tessera') & paired_stock: continue   # it trades in another wrapper
+            st24 = x.get('stats24h') or {}; vol = (st24.get('buyVolume') or 0) + (st24.get('sellVolume') or 0)
+            c = ts(x.get('createdAt')); r = state['sun'].get(m) or {}
+            new = c > now - 14 * 86400 or (not first_iss and m not in seen)
+            seen.setdefault(m, now)
+            if lab == 'xStock' and not (vol >= 5000 or (x.get('liquidity') or 0) >= 25000 or new or r): continue
+            nxt.append({'m': m, 's': x.get('symbol'), 'n': x.get('name'), 'i': x.get('icon'), 'iss': lab, 'liq': round(x.get('liquidity') or 0),
+                        'v': round(vol), 'h': x.get('holderCount') or 0, 'ver': bool(x.get('isVerified')) or r.get('st') == 'verified',
+                        'lane': r.get('lane'), 'st': r.get('st'), 'req': r.get('t'), 'c': c, 'new': bool(new)})
+            # an alert when a stock first shows up (issued, or sent to VRFD) and when Sunrise's VRFD request is verified
+            key = f"{m}:{'verified' if nxt[-1]['ver'] else 'asked'}" if r else f'{m}:issued'
+            if (r or new) and key not in state['fired'] and not first_v and not first_iss:
                 state['fired'][key] = now
-                sig('sunrise', key, f"Sunrise's ${x.get('symbol')} " + ('is verified on Jupiter' if nxt[-1]['ver'] else f"went to Jupiter VRFD ({r.get('lane')} lane)")
-                    + ': no stonkfun pair trades this stock yet, and stonkfun lists Sunrise stocks', m, x.get('symbol'), x.get('icon'))
-        nxt.sort(key=lambda r: (-(r['req'] or 0), -r['liq']))
-        state['sunListed'] = [listed, len(cand)]
+                what = ('is verified on Jupiter' if nxt[-1]['ver'] else f"went to Jupiter VRFD ({r.get('lane')} lane)") if r else 'is new on chain'
+                sig('sunrise', key, f"{lab}'s ${x.get('symbol')} {what}: no stonkfun pair trades this stock yet, and stonkfun lists {lab} stocks",
+                    m, x.get('symbol'), x.get('icon'))
+        nxt.sort(key=lambda r: (-(r['req'] or 0), not r['new'], -r['v'], -r['liq']))
+        state['issListed'] = listed; state['sunListed'] = listed.get('Sunrise')
     except Exception as e: log('next pairs', e)
 
 # ---------- score the launches that trade ----------
@@ -352,7 +369,7 @@ new_pairs = sorted([{'m': m, 's': (pairs.get(m) or {}).get('symbol'), 'n': (pair
 vrfd = sorted([dict(r, m=m) for m, r in state['vr'].items()], key=lambda r: -r['t'])[:40]
 for r in vrfd: r.pop('ck', None)
 save('launches.json', {'at': now, 'stats': stats, 'pairs': len(pairs) or len(state['pairs']), 'newPairs': new_pairs, 'vrfd': vrfd,
-                       'next': nxt, 'sunListed': state.get('sunListed'), 'hot': hot, 'launches': rows[:200], 'signals': signals[:120]})
+                       'next': nxt, 'sunListed': state.get('sunListed'), 'issListed': state.get('issListed'), 'hot': hot, 'launches': rows[:200], 'signals': signals[:120]})
 save('launches-state.json', state)
 log(f"done{' (full)' if FULL else ''}: {stats['launches']} launches in 24 h, {stats['real']} REAL, {stats['farm']} FARM, {stats['bundled']} bundled, "
     f"{scanned} holder scans, {len(vrfd)} stonkfun coins in VRFD, {len(nxt)} next pairs, {len(signals)} signals")

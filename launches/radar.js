@@ -53,7 +53,7 @@ ROOT.innerHTML = `
   <section class="pipe">
     <div class="lr-panel"><div class="lr-ph"><h2>STONKFUN COINS IN JUPITER VRFD</h2><span class="hint">⚡ express = paid 1,000 JUP</span></div>
       <div class="list" id="lr-vrfd"><div class="empty">loading…</div></div></div>
-    <div class="lr-panel"><div class="lr-ph"><h2>NEXT PAIRS · SUNRISE</h2><span class="hint" id="lr-sunHint"></span></div>
+    <div class="lr-panel"><div class="lr-ph"><h2>NEXT PAIRS</h2><span class="hint" id="lr-sunHint"></span></div>
       <div class="list" id="lr-next"><div class="empty">loading…</div></div></div>
     <div class="lr-panel"><div class="lr-ph"><h2>NEW STONKFUN PAIRS</h2><span class="hint" id="lr-pairsN"></span></div>
       <div class="list" id="lr-pairs"><div class="empty">loading…</div></div></div>
@@ -69,7 +69,7 @@ ROOT.innerHTML = `
       <li><b>Fees per trade (5)</b>: priority fees and tips traders paid per trade (Jupiter's Fees Paid). Farm bots pay to land their bundles: farms measured 2.3–5 mSOL a trade, real coins 0.7–2.7.</li>
     </ul>
     <p><span class="v-REAL">REAL</span> 60+ and not bundled (20%+ bundled or linked caps it at WATCH) · <span class="v-WATCH">WATCH</span> 35+ · <span class="v-FARM">FARM</span> $20,000+ volume the fees don't back up, with few organic buyers or holders · <span class="v-THIN">THIN</span> the rest.</p>
-    <p>VRFD: Jupiter's verification desk. Standard requests are free. ⚡ Express costs 1,000 JUP and is reviewed first. Next pairs: stonkfun lists Sunrise's stocks as pairs, so a verified Sunrise stock with no pair for that stock yet (no xStock or PreStock of it) is the next one in line. Not financial advice: a score reads what already happened on chain.</p>
+    <p>VRFD: Jupiter's verification desk. Standard requests are free. ⚡ Express costs 1,000 JUP and is reviewed first. Next pairs: the stock issuers stonkfun pairs with (Sunrise, xStocks, PreStocks, Tessera) and their verified stocks that no stonkfun pair trades yet, in any wrapper. xStocks only when one trades, is new or went to VRFD: stonkfun pairs only its busiest. A new stock and a Sunrise VRFD request each pop an alert. Not financial advice: a score reads what already happened on chain.</p>
   </details></section>
   <div class="lr-foot">updated <span id="lr-upd2">…</span> · a pass every ~5 min · data: stonkfun, Jupiter, Jupiter VRFD</div>`;
 // the coin's panel covers the whole page, so it lives on <body>
@@ -87,11 +87,13 @@ function render() {
   const V = D.vrfd || []; $('vrfd').innerHTML = V.length ? V.map(v => `<a class="it" href="https://verified.jup.ag/dashboard/${esc(v.m)}" target="_blank" rel="noopener">${pic(v.i)}
     <span class="lr-nm"><b>${sy(v.s)}</b><small>${esc(short(v.m))} · ${ago(v.t)} · MC ${compact(v.mc)}</small></span>
     <span class="pills">${stPill(v.st)}${lanePill(v.lane)}</span></a>`).join('') : '<div class="empty">no stonkfun coin has asked VRFD in the last 2 weeks</div>';
-  // next pairs: Sunrise
-  const SL = D.sunListed; $('sunHint').textContent = SL ? SL[0] + ' of ' + SL[1] + ' Sunrise stocks are pairs' : '';
+  // next pairs: the stocks of every issuer stonkfun pairs with (Sunrise, xStock, PreStock, Tessera) that no pair trades yet
+  const IL = D.issListed || (D.sunListed ? { Sunrise: D.sunListed } : null);
+  $('sunHint').textContent = IL ? Object.entries(IL).map(([k, v]) => k + ' ' + v[0] + '/' + v[1]).join(' · ') + ' paired' : '';
+  $('sunHint').title = 'stonkfun pairs out of each issuer\'s verified stocks';
   const N = D.next || []; $('next').innerHTML = N.length ? N.map(p => `<a class="it" href="https://jup.ag/tokens/${esc(p.m)}" target="_blank" rel="noopener">${pic(p.i)}
-    <span class="lr-nm"><b>${sy(p.s)}</b><small>${esc(p.n)}${p.liq ? ' · liq ' + compact(p.liq) : ' · no market yet'}</small></span>
-    <span class="pills">${p.ver ? stPill('verified') : p.st ? stPill(p.st) : ''}${lanePill(p.lane)}</span></a>`).join('') : '<div class="empty">every verified Sunrise stock has a pair (or an xStock / PreStock of it does). The next one pops here and as an alert.</div>';
+    <span class="lr-nm"><b>${sy(p.s)}</b><span class="lr-tag">${esc(p.iss || 'Sunrise')}</span>${p.new ? '<span class="lr-tag new">NEW</span>' : ''}<small>${esc(p.n)}${p.v ? ' · vol ' + compact(p.v) : ''}${p.liq ? ' · liq ' + compact(p.liq) : ' · no market yet'}</small></span>
+    <span class="pills">${p.ver ? stPill('verified') : p.st ? stPill(p.st) : ''}${lanePill(p.lane)}</span></a>`).join('') : '<div class="empty">every stock these issuers put on chain has a stonkfun pair. The next one pops here and as an alert.</div>';
   // new pairs
   const P = D.newPairs || []; $('pairsN').textContent = 'watching ' + num(D.pairs) + ' pairs';
   $('pairs').innerHTML = P.length ? P.map(p => `<a class="it" href="https://jup.ag/tokens/${esc(p.m)}" target="_blank" rel="noopener">${pic(p.i)}
