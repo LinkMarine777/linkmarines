@@ -101,6 +101,8 @@ footer{text-align:center;color:var(--dim);font-size:11px;padding:20px 16px 30px}
 .cl{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px 12px;font-size:12px;padding:6px 0;border-bottom:1px solid var(--line)}
 #dr .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
 .openb{display:inline-block;border:1px solid var(--line);color:var(--txt);font-size:11px;letter-spacing:1px;padding:4px 10px;white-space:nowrap}.openb:hover{border-color:var(--blue2);color:#fff;text-decoration:none}
+.warn{border:1px solid var(--line);padding:10px 12px;margin-bottom:10px;font-size:12px}.warn b{display:block;font-size:10.5px;letter-spacing:1.5px;color:#fff;margin-bottom:6px}
+.warn li{list-style:none;padding:2px 0}.warn li.r::before{content:'✕ ';color:var(--red)}.warn li.a::before{content:'! ';color:var(--amber)}.warn li.g::before{content:'✓ ';color:var(--green)}
 .buyb{background:var(--green);color:#04060f;border:0;font:inherit;font-size:11px;font-weight:600;letter-spacing:1px;padding:4px 12px;cursor:pointer;margin-left:10px}.buyb:hover{filter:brightness(1.1)}
 #jupSwap{min-height:330px;border:1px solid var(--line)}#jupSwap .ld{padding:40px 0;text-align:center;font-size:12px;color:var(--dim)}
 </style>
@@ -178,7 +180,9 @@ const num=n=>n==null?'—':Number(n).toLocaleString('en-US');
 const ago=t=>{const s=Date.now()/1000-t;return s<60?'now':s<3600?Math.floor(s/60)+'m':s<86400?Math.floor(s/3600)+'h':Math.floor(s/86400)+'d'};
 const sy=s=>'$'+esc(String(s??'').replace(/^\$+/,''));   // tickers that already start with $ keep one
 const short=a=>a?a.slice(0,4)+'…'+a.slice(-4):'';
-const tok=m=>'/terminal/token?ca='+m;
+// the site's own pages: relative on its domains, the live site's from anywhere else (a test copy of this page)
+const SITE=/(^|\.)(terminal7\.xyz|themarines\.link|workers\.dev)$|^localhost/.test(location.hostname)?'':'https://terminal7.xyz';
+const tok=m=>SITE+'/terminal/token?ca='+m;
 
 const pic=u=>u?`<img src="${esc(u)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'ph0'}))">`:'<span class="ph0"></span>';
 // VRFD's own pills: • Pending, ✓ Verified, Rejected, Needs info; ⚡ Express for the paid lane
@@ -252,11 +256,23 @@ function openCoin(m){const r=(D.launches||[]).find(x=>x.m===m);if(!r)return;cons
     </div>`;
   if(sc){const tot=Object.values(sc.src).reduce((a,b)=>a+b,0)||1;
     h+=`<h3>WHO FUNDED THE TOP ${sc.n} HOLDERS</h3><div class="src">${Object.entries(sc.src).map(([k,v])=>`<span>${esc(k==='linked'?'linked (one private funder)':k==='independent'||k==='own wallet'?'independent wallets':k==='unknown'?'no funding info':k)}</span><i>${v}</i><div class="sbar ${k==='linked'?'lk':k==='independent'||k==='own wallet'||k==='unknown'?'':'ex'}"><s style="width:${v/tot*100}%"></s></div>`).join('')}</div>`;
-    h+=sc.cl&&sc.cl.length?`<h3>LINKED CLUSTERS</h3>${sc.cl.map(c=>`<div class="cl"><a href="/wallet/${esc(c[0])}">${esc(short(c[0]))}</a><span>${c[1]} wallets</span><b class="${c[2]>=10?'dn':''}">${c[2]}%</b></div>`).join('')}<p class="dim" style="font-size:11px;margin-top:6px">holders first funded by the same wallet, which isn't an exchange or a service that funds wallets across many coins</p>`:'<h3>LINKED CLUSTERS</h3><p class="dim">none: no private wallet funded two of the top holders</p>';
+    h+=sc.cl&&sc.cl.length?`<h3>LINKED CLUSTERS</h3>${sc.cl.map(c=>`<div class="cl"><a href="${SITE}/wallet/${esc(c[0])}">${esc(short(c[0]))}</a><span>${c[1]} wallets</span><b class="${c[2]>=10?'dn':''}">${c[2]}%</b></div>`).join('')}<p class="dim" style="font-size:11px;margin-top:6px">holders first funded by the same wallet, which isn't an exchange or a service that funds wallets across many coins</p>`:'<h3>LINKED CLUSTERS</h3><p class="dim">none: no private wallet funded two of the top holders</p>';
   }else h+='<p class="dim" style="margin-top:12px">bundle scan pending: it runs on coins with $10K+ volume, a few each pass</p>';
-  h+=`<h3>BUY ${sy(r.s)}</h3><div id="jupSwap"><div class="ld">Loading Jupiter…</div></div>
+  h+=`<h3>BUY ${sy(r.s)}</h3>${beforeBuy(r)}<div id="jupSwap"><div class="ld">Loading Jupiter…</div></div>
     <div class="acts"><a class="btn primary" href="${tok(r.m)}">OPEN IN TERMINAL</a><a class="btn" href="https://jup.ag/tokens/${esc(r.m)}" target="_blank" rel="noopener">OPEN ON JUPITER</a>${r.vr?`<a class="btn" href="https://verified.jup.ag/dashboard/${esc(r.m)}" target="_blank" rel="noopener">VRFD</a>`:''}</div>`;
   $('drBox').innerHTML=h;$('dr').classList.add('on');swap(r.m)}
+// right above the swap: what the data says against this coin, so nobody buys it without seeing it (every swap still needs the wallet's approval: no quick buy)
+function beforeBuy(r){const sc=r.scan||{},F=[],bund=bundOf(r);
+  if(r.vd==='FARM')F.push(['r','farm volume: its fees back only '+(r.fb??'—')+' of the volume it reports']);
+  else if(r.fb!=null&&r.fb<0.45)F.push(['a','fees back only '+r.fb+' of the reported volume']);
+  if(bund>=20)F.push(['r',bund.toFixed(1)+'% of the supply bundled or held by linked wallets']);else if(bund>=10)F.push(['a',bund.toFixed(1)+'% bundled or linked']);
+  if(sc.sn>5)F.push(['a','snipers hold '+sc.sn.toFixed(1)+'%']);if(sc.in>5)F.push(['a','insiders hold '+sc.in.toFixed(1)+'%']);
+  if(r.top>30)F.push(['a','top 10 holders hold '+r.top+'%']);
+  if(r.dn>=5&&r.dn<=2000&&r.dg/r.dn<0.05)F.push(['r','serial launcher: '+num(r.dg)+' of '+num(r.dn)+' other coins graduated']);
+  (r.flags||[]).filter(f=>f[0]==='@').forEach(f=>F.push(['a','its X link is a post by '+esc(f)+', a big account it doesn\'t belong to']));
+  if(r.vr&&r.vr.st==='rejected')F.push(['r','Jupiter VRFD rejected its verification']);
+  if(r.ob<5)F.push(['a','only '+num(r.ob)+' organic buyers in 24 h']);
+  return`<div class="warn"><b>BEFORE YOU BUY</b><ul>${F.length?F.map(([c,t])=>`<li class="${c}">${t}</li>`).join(''):'<li class="g">no red flags in the data above (not a guarantee)</li>'}</ul></div>`}
 // ---------- BUY: Jupiter's swap widget in the panel, locked to the coin, SOL in (the same widget as the terminal's) ----------
 const SOL_MINT='So11111111111111111111111111111111111111112';
 function swap(m){const go=()=>{try{const box=$('jupSwap');if(!box)return;box.innerHTML='';window.Jupiter.init({displayMode:'integrated',integratedTargetId:'jupSwap',formProps:{initialInputMint:SOL_MINT,initialOutputMint:m,fixedMint:m}});styleSwap()}catch(e){fail()}},
