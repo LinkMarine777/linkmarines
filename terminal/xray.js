@@ -30,7 +30,7 @@
 #walKpi{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:14px 0 4px}
 #walKpi>div{background:var(--panel);border:1px solid var(--line);padding:9px 10px;min-width:0}
 #walKpi b{display:block;font-family:'VT323';font-weight:400;font-size:30px;line-height:1;color:#fff}
-#walKpi span{display:block;font-size:9.5px;letter-spacing:1px;color:var(--dim);margin-top:3px}
+#walKpi span{display:block;font-size:9.5px;letter-spacing:1px;color:var(--dim);margin-top:3px}#walKpi i{display:block;font-style:normal;font-size:10px;color:var(--txt);margin-top:3px;cursor:help}
 .xr .sec{font-size:10.5px;letter-spacing:2px;color:#fff;margin:16px 0 6px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.xr .sec .dim{letter-spacing:0;font-size:10px}
 .xr table{width:100%;border-collapse:collapse;font-size:12px}
 .xr td,.xr th{padding:6px 5px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
@@ -146,7 +146,7 @@
     const earning = d.coins.filter(c => c.R > 0);
     const T = d.totals || {}, pc = v => v > 0 ? 'var(--green)' : v < 0 ? 'var(--red)' : 'var(--txt)';
     $('walKpi').innerHTML = `<div style="border-color:${col}"><b style="color:${col}">${sc ?? '—'}</b><span>COMPOUND SCORE · ${lbl.toUpperCase()}</span></div>
-    <div><b style="color:var(--green)">${usd(d.rewards || 0)}</b><span>TOTAL REWARDS</span></div>
+    <div><b style="color:var(--green)">${usd(d.rewards || 0)}</b><span>TOTAL REWARDS</span>${d.rewardsNow != null && d.rewards > 0 ? `<i title="each payout's reward tokens valued at today's price (how stonkfun shows rewards); the big number values each payout at its own day's price${d.rewardsNowAll ? '' : '. Coins whose history is still being read count as paid'}">${d.rewardsNowAll ? '' : '≈ '}${usd(d.rewardsNow)} at today's prices</i>` : ''}</div>
     <div><b style="color:${pc(T.pnl)}">${T.pnl != null ? (T.pnl > 0 ? '+' : '') + usd(T.pnl) + (T.est ? '*' : '') : '—'}</b><span>TOTAL P&amp;L</span></div>
     <div><b>${usd(d.value || 0)}</b><span>STONKFUN HOLDINGS</span></div>
     <div><b>${T.tax != null || T.fees != null ? usd((T.tax || 0) + (T.fees || 0)) : '—'}</b><span title="transfer tax on its trades + Solana network fees">FEES PAID</span></div>
@@ -179,7 +179,7 @@
       <td class="r hs2" style="color:${pnlc(c.N)}">${c.N != null ? (c.N > 0 ? '+' : '') + usd(c.N) : '—'}</td>
       <td class="r hs2">${c.p != null ? c.p.toFixed(2) + '%' : dash}</td>
       <td class="r">${c.score != null ? `<span class="wsc" style="color:${TAGC[c.tag]};border-color:${TAGC[c.tag]}">${c.score}</span><span class="wtg" style="color:${TAGC[c.tag]}">${esc(c.tag).toUpperCase()}</span>` : `<span class="dim" style="font-size:9.5px;letter-spacing:1px" title="scores cover each coin's biggest holders">${c.tracked ? 'NO REWARD YET' : 'NOT SCORED'}</span>`}</td></tr>
-      ${c.tr && c.tr.length ? `<tr class="wtr" style="display:none"><td colspan="7"><div class="wsum">bought <b>${usd(c.B || 0)}</b> · sold <b>${usd(c.S || 0)}</b> · rewards <b>${usd(c.R || 0)}</b> · tax paid <b>${(c.tax || 0) < 1 ? '$' + (c.tax || 0).toFixed(2) : usd(c.tax)}</b> · network fees <b>${(c.fees || 0) < 1 ? '$' + (c.fees || 0).toFixed(2) : usd(c.fees)}</b></div><div class="wtl">${c.tr.map(x => `<a href="https://solscan.io/tx/${esc(x[4])}" target="_blank" rel="noopener" title="opens the transaction (first 20 characters of its signature)"><span>${dt(x[0])}</span><b style="color:${x[1] === 'b' ? 'var(--green)' : 'var(--red)'}">${x[1] === 'b' ? 'BUY' : 'SELL'}</b><span>${amt(x[2])}</span><span>${usd(x[3])}</span></a>`).join('')}</div></td></tr>` : ''}`).join('')}</tbody></table></div>
+      ${c.tr && c.tr.length ? `<tr class="wtr" style="display:none"><td colspan="7"><div class="wsum">bought <b>${usd(c.B || 0)}</b> · sold <b>${usd(c.S || 0)}</b> · rewards <b>${usd(c.R || 0)}</b>${c.Rn != null && Math.abs(c.Rn - c.R) >= 1 ? ` (${usd(c.Rn)} at today's prices)` : ''} · tax paid <b>${(c.tax || 0) < 1 ? '$' + (c.tax || 0).toFixed(2) : usd(c.tax)}</b> · network fees <b>${(c.fees || 0) < 1 ? '$' + (c.fees || 0).toFixed(2) : usd(c.fees)}</b></div><div class="wtl">${c.tr.map(x => `<a href="https://solscan.io/tx/${esc(x[4])}" target="_blank" rel="noopener" title="opens the transaction (first 20 characters of its signature)"><span>${dt(x[0])}</span><b style="color:${x[1] === 'b' ? 'var(--green)' : 'var(--red)'}">${x[1] === 'b' ? 'BUY' : 'SELL'}</b><span>${amt(x[2])}</span><span>${usd(x[3])}</span></a>`).join('')}</div></td></tr>` : ''}`).join('')}</tbody></table></div>
       ${shown.length > 25 ? `<button class="btn" id="walMore" style="margin-top:6px;font-size:11px">${all ? 'SHOW TOP 25' : 'SHOW ALL ' + shown.length}</button>` : ''}`
       : '<div class="dim" style="font-size:11px">No coins match these filters.</div>';
     $('walCoins').querySelectorAll('th[data-k]').forEach(t => t.onclick = () => sortBy(t.dataset.k));
