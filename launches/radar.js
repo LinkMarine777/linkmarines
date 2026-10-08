@@ -3,7 +3,8 @@
 // Data: terminal/launches.json on the data branch, written by intel/launches.py every ~5 min.
 // Everything here lives under #lr (and the coin's panel, #lr-dr): its own ids and classes, so it never meets trending's.
 (() => {
-const ROOT = document.getElementById('lr'); if (!ROOT || window.LR) return;
+const ROOT = document.getElementById('lr'); if (!ROOT || window.LR || !window.LRS) return;
+const { SITE, bundOf, short } = LRS;
 const SRC = ['https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/launches.json', 'https://war-room-bot.linkmarine777.workers.dev/data/terminal/launches.json'];
 const $ = id => document.getElementById('lr-' + id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -11,15 +12,11 @@ const compact = n => n == null ? '—' : '$' + (n >= 1e9 ? (n / 1e9).toFixed(2) 
 const num = n => n == null ? '—' : Number(n).toLocaleString('en-US');
 const ago = t => { const s = Date.now() / 1000 - t; return s < 60 ? 'now' : s < 3600 ? Math.floor(s / 60) + 'm' : s < 86400 ? Math.floor(s / 3600) + 'h' : Math.floor(s / 86400) + 'd'; };
 const sy = s => '$' + esc(String(s ?? '').replace(/^\$+/, ''));   // tickers that already start with $ keep one
-const short = a => a ? a.slice(0, 4) + '…' + a.slice(-4) : '';
-// the site's own pages: relative on its domains, the live site's from anywhere else (a test copy)
-const SITE = /(^|\.)(terminal7\.xyz|themarines\.link|workers\.dev)$|^localhost/.test(location.hostname) ? '' : 'https://terminal7.xyz';
 const tok = m => SITE + '/terminal/token?ca=' + m;
 const pic = u => u ? `<img src="${esc(u)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'ph0'}))">` : '<span class="ph0"></span>';
 // VRFD's own pills: • Pending, ✓ Verified, Rejected, Needs info; ⚡ Express for the paid lane
 const stPill = s => s === 'verified' ? '<span class="pill ok">✓ Verified</span>' : s === 'rejected' ? '<span class="pill no">Rejected</span>' : s === 'needs_info' ? '<span class="pill info">! Needs info</span>' : '<span class="pill wait">• Pending</span>';
 const lanePill = l => l === 'express' ? '<span class="pill ex">⚡ Express</span>' : '';
-const bundOf = r => Math.max(r.bpk || 0, (r.scan && r.scan.lk) || 0);
 
 // sorting: tap a column's label; first tap the way it usually reads (biggest first; BUNDLED least first, AGE newest first,
 // COIN / PAIR A-Z), a second tap turns it around
@@ -141,39 +138,15 @@ function renderRows() {
 }
 function setSort(k) { sd = sk === k ? -sd : (DIR[k] ?? -1); sk = k; try { localStorage.setItem('lrSort', JSON.stringify([sk, sd])); } catch (e) {} if (D) renderRows(); }
 
-// the coin's Token Info (like jup.ag's) and its bundle scan: who funded the top 100 holders
-function tile(v, label, bad) { return `<div class="tile"><b class="${bad == null ? '' : bad ? 'r' : 'g'}">${v}</b><span>${label}</span></div>`; }
+// the coin's panel: Token Info (like jup.ag's), who funded its top 100 holders, BEFORE YOU BUY, Jupiter's swap
 function openCoin(m) {
-  const r = (D.launches || []).find(x => x.m === m); if (!r) return; const sc = r.scan;
-  const pc = v => v == null ? '—' : (+v).toFixed(2) + '%';
+  const r = (D.launches || []).find(x => x.m === m); if (!r) return;
   let h = `<div class="top">${pic(r.i)}<div><b>${sy(r.s)}</b><small>${esc(r.n)} · ${sy(r.q)} pair · ${ago(r.c)} old</small></div><button class="x" type="button" data-act="close">✕</button></div>
-    <div style="margin-top:10px"><span class="vd v-${r.vd}"><i>${r.score}</i>${r.vd}</span><button class="buyb" type="button" data-act="tobuy">BUY ↓</button></div>
-    <h3>TOKEN INFO</h3><div class="tiles">
-      ${tile(pc(r.top), 'Top 10 H.', r.top > 30)}${tile(sc ? pc(sc.sn) : '—', 'Snipers H.', sc ? sc.sn > 5 : null)}${tile(sc ? pc(sc.in) : '—', 'Insiders H.', sc ? sc.in > 5 : null)}
-      ${tile(r.bpk + '%', 'Bundlers H. (peak)', r.bpk >= 10)}${tile(sc ? pc(sc.lk) : '—', 'Linked H.', sc ? sc.lk >= 10 : null)}${tile(r.bot + '%', 'Bot H.', null)}
-      ${tile('◎' + (r.fees ?? '—'), 'Fees Paid', null)}${tile(r.os, 'Org Score', r.os < 30)}${tile(sc ? sc.fresh + ' / ' + sc.n : '—', 'Fresh wallets', sc ? sc.fresh / Math.max(sc.n, 1) > 0.3 : null)}
-    </div>`;
-  if (sc) {
-    const tot = Object.values(sc.src).reduce((a, b) => a + b, 0) || 1, ind = k => k === 'independent' || k === 'own wallet';
-    h += `<h3>WHO FUNDED THE TOP ${sc.n} HOLDERS</h3><div class="lr-src">${Object.entries(sc.src).map(([k, v]) => `<span>${esc(k === 'linked' ? 'linked (one private funder)' : ind(k) ? 'independent wallets' : k === 'unknown' ? 'no funding info' : k)}</span><i>${v}</i><div class="sbar ${k === 'linked' ? 'lk' : ind(k) || k === 'unknown' ? '' : 'ex'}"><s style="width:${v / tot * 100}%"></s></div>`).join('')}</div>`;
-    h += sc.cl && sc.cl.length ? `<h3>LINKED CLUSTERS</h3>${sc.cl.map(c => `<div class="cl"><a href="${SITE}/wallet/${esc(c[0])}">${esc(short(c[0]))}</a><span>${c[1]} wallets</span><b class="${c[2] >= 10 ? 'dn' : ''}">${c[2]}%</b></div>`).join('')}<p class="dim" style="font-size:11px;margin-top:6px">holders first funded by the same wallet, which isn't an exchange or a service that funds wallets across many coins</p>` : '<h3>LINKED CLUSTERS</h3><p class="dim">none: no private wallet funded two of the top holders</p>';
-  } else h += '<p class="dim" style="margin-top:12px">bundle scan pending: it runs on coins with $10K+ volume, a few each pass</p>';
-  h += `<h3>BUY ${sy(r.s)}</h3>${beforeBuy(r)}<div id="lr-swap"><div class="ld">Loading Jupiter…</div></div>
+    <div class="lrscan"><div style="margin-top:10px">${LRS.vd(r)}<button class="buyb" type="button" data-act="tobuy">BUY ↓</button></div>
+    <h3>TOKEN INFO</h3>${LRS.tiles(r)}${LRS.funding(r)}
+    <h3>BUY ${sy(r.s)}</h3>${LRS.beforeBuy(r)}</div><div id="lr-swap"><div class="ld">Loading Jupiter…</div></div>
     <div class="lr-acts"><a class="btn primary" href="${tok(r.m)}">OPEN IN TERMINAL</a><a class="btn" href="https://jup.ag/tokens/${esc(r.m)}" target="_blank" rel="noopener">OPEN ON JUPITER</a>${r.vr ? `<a class="btn" href="https://verified.jup.ag/dashboard/${esc(r.m)}" target="_blank" rel="noopener">VRFD</a>` : ''}</div>`;
   $('drBox').innerHTML = h; DR.classList.add('on'); swap(r.m);
-}
-// right above the swap: what the data says against this coin, so nobody buys it without seeing it (every swap still needs the wallet's approval: no quick buy)
-function beforeBuy(r) {
-  const sc = r.scan || {}, F = [], bund = bundOf(r);
-  if (r.vd === 'FARM') F.push(['r', 'farm volume: its fees back only ' + (r.fb ?? '—') + ' of the volume it reports']);
-  else if (r.fb != null && r.fb < 0.45) F.push(['a', 'fees back only ' + r.fb + ' of the reported volume']);
-  if (bund >= 20) F.push(['r', bund.toFixed(1) + '% of the supply bundled or held by linked wallets']); else if (bund >= 10) F.push(['a', bund.toFixed(1) + '% bundled or linked']);
-  if (sc.sn > 5) F.push(['a', 'snipers hold ' + sc.sn.toFixed(1) + '%']); if (sc.in > 5) F.push(['a', 'insiders hold ' + sc.in.toFixed(1) + '%']);
-  if (r.top > 30) F.push(['a', 'top 10 holders hold ' + r.top + '%']);
-  if (r.dn >= 5 && r.dn <= 2000 && r.dg / r.dn < 0.05) F.push(['r', 'serial launcher: ' + num(r.dg) + ' of ' + num(r.dn) + ' other coins graduated']);
-  if (r.vr && r.vr.st === 'rejected') F.push(['r', 'Jupiter VRFD rejected its verification']);
-  if (r.ob < 5) F.push(['a', 'only ' + num(r.ob) + ' organic buyers in 24 h']);
-  return `<div class="bfb"><b>BEFORE YOU BUY</b><ul>${F.length ? F.map(([c, t]) => `<li class="${c}">${t}</li>`).join('') : '<li class="g">no red flags in the data above (not a guarantee)</li>'}</ul></div>`;
 }
 // ---------- BUY: Jupiter's swap widget in the panel, locked to the coin, SOL in (the same widget as the terminal's) ----------
 const SOL_MINT = 'So11111111111111111111111111111111111111112';

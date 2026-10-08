@@ -17,6 +17,12 @@
 <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/terminal7.webmanifest">
+<meta name="theme-color" content="#04060f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Terminal 7">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -495,7 +501,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .stats .xtra{display:none}.stats.open .xtra{display:block}
   .moreStats{display:block;grid-column:span 2;background:transparent;border:0;border-bottom:1px solid var(--line);color:var(--blue2);font:inherit;font-size:11px;letter-spacing:1.5px;padding:8px;cursor:pointer}
   main{display:flex;flex-direction:column}.col,.lower{display:contents}
-  .chartP{order:1}.tapeP{order:2}.bill{order:3}#sbP{order:4}.ads{order:5}   /* chart, tape / holders, billboard, Stonk Board, the two ads */
+  .chartP{order:1}.tapeP{order:2}#radarP{order:3}.bill{order:4}#sbP{order:5}.ads{order:6}   /* chart, tape / holders, launch radar, billboard, Stonk Board, the two ads */
   .ads .slots{gap:6px}
   .panel{padding:10px 12px}
   .acc>.ph{cursor:pointer;margin-bottom:8px;flex-wrap:nowrap;user-select:none;-webkit-tap-highlight-color:transparent}
@@ -556,7 +562,15 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #infoPop .k{font-size:20px}html.fit #infoPop .h{font-size:64px}html.fit #infoPop .d{font-size:22px}
 #audioGate{display:none!important}
 .was{opacity:.55;font-weight:400;margin-right:2px}.off{font-size:.72em;letter-spacing:1px;color:var(--green);border:1px solid var(--green);padding:0 4px;border-radius:3px;margin-left:4px;vertical-align:middle}
+/* LAUNCH RADAR (launches/token-radar.js): a stonkfun launch's score with CLOBr / Compound, the panel, BEFORE YOU BUY above the swap */
+#sRadar.v-REAL{color:var(--green)}#sRadar.v-WATCH{color:var(--blue2)}#sRadar.v-THIN{color:var(--dim)}#sRadar.v-FARM{color:var(--red)}
+#radarP .rtop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px}#radarP .rtop .vd i{font-size:28px}
+#radarP .rstats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:10px}#radarP .rstats>div:last-child:nth-child(odd){grid-column:1/-1}
+#radarP .rstats>div{background:var(--panel);padding:8px 10px}#radarP .rstats label{display:block;font-size:9.5px;letter-spacing:1.2px;color:var(--dim);text-transform:uppercase}
+#radarP .rstats b{display:block;font-size:14px;color:#fff;font-weight:600;margin-top:2px}#radarP .rstats b.up{color:var(--green)}#radarP .rstats b.dn{color:var(--red)}#radarP .rstats b.am{color:var(--amber)}
+#radarBfb .bfb{margin:0 0 8px}
 </style>
+<link rel="stylesheet" href="../launches/scan.css">
 </head>
 <body>
 <div id="stage">
@@ -586,6 +600,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
         <a href="/bridge/">🌉 New to Solana? Bridge &amp; buy</a>
         <a href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ War Room chat</a>
         <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener">𝕏 @TheMarinesX</a>
+        <a href="#" onclick="return wrWelcome()">👋 Welcome &amp; tips</a>
         <a href="/">🏠 HQ</a>
       </div></div>
   </nav>
@@ -617,6 +632,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
   <div class="stat duo" id="scoresStat" style="display:none">
   <div class="half fx" id="cmpStat" style="display:none" title="Are the biggest holders putting their rewards back in? Click for the holder list"><label>Compound</label><b id="sCmp">—</b><span class="dim" id="sCmpMsg">&nbsp;</span></div>
   <div class="half" id="scoreStat" style="display:none" title="CLOBr score: 0-100 balance of support vs resistance liquidity. Click for more on CLOBr"><label>CLOBr ↗</label><b id="sScore">—</b><span class="dim" id="sScoreMsg">&nbsp;</span><span class="dly" id="scoreDly" title="CLOBr data on Terminal 7 is up to 1 hour old; live with CLOBr Pro and the CLOBr extension (free 7-day trial)">delayed</span><span class="dim" id="sScoreWhy">&nbsp;</span></div>
+  <div class="half" id="radarStat" style="display:none;cursor:pointer" title="Launch radar: this launch's score from its first 24 h. Click for what it's made of"><label>Radar ↓</label><b id="sRadar">—</b><span class="dim" id="sRadarMsg">&nbsp;</span></div>
   </div>
 </section>
 
@@ -692,6 +708,10 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
         <p class="dim" id="mbNote"></p>
       </div>
       <div id="mbNo" class="empty" style="display:none"></div>
+    </section>
+    <section class="panel acc" id="radarP" data-acc="radar" data-def="1" style="display:none">
+      <div class="ph"><h2>LAUNCH RADAR</h2><span class="meta" id="radarMeta"></span></div>
+      <div id="radarBody"></div>
     </section>
   </div>
 </main>
@@ -1365,7 +1385,7 @@ function renderCompound(){if(!CMP)return;const W=CMP.win[cmpW]||{},sc=W.score,sy
 // disappearing (phones still fold empty ones away)
 const DESK=matchMedia('(min-width:1000px)').matches;
 if(DESK)setTimeout(()=>{if($('cmpStat').style.display==='none'){$('cmpStat').style.display='';$('sCmp').style.color='var(--dim)';$('sCmpMsg').textContent='not tracked'}syncScores()},0);
-function syncScores(){const a=$('scoreStat').style.display!=='none',b=$('cmpStat').style.display!=='none';$('scoresStat').style.display=a||b?'':'none';$('scoresStat').classList.toggle('both',a&&b)}
+function syncScores(){const v=['cmpStat','scoreStat','radarStat'].filter(id=>$(id).style.display!=='none').length;$('scoresStat').style.display=v?'':'none';$('scoresStat').classList.toggle('both',v>1)}
 $('cmpStat').onclick=()=>{setTapeView('holders');document.querySelector('.tapeP').scrollIntoView({behavior:'smooth',block:'start'})};
 $('cmpWin').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();cmpW=b.dataset.w;[...$('cmpWin').children].forEach(x=>x.classList.toggle('on',x===b));renderCompound()});
 loadCompound();setInterval(()=>{if(!document.hidden)loadCompound()},30*60e3);
@@ -1980,5 +2000,8 @@ addEventListener('touchend',()=>{try{unlockAudio()}catch(e){}},{once:true});
   chk();setInterval(chk,300e3)})();
 </script>
 <script src="/terminal/search.js" defer></script>
+<script src="../launches/scan.js" defer></script>
+<script src="../launches/token-radar.js" defer></script>
+<script src="../terminal/welcome.js" defer></script>
 </body>
 </html>

@@ -1,0 +1,15 @@
+/* The launch radar's shared pieces (launches/scan.js): the verdict, Token Info tiles, who funded the top holders, BEFORE
+   YOU BUY. Everything under .lrscan, so it looks the same on New launches and the token page and touches nothing else. */
+.lrscan .vd{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:11px;letter-spacing:1px}
+.lrscan .vd i{font-style:normal;font-family:'VT323';font-size:22px;font-weight:400;line-height:1;min-width:22px;text-align:right}
+.lrscan .v-REAL{color:var(--green)}.lrscan .v-WATCH{color:var(--blue2)}.lrscan .v-THIN{color:var(--dim)}.lrscan .v-FARM{color:var(--red)}
+.lrscan h3{font-size:11px;letter-spacing:1.5px;color:#fff;margin:16px 0 8px;font-weight:600}
+.lrscan .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.lrscan .tile{border:1px solid var(--line);border-radius:6px;padding:8px 4px;text-align:center}.lrscan .tile b{display:block;font-size:14px;color:var(--txt);font-weight:600}
+.lrscan .tile b.g{color:#3ee08f}.lrscan .tile b.r{color:var(--red)}.lrscan .tile span{font-size:10.5px;color:var(--dim);text-decoration:underline dotted;text-underline-offset:3px}
+.lrscan .lr-src{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;font-size:12px}.lrscan .lr-src i{font-style:normal;color:var(--dim)}
+.lrscan .sbar{grid-column:1/-1;height:5px;background:#141c36;margin-bottom:4px}.lrscan .sbar s{display:block;height:100%;background:var(--blue2)}.lrscan .sbar.lk s{background:var(--red)}.lrscan .sbar.ex s{background:#c7f284}
+.lrscan .cl{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px 12px;font-size:12px;padding:6px 0;border-bottom:1px solid var(--line)}
+.lrscan .note{font-size:11px;margin-top:6px}
+.lrscan .bfb{border:1px solid var(--line);padding:10px 12px;margin-bottom:10px;font-size:12px}.lrscan .bfb b{display:block;font-size:10.5px;letter-spacing:1.5px;color:#fff;margin-bottom:6px}
+.lrscan .bfb ul{margin:0;padding:0}.lrscan .bfb li{list-style:none;padding:2px 0}.lrscan .bfb li.r::before{content:'✕ ';color:var(--red)}.lrscan .bfb li.a::before{content:'! ';color:var(--amber)}.lrscan .bfb li.g::before{content:'✓ ';color:var(--green)}
