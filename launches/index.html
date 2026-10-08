@@ -101,8 +101,8 @@ footer{text-align:center;color:var(--dim);font-size:11px;padding:20px 16px 30px}
 .cl{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px 12px;font-size:12px;padding:6px 0;border-bottom:1px solid var(--line)}
 #dr .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
 .openb{display:inline-block;border:1px solid var(--line);color:var(--txt);font-size:11px;letter-spacing:1px;padding:4px 10px;white-space:nowrap}.openb:hover{border-color:var(--blue2);color:#fff;text-decoration:none}
-.warn{border:1px solid var(--line);padding:10px 12px;margin-bottom:10px;font-size:12px}.warn b{display:block;font-size:10.5px;letter-spacing:1.5px;color:#fff;margin-bottom:6px}
-.warn li{list-style:none;padding:2px 0}.warn li.r::before{content:'✕ ';color:var(--red)}.warn li.a::before{content:'! ';color:var(--amber)}.warn li.g::before{content:'✓ ';color:var(--green)}
+.bfb{border:1px solid var(--line);padding:10px 12px;margin-bottom:10px;font-size:12px}.bfb b{display:block;font-size:10.5px;letter-spacing:1.5px;color:#fff;margin-bottom:6px}
+.bfb li{list-style:none;padding:2px 0}.bfb li.r::before{content:'✕ ';color:var(--red)}.bfb li.a::before{content:'! ';color:var(--amber)}.bfb li.g::before{content:'✓ ';color:var(--green)}
 .buyb{background:var(--green);color:#04060f;border:0;font:inherit;font-size:11px;font-weight:600;letter-spacing:1px;padding:4px 12px;cursor:pointer;margin-left:10px}.buyb:hover{filter:brightness(1.1)}
 #jupSwap{min-height:330px;border:1px solid var(--line)}#jupSwap .ld{padding:40px 0;text-align:center;font-size:12px;color:var(--dim)}
 </style>
@@ -272,7 +272,7 @@ function beforeBuy(r){const sc=r.scan||{},F=[],bund=bundOf(r);
   (r.flags||[]).filter(f=>f[0]==='@').forEach(f=>F.push(['a','its X link is a post by '+esc(f)+', a big account it doesn\'t belong to']));
   if(r.vr&&r.vr.st==='rejected')F.push(['r','Jupiter VRFD rejected its verification']);
   if(r.ob<5)F.push(['a','only '+num(r.ob)+' organic buyers in 24 h']);
-  return`<div class="warn"><b>BEFORE YOU BUY</b><ul>${F.length?F.map(([c,t])=>`<li class="${c}">${t}</li>`).join(''):'<li class="g">no red flags in the data above (not a guarantee)</li>'}</ul></div>`}
+  return`<div class="bfb"><b>BEFORE YOU BUY</b><ul>${F.length?F.map(([c,t])=>`<li class="${c}">${t}</li>`).join(''):'<li class="g">no red flags in the data above (not a guarantee)</li>'}</ul></div>`}
 // ---------- BUY: Jupiter's swap widget in the panel, locked to the coin, SOL in (the same widget as the terminal's) ----------
 const SOL_MINT='So11111111111111111111111111111111111111112';
 function swap(m){const go=()=>{try{const box=$('jupSwap');if(!box)return;box.innerHTML='';window.Jupiter.init({displayMode:'integrated',integratedTargetId:'jupSwap',formProps:{initialInputMint:SOL_MINT,initialOutputMint:m,fixedMint:m}});styleSwap()}catch(e){fail()}},
