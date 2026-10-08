@@ -24,7 +24,19 @@ a{color:inherit;text-decoration:none}
 .tkb img{width:32px;height:32px;border-radius:50%;background:#111;flex:none}
 .tkb b{font-family:'VT323';font-weight:400;font-size:26px;color:#fff;letter-spacing:1px;line-height:1}
 .tkb .q{font-family:'IBM Plex Mono';font-size:12px;color:var(--dim);margin-left:3px;letter-spacing:0}
-.tkb .ca{font-size:11px;color:var(--dim);margin-left:8px}
+.tkb .nm{display:flex;flex-direction:column;line-height:1.1}
+.tkb .nm small{font-size:9.5px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mca{display:flex;align-items:center;gap:4px;background:none;border:0;color:var(--dim);font:inherit;font-size:11px;cursor:pointer;margin-left:6px}.mca:hover{color:#fff}.mca svg{width:11px;height:11px;fill:currentColor}
+.tkl{display:flex;gap:4px;margin-left:6px}.tkl:empty{display:none}
+.tkl a,.tkl button{display:grid;place-items:center;width:26px;height:26px;border:1px solid var(--line);border-radius:5px;color:var(--dim);background:#050914;cursor:pointer;padding:0;text-decoration:none}
+.tkl a:hover,.tkl button:hover{color:#fff;border-color:var(--blue2)}.tkl button.ok{color:var(--green);border-color:var(--green)}.tkl svg{width:13px;height:13px;fill:currentColor}
+.tkl a.sfl img{width:15px;height:15px;display:block}.tkl a.fwl{position:relative;color:var(--green)}
+.fwtip{display:none;position:absolute;top:32px;left:50%;transform:translateX(-50%);width:290px;z-index:60;background:#050914;border:1px solid var(--blue2);box-shadow:0 8px 30px rgba(0,0,0,.6);padding:10px 12px;font-size:12px;line-height:1.5;color:var(--txt);text-align:left;white-space:normal}
+.fwtip b{display:block;color:var(--green);font-size:11px;letter-spacing:1.5px;margin-bottom:4px}.fwtip i{display:block;font-style:normal;color:#fff;margin-top:6px}.fwtip u{display:block;text-decoration:none;color:var(--blue2);margin-top:6px}
+.tkl a.fwl:hover .fwtip,.tkl a.fwl:focus .fwtip{display:block}
+.pchips{display:none}.pchips:not(:empty){display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-right:6px}
+.pchips span{display:flex;align-items:baseline;gap:4px;padding:5px 9px;font-size:11px;white-space:nowrap}.pchips span+span{border-left:1px solid var(--line)}
+.pchips i{font-style:normal;color:var(--dim)}.pchips b{font-weight:400}.pchips .up{color:var(--green)}.pchips .dn{color:var(--red)}
 .legend{display:flex;gap:16px;align-items:center;margin-left:auto;font-size:12px;white-space:nowrap}
 .legend span{display:flex;align-items:center;gap:6px}.legend i{display:inline-block;width:14px;height:2px}
 .legend .dq{background:repeating-linear-gradient(90deg,var(--amber) 0 4px,transparent 4px 7px)}
@@ -70,10 +82,11 @@ a{color:inherit;text-decoration:none}
 <div class="top"><span class="lab">CHART LAB · TEST</span><span>not live: the token page's chart, rebuilt to try new tools</span><a id="back" href="/terminal/token" style="margin-left:auto">← TOKEN PAGE</a></div>
 <div class="panel">
   <div class="ph">
-    <div class="tkb"><img id="tkImg" alt=""><b><span id="tkSym">…</span><span class="q" id="tkQ"></span></b><span class="ca" id="tkCa"></span></div>
+    <div class="tkb"><img id="tkImg" alt=""><span class="nm"><b><span id="tkSym">…</span><span class="q" id="tkQ"></span></b><small id="tkName"></small></span><button type="button" class="mca" id="mCa" title="Copy the contract address"></button></div><span class="tkl" id="tkLinks"></span>
     <div class="legend"><a class="dep" id="depLeg" target="_blank" rel="noopener" style="display:none" title="CLOBr market depth, delayed up to 1h"><span><i></i>CLOBr depth <span class="dly">delayed</span></span></a>
       <span><i style="background:var(--blue2)"></i><span id="lgB">$TOKEN</span> (right)</span><span id="lgQw" style="display:none"><i class="dq"></i><span id="lgQ"></span> (left)</span></div>
     <i class="brk"></i>
+    <div class="pchips" id="pChips"></div>
     <div class="tabs" id="tf"></div>
     <div class="tabs" id="ctab"><button id="candleBtn" type="button" aria-label="Line or candles"></button></div>
     <div class="tabs dd" id="indDd"><button type="button" id="indBtn" aria-haspopup="true" aria-expanded="false"><span class="fx">f</span>INDICATORS <span id="indN"></span>▾</button><div class="menu" id="ind" role="menu"></div></div>
@@ -92,7 +105,7 @@ const CA=((new URLSearchParams(location.search).get('ca')||'').trim().match(/^[1
 const $=id=>document.getElementById(id);
 const say=(t,ms=2500)=>{const m=$('msg');m.textContent=t;m.style.display='block';clearTimeout(say.t);say.t=setTimeout(()=>m.style.display='none',ms)};
 const store=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
-$('back').href='/terminal/token?ca='+CA;$('tkCa').textContent=CA.slice(0,4)+'…'+CA.slice(-4);
+$('back').href='/terminal/token?ca='+CA;
 let SYM='TOKEN',Q=null;   // Q: the pair token {mint, sym}
 // ---------- Ichimoku (9 / 26 / 52): conversion, base, the cloud (leading spans A and B, 26 bars ahead, shaded green / red), lagging span ----------
 klinecharts.registerIndicator({
@@ -294,15 +307,46 @@ $('shotMenu').onclick=async e=>{const b=e.target.closest('[data-s]');if(!b)retur
   say(copied?'Image copied: paste it into your post (Ctrl/Cmd+V)':'Download the image to add it to your post',5000)};
 
 // ---------- the token, its pair token and CLOBr depth; the symbol is set once (setting it again reloads the chart) ----------
-const tokenInfo=fetch('https://lite-api.jup.ag/tokens/v2/search?query='+CA).then(r=>r.json()).then(L=>(L||[]).find(t=>t.id===CA)).catch(()=>null);
-const pairInfo=fetch('https://api.dexscreener.com/latest/dex/tokens/'+CA).then(r=>r.json()).then(d=>{
-  const P=(d.pairs||[]).filter(p=>p.chainId==='solana').sort((a,b)=>((b.liquidity||{}).usd||0)-((a.liquidity||{}).usd||0))[0];if(!P)return null;
-  const o=P.baseToken.address===CA?P.quoteToken:P.baseToken;return{mint:o.address,sym:String(o.symbol||'').replace(/^\$/,'')}}).catch(()=>null);
-Promise.all([tokenInfo,pairInfo]).then(([t,q])=>{
-  if(t){SYM=String(t.symbol||'TOKEN').replace(/^\$/,'');if(t.icon)$('tkImg').src=t.icon}
-  $('tkSym').textContent='$'+SYM;$('lgB').textContent='$'+SYM;document.title='$'+SYM+' · Chart Lab';
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=(n,d=0)=>n==null?'—':Number(n).toLocaleString('en-US',{maximumFractionDigits:d,minimumFractionDigits:d});
+const ICO={x:'<path d="M18.9 2H22l-7.6 8.7L23 22h-6.8l-5.3-6.9L4.8 22H1.7l8.1-9.3L1 2h7l4.8 6.3zm-1.2 18h1.9L7.4 4H5.4z"/>',
+  web:'<path d="M12 2a10 10 0 100 20 10 10 0 000-20zm6.9 6h-2.9a15.7 15.7 0 00-1.4-3.6A8 8 0 0118.9 8zM12 4c.8 1.2 1.5 2.5 1.9 4h-3.8c.4-1.5 1.1-2.8 1.9-4zM4.3 14a8 8 0 010-4h3.4a16.6 16.6 0 000 4zm.8 2h2.9c.3 1.3.8 2.5 1.4 3.6A8 8 0 015.1 16zM8 8H5.1a8 8 0 014.3-3.6C8.8 5.5 8.4 6.7 8 8zm4 12c-.8-1.2-1.5-2.5-1.9-4h3.8c-.4 1.5-1.1 2.8-1.9 4zm2.3-6H9.7a14.7 14.7 0 010-4h4.6a14.7 14.7 0 010 4zm.3 5.6c.6-1.1 1.1-2.3 1.4-3.6h2.9a8 8 0 01-4.3 3.6zm1.7-5.6a16.6 16.6 0 000-4h3.4a8 8 0 010 4z"/>',
+  tg:'<path d="M21.9 4.3l-3.3 15.5c-.2 1.1-.9 1.4-1.8.9l-5-3.7-2.4 2.3c-.3.3-.5.5-1 .5l.4-5.1 9.3-8.4c.4-.4-.1-.6-.6-.2L5.9 13.3l-4.9-1.5c-1.1-.3-1.1-1.1.2-1.6L20.5 2.8c.9-.3 1.7.2 1.4 1.5z"/>',
+  copy:'<path d="M8 3h11a2 2 0 012 2v11h-2V5H8zM4 7h11a2 2 0 012 2v11a2 2 0 01-2 2H4a2 2 0 01-2-2V9a2 2 0 012-2zm0 2v11h11V9z"/>',ok:'<path d="M9 16.2l-3.5-3.5L4 14.2l5 5 11-11-1.4-1.4z"/>',
+  fw:'<path d="M12 4a8 8 0 017.4 5H17l3.5 4 3.5-4h-2.4A10 10 0 002.3 9.5l1.9.6A8 8 0 0112 4zm-8.5 7L0 15h2.4a10 10 0 0019.3 1.5l-1.9-.6A8 8 0 014.6 15H7z"/>',
+  search:'<path d="M10 2a8 8 0 016.3 12.9l5.4 5.4-1.4 1.4-5.4-5.4A8 8 0 1110 2zm0 2a6 6 0 100 12 6 6 0 000-12z"/>'};
+const svg=k=>`<svg viewBox="0 0 24 24">${ICO[k]}</svg>`;
+async function copyCa(b,ico){try{await navigator.clipboard.writeText(CA)}catch(e){}b.classList.add('ok');const h=b.innerHTML;b.innerHTML=ico?svg('ok'):'copied '+svg('ok');setTimeout(()=>{b.classList.remove('ok');b.innerHTML=h},1400)}
+$('mCa').innerHTML=esc(CA.slice(0,4)+'…'+CA.slice(-4))+' '+svg('copy');$('mCa').onclick=()=>copyCa($('mCa'));
+// the token as the token page sees it: stonkfun's record (the bot's /token: name, logo, quote token, tax, flywheel), DexScreener for
+// the pool, the socials and the 5m / 1h / 6h / 24h changes; Jupiter for anything stonkfun doesn't have
+const sfInfo=fetch(BOT+'/token/'+CA).then(r=>r.json()).then(t=>t&&!t.error?t:null).catch(()=>null);
+const dsInfo=fetch('https://api.dexscreener.com/latest/dex/tokens/'+CA).then(r=>r.json()).then(d=>(d.pairs||[]).filter(p=>p.chainId==='solana')).catch(()=>[]);
+const jupInfo=fetch('https://lite-api.jup.ag/tokens/v2/search?query='+CA).then(r=>r.json()).then(L=>(L||[]).find(t=>t.id===CA)||null).catch(()=>null);
+Promise.all([sfInfo,dsInfo,jupInfo]).then(([sf,pairs,jt])=>{
+  const liq=p=>((p.liquidity||{}).usd||0),other=p=>p.baseToken.address===CA?p.quoteToken:p.baseToken;
+  const qm=sf&&sf.quote&&sf.quote.mint,P=(qm&&pairs.filter(p=>other(p).address===qm).sort((a,b)=>liq(b)-liq(a))[0])||pairs.sort((a,b)=>liq(b)-liq(a))[0]||null;
+  const me=P?(P.baseToken.address===CA?P.baseToken:P.quoteToken):{};
+  SYM=String((sf&&sf.symbol)||(jt&&jt.symbol)||me.symbol||'TOKEN').replace(/^\$/,'');
+  const name=(sf&&sf.name)||(jt&&jt.name)||me.name||'',img=CA===MARINE?'/terminal/img/marine.webp':(sf&&sf.image)||(jt&&jt.icon)||(P&&P.info&&P.info.imageUrl)||'';
+  if(img)$('tkImg').src=img;$('tkSym').textContent='$'+SYM;$('lgB').textContent='$'+SYM;document.title='$'+SYM+' · Chart Lab';
+  $('tkName').textContent=name&&name.replace(/^\$/,'').toLowerCase()!==SYM.toLowerCase()?name:'';
+  const q=qm?{mint:qm,sym:String(sf.quote.symbol||'').replace(/^\$/,'')}:P?{mint:other(P).address,sym:String(other(P).symbol||'').replace(/^\$/,'')}:null;
   if(q&&q.mint){Q=q;chart.createIndicator({name:'QUOTE',shortName:'$'+q.sym,paneId:'candle_pane',yAxisId:'quote_axis'},true);$('tkQ').textContent='/$'+q.sym;$('lgQ').textContent='$'+q.sym;$('lgQw').style.display=''}
-  chart.setSymbol({ticker:SYM,pricePrecision:prec(t&&+t.usdPrice||0)||8,volumePrecision:0});chart.setPeriod(TF[3])});
+  // the links, in the token page's order: stonkfun, the flywheel, X, website, Telegram, an X search for the cashtag, copy
+  const info=pairs.map(p=>p.info).find(i=>i&&((i.socials||[]).length||(i.websites||[]).length))||{},safe=u=>/^https?:\/\//i.test(u||'')?u:null,
+    soc=t=>safe(((info.socials||[]).find(x=>x.type===t)||{}).url),L=[],a=(href,ico,title)=>href&&L.push(`<a href="${esc(href)}" target="_blank" rel="noopener" title="${esc(title)}" aria-label="${esc(title)}">${svg(ico)}</a>`);
+  if(sf){L.push(`<a class="sfl" href="https://www.stonkfun.xyz/token/${esc(CA)}" target="_blank" rel="noopener" title="$${esc(SYM)} on stonkfun" aria-label="$${esc(SYM)} on stonkfun"><img src="/terminal/img/stonkfun.png" alt=""></a>`);
+    const r=sf.rewards||{},tax=sf.transferTaxBps!=null?+(sf.transferTaxBps/100).toFixed(1)+'%':'a';
+    if(r.minDistributionUsd||r.minHoldingUsd)L.push(`<a class="fwl" href="/flywheel/" aria-label="How the $${esc(SYM)} flywheel works">${svg('fw')}<span class="fwtip"><b>THE FLYWHEEL</b>Every $${esc(SYM)} buy and sell pays ${esc(tax)} tax. It's swapped into $${esc(Q?Q.sym:'')} and pooled; when the pot hits $${num(r.minDistributionUsd||0)}, it's airdropped to every wallet holding $${num(r.minHoldingUsd||0)}+ of $${esc(SYM)}. No claiming.<u>Click for how it works ▸</u></span></a>`)}
+  a(soc('twitter'),'x','$'+SYM+' on X');a(safe((info.websites||[])[0]&&info.websites[0].url),'web','$'+SYM+' website');a(soc('telegram'),'tg','$'+SYM+' Telegram');
+  if(/^[A-Za-z0-9_]{1,15}$/.test(SYM))a('https://x.com/search?q='+encodeURIComponent('$'+SYM)+'&f=live','search','Search $'+SYM+' on X');
+  L.push(`<button type="button" id="copyCa" title="Copy $${esc(SYM)} contract address" aria-label="Copy contract address">${svg('copy')}</button>`);
+  $('tkLinks').innerHTML=L.join('');$('copyCa').onclick=()=>copyCa($('copyCa'),1);
+  // the change chips: DexScreener's, for a pool where the token is the base (a pool listed the other way round describes the other token)
+  const pc=P&&P.baseToken.address===CA?(P.priceChange||{}):null;if(pc&&pc.m5==null&&pc.h1!=null)pc.m5=0;
+  $('pChips').innerHTML=pc?[['m5','5m'],['h1','1h'],['h6','6h'],['h24','24h']].map(([k,l])=>pc[k]==null?'':`<span><i>${l}</i><b class="${pc[k]>=0?'up':'dn'}">${pc[k]>=0?'':'−'}${Math.abs(pc[k]).toFixed(2)}%</b></span>`).join(''):'';
+  chart.setSymbol({ticker:SYM,pricePrecision:prec(jt&&+jt.usdPrice||+(P&&P.priceUsd)||0)||8,volumePrecision:0});chart.setPeriod(TF[3])});
 fetch(BOT+'/depth?mint='+CA+'&d=1').then(r=>r.json()).then(d=>{if(!d||!d.levels||!d.levels.length)return;DEPTH=d.levels;
   $('dtab').style.visibility='';const l=$('depLeg');l.style.display='';l.href='https://clobr.io/token/'+encodeURIComponent(CA);l.classList.toggle('off',!depthOn);chart.resize()}).catch(()=>{});
 addEventListener('resize',()=>chart.resize());
