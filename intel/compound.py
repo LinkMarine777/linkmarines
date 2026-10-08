@@ -130,10 +130,24 @@ bonded = {m: b.get('bondedAt') for m, b in board.items() if b.get('bondedAt')}
 bonded.update({t['mint']: t['bondedAt'] for t in toks if t.get('bondedAt')})
 mcap = {**{m: b.get('mcap') or 0 for m, b in board.items()}, **{t['mint']: t.get('mcap') or 0 for t in toks}}
 ranked = [m for m in sorted(set(mcap) - {MARINE}, key=lambda m: -(mcap[m] or 0))]
-G = {x['mint']: x for x in get(f'{SF}/api/public/v1/rewards')['data']['launches']}   # every launch's payout total, one call
+def all_launches():
+    """Every launch's payout total. stonkfun pages this since 2026-10-07 (1,000 a page, ~53 pages; it used to be one answer,
+    and reading only page 1 dropped the index from 200 coins to 5): read every page (an unpaged answer is a single page)."""
+    out, p = {}, 1
+    while True:
+        d = get(f'{SF}/api/public/v1/rewards?pageSize=1000&page={p}')['data']
+        for x in d.get('launches') or []: out[x['mint']] = x
+        tp = (d.get('launchesPagination') or {}).get('totalPages') or 1
+        if p >= tp or not d.get('launches') or p >= 100: return out
+        p += 1; time.sleep(0.3)
+G = all_launches()
 watch = [m for m in [MARINE] + ranked if m in G]
 # then stonkfun's biggest coins by holders, up to 200 tracked in all (the long tail is covered on demand by the bot's wallet reader)
 watch += [m for m in sorted(G, key=lambda m: -(G[m].get('holderCount') or 0)) if m not in watch][:max(0, int(os.environ.get('WATCH_N', 200)) - len(watch))]
+# a list that came back far smaller than the last run's (a changed or broken API) never replaces the index: stop, keep what's saved
+_prev = len(load('compound/index.json', {'tokens': {}}).get('tokens', {}))
+if _prev >= 20 and len(watch) < _prev / 2:
+    log(f'only {len(watch)} coins found (last run had {_prev}): stonkfun list looks broken, nothing saved'); sys.exit(1)
 backfill_set = set(watch[:11])                                                        # $MARINE + the top 10 by market cap
 price = {}
 mints = sorted(set(watch) | {SOL} | {G[m]['quote']['mint'] for m in watch if (G[m].get('quote') or {}).get('mint')})
