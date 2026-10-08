@@ -11,6 +11,10 @@
       "destination": "/terminal/token.html"
     },
     {
+      "source": "/wallet/:w",
+      "destination": "/terminal/wallet.html"
+    },
+    {
       "source": "/tts/checkout",
       "destination": "/tts/checkout.html"
     }

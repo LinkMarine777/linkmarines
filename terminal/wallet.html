@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wallet X-Ray · Terminal 7</title>
+<meta name="description" content="Compound score, rewards and stonkfun holdings for this wallet on Terminal 7.">
+<meta property="og:title" content="Wallet X-Ray · Terminal 7">
+<meta property="og:site_name" content="Terminal 7">
+<meta property="og:description" content="Compound score, rewards and stonkfun holdings for this wallet on Terminal 7.">
+<meta property="og:image" content="https://terminal7.xyz/share-terminal7-v2.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://terminal7.xyz/share-terminal7-v2.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#04060f;--panel:#0a0f1f;--panel2:#0d1428;--line:#1a2444;--dim:#5d6a8f;--txt:#c9d3ee;
+  --blue:#2A5ADA;--blue2:#4a7aff;--green:#39ff6a;--red:#ff3355;--amber:#ffd23f;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--txt);font:13px/1.4 'IBM Plex Mono',monospace}
+body{min-height:100vh;background-image:linear-gradient(rgba(42,90,218,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(42,90,218,.05) 1px,transparent 1px);background-size:28px 28px}
+a{color:var(--blue2);text-decoration:none}a:hover{text-decoration:underline}
+.dim{color:var(--dim)}
+.btn{border:1px solid var(--line);padding:6px 12px;color:var(--txt);font:inherit;font-size:12px;background:var(--panel);cursor:pointer}
+.btn:hover{border-color:var(--blue2);text-decoration:none}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+header{display:flex;align-items:center;gap:18px;padding:9px 16px;border-bottom:1px solid var(--line);background:rgba(4,6,15,.92)}
+header img{width:40px;height:40px;object-fit:contain}
+.brand{font-family:'VT323';font-size:34px;line-height:1;color:#fff}
+.brand small{display:block;font-size:17px;color:var(--blue2)}
+header .ca{display:flex;align-items:center;gap:6px;flex:1;min-width:0;max-width:720px;margin:0 8px;position:relative}
+header .ca input{flex:1 1 150px;min-width:120px;background:#050914;border:1px solid var(--line);color:#fff;font:inherit;font-size:12px;padding:7px 9px}
+header .ca input:focus{outline:none;border-color:var(--blue2)}
+.srch{position:relative;flex:1 1 150px;min-width:120px;display:flex}.srch input{flex:1;min-width:0;padding-right:34px!important}
+.srch button{position:absolute;right:1px;top:1px;bottom:1px;width:32px;border:0;background:none;color:var(--dim);cursor:pointer;display:grid;place-items:center}.srch button:hover{color:#fff}.srch svg{width:15px;height:15px;fill:currentColor}
+.tkm{font-size:11px;color:var(--amber)}
+header nav{margin-left:auto;display:flex;gap:10px}
+main{max-width:980px;margin:18px auto 40px;padding:0 16px}
+.page{background:#070c18;border:2px solid var(--blue2);padding:20px 22px}
+@media (max-width:700px){header{gap:10px;padding:8px 10px;flex-wrap:wrap}.brand{font-size:26px}.brand small{font-size:14px}header img{width:32px;height:32px}
+  header .ca{order:3;flex-basis:100%;margin:0;max-width:none}header nav .lg{display:none}main{margin-top:10px;padding:0 10px}.page{padding:16px 14px}}
+</style>
+</head>
+<body>
+<header>
+  <a href="/" title="The Marines HQ"><img src="/helmet.png" alt="Marines"></a>
+  <a class="brand" href="/trending/" title="Terminal 7 home: trending tokens" style="text-decoration:none">THE WAR ROOM<small>TERMINAL 7</small></a>
+  <form id="caForm" class="ca" autocomplete="off">
+    <span class="srch"><input id="caIn" placeholder="Search a token or paste a wallet…" spellcheck="false" aria-label="Search"><button type="submit" title="Search" aria-label="Search"><svg viewBox="0 0 24 24"><path d="M10 2a8 8 0 016.3 12.9l5.4 5.4-1.4 1.4-5.4-5.4A8 8 0 1110 2zm0 2a6 6 0 100 12 6 6 0 000-12z"/></svg></button></span>
+    <span id="tkMsg" class="tkm"></span>
+  </form>
+  <nav><a class="btn" href="/trending/" title="Trending on stonkfun">🔥<span class="lg"> TRENDING</span></a></nav>
+</header>
+<main><div class="page" id="xrPage"></div></main>
+<script src="/terminal/xray.js"></script>
+<script>
+// The Wallet X-Ray on its own page: terminal7.xyz/wallet/<address> (also ?w=<address>)
+(() => {
+  const $ = id => document.getElementById(id);
+  const fromPath = (location.pathname.match(/\/wallet\/([1-9A-HJ-NP-Za-km-z]{32,44})\/?$/) || [])[1];
+  const w = fromPath || new URLSearchParams(location.search).get('w');
+  if (Xray.WRE.test(w || '')) { Xray.mount($('xrPage'), { page: true }); Xray.open(w); }
+  else $('xrPage').innerHTML = '<div class="dim">Paste a Solana wallet address in the search box above to X-Ray it.</div>';
+  // the search box: a pasted address is a wallet here unless it's a token (search.js offers names and tickers as you type)
+  $('caForm').addEventListener('submit', async e => {
+    e.preventDefault(); const v = $('caIn').value.trim();
+    if (!Xray.WRE.test(v)) { $('tkMsg').textContent = 'paste a wallet or token address'; return; }
+    let tok = null; try { tok = await (await fetch('https://war-room-bot.linkmarine777.workers.dev/token/' + v)).json(); } catch (e) {}
+    location.href = tok && tok.symbol ? '/terminal/token?ca=' + v : '/wallet/' + v;
+  });
+})();
+</script>
+<script src="/terminal/search.js" defer></script>
+</body>
+</html>

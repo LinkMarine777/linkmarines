@@ -1,4 +1,4 @@
-// The site is static files. For /terminal/token pages this points
+// The site is static files. For /terminal/token pages (and a wallet's page, /wallet/<address>) this points
 // the link preview (og:image) at the token's own share card, and for link-preview crawlers (X, Discord, Telegram...)
 // also puts the token's name in the title. Anything unexpected: the page is served exactly as it is.
 const BOT = 'https://war-room-bot.linkmarine777.workers.dev';
@@ -10,7 +10,7 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '
 // opened on themarines.link go to terminal7.xyz; the terminal's HQ links (href="/") go to themarines.link. The stream is served
 // on both as is (nothing pointing at it may break). Every other host (workers.dev, previews) is served unchanged.
 const HQ = 'themarines.link', T7 = 'terminal7.xyz';
-const TERMINAL = /^\/(trending|terminal|terminal2|terminal1\.1|flywheel)(\/|\.html|$)/;
+const TERMINAL = /^\/(trending|terminal|terminal2|terminal1\.1|flywheel|wallet)(\/|\.html|$)/;
 function domains(req) {
   const u = new URL(req.url), host = u.hostname.replace(/^www\./, '');
   if (u.hostname === 'www.' + HQ || u.hostname === 'www.' + T7) return Response.redirect(`https://${host}${u.pathname}${u.search}`, 301);   // www -> the bare domain
@@ -47,12 +47,14 @@ export default {
       try { const g = await env.ASSETS.fetch(new Request(new URL('/share-terminal7-v2.png', req.url))); if (g.ok) return new Response(g.body, { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=60' } }); } catch (e) {}
       return Response.redirect(`${BOT}/card/${card[1]}.png`, 302);
     }
-    const res = await env.ASSETS.fetch(req);
-    if (!new URL(req.url).pathname.startsWith('/terminal/token')) return res;
+    // a wallet's own page, /wallet/<address>: the Wallet X-Ray (terminal/wallet.html), with the wallet's card as its link preview
+    const wpage = /^\/wallet\/([1-9A-HJ-NP-Za-km-z]{32,44})\/?$/.exec(new URL(req.url).pathname);
+    const res = wpage ? await env.ASSETS.fetch(new Request(new URL('/terminal/wallet', req.url), req)) : await env.ASSETS.fetch(req);
+    if (!wpage && !new URL(req.url).pathname.startsWith('/terminal/token')) return res;
     try {
       const ca = new URL(req.url).searchParams.get('ca');
-      if (!MINT.test(ca || '') || !(res.headers.get('content-type') || '').includes('text/html')) return res;
-      const wal = new URL(req.url).searchParams.get('w');   // a shared wallet window: the wallet's card instead of the token's
+      if ((!wpage && !MINT.test(ca || '')) || !(res.headers.get('content-type') || '').includes('text/html')) return res;
+      const wal = wpage ? wpage[1] : new URL(req.url).searchParams.get('w');   // a shared wallet window: the wallet's card instead of the token's
       const img = MINT.test(wal || '') ? `${new URL(req.url).origin}/card/wallet/${wal}.png` : `${new URL(req.url).origin}/card/${ca}.png`;
       let title = null, desc = null;
       if (MINT.test(wal || '')) {
