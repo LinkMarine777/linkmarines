@@ -1,0 +1,23 @@
+# Wallet X-Ray preload (intel/xray_preload.py): every hour, for up to ~50 min, reads the wallet histories the bot still needs
+# (its /wallet-queue), one round per request. The bot spends its own Helius credits and stops handing out wallets once its day
+# passes the preload budget; nothing is ever read twice. Free: public repo Actions minutes, no secrets.
+name: xray preload
+on:
+  schedule:
+    - cron: '41 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: xray-preload
+  cancel-in-progress: false
+jobs:
+  preload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 58
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: intel
+      - name: read the wallets still needed
+        run: python3 intel/xray_preload.py
