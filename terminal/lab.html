@@ -47,6 +47,10 @@ a{color:inherit;text-decoration:none}
 .dd .menu button.on .ck{border-color:var(--blue2);background:rgba(42,90,218,.3);color:#fff}
 .dd .menu hr{border:0;border-top:1px solid var(--line);margin:4px 0}
 .dd .menu.r{left:auto;right:0;min-width:210px}
+#tf{display:flex;gap:4px;align-items:center}#tfMore{padding:4px 8px}
+#tfMenu{min-width:150px;max-height:70vh;overflow-y:auto}#tfMenu button{font-size:12px;padding:5px 10px}
+#tfMenu .star{color:var(--dim);font-size:14px;padding:0 2px}#tfMenu .star:hover{color:#fff}#tfMenu .star.fav{color:var(--amber)}
+#tfMenu button.on>span:first-child{color:#fff;font-weight:600}
 .dd .menu .mh{font-size:10px;letter-spacing:1.5px;color:var(--dim);padding:6px 10px 4px}
 .dd .menu [data-s]{justify-content:flex-start;gap:12px}.dd .menu [data-s] svg{width:18px;height:18px;flex:none;color:var(--dim)}.dd .menu [data-s]:hover svg{color:#fff}
 #shot svg,#resetBtn svg{width:17px;height:17px}#resetBtn{padding:3px 9px;display:grid;place-items:center}#shot{padding:3px 9px;display:grid;place-items:center;color:var(--amber);border-color:rgba(255,210,63,.5)}
@@ -159,7 +163,7 @@ klinecharts.registerIndicator({name:'DEPTHB',shortName:'',series:'normal',figure
 const F='IBM Plex Mono';
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const fmtD=({timestamp:t,type})=>{const d=new Date(t),h=d.getHours(),hm=(h%12||12)+(d.getMinutes()?':'+String(d.getMinutes()).padStart(2,'0'):'')+(h<12?' AM':' PM');
-  return type==='xAxis'?(TF[2].includes('MINUTE')&&TF[0]!=='1d'?hm:MON[d.getMonth()]+' '+d.getDate()+' '+hm):MON[d.getMonth()]+' '+d.getDate()+', '+hm};
+  return type==='xAxis'?(/SECOND|MINUTE/.test(TF[2])?hm:MON[d.getMonth()]+' '+d.getDate()+' '+hm):MON[d.getMonth()]+' '+d.getDate()+', '+hm};
 const chart=klinecharts.init('chart',{decimalFold:{threshold:99},formatter:{formatDate:fmtD},layout:{yAxis:{gap:{top:.08,bottom:.25}}},styles:{
   grid:{horizontal:{color:'#121a33'},vertical:{show:false}},
   candle:{bar:{upColor:'#4a7aff',downColor:'#e8eeff',noChangeColor:'#5d6a8f',upBorderColor:'#4a7aff',downBorderColor:'#e8eeff',upWickColor:'#4a7aff',downWickColor:'#e8eeff'},
@@ -187,14 +191,23 @@ $('depthBtn').classList.toggle('on',depthOn);
 
 // timeframes like the live chart; each loads candles of a fitting size and fits that window on screen, the rest of the
 // history is there to drag back to (older candles load as you go)
-const TFS=[['5m','5M','1_MINUTE',{type:'minute',span:1},15],['1h','1H','1_MINUTE',{type:'minute',span:1},60],['6h','6H','5_MINUTE',{type:'minute',span:5},72],
-  ['1d','24H','15_MINUTE',{type:'minute',span:15},96],['7d','7D','1_HOUR',{type:'hour',span:1},168],['all','ALL','4_HOUR',{type:'hour',span:4},0]];
-let TF=TFS.find(t=>t[0]===store('wrLabTf'))||TFS[4];
+const TFS=[['1s','1s','1_SECOND',{type:'second',span:1}],['15s','15s','15_SECOND',{type:'second',span:15}],['30s','30s','30_SECOND',{type:'second',span:30}],
+  ['1m','1m','1_MINUTE',{type:'minute',span:1}],['3m','3m','3_MINUTE',{type:'minute',span:3}],['5m','5m','5_MINUTE',{type:'minute',span:5}],
+  ['15m','15m','15_MINUTE',{type:'minute',span:15}],['30m','30m','30_MINUTE',{type:'minute',span:30}],
+  ['1h','1h','1_HOUR',{type:'hour',span:1}],['2h','2h','2_HOUR',{type:'hour',span:2}],['4h','4h','4_HOUR',{type:'hour',span:4}],
+  ['8h','8h','8_HOUR',{type:'hour',span:8}],['12h','12h','12_HOUR',{type:'hour',span:12}],
+  ['1d','1D','1_DAY',{type:'day',span:1}],['1w','1W','1_WEEK',{type:'week',span:1}],
+  ['all','ALL','4_HOUR',{type:'hour',span:4},0]];   // ALL: the whole history on screen
+const GROUPS=[['SECONDS',/s$/],['MINUTES',/m$/],['HOURS',/h$/],['DAYS',/[dw]$/]];
+// candle size: favourites in the toolbar (starred in the ▾ menu, kept per browser), every size in the menu, ALL on its own
+let FAV=(store('wrLabFav')||'5m,15m,1h,4h,1d').split(',').filter(k=>TFS.some(t=>t[0]===k&&k!=='all'));
+let TF=TFS.find(t=>t[0]===store('wrLabTf'))||TFS.find(t=>t[0]==='1h');
 const IV=()=>TF[2];
 async function bars(m,to,n=500){const r=await fetch(`https://datapi.jup.ag/v2/charts/${m}?interval=${IV()}&to=${to}&candles=${n}&type=price&quote=usd`);
   if(!r.ok)throw new Error(r.status);return((await r.json()).candles||[]).map(c=>({timestamp:c.time*1000,open:+c.open,high:+c.high,low:+c.low,close:+c.close,volume:+c.volume||0}))}
 async function quoteFor(to){if(!Q)return;try{(await bars(Q.mint,to)).forEach(b=>QMAP.set(b.timestamp,b.close))}catch(e){}}
-function fit(){const n=TF[4],L=chart.getDataList().length,w=(chart.getSize('candle_pane')||{}).width||800,k=n?Math.min(n,L):L;if(k>1)chart.setBarSpace(Math.max(1,Math.min(50,(w-20)/k)));chart.scrollToRealTime()}
+function fit(){const L=chart.getDataList().length,w=(chart.getSize('candle_pane','main')||chart.getSize('candle_pane')||{}).width||800;   // ALL: every candle loaded on screen; else the usual candle width
+  chart.setBarSpace(TF[4]===0&&L>1?Math.max(1,Math.min(50,(w-30)/(L+1))):8);chart.scrollToRealTime()}
 chart.setDataLoader({getBars:async({type,timestamp,callback})=>{
   try{if(type==='init'){QMAP=new Map();const [d]=await Promise.all([bars(CA,Date.now()),quoteFor(Date.now())]);callback(d,{forward:d.length>=500,backward:d.length>=500});setTimeout(fit,0);return}
     // more history when the chart is dragged past its oldest candle (whichever direction name the library gives it)
@@ -205,10 +218,19 @@ chart.setDataLoader({getBars:async({type,timestamp,callback})=>{
 const prec=p=>p>0?Math.min(12,Math.max(2,Math.ceil(-Math.log10(p))+3)):2;
 function resetView(){chart.overrideYAxis({paneId:'candle_pane',createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtP(t.value)}))});fit();say('View reset',1200)}
 $('resetBtn').onclick=resetView;$('chart').addEventListener('dblclick',e=>{if(!chart.getOverlays().some(o=>o.currentStep>0))resetView()});
-$('tf').innerHTML=TFS.map(t=>`<button type="button" data-k="${t[0]}"${t===TF?' class="on"':''}>${t[1]}</button>`).join('');
-$('tf').onclick=e=>{const b=e.target.closest('button');if(!b)return;const was=TF;TF=TFS.find(t=>t[0]===b.dataset.k);store('wrLabTf',TF[0]);
-  $('tf').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
-  if(was[2]===TF[2])fit();else chart.setPeriod(TF[3])};   // same candle size (5M / 1H): just refit
+function tfBar(){const fav=TFS.filter(t=>FAV.includes(t[0])),extra=TF[0]!=='all'&&!FAV.includes(TF[0])?TF:null;
+  $('tf').innerHTML=fav.concat(extra?[extra]:[]).map(t=>`<button type="button" data-k="${t[0]}"${t===TF?' class="on"':''}>${t[1]}</button>`).join('')
+    +`<button type="button" data-k="all"${TF[0]==='all'?' class="on"':''} title="The whole history">ALL</button>`
+    +`<span class="dd" id="tfDd"><button type="button" id="tfMore" title="All candle sizes" aria-haspopup="true" aria-expanded="false">▾</button><div class="menu" id="tfMenu" role="menu">`
+    +GROUPS.map(([g,re])=>`<div class="mh">${g}</div>`+TFS.filter(t=>t[0]!=='all'&&re.test(t[0])).map(t=>`<button type="button" data-k="${t[0]}"${t===TF?' class="on"':''}><span>${t[1]}</span><span class="star${FAV.includes(t[0])?' fav':''}" data-star="${t[0]}" title="${FAV.includes(t[0])?'Remove from':'Add to'} the toolbar">${FAV.includes(t[0])?'★':'☆'}</span></button>`).join('')).join('')
+    +'</div></span>'}
+function setTf(k){const was=TF;TF=TFS.find(t=>t[0]===k);store('wrLabTf',k);tfBar();if(was[2]===TF[2])fit();else chart.setPeriod(TF[3])}
+$('tf').onclick=e=>{const st=e.target.closest('[data-star]');
+  if(st){e.stopPropagation();const k=st.dataset.star;FAV=FAV.includes(k)?FAV.filter(x=>x!==k):FAV.concat(k);store('wrLabFav',FAV.join(','));tfBar();$('tfDd').classList.add('open');return}
+  if(e.target.closest('#tfMore')){e.stopPropagation();const d=$('tfDd'),o=!d.classList.contains('open');d.classList.toggle('open',o);$('tfMore').setAttribute('aria-expanded',o);return}
+  const b=e.target.closest('[data-k]');if(b)setTf(b.dataset.k)};
+document.addEventListener('click',e=>{const d=$('tfDd');if(d&&!e.target.closest('#tfDd'))d.classList.remove('open')});
+tfBar();
 
 // ---------- drawing tools: an icon panel on the left of the chart ----------
 const SV=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
