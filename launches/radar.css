@@ -63,3 +63,7 @@
 #lr-dr .lr-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
 #lr-dr .buyb{background:var(--green);color:#04060f;border:0;font:inherit;font-size:11px;font-weight:600;letter-spacing:1px;padding:4px 12px;cursor:pointer;margin-left:10px}#lr-dr .buyb:hover{filter:brightness(1.1)}
 #lr-swap{min-height:330px;border:1px solid var(--line)}#lr-swap .ld{padding:40px 0;text-align:center;font-size:12px;color:var(--dim)}
+/* ⓘ INFO next to the ticker: the coin's panel here; the rest of the row opens its terminal */
+#lr .infob{background:none;border:1px solid var(--blue2);color:var(--blue2);font:inherit;font-size:9.5px;letter-spacing:1px;padding:1px 6px;margin-left:6px;cursor:pointer;vertical-align:1px;white-space:nowrap}
+#lr .infob:hover{background:rgba(74,122,255,.14);color:#fff}
+#lr #lr-rows tr[data-m]{cursor:pointer}
