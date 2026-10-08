@@ -1,7 +1,7 @@
-# Launch radar (intel/launches.py): what's about to be listed on stonkfun (Jupiter VRFD submissions, newly verified stocks),
-# new stonkfun pairs, and a REAL / WATCH / THIN / FARM score for every launch of the last 24 h. A pass every ~5 min,
-# written to terminal/launches.json on the data branch (the /launches page reads it, the whale radar folds its alerts in).
-# Free: stonkfun's public API, Jupiter's token API, a few Solana RPC calls a pass.
+# Launch radar (intel/launches.py): a REAL / WATCH / THIN / FARM score and a bundle scan for every stonkfun launch of the
+# last 24 h, stonkfun coins in Jupiter VRFD, Sunrise's next pairs, new stonkfun pairs. A pass every ~5 min, written to
+# terminal/launches.json on the data branch (the /launches page reads it, the whale radar folds its alerts in).
+# Free: stonkfun's public API, Jupiter's data API and VRFD's public request list. No RPC.
 name: launch radar
 on:
   schedule:
@@ -27,8 +27,6 @@ jobs:
           path: data
       - name: a pass every ~5 min until the next run
         env:
-          HELIUS_KEY: ${{ secrets.HELIUS_KEY }}
-          SOLANA_RPC: ${{ secrets.SOLANA_RPC }}
           FILES: terminal/launches.json terminal/launches-state.json
         run: |
           end=$(( $(date +%s) + 27 * 60 ))

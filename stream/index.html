@@ -1347,7 +1347,7 @@ function infoScan(){const first=!IS.init,fire=(...a)=>{if(!first)infoAlert(...a)
     const old=linkRaw.find(a=>now-Date.parse(a.block_timestamp)>=3600e3),cur=pr(linkRaw[0]);
     if(old&&cur){const ch=(cur/pr(old)-1)*100;if(Math.abs(ch)>=5&&now-(IS.linkMove||0)>2*3600e3){IS.linkMove=now;fire(ch>0?'🔗 $LINK PUMPING':'🔗 $LINK DIPPING','$LINK '+(ch>0?'+':'')+ch.toFixed(1)+'% IN AN HOUR','Now '+px(cur)+' on Solana')}}}
   // whale radar signals: whales piling into a token, rotating, exiting, buying a dip, compounding rewards
-  if(WR&&WR.signals){const SIDE={convergence:'buy',dip:'buy',dumping:'sell',exit:'sell',newpair:'buy',launch:'buy'};const HEAD={dumping:'🐋 WHALES DUMPING',score:'🧱 CLOBr SCORE',convergence:'🐋 WHALES PILING IN',rotation:'🔄 WHALE ROTATION',exit:'🚪 WHALE EXIT',dip:'🩸 WHALES BUYING THE DIP',rewards:'♻️ WHALE REWARDS',newpair:'🆕 NEW STONKFUN PAIR',vrfd:'📝 VRFD SUBMISSION',verified:'✅ JUPITER VERIFIED',launch:'🧪 REAL LAUNCH'};
+  if(WR&&WR.signals){const SIDE={convergence:'buy',dip:'buy',dumping:'sell',exit:'sell',newpair:'buy',launch:'buy',sunrise:'buy'};const HEAD={dumping:'🐋 WHALES DUMPING',score:'🧱 CLOBr SCORE',convergence:'🐋 WHALES PILING IN',rotation:'🔄 WHALE ROTATION',exit:'🚪 WHALE EXIT',dip:'🩸 WHALES BUYING THE DIP',rewards:'♻️ WHALE REWARDS',newpair:'🆕 NEW STONKFUN PAIR',vrfd:'⚡ JUPITER VRFD',sunrise:'🌅 NEXT STONKFUN PAIR',launch:'🧪 REAL LAUNCH'};
     if(IS.wr)WR.signals.filter(x=>!IS.wr.includes(x.id)&&!['bigtrade','mover','board','top10','payout','buy','pulse','milestone','link','tts'].includes(x.kind)&&Date.now()/1000-x.t<6*3600).slice(0,3).reverse()
       .forEach(x=>infoAlert(HEAD[x.kind]||'🐋 WHALE RADAR',(x.s?'$'+x.s:'')+(x.u?' · '+compact(x.u):''),x.text,SIDE[x.kind]));
     IS.wr=[...new Set([...WR.signals.map(x=>x.id),...(IS.wr||[])])].slice(0,300)}
@@ -1358,7 +1358,7 @@ function infoScan(){const first=!IS.init,fire=(...a)=>{if(!first)infoAlert(...a)
 const DB_HEAD=x=>{const k=x.kind,sd=x.side;
   if(k==='buy'&&/whale watch/i.test(x.text))return['🐋 WHALE WATCH','buy'];
   return({convergence:['🐋 WHALES PILING IN','buy'],dumping:['🐋 WHALES DUMPING','sell'],rotation:['🔄 WHALE ROTATION'],exit:['🚪 WHALE EXIT','sell'],
-    newpair:['🆕 NEW STONKFUN PAIR','buy'],vrfd:['📝 VRFD SUBMISSION'],verified:['✅ JUPITER VERIFIED'],launch:['🧪 REAL LAUNCH','buy'],
+    newpair:['🆕 NEW STONKFUN PAIR','buy'],vrfd:['⚡ JUPITER VRFD'],sunrise:['🌅 NEXT STONKFUN PAIR','buy'],launch:['🧪 REAL LAUNCH','buy'],
     dip:['🩸 WHALES BUYING THE DIP','buy'],rewards:['♻️ WHALE REWARDS'],score:['🧱 CLOBr SCORE'],board:['📋 STONK BOARD'],top10:['🚀 STONKFUN TOP 10'],
     milestone:['🏆 MILESTONE'],payout:['💸 HOLDER PAYOUT'],pulse:['⚡ PULSE INCOMING'],link:[sd==='down'?'🔗 $LINK DIPPING':'🔗 $LINK PUMPING'],
     mover:[sd==='down'?'📉 BIG MOVER':'📈 BIG MOVER'],bigtrade:[sd==='sell'?'🐳 BIG SELL':'🐳 BIG BUY',sd==='sell'?'sell':'buy']})[k]||['🐋 WHALE RADAR']};

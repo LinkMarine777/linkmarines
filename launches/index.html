@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>LAUNCH RADAR · Terminal 7 · real or farm, next stonkfun pairs</title>
-<meta name="description" content="Every stonkfun launch of the last 24 h scored REAL or FARM from the fees it actually paid, organic buyers and its dev's record; the stocks about to become stonkfun pairs, from Jupiter VRFD submissions on chain.">
+<meta name="description" content="Every stonkfun launch of the last 24 h scored REAL or FARM from the fees it actually paid, organic buyers and its dev's record; bundles and linked wallets, and the coins in Jupiter VRFD.">
 <meta property="og:title" content="Launch Radar · Terminal 7">
 <meta property="og:site_name" content="Terminal 7">
 <meta property="og:description" content="Real or farm? Every stonkfun launch checked against the fees it actually paid. Plus the next pairs, straight from Jupiter VRFD submissions on chain.">
@@ -79,6 +79,27 @@ details.how{padding:12px 14px;font-size:12px;line-height:1.6}details.how summary
 details.how p,details.how li{color:var(--txt);margin-top:6px}details.how ul{padding-left:18px}details.how code{color:var(--amber)}
 footer{text-align:center;color:var(--dim);font-size:11px;padding:20px 16px 30px}
 @media (max-width:600px){main{padding:10px}header{padding:8px 12px}.brand{font-size:28px}.ph .hint{margin-left:0;width:100%}}
+
+/* Jupiter-style pills (VRFD) and Token Info tiles (jup.ag) */
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;padding:1px 8px;border-radius:999px;border:1px solid var(--line);color:var(--dim);white-space:nowrap}
+.pill.ok{color:#c7f284;border-color:rgba(199,242,132,.4);background:rgba(199,242,132,.08)}.pill.no{color:var(--red);border-color:rgba(255,51,85,.4);background:rgba(255,51,85,.08)}
+.pill.wait{color:#aab4d4;background:rgba(255,255,255,.04)}.pill.ex{color:#c7f284;border-color:rgba(199,242,132,.4)}.pill.info{color:var(--amber);border-color:rgba(255,210,63,.4)}
+.pills{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.chip{display:inline-block;font-size:9.5px;letter-spacing:.8px;padding:0 5px;margin-left:5px;border:1px solid;vertical-align:1px}
+.chip.bad{color:var(--red);border-color:rgba(255,51,85,.5)}.chip.warn{color:var(--amber);border-color:rgba(255,210,63,.45)}.chip.ok{color:#c7f284;border-color:rgba(199,242,132,.45)}
+.sol{color:#c7f284}
+#dr{position:fixed;inset:0;background:rgba(2,3,10,.7);display:none;z-index:50}#dr.on{display:block}
+#dr .box{position:absolute;right:0;top:0;bottom:0;width:min(460px,100%);background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;padding:16px}
+#dr .top{display:flex;align-items:center;gap:10px}#dr .top img,#dr .top .ph0{width:40px;height:40px}#dr .top b{font-size:18px;color:#fff}#dr .top small{display:block;color:var(--dim)}
+#dr .x{margin-left:auto;background:none;border:1px solid var(--line);color:var(--txt);font:inherit;padding:4px 10px;cursor:pointer}
+#dr h3{font-size:11px;letter-spacing:1.5px;color:#fff;margin:16px 0 8px;font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.tile{border:1px solid var(--line);border-radius:6px;padding:8px 4px;text-align:center}.tile b{display:block;font-size:14px;color:var(--txt)}
+.tile b.g{color:#3ee08f}.tile b.r{color:var(--red)}.tile span{font-size:10.5px;color:var(--dim);text-decoration:underline dotted;text-underline-offset:3px}
+.src{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;font-size:12px}.src i{font-style:normal;color:var(--dim)}
+.sbar{grid-column:1/-1;height:5px;background:#141c36;margin-bottom:4px}.sbar s{display:block;height:100%;background:var(--blue2)}.sbar.lk s{background:var(--red)}.sbar.ex s{background:#c7f284}
+.cl{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px 12px;font-size:12px;padding:6px 0;border-bottom:1px solid var(--line)}
+#dr .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
 </style>
 </head>
 <body>
@@ -94,53 +115,57 @@ footer{text-align:center;color:var(--dim);font-size:11px;padding:20px 16px 30px}
 <main>
   <section class="hero">
     <div class="intro"><h1>Real or farm?</h1>
-      <p>Every stonkfun launch of the last 24 h checked against the <b>fees it actually paid</b> its holders, Jupiter's organic buyers and its dev's record across every launch. And the next pairs, from <b>Jupiter VRFD submissions on chain</b> before stonkfun lists them.</p></div>
+      <p>Every stonkfun launch of the last 24 h checked against the <b>fees it actually paid</b>, Jupiter's organic buyers, bundles, the dev's record and <b>who funded its top holders</b>. Tap a coin for its bundle scan.</p></div>
     <div><label>Launched 24h</label><b id="kL">…</b><span class="s" id="kG"></span></div>
-    <div><label>Real</label><b class="up" id="kR">…</b><span class="s">score 60+, fees back the volume</span></div>
+    <div><label>Real</label><b class="up" id="kR">…</b><span class="s">score 60+, not bundled</span></div>
     <div><label>Farms</label><b class="dn" id="kF">…</b><span class="s">volume the fees don't back</span></div>
-    <div><label>Devs tracked</label><b id="kD">…</b><span class="s">every launch, back 14 days</span></div>
+    <div><label>Bundled</label><b class="am" id="kB">…</b><span class="s">20%+ in bundles or linked wallets</span></div>
   </section>
 
   <section class="pipe">
-    <div class="panel"><div class="ph"><span class="step">①</span><h2>VRFD SUBMISSIONS</h2><span class="hint">1,000 JUP paid to Jupiter's verification desk</span></div>
+    <div class="panel"><div class="ph"><h2>STONKFUN COINS IN JUPITER VRFD</h2><span class="hint">⚡ express = paid 1,000 JUP</span></div>
       <div class="list" id="vrfd"><div class="empty">loading…</div></div></div>
-    <div class="panel"><div class="ph"><span class="step">②</span><h2>VERIFIED · NOT A STONKFUN PAIR YET</h2><span class="hint">from issuers stonkfun lists</span></div>
-      <div class="list" id="pending"><div class="empty">loading…</div></div></div>
-    <div class="panel"><div class="ph"><span class="step">③</span><h2>NEW STONKFUN PAIRS</h2><span class="hint" id="pairsN"></span></div>
+    <div class="panel"><div class="ph"><h2>NEXT PAIRS · SUNRISE</h2><span class="hint" id="sunHint"></span></div>
+      <div class="list" id="next"><div class="empty">loading…</div></div></div>
+    <div class="panel"><div class="ph"><h2>NEW STONKFUN PAIRS</h2><span class="hint" id="pairsN"></span></div>
       <div class="list" id="pairs"><div class="empty">loading…</div></div></div>
   </section>
 
   <section class="panel">
     <div class="ph"><h2>LAUNCHES · LAST 24H</h2><span class="n" id="nRows"></span>
-      <div class="tabs" id="tabs"><button data-v="REAL" class="on">REAL</button><button data-v="WATCH">WATCH</button><button data-v="FARM">FARM</button><button data-v="THIN">THIN</button><button data-v="ALL">ALL</button></div>
-      <span class="hint">tap a coin to open its terminal</span></div>
+      <div class="tabs" id="tabs"><button data-v="REAL" class="on">REAL</button><button data-v="WATCH">WATCH</button><button data-v="FARM">FARM</button><button data-v="BUNDLED">BUNDLED</button><button data-v="THIN">THIN</button><button data-v="ALL">ALL</button></div>
+      <span class="hint">tap a coin for its bundle scan</span></div>
     <div class="tw"><table><thead><tr>
       <th class="l" data-k="score">SCORE</th><th class="l" data-k="s">COIN</th><th class="l" data-k="q">PAIR</th><th data-k="c">AGE</th>
-      <th data-k="mc">MCAP</th><th data-k="v">VOL 24H</th><th data-k="paid">PAID HOLDERS</th><th data-k="fb" title="fees paid ÷ tax rate, against the volume reported: real trading lands near 1.0">FEE-BACKED</th>
-      <th data-k="ob">ORGANIC BUYERS</th><th data-k="h">HOLDERS</th><th data-k="top">TOP HOLDERS</th><th data-k="dn" title="the deployer's other launches: graduated / launched">DEV</th>
+      <th data-k="mc">MC</th><th data-k="v">24H VOL</th><th data-k="fees" title="priority fees + tips traders paid (Jupiter's Fees Paid), and per trade">FEES PAID</th>
+      <th data-k="fb" title="what the coin paid its holders ÷ its tax rate, against the volume it reports: real trading lands near 1.0">FEE-BACKED</th>
+      <th data-k="ob">ORG BUYERS</th><th data-k="h">HOLDERS</th><th data-k="bund" title="the bigger of bundlers' peak share (Jupiter) and holders linked by one private funder">BUNDLED</th>
+      <th data-k="dg" title="the dev's other coins: 👑 graduated · launched (Jupiter)">DEV</th>
     </tr></thead><tbody id="rows"><tr><td class="l dim" colspan="12">loading…</td></tr></tbody></table></div>
   </section>
 
   <section class="panel">
     <div class="ph"><h2>WHERE THE REAL LAUNCHES ARE · PAIRS</h2><span class="hint">launches against each pair in 24 h</span></div>
-    <div class="tw"><table><thead><tr><th class="l">PAIR</th><th>LAUNCHES</th><th>VOL 24H</th><th>REAL</th><th class="l">BEST LAUNCH</th></tr></thead>
+    <div class="tw"><table><thead><tr><th class="l">PAIR</th><th>LAUNCHES</th><th>24H VOL</th><th>REAL</th><th class="l">BEST LAUNCH</th></tr></thead>
       <tbody id="hot"></tbody></table></div>
   </section>
 
   <section class="panel"><details class="how"><summary>HOW THE SCORE WORKS</summary>
     <p>Every launch of the last 24 h that trades ($2,500+ volume, or graduated) gets a score out of 100:</p>
     <ul>
-      <li><b>Organic buyers (30)</b>: distinct wallets Jupiter counts as organic buyers in 24 h. Bots and wash wallets are filtered out.</li>
-      <li><b>Fee-backed volume (20)</b>: what the coin actually paid its holders, divided by its tax rate, against the volume it reports. Every taxed trade pays, so real trading comes out near <code>1.0</code>. Volume washed through untaxed routes comes out far below it: farms measure 0.15–0.45.</li>
-      <li><b>Holders (15)</b> and <b>top holders' share (10)</b>, from Jupiter.</li>
-      <li><b>Dev record (15)</b>: the deployer's other launches over the last 14 days. 1 in 5 graduated, or one peaked at $500k+, gives the full 15. A serial launcher (5+ coins, under 1 in 10 graduated) gets 0.</li>
-      <li><b>Organic share of volume (10)</b>, from Jupiter.</li>
+      <li><b>Organic buyers (25)</b>: distinct wallets Jupiter counts as organic buyers in 24 h. Bots and wash wallets are filtered out.</li>
+      <li><b>Fee-backed volume (20)</b>: what the coin paid its holders, divided by its tax rate, against the volume it reports. Every taxed trade pays, so real trading comes out near <code>1.0</code>. Washed volume comes out far below: farms measure 0.15–0.45.</li>
+      <li><b>Bundles (15)</b>: the bigger of the bundlers' peak share of the supply (Jupiter) and <b>linked holders</b>: top-100 holders funded by one private wallet. An exchange (Binance, Coinbase, OKX, Bybit, MEXC) or any service that funds holders across many coins doesn't count as a link.</li>
+      <li><b>Dev (15)</b>: the deployer's other coins, 👑 graduated out of launched (Jupiter). 1 in 5 graduated gives the full 15. A serial launcher (5+ coins, under 1 in 20 graduated) gets 0. A wallet with 2,000+ coins is a launch tool shared by many people, so it counts as neutral.</li>
+      <li><b>Holders (10)</b>, <b>top 10 holders' share (5)</b>, <b>organic share of volume (5)</b>.</li>
+      <li><b>Fees per trade (5)</b>: priority fees and tips traders paid per trade (Jupiter's Fees Paid). Farm bots pay to land their bundles: farms measured 2.3–5 mSOL a trade, real coins 0.7–2.7.</li>
     </ul>
-    <p><span class="v-REAL">REAL</span> 60+ · <span class="v-WATCH">WATCH</span> 35+ · <span class="v-FARM">FARM</span> $20,000+ volume that the fees (or, with no payouts to check, the organic buyers) don't back up · <span class="v-THIN">THIN</span> the rest.</p>
-    <p>The pipeline: an issuer (Sunrise brings stocks to Solana) pays Jupiter VRFD 1,000 JUP to verify a token, Jupiter verifies it, then stonkfun adds it as a pair and coins launch against it. Each step pops as an alert on every page here. Not financial advice: a score reads what already happened on chain.</p>
+    <p><span class="v-REAL">REAL</span> 60+ and not bundled (20%+ bundled or linked caps it at WATCH) · <span class="v-WATCH">WATCH</span> 35+ · <span class="v-FARM">FARM</span> $20,000+ volume the fees don't back up, with few organic buyers or holders · <span class="v-THIN">THIN</span> the rest.</p>
+    <p>VRFD: Jupiter's verification desk. Standard requests are free. ⚡ Express costs 1,000 JUP and is reviewed first. Next pairs: stonkfun lists Sunrise's stocks as pairs, so a verified Sunrise stock with no pair for that stock yet (no xStock or PreStock of it) is the next one in line. Not financial advice: a score reads what already happened on chain.</p>
   </details></section>
 </main>
-<footer>updated <span id="upd">…</span> · a pass every ~5 min · data: stonkfun, Jupiter, Solana</footer>
+<div id="dr"><div class="box" id="drBox"></div></div>
+<footer>updated <span id="upd">…</span> · a pass every ~5 min · data: stonkfun, Jupiter, Jupiter VRFD</footer>
 <script>
 const SRC=['https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/launches.json','https://war-room-bot.linkmarine777.workers.dev/data/terminal/launches.json'];
 const $=id=>document.getElementById(id);
@@ -148,8 +173,14 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const compact=n=>n==null?'—':'$'+(n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':Math.round(n));
 const num=n=>n==null?'—':Number(n).toLocaleString('en-US');
 const ago=t=>{const s=Date.now()/1000-t;return s<60?'now':s<3600?Math.floor(s/60)+'m':s<86400?Math.floor(s/3600)+'h':Math.floor(s/86400)+'d'};
+const sy=s=>'$'+esc(String(s??'').replace(/^\$+/,''));   // tickers that already start with $ keep one
+const short=a=>a?a.slice(0,4)+'…'+a.slice(-4):'';
 const tok=m=>'/terminal/token?ca='+m;
 const pic=u=>u?`<img src="${esc(u)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'ph0'}))">`:'<span class="ph0"></span>';
+// VRFD's own pills: • Pending, ✓ Verified, Rejected, Needs info; ⚡ Express for the paid lane
+const stPill=s=>s==='verified'?'<span class="pill ok">✓ Verified</span>':s==='rejected'?'<span class="pill no">Rejected</span>':s==='needs_info'?'<span class="pill info">! Needs info</span>':'<span class="pill wait">• Pending</span>';
+const lanePill=l=>l==='express'?'<span class="pill ex">⚡ Express</span>':'';
+const bundOf=r=>Math.max(r.bpk||0,(r.scan&&r.scan.lk)||0);
 let D=null,vf='REAL',sk='score',sd=-1;
 try{vf=localStorage.getItem('lrTab')||'REAL'}catch(e){}
 
@@ -159,49 +190,70 @@ async function load(){
 }
 function render(){
   const s=D.stats||{};$('kL').textContent=num(s.launches);$('kG').textContent=num(s.graduated)+' graduated';
-  $('kR').textContent=num(s.real);$('kF').textContent=num(s.farm);$('kD').textContent=num(s.devs);
+  $('kR').textContent=num(s.real);$('kF').textContent=num(s.farm);$('kB').textContent=num(s.bundled);
   const stale=Date.now()/1000-D.at>1200;$('live').classList.toggle('stale',stale);$('liveTxt').textContent=stale?'DELAYED':'LIVE';$('upd').textContent=ago(D.at)+' ago';
-  // ① VRFD
-  const V=D.vrfd||[];$('vrfd').innerHTML=V.length?V.map(v=>`<a class="it" href="https://solscan.io/tx/${esc(v.sig)}" target="_blank" rel="noopener"><span class="ph0"></span>
-    <span class="nm"><b>${v.who?esc(v.who):esc(v.by.slice(0,4)+'…'+v.by.slice(-4))}</b>${v.who?'<span class="tag sun">LISTS ON STONKFUN</span>':''}<small>${num(v.jup)} JUP · ${v.n>1?v.n+' submissions seen from this wallet':'first submission seen'}</small></span>
-    <span class="r"><b>${ago(v.t)}</b>ago</span></a>`).join(''):'<div class="empty">no submissions seen yet</div>';
-  // ② verified, not listed
-  const P=D.pending||[];$('pending').innerHTML=P.length?P.map(p=>`<a class="it" href="https://jup.ag/tokens/${esc(p.m)}" target="_blank" rel="noopener">${pic(p.i)}
-    <span class="nm"><b>$${esc(p.s)}</b><span class="tag${p.who==='Sunrise'?' sun':''}">${esc(p.who||'')}</span>${p.seen?'<span class="tag new">NEW '+ago(p.seen)+'</span>':''}<small>${esc(p.n)}</small></span>
-    <span class="r"><b>${compact(p.liq)}</b>liq · ${num(p.h)} holders</span></a>`).join(''):'<div class="empty">nothing verified and waiting right now</div>';
-  // ③ new pairs
-  const N=D.newPairs||[];$('pairsN').textContent='watching '+num(D.pairs)+' pairs';
-  $('pairs').innerHTML=N.length?N.map(p=>`<a class="it" href="https://www.stonkfun.xyz/" target="_blank" rel="noopener">${pic(p.i)}
-    <span class="nm"><b>$${esc(p.s)}</b><span class="tag${p.cat==='Sunrise'?' sun':''}">${esc(p.cat||'')}</span><small>${esc(p.n)}</small></span>
+  // stonkfun coins in VRFD (rows like VRFD's own list)
+  const V=D.vrfd||[];$('vrfd').innerHTML=V.length?V.map(v=>`<a class="it" href="https://verified.jup.ag/dashboard/${esc(v.m)}" target="_blank" rel="noopener">${pic(v.i)}
+    <span class="nm"><b>${sy(v.s)}</b><small>${esc(short(v.m))} · ${ago(v.t)} · MC ${compact(v.mc)}</small></span>
+    <span class="pills">${stPill(v.st)}${lanePill(v.lane)}</span></a>`).join(''):'<div class="empty">no stonkfun coin has asked VRFD in the last 2 weeks</div>';
+  // next pairs: Sunrise
+  const SL=D.sunListed;$('sunHint').textContent=SL?SL[0]+' of '+SL[1]+' Sunrise stocks are pairs':'';
+  const N=D.next||[];$('next').innerHTML=N.length?N.map(p=>`<a class="it" href="https://jup.ag/tokens/${esc(p.m)}" target="_blank" rel="noopener">${pic(p.i)}
+    <span class="nm"><b>${sy(p.s)}</b><small>${esc(p.n)}${p.liq?' · liq '+compact(p.liq):' · no market yet'}</small></span>
+    <span class="pills">${p.ver?stPill('verified'):p.st?stPill(p.st):''}${lanePill(p.lane)}</span></a>`).join(''):'<div class="empty">every verified Sunrise stock has a pair (or an xStock / PreStock of it does). The next one pops here and as an alert.</div>';
+  // new pairs
+  const P=D.newPairs||[];$('pairsN').textContent='watching '+num(D.pairs)+' pairs';
+  $('pairs').innerHTML=P.length?P.map(p=>`<a class="it" href="https://jup.ag/tokens/${esc(p.m)}" target="_blank" rel="noopener">${pic(p.i)}
+    <span class="nm"><b>${sy(p.s)}</b><span class="tag${p.cat==='Sunrise'?' sun':''}">${esc(p.cat||'')}</span><small>${esc(p.n)}</small></span>
     <span class="r"><b>${ago(p.t)}</b>ago</span></a>`).join(''):'<div class="empty">no new pair since the radar started. The next one pops here and as an alert on every page.</div>';
   renderRows();
-  // pairs
-  $('hot').innerHTML=(D.hot||[]).map(h=>`<tr onclick="${h.best?`location.href='${tok(h.best[2])}'`:''}"><td class="l"><b style="color:#fff">$${esc(h.q)}</b> <span class="tag${h.qc==='Sunrise'?' sun':''}">${esc(h.qc||'')}</span>${h.new&&Date.now()/1000-h.new<7*86400?'<span class="tag new">NEW PAIR</span>':''}</td>
-    <td>${num(h.n)}</td><td>${compact(h.v)}</td><td class="${h.real?'up':'dim'}">${num(h.real)}</td><td class="l">${h.best?`<a href="${tok(h.best[2])}">$${esc(h.best[0])}</a> <span class="dim">${h.best[1]}</span>`:'<span class="dim">—</span>'}</td></tr>`).join('');
+  $('hot').innerHTML=(D.hot||[]).map(h=>`<tr onclick="${h.best?`location.href='${tok(h.best[2])}'`:''}"><td class="l"><b style="color:#fff">${sy(h.q)}</b> <span class="tag${h.qc==='Sunrise'?' sun':''}">${esc(h.qc||'')}</span>${h.new&&Date.now()/1000-h.new<7*86400?'<span class="tag new">NEW PAIR</span>':''}</td>
+    <td>${num(h.n)}</td><td>${compact(h.v)}</td><td class="${h.real?'up':'dim'}">${num(h.real)}</td><td class="l">${h.best?`<a href="${tok(h.best[2])}">${sy(h.best[0])}</a> <span class="dim">${h.best[1]}</span>`:'<span class="dim">—</span>'}</td></tr>`).join('');
 }
 function fbCell(r){if(r.fb==null)return'<span class="dim" title="no holder payouts to check (standard mode)">—</span>';
   const c=r.fb>=0.6?'':r.fb>=0.45?' mid':' lo';return`${r.fb.toFixed(2)}<span class="bar${c}"><s style="width:${Math.min(100,r.fb*100)}%"></s></span>`}
+const devCell=r=>r.dn>2000?`<span class="dim" title="a launch tool's wallet: ${num(r.dn)} coins">tool</span>`:r.dn?`<span class="${r.dg/r.dn>=0.2?'up':r.dn>=5&&r.dg/r.dn<0.05?'dn':''}">👑 ${num(r.dg)}</span><small class="dim" style="display:block;font-size:10px">of ${num(r.dn)}</small>`:'<span class="dim">first coin</span>';
 function renderRows(){
-  let L=(D.launches||[]).filter(r=>vf==='ALL'||r.vd===vf);
+  let L=(D.launches||[]).map(r=>(r.bund=bundOf(r),r)).filter(r=>vf==='ALL'||(vf==='BUNDLED'?r.flags&&r.flags.includes('BUNDLED'):r.vd===vf));
   L=L.slice().sort((a,b)=>{const x=a[sk],y=b[sk];if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return-1;return(typeof x==='string'?x.localeCompare(y):x-y)*sd});
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===vf));
   document.querySelectorAll('th[data-k]').forEach(t=>t.classList.toggle('on',t.dataset.k===sk));
   $('nRows').textContent=L.length;
-  $('rows').innerHTML=L.length?L.map(r=>`<tr onclick="location.href='${tok(r.m)}'">
+  $('rows').innerHTML=L.length?L.map(r=>`<tr data-m="${esc(r.m)}">
     <td class="l"><span class="vd v-${r.vd}"><i>${r.score}</i>${r.vd}</span></td>
-    <td class="l"><div class="coin">${pic(r.i)}<div><b>$${esc(r.s)}</b>${r.st==='graduated'?'<span class="tag new">GRAD</span>':''}<small>${esc(r.n)}</small></div></div></td>
-    <td class="l">$${esc(r.q)}${r.qc==='Sunrise'?'<span class="tag sun">SUNRISE</span>':''}</td>
+    <td class="l"><div class="coin">${pic(r.i)}<div><b>${sy(r.s)}</b>${r.st==='graduated'?'<span class="chip ok">GRAD</span>':''}${(r.flags||[]).map(f=>f==='BUNDLED'?'<span class="chip bad">BUNDLED</span>':`<span class="chip warn" title="its X link is a post by ${esc(f)}, a big account it doesn't belong to">X: ${esc(f)}</span>`).join('')}${r.vr?`<span class="chip ${r.vr.st==='verified'?'ok':'warn'}" title="Jupiter VRFD: ${esc(r.vr.st)} (${esc(r.vr.lane)} lane)">${r.vr.lane==='express'?'⚡ ':''}VRFD</span>`:''}<small>${esc(r.n)}</small></div></div></td>
+    <td class="l">${sy(r.q)}${r.qc?`<span class="tag${r.qc==='Sunrise'?' sun':''}">${esc(r.qc)}</span>`:''}</td>
     <td class="dim">${ago(r.c)}</td>
     <td>${compact(r.mc)}<small class="dim" style="display:block;font-size:10px">peak ${compact(r.pk)}</small></td>
     <td>${compact(r.v)}</td>
-    <td>${r.paid!=null?compact(r.paid):'<span class="dim">—</span>'}${r.tax?'<small class="dim" style="display:block;font-size:10px">'+(r.tax/100)+'% tax</small>':''}</td>
+    <td>${r.fees!=null?`<span class="sol">◎${r.fees}</span><small class="dim" style="display:block;font-size:10px">${r.fpt!=null?r.fpt+' mSOL/trade':''}</small>`:'<span class="dim">—</span>'}</td>
     <td>${fbCell(r)}</td>
     <td class="${r.ob>=40?'up':r.ob<5?'dn':''}">${num(r.ob)}</td>
     <td>${num(r.h)}</td>
-    <td class="${r.top>60?'dn':''}">${r.top==null?'—':r.top+'%'}</td>
-    <td>${r.dn?`<span class="${r.dg&&r.dg/r.dn>=0.2?'up':r.dn>=5&&r.dg/r.dn<0.1?'dn':''}">${r.dg}/${r.dn}</span>${r.dpk?'<small class="dim" style="display:block;font-size:10px">best '+compact(r.dpk)+'</small>':''}`:'<span class="dim">first</span>'}</td>
+    <td class="${r.bund>=20?'dn':r.bund>=10?'am':''}">${r.bund?r.bund.toFixed(1)+'%':'0%'}<small class="dim" style="display:block;font-size:10px">${r.bn?r.bn+' bundles':''}${r.scan&&r.scan.cl&&r.scan.cl.length?(r.bn?' · ':'')+r.scan.cl.length+' linked':''}</small></td>
+    <td>${devCell(r)}</td>
   </tr>`).join(''):`<tr><td class="l dim" colspan="12">no ${vf} launches right now</td></tr>`;
 }
+// the coin's Token Info (like jup.ag's) and its bundle scan: who funded the top 100 holders
+function tile(v,label,bad){return`<div class="tile"><b class="${bad==null?'':bad?'r':'g'}">${v}</b><span>${label}</span></div>`}
+function openCoin(m){const r=(D.launches||[]).find(x=>x.m===m);if(!r)return;const sc=r.scan;
+  const pc=v=>v==null?'—':(+v).toFixed(2)+'%';
+  let h=`<div class="top">${pic(r.i)}<div><b>${sy(r.s)}</b><small>${esc(r.n)} · ${sy(r.q)} pair · ${ago(r.c)} old</small></div><button class="x" onclick="closeCoin()">✕</button></div>
+    <div style="margin-top:10px"><span class="vd v-${r.vd}"><i>${r.score}</i>${r.vd}</span></div>
+    <h3>TOKEN INFO</h3><div class="tiles">
+      ${tile(pc(r.top),'Top 10 H.',r.top>30)}${tile(sc?pc(sc.sn):'—','Snipers H.',sc?sc.sn>5:null)}${tile(sc?pc(sc.in):'—','Insiders H.',sc?sc.in>5:null)}
+      ${tile(r.bpk+'%','Bundlers H. (peak)',r.bpk>=10)}${tile(sc?pc(sc.lk):'—','Linked H.',sc?sc.lk>=10:null)}${tile(r.bot+'%','Bot H.',null)}
+      ${tile('◎'+(r.fees??'—'),'Fees Paid',null)}${tile(r.os,'Org Score',r.os<30)}${tile(sc?sc.fresh+' / '+sc.n:'—','Fresh wallets',sc?sc.fresh/Math.max(sc.n,1)>0.3:null)}
+    </div>`;
+  if(sc){const tot=Object.values(sc.src).reduce((a,b)=>a+b,0)||1;
+    h+=`<h3>WHO FUNDED THE TOP ${sc.n} HOLDERS</h3><div class="src">${Object.entries(sc.src).map(([k,v])=>`<span>${esc(k==='linked'?'linked (one private funder)':k==='independent'||k==='own wallet'?'independent wallets':k==='unknown'?'no funding info':k)}</span><i>${v}</i><div class="sbar ${k==='linked'?'lk':k==='independent'||k==='own wallet'||k==='unknown'?'':'ex'}"><s style="width:${v/tot*100}%"></s></div>`).join('')}</div>`;
+    h+=sc.cl&&sc.cl.length?`<h3>LINKED CLUSTERS</h3>${sc.cl.map(c=>`<div class="cl"><a href="/wallet/${esc(c[0])}">${esc(short(c[0]))}</a><span>${c[1]} wallets</span><b class="${c[2]>=10?'dn':''}">${c[2]}%</b></div>`).join('')}<p class="dim" style="font-size:11px;margin-top:6px">holders first funded by the same wallet, which isn't an exchange or a service that funds wallets across many coins</p>`:'<h3>LINKED CLUSTERS</h3><p class="dim">none: no private wallet funded two of the top holders</p>';
+  }else h+='<p class="dim" style="margin-top:12px">bundle scan pending: it runs on coins with $10K+ volume, a few each pass</p>';
+  h+=`<div class="acts"><a class="btn primary" href="${tok(r.m)}">OPEN IN TERMINAL</a><a class="btn" href="https://jup.ag/tokens/${esc(r.m)}" target="_blank" rel="noopener">JUPITER</a>${r.vr?`<a class="btn" href="https://verified.jup.ag/dashboard/${esc(r.m)}" target="_blank" rel="noopener">VRFD</a>`:''}</div>`;
+  $('drBox').innerHTML=h;$('dr').classList.add('on')}
+function closeCoin(){$('dr').classList.remove('on')}
+$('dr').addEventListener('click',e=>{if(e.target.id==='dr')closeCoin()});addEventListener('keydown',e=>{if(e.key==='Escape')closeCoin()});
+$('rows').addEventListener('click',e=>{const tr=e.target.closest('tr[data-m]');if(tr)openCoin(tr.dataset.m)});
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;vf=b.dataset.v;try{localStorage.setItem('lrTab',vf)}catch(e){}if(D)renderRows()});
 document.querySelectorAll('th[data-k]').forEach(t=>t.addEventListener('click',()=>{const k=t.dataset.k;sd=sk===k?-sd:(k==='s'||k==='q'?1:-1);sk=k;if(D)renderRows()}));
 load();setInterval(load,60e3);
