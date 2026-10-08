@@ -54,6 +54,7 @@
       <div class="it"><span>🔥</span><div><b>Trending</b>: stonkfun's busiest coins: volume, APY, what they paid holders, CLOBr and compound scores.</div></div>
       <div class="it"><span>🧪</span><div><b>New launches</b>: every launch of the last 24 h, real or farm. Tap one for its bundle scan and who funded its holders.</div></div>
       <div class="it"><span>🐋</span><div><b>Whale radar &amp; alerts</b>: what the biggest holders buy and sell, live. The 🔔 picks which alerts pop up.</div></div>
+      <div class="it"><span>🔬</span><div><b>Wallet X-Ray</b>: tap any wallet (holders, the tape, whales) or paste one: every stonkfun coin it holds, its compound score, rewards and P&amp;L per coin.</div></div>
       <div class="it"><span>🔍</span><div><b>Search</b>: a $ticker, a name or a pasted address: a coin opens its terminal, a wallet its X-Ray.</div></div>
       ${appSteps()}
       <p class="ft">You always trade from your own wallet, through Jupiter: nothing here holds your funds or signs for you. Not financial advice.</p>
