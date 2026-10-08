@@ -58,7 +58,7 @@ a.it:hover{background:rgba(255,255,255,.03);text-decoration:none}
 .it .nm{min-width:0}.it .nm b{color:#fff;font-weight:600}.it .nm small{display:block;color:var(--dim);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .it .r{text-align:right;font-size:11px;color:var(--dim);white-space:nowrap}.it .r b{display:block;color:var(--txt);font-weight:500;font-size:12px}
 .tag{display:inline-block;font-size:10px;letter-spacing:1px;padding:1px 6px;border:1px solid var(--line);color:var(--dim);margin-left:6px;vertical-align:1px}
-.tag.sun{color:var(--amber);border-color:rgba(255,210,63,.45)}.tag.new{color:var(--green);border-color:rgba(57,255,106,.45)}
+.tag.new{color:var(--green);border-color:rgba(57,255,106,.45)}
 .empty{padding:16px 14px;color:var(--dim);font-size:12px}
 .tw{overflow-x:auto;scrollbar-width:thin;scrollbar-color:#24345e transparent}
 table{width:100%;border-collapse:collapse;font-size:12px}
@@ -100,6 +100,9 @@ footer{text-align:center;color:var(--dim);font-size:11px;padding:20px 16px 30px}
 .sbar{grid-column:1/-1;height:5px;background:#141c36;margin-bottom:4px}.sbar s{display:block;height:100%;background:var(--blue2)}.sbar.lk s{background:var(--red)}.sbar.ex s{background:#c7f284}
 .cl{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px 12px;font-size:12px;padding:6px 0;border-bottom:1px solid var(--line)}
 #dr .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.buyb{background:var(--green);color:#04060f;border:0;font:inherit;font-size:11px;font-weight:600;letter-spacing:1px;padding:5px 12px;cursor:pointer}.buyb:hover{filter:brightness(1.1)}
+#bm{position:fixed;display:none;z-index:60;background:var(--panel2);border:1px solid var(--line);min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.5)}#bm.on{display:block}
+#bm a{display:block;padding:9px 12px;color:var(--txt);font-size:12px;border-bottom:1px solid var(--line)}#bm a:last-child{border-bottom:0}#bm a:hover{background:rgba(255,255,255,.04);text-decoration:none;color:#fff}
 </style>
 </head>
 <body>
@@ -140,8 +143,8 @@ footer{text-align:center;color:var(--dim);font-size:11px;padding:20px 16px 30px}
       <th data-k="mc">MC</th><th data-k="v">24H VOL</th><th data-k="fees" title="priority fees + tips traders paid (Jupiter's Fees Paid), and per trade">FEES PAID</th>
       <th data-k="fb" title="what the coin paid its holders ÷ its tax rate, against the volume it reports: real trading lands near 1.0">FEE-BACKED</th>
       <th data-k="ob">ORG BUYERS</th><th data-k="h">HOLDERS</th><th data-k="bund" title="the bigger of bundlers' peak share (Jupiter) and holders linked by one private funder">BUNDLED</th>
-      <th data-k="dg" title="the dev's other coins: 👑 graduated · launched (Jupiter)">DEV</th>
-    </tr></thead><tbody id="rows"><tr><td class="l dim" colspan="12">loading…</td></tr></tbody></table></div>
+      <th data-k="dg" title="the dev's other coins: 👑 graduated · launched (Jupiter)">DEV</th><th></th>
+    </tr></thead><tbody id="rows"><tr><td class="l dim" colspan="13">loading…</td></tr></tbody></table></div>
   </section>
 
   <section class="panel">
@@ -165,6 +168,7 @@ footer{text-align:center;color:var(--dim);font-size:11px;padding:20px 16px 30px}
   </details></section>
 </main>
 <div id="dr"><div class="box" id="drBox"></div></div>
+<div id="bm" role="menu"></div>
 <footer>updated <span id="upd">…</span> · a pass every ~5 min · data: stonkfun, Jupiter, Jupiter VRFD</footer>
 <script>
 const SRC=['https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/launches.json','https://war-room-bot.linkmarine777.workers.dev/data/terminal/launches.json'];
@@ -176,6 +180,8 @@ const ago=t=>{const s=Date.now()/1000-t;return s<60?'now':s<3600?Math.floor(s/60
 const sy=s=>'$'+esc(String(s??'').replace(/^\$+/,''));   // tickers that already start with $ keep one
 const short=a=>a?a.slice(0,4)+'…'+a.slice(-4):'';
 const tok=m=>'/terminal/token?ca='+m;
+const buyT7=m=>'/terminal/token?ca='+m+'&buy=1';   // the terminal opens with its swap widget showing
+const buyJup=m=>'https://jup.ag/swap?sell=So11111111111111111111111111111111111111112&buy='+m;   // Jupiter's swap, SOL → the coin
 const pic=u=>u?`<img src="${esc(u)}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'ph0'}))">`:'<span class="ph0"></span>';
 // VRFD's own pills: • Pending, ✓ Verified, Rejected, Needs info; ⚡ Express for the paid lane
 const stPill=s=>s==='verified'?'<span class="pill ok">✓ Verified</span>':s==='rejected'?'<span class="pill no">Rejected</span>':s==='needs_info'?'<span class="pill info">! Needs info</span>':'<span class="pill wait">• Pending</span>';
@@ -186,7 +192,7 @@ try{vf=localStorage.getItem('lrTab')||'REAL'}catch(e){}
 
 async function load(){
   for(const u of SRC){try{const r=await fetch(u+'?t='+Math.floor(Date.now()/60000),{cache:'no-store'});if(!r.ok)continue;D=await r.json();render();return}catch(e){}}
-  if(!D)$('rows').innerHTML='<tr><td class="l dim" colspan="12">the radar hasn\'t written its first pass yet: back in a few minutes</td></tr>';
+  if(!D)$('rows').innerHTML='<tr><td class="l dim" colspan="13">the radar hasn\'t written its first pass yet: back in a few minutes</td></tr>';
 }
 function render(){
   const s=D.stats||{};$('kL').textContent=num(s.launches);$('kG').textContent=num(s.graduated)+' graduated';
@@ -204,10 +210,10 @@ function render(){
   // new pairs
   const P=D.newPairs||[];$('pairsN').textContent='watching '+num(D.pairs)+' pairs';
   $('pairs').innerHTML=P.length?P.map(p=>`<a class="it" href="https://jup.ag/tokens/${esc(p.m)}" target="_blank" rel="noopener">${pic(p.i)}
-    <span class="nm"><b>${sy(p.s)}</b><span class="tag${p.cat==='Sunrise'?' sun':''}">${esc(p.cat||'')}</span><small>${esc(p.n)}</small></span>
+    <span class="nm"><b>${sy(p.s)}</b><span class="tag">${esc(p.cat||'')}</span><small>${esc(p.n)}</small></span>
     <span class="r"><b>${ago(p.t)}</b>ago</span></a>`).join(''):'<div class="empty">no new pair since the radar started. The next one pops here and as an alert on every page.</div>';
   renderRows();
-  $('hot').innerHTML=(D.hot||[]).map(h=>`<tr onclick="${h.best?`location.href='${tok(h.best[2])}'`:''}"><td class="l"><b style="color:#fff">${sy(h.q)}</b> <span class="tag${h.qc==='Sunrise'?' sun':''}">${esc(h.qc||'')}</span>${h.new&&Date.now()/1000-h.new<7*86400?'<span class="tag new">NEW PAIR</span>':''}</td>
+  $('hot').innerHTML=(D.hot||[]).map(h=>`<tr onclick="${h.best?`location.href='${tok(h.best[2])}'`:''}"><td class="l"><b style="color:#fff">${sy(h.q)}</b> <span class="tag">${esc(h.qc||'')}</span>${h.new&&Date.now()/1000-h.new<7*86400?'<span class="tag new">NEW PAIR</span>':''}</td>
     <td>${num(h.n)}</td><td>${compact(h.v)}</td><td class="${h.real?'up':'dim'}">${num(h.real)}</td><td class="l">${h.best?`<a href="${tok(h.best[2])}">${sy(h.best[0])}</a> <span class="dim">${h.best[1]}</span>`:'<span class="dim">—</span>'}</td></tr>`).join('');
 }
 function fbCell(r){if(r.fb==null)return'<span class="dim" title="no holder payouts to check (standard mode)">—</span>';
@@ -222,7 +228,7 @@ function renderRows(){
   $('rows').innerHTML=L.length?L.map(r=>`<tr data-m="${esc(r.m)}">
     <td class="l"><span class="vd v-${r.vd}"><i>${r.score}</i>${r.vd}</span></td>
     <td class="l"><div class="coin">${pic(r.i)}<div><b>${sy(r.s)}</b>${r.st==='graduated'?'<span class="chip ok">GRAD</span>':''}${(r.flags||[]).map(f=>f==='BUNDLED'?'<span class="chip bad">BUNDLED</span>':`<span class="chip warn" title="its X link is a post by ${esc(f)}, a big account it doesn't belong to">X: ${esc(f)}</span>`).join('')}${r.vr?`<span class="chip ${r.vr.st==='verified'?'ok':'warn'}" title="Jupiter VRFD: ${esc(r.vr.st)} (${esc(r.vr.lane)} lane)">${r.vr.lane==='express'?'⚡ ':''}VRFD</span>`:''}<small>${esc(r.n)}</small></div></div></td>
-    <td class="l">${sy(r.q)}${r.qc?`<span class="tag${r.qc==='Sunrise'?' sun':''}">${esc(r.qc)}</span>`:''}</td>
+    <td class="l">${sy(r.q)}${r.qc?`<span class="tag">${esc(r.qc)}</span>`:''}</td>
     <td class="dim">${ago(r.c)}</td>
     <td>${compact(r.mc)}<small class="dim" style="display:block;font-size:10px">peak ${compact(r.pk)}</small></td>
     <td>${compact(r.v)}</td>
@@ -232,7 +238,8 @@ function renderRows(){
     <td>${num(r.h)}</td>
     <td class="${r.bund>=20?'dn':r.bund>=10?'am':''}">${r.bund?r.bund.toFixed(1)+'%':'0%'}<small class="dim" style="display:block;font-size:10px">${r.bn?r.bn+' bundles':''}${r.scan&&r.scan.cl&&r.scan.cl.length?(r.bn?' · ':'')+r.scan.cl.length+' linked':''}</small></td>
     <td>${devCell(r)}</td>
-  </tr>`).join(''):`<tr><td class="l dim" colspan="12">no ${vf} launches right now</td></tr>`;
+    <td><button class="buyb" data-buy="${esc(r.m)}" title="buy ${sy(r.s)}">BUY</button></td>
+  </tr>`).join(''):`<tr><td class="l dim" colspan="13">no ${vf} launches right now</td></tr>`;
 }
 // the coin's Token Info (like jup.ag's) and its bundle scan: who funded the top 100 holders
 function tile(v,label,bad){return`<div class="tile"><b class="${bad==null?'':bad?'r':'g'}">${v}</b><span>${label}</span></div>`}
@@ -249,11 +256,17 @@ function openCoin(m){const r=(D.launches||[]).find(x=>x.m===m);if(!r)return;cons
     h+=`<h3>WHO FUNDED THE TOP ${sc.n} HOLDERS</h3><div class="src">${Object.entries(sc.src).map(([k,v])=>`<span>${esc(k==='linked'?'linked (one private funder)':k==='independent'||k==='own wallet'?'independent wallets':k==='unknown'?'no funding info':k)}</span><i>${v}</i><div class="sbar ${k==='linked'?'lk':k==='independent'||k==='own wallet'||k==='unknown'?'':'ex'}"><s style="width:${v/tot*100}%"></s></div>`).join('')}</div>`;
     h+=sc.cl&&sc.cl.length?`<h3>LINKED CLUSTERS</h3>${sc.cl.map(c=>`<div class="cl"><a href="/wallet/${esc(c[0])}">${esc(short(c[0]))}</a><span>${c[1]} wallets</span><b class="${c[2]>=10?'dn':''}">${c[2]}%</b></div>`).join('')}<p class="dim" style="font-size:11px;margin-top:6px">holders first funded by the same wallet, which isn't an exchange or a service that funds wallets across many coins</p>`:'<h3>LINKED CLUSTERS</h3><p class="dim">none: no private wallet funded two of the top holders</p>';
   }else h+='<p class="dim" style="margin-top:12px">bundle scan pending: it runs on coins with $10K+ volume, a few each pass</p>';
-  h+=`<div class="acts"><a class="btn primary" href="${tok(r.m)}">OPEN IN TERMINAL</a><a class="btn" href="https://jup.ag/tokens/${esc(r.m)}" target="_blank" rel="noopener">JUPITER</a>${r.vr?`<a class="btn" href="https://verified.jup.ag/dashboard/${esc(r.m)}" target="_blank" rel="noopener">VRFD</a>`:''}</div>`;
+  h+=`<div class="acts"><a class="btn primary" href="${buyT7(r.m)}">BUY IN TERMINAL 7</a><a class="btn" href="${buyJup(r.m)}" target="_blank" rel="noopener">BUY ON JUPITER</a></div>
+    <div class="acts" style="margin-top:8px"><a class="btn" href="${tok(r.m)}">OPEN IN TERMINAL</a><a class="btn" href="https://jup.ag/tokens/${esc(r.m)}" target="_blank" rel="noopener">JUPITER</a>${r.vr?`<a class="btn" href="https://verified.jup.ag/dashboard/${esc(r.m)}" target="_blank" rel="noopener">VRFD</a>`:''}</div>`;
   $('drBox').innerHTML=h;$('dr').classList.add('on')}
 function closeCoin(){$('dr').classList.remove('on')}
 $('dr').addEventListener('click',e=>{if(e.target.id==='dr')closeCoin()});addEventListener('keydown',e=>{if(e.key==='Escape')closeCoin()});
-$('rows').addEventListener('click',e=>{const tr=e.target.closest('tr[data-m]');if(tr)openCoin(tr.dataset.m)});
+// BUY on a row: a small menu, the terminal's swap or Jupiter's (the row itself opens the coin's panel)
+function buyMenu(btn){const m=btn.dataset.buy,bm=$('bm'),r=btn.getBoundingClientRect();
+  bm.innerHTML=`<a href="${buyT7(m)}">⚓ Buy in Terminal 7</a><a href="${buyJup(m)}" target="_blank" rel="noopener">🪐 Buy on Jupiter</a>`;
+  bm.classList.add('on');bm.style.top=Math.min(r.bottom+4,innerHeight-bm.offsetHeight-8)+'px';bm.style.left=Math.max(8,Math.min(r.right-bm.offsetWidth,innerWidth-bm.offsetWidth-8))+'px'}
+addEventListener('click',e=>{if(!e.target.closest('#bm,[data-buy]'))$('bm').classList.remove('on')});addEventListener('scroll',()=>$('bm').classList.remove('on'),true);
+$('rows').addEventListener('click',e=>{const b=e.target.closest('[data-buy]');if(b){e.stopPropagation();return buyMenu(b)}const tr=e.target.closest('tr[data-m]');if(tr)openCoin(tr.dataset.m)});
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;vf=b.dataset.v;try{localStorage.setItem('lrTab',vf)}catch(e){}if(D)renderRows()});
 document.querySelectorAll('th[data-k]').forEach(t=>t.addEventListener('click',()=>{const k=t.dataset.k;sd=sk===k?-sd:(k==='s'||k==='q'?1:-1);sk=k;if(D)renderRows()}));
 load();setInterval(load,60e3);
