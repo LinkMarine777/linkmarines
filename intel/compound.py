@@ -60,6 +60,7 @@ def auth():
 SF = 'https://www.stonkfun.xyz'
 MARINE = 'F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK'
 SOL = 'So11111111111111111111111111111111111111112'
+STONK = '6GmAFSYs4gk3FDao5FzzySQpPZaWsa4rUJHacpMpUNgx'   # the platform token (not a stonkfun launch itself)
 STABLE = {'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'}
 NOT_WALLETS = {'5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1', 'GpMZbSM2GgvTKHJirzeGfMFoaZ8UR2X7F4v8vHTvxFbL',
                'WLHv2UAZm6z4KyaaELi5pjdbJh6RESMva1Rnn8pJVVh', 'HLnpSz9h2S4hiLQ43rnSD9XkcUThA7B8hQMKmDaiTLcC'}
@@ -156,6 +157,9 @@ if _prev >= 20 and len(watch) < _prev / 2:
 # ... nor one whose coins have no reward token (stonkfun renamed the field on 2026-10-07: every coin was skipped, launches.json emptied)
 if sum(1 for x in G.values() if (x.get('quote') or {}).get('mint')) < len(G) / 2:
     log(f'stonkfun list has no reward tokens ({len(G)} launches): field changed?, nothing saved'); sys.exit(1)
+# the ecosystem coins that aren't stonkfun launches (STONK, and the Stonk Board's / the site's coins launched elsewhere): the wallet
+# X-Ray counts their trades too. Only ever grows (a coin that leaves the board keeps counting); hourly prices kept for them below
+ECO = sorted((set((load('compound/px/launches.json', {}) or {}).get('e') or []) | set(board) | {t['mint'] for t in toks} | {STONK}) - set(G))
 backfill_set = set(watch[:11])                                                        # $MARINE + the top 10 by market cap
 price = {}
 mints = sorted(set(watch) | {SOL} | {G[m]['quote']['mint'] for m in watch if (G[m].get('quote') or {}).get('mint')})
@@ -571,10 +575,11 @@ def px_publish(minutes=float(os.environ.get('PX_MINUTES', 20))):
     compound/px/<mint>.json = hourly $ closes for every tracked coin, its reward token and SOL (after the first fill, each run
     only adds the hours since its last point), and compound/px/launches.json = every stonkfun launch and its reward token."""
     qs = sorted({(x.get('quote') or {}).get('mint') for x in G.values()} - {None}); qi = {q: i for i, q in enumerate(qs)}
-    save('compound/px/launches.json', {'at': now, 'q': qs, 'm': {m: qi[(x.get('quote') or {}).get('mint')] for m, x in G.items() if (x.get('quote') or {}).get('mint')}})
+    save('compound/px/launches.json', {'at': now, 'q': qs, 'm': {m: qi[(x.get('quote') or {}).get('mint')] for m, x in G.items() if (x.get('quote') or {}).get('mint')},
+                                       'e': ECO})   # e: ecosystem coins that aren't launches (see ECO)
     # SOL and the reward tokens first (every coin's trades and payouts are valued through them), then the coins
     rq = sorted({(G[m].get('quote') or {}).get('mint') for m in watch} - STABLE - {None, SOL})
-    todo = [SOL] + rq + [m for m in watch if m not in rq and m != SOL and m not in STABLE]; done = 0
+    todo = [SOL] + rq + [m for m in ECO if m not in rq] + [m for m in watch if m not in rq and m != SOL and m not in STABLE and m not in ECO]; done = 0
     t0 = time.time()   # (its own minutes: counted from the run's start, a 200-coin run left it none)
     for m in todo:
         if time.time() - t0 > minutes * 60: log(f'px: out of time, {done}/{len(todo)} updated'); break
