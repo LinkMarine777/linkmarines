@@ -74,6 +74,13 @@ a{color:inherit;text-decoration:none}
 .side hr{width:24px;border:0;border-top:1px solid var(--line);margin:4px 0}
 .side #clr:hover{color:var(--red)}
 #chart{flex:1;min-width:0;min-height:380px}
+#fsBtn{padding:3px 9px;display:grid;place-items:center}#fsBtn svg{width:17px;height:17px}
+.panel.fs{position:fixed;inset:0;z-index:50}
+.cmenu{position:fixed;z-index:80;display:none;min-width:230px;background:#070c18;border:1px solid var(--line);box-shadow:0 12px 34px #000c;padding:4px;font-size:12px}
+.cmenu.open{display:block}
+.cmenu button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:var(--txt);font:inherit;padding:8px 10px;cursor:pointer;text-align:left}
+.cmenu button:hover{background:#141f36}.cmenu button svg{width:17px;height:17px;flex:none;color:var(--dim);fill:none;stroke:currentColor}
+.cmenu button .k{margin-left:auto;color:var(--dim);font-size:10.5px}.cmenu hr{border:0;border-top:1px solid var(--line);margin:4px 0}
 #msg{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#070c18;border:1px solid var(--amber);color:#fff;padding:8px 14px;display:none;z-index:9}
 @media (max-width:700px){.top>span:not(.lab){display:none}.legend{margin-left:0;flex-wrap:wrap;gap:10px}.tabs button{padding:4px 8px}.side{width:36px}.side button{width:28px;height:28px}}
 </style>
@@ -91,12 +98,14 @@ a{color:inherit;text-decoration:none}
     <div class="tabs" id="ctab"><button id="candleBtn" type="button" aria-label="Line or candles"></button></div>
     <div class="tabs dd" id="indDd"><button type="button" id="indBtn" aria-haspopup="true" aria-expanded="false"><span class="fx">f</span>INDICATORS <span id="indN"></span>▾</button><div class="menu" id="ind" role="menu"></div></div>
     <div class="tabs" id="dtab" style="visibility:hidden"><button id="depthBtn" class="on" type="button" title="CLOBr market depth: support (green) and resistance (red) liquidity by price">DEPTH</button></div>
+    <div class="tabs"><button id="fsBtn" type="button" title="Full screen (F)" aria-label="Full screen"></button></div>
     <div class="tabs"><button id="resetBtn" type="button" title="Reset the view (or double-click the chart)" aria-label="Reset the view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></button></div>
     <div class="tabs dd" id="shotDd"><button id="shot" type="button" title="Chart snapshot" aria-haspopup="true" aria-expanded="false" aria-label="Screenshot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="3.5"/></svg></button><div class="menu r" id="shotMenu" role="menu"><div class="mh">CHART SNAPSHOT</div><button type="button" data-s="save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M4 20h16"/></svg><span>Download image</span></button><button type="button" data-s="copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V4H4v12h4"/></svg><span>Copy image</span></button><button type="button" data-s="x"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.8 3h3.1l-6.8 7.8L22 21h-6.2l-4.9-6.4L5.3 21H2.2l7.3-8.3L2 3h6.4l4.4 5.8zm-1.1 16.2h1.7L7.4 4.7H5.6z"/></svg><span>Share on X</span></button></div></div>
   </div>
   <div class="body"><div class="side" id="draw" aria-label="Drawing tools"></div><div id="chart"></div></div>
 </div>
 <div id="msg"></div>
+<div class="cmenu" id="ctx" role="menu"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/klinecharts@10.0.3/dist/umd/klinecharts.min.js"></script>
 <script>
@@ -151,7 +160,7 @@ klinecharts.registerIndicator({name:'QUOTE',shortName:'',series:'normal',precisi
   calc:d=>{let last=null;return d.map(k=>{const v=QMAP.get(k.timestamp);if(v!=null)last=v;return{q:v??last}})},
   styles:{lines:[{color:'rgba(255,210,63,.8)',size:1.25,style:'dashed',dashedValue:[4,3]}]}});
 const fmtQ=v=>v>=1000?v.toFixed(0):v>=1?v.toFixed(2):+v>=.01?v.toFixed(4):(+v).toPrecision(3);
-const fmtP=v=>{v=+v;if(!v)return'0';const d=Math.max(2,Math.ceil(-Math.log10(Math.abs(v)))+2);return v.toFixed(Math.min(12,d)).replace(/(\.\d*?[1-9])0+$/,'$1')};
+const fmtP=v=>{v=+v;if(!v)return'0';if(Math.abs(v)>=1)return v.toFixed(2);const d=Math.max(2,Math.ceil(-Math.log10(Math.abs(v)))+2);return v.toFixed(Math.min(12,d)).replace(/(\.\d*?[1-9])0+$/,'$1')};
 
 // ---------- volume along the bottom of the chart (blue up, grey down), like the live chart ----------
 klinecharts.registerIndicator({name:'VOLB',shortName:'',series:'normal',figures:[],calc:d=>d.map(()=>({})),
@@ -295,7 +304,8 @@ const shotOpen=o=>{$('shotDd').classList.toggle('open',o);$('shot').setAttribute
 $('shot').onclick=e=>{e.stopPropagation();ddOpen(false);shotOpen(!$('shotDd').classList.contains('open'))};
 document.addEventListener('click',e=>{if(!e.target.closest('#shotDd'))shotOpen(false)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')shotOpen(false)});
-$('shotMenu').onclick=async e=>{const b=e.target.closest('[data-s]');if(!b)return;shotOpen(false);const blob=await snapshot();if(!blob)return say('Couldn\'t make the image');
+$('shotMenu').onclick=e=>{const b=e.target.closest('[data-s]');if(!b)return;shotOpen(false);doShot(b.dataset.s)};
+async function doShot(kind){const b={dataset:{s:kind}},blob=await snapshot();if(!blob)return say('Couldn\'t make the image');
   if(b.dataset.s==='save'){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname();a.click();return say('Image saved')}
   if(b.dataset.s==='copy')return say(await copyImg(blob)?'Image copied':'Your browser blocked copying: use Download image');
   // Share on X: phones hand the image to the X app through the share sheet; elsewhere the image is copied and X opens with
@@ -350,6 +360,41 @@ Promise.all([sfInfo,dsInfo,jupInfo]).then(([sf,pairs,jt])=>{
 fetch(BOT+'/depth?mint='+CA+'&d=1').then(r=>r.json()).then(d=>{if(!d||!d.levels||!d.levels.length)return;DEPTH=d.levels;
   $('dtab').style.visibility='';const l=$('depLeg');l.style.display='';l.href='https://clobr.io/token/'+encodeURIComponent(CA);l.classList.toggle('off',!depthOn);chart.resize()}).catch(()=>{});
 addEventListener('resize',()=>chart.resize());
+
+// ---------- full screen: the browser's own where it has one (Esc leaves), else the chart fills the window ----------
+const FS_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+  FS_OFF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>';
+const panel=document.querySelector('.panel'),isFs=()=>!!document.fullscreenElement||panel.classList.contains('fs');
+const fsIcon=()=>{$('fsBtn').innerHTML=isFs()?FS_OFF:FS_ON;$('fsBtn').title=isFs()?'Exit full screen (Esc)':'Full screen (F)';setTimeout(()=>chart.resize(),60)};
+function toggleFs(){if(isFs()){if(document.fullscreenElement)document.exitFullscreen();else panel.classList.remove('fs');return fsIcon()}
+  if(panel.requestFullscreen)panel.requestFullscreen().catch(()=>{panel.classList.add('fs');fsIcon()});else panel.classList.add('fs');fsIcon()}
+$('fsBtn').onclick=toggleFs;document.addEventListener('fullscreenchange',fsIcon);fsIcon();
+
+// ---------- right-click (or long-press) on the chart: reset, copy the price there, snapshot, clear ----------
+const CI={reset:'<path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/>',copy:'<rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V4H4v12h4"/>',
+  save:'<path d="M12 4v11M7 10l5 5 5-5M4 20h16"/>',x:'<path d="M4 4l16 16M20 4L4 20"/>',share:'<path d="M4 12v7h16v-7M12 3v12M8 7l4-4 4 4"/>',
+  draw:'<path d="M6 18L18 6"/><circle cx="5" cy="19" r="1.8"/><circle cx="19" cy="5" r="1.8"/>',ind:'<path d="M3 17l5-6 4 3 4-7 5 5"/>'};
+const ci=k=>`<svg viewBox="0 0 24 24" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${CI[k]}</svg>`;
+let ctxPrice=null;
+$('chart').addEventListener('contextmenu',e=>{e.preventDefault();
+  const main=chart.getDom('candle_pane','main'),r=main&&main.getBoundingClientRect();ctxPrice=null;
+  if(r&&e.clientY>=r.top&&e.clientY<=r.bottom){const pt=chart.convertFromPixel([{x:e.clientX-r.left,y:e.clientY-r.top}],{paneId:'candle_pane'});ctxPrice=(Array.isArray(pt)?pt[0]:pt).value}
+  const m=$('ctx');m.innerHTML=`<button data-c="reset">${ci('reset')}Reset chart view<span class="k">Alt+R</span></button>`
+    +(ctxPrice>0?`<button data-c="price">${ci('copy')}Copy price $${fmtP(ctxPrice)}</button>`:'')+'<hr>'
+    +`<button data-c="save">${ci('save')}Download image</button><button data-c="copyimg">${ci('copy')}Copy image</button><button data-c="x">${ci('share')}Share on X</button><hr>`
+    +`<button data-c="draw">${ci('draw')}Remove drawings</button><button data-c="ind">${ci('ind')}Remove indicators</button>`;
+  m.classList.add('open');const w=m.offsetWidth,h=m.offsetHeight;m.style.left=Math.min(e.clientX,innerWidth-w-6)+'px';m.style.top=Math.min(e.clientY,innerHeight-h-6)+'px'});
+$('ctx').onclick=async e=>{const b=e.target.closest('[data-c]');if(!b)return;$('ctx').classList.remove('open');const c=b.dataset.c;
+  if(c==='reset')resetView();
+  else if(c==='price'){try{await navigator.clipboard.writeText(fmtP(ctxPrice))}catch(err){}say('Copied $'+fmtP(ctxPrice),1500)}
+  else if(c==='draw')$('clr').click();
+  else if(c==='ind')Object.keys(live).forEach(toggleInd);
+  else doShot(c==='copyimg'?'copy':c)};
+document.addEventListener('click',e=>{if(!e.target.closest('#ctx'))$('ctx').classList.remove('open')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('ctx').classList.remove('open');
+  if(e.target.closest('input,textarea'))return;
+  if(e.altKey&&e.code==='KeyR'){e.preventDefault();resetView()}
+  else if(!e.altKey&&!e.ctrlKey&&!e.metaKey&&e.code==='KeyF')toggleFs()});
 </script>
 </body>
 </html>
