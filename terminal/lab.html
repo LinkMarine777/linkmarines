@@ -36,15 +36,27 @@ a{color:inherit;text-decoration:none}
 .tabs button{background:transparent;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:11px;padding:4px 12px;cursor:pointer;white-space:nowrap}
 .tabs button:hover{color:#fff;border-color:var(--blue2)}
 .tabs button.on{color:#fff;border-color:var(--blue2);background:rgba(42,90,218,.2)}
-#dtab{margin-left:auto}#ctab button{padding:3px 10px;display:grid;place-items:center}#ctab svg{width:18px;height:18px}
-.tools{display:flex;align-items:center;gap:4px;flex-wrap:wrap;padding:4px 16px 8px;border-bottom:1px solid var(--line)}
-.tools label{font-size:9px;letter-spacing:1.5px;color:var(--dim);margin:0 4px 0 8px}.tools label:first-child{margin-left:0}
-.tools button{background:transparent;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:10.5px;padding:3px 8px;cursor:pointer;white-space:nowrap}
-.tools button:hover{color:#fff;border-color:var(--blue2)}.tools button.on{color:#fff;border-color:var(--blue2);background:rgba(42,90,218,.2)}
-.tools .shot{border-color:var(--amber);color:var(--amber);margin-left:auto}
-#chart{flex:1;min-height:380px}
+#dtab{margin-right:auto}#tf{margin-right:6px}#ctab button{padding:3px 10px;display:grid;place-items:center}#ctab svg{width:18px;height:18px}
+.dd{position:relative}
+.dd>button{display:flex;align-items:center;gap:6px}.dd>button .fx{font-style:italic;font-family:Georgia,serif;font-size:13px;color:var(--amber)}
+.dd .menu{position:absolute;top:calc(100% + 4px);left:0;z-index:20;background:#070c18;border:1px solid var(--line);box-shadow:0 10px 30px #000a;min-width:200px;padding:4px;display:none}
+.dd.open .menu{display:block}
+.dd .menu button{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;border:0;background:none;color:var(--txt);font:inherit;font-size:12px;padding:7px 10px;cursor:pointer;text-align:left}
+.dd .menu button:hover{background:#141f36}.dd .menu button small{color:var(--dim);font-size:10px}
+.dd .menu button .ck{width:14px;height:14px;border:1px solid var(--line);display:grid;place-items:center;font-size:10px;color:transparent;flex:none}
+.dd .menu button.on .ck{border-color:var(--blue2);background:rgba(42,90,218,.3);color:#fff}
+.dd .menu hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+#shot svg,#resetBtn svg{width:17px;height:17px}#resetBtn{padding:3px 9px;display:grid;place-items:center}#shot{padding:3px 9px;display:grid;place-items:center;color:var(--amber);border-color:rgba(255,210,63,.5)}
+.body{display:flex;flex:1;min-height:0;border-top:1px solid var(--line)}
+.side{width:42px;flex:none;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0}
+.side button{width:32px;height:32px;display:grid;place-items:center;border:1px solid transparent;background:transparent;color:var(--dim);cursor:pointer;border-radius:4px}
+.side button svg{width:19px;height:19px}
+.side button:hover{color:#fff;background:#141f36}.side button.on{color:#fff;border-color:var(--blue2);background:rgba(42,90,218,.2)}
+.side hr{width:24px;border:0;border-top:1px solid var(--line);margin:4px 0}
+.side #clr:hover{color:var(--red)}
+#chart{flex:1;min-width:0;min-height:380px}
 #msg{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#070c18;border:1px solid var(--amber);color:#fff;padding:8px 14px;display:none;z-index:9}
-@media (max-width:700px){.legend{margin-left:0;flex-wrap:wrap;gap:10px}.tabs button{padding:4px 8px}.tools .shot{margin-left:0}}
+@media (max-width:700px){.top>span:not(.lab){display:none}.legend{margin-left:0;flex-wrap:wrap;gap:10px}.tabs button{padding:4px 8px}.side{width:36px}.side button{width:28px;height:28px}}
 </style>
 </head>
 <body>
@@ -55,14 +67,14 @@ a{color:inherit;text-decoration:none}
     <div class="legend"><a class="dep" id="depLeg" target="_blank" rel="noopener" style="display:none" title="CLOBr market depth, delayed up to 1h"><span><i></i>CLOBr depth <span class="dly">delayed</span></span></a>
       <span><i style="background:var(--blue2)"></i><span id="lgB">$TOKEN</span> (right)</span><span id="lgQw" style="display:none"><i class="dq"></i><span id="lgQ"></span> (left)</span></div>
     <i class="brk"></i>
-    <div class="tabs" id="dtab" style="visibility:hidden"><button id="depthBtn" class="on" type="button" title="CLOBr market depth: support (green) and resistance (red) liquidity by price">DEPTH</button></div>
-    <div class="tabs" id="ctab"><button id="candleBtn" type="button" aria-label="Line or candles"></button></div>
     <div class="tabs" id="tf"></div>
+    <div class="tabs" id="ctab"><button id="candleBtn" type="button" aria-label="Line or candles"></button></div>
+    <div class="tabs dd" id="indDd"><button type="button" id="indBtn" aria-haspopup="true" aria-expanded="false"><span class="fx">f</span>INDICATORS <span id="indN"></span>▾</button><div class="menu" id="ind" role="menu"></div></div>
+    <div class="tabs" id="dtab" style="visibility:hidden"><button id="depthBtn" class="on" type="button" title="CLOBr market depth: support (green) and resistance (red) liquidity by price">DEPTH</button></div>
+    <div class="tabs"><button id="resetBtn" type="button" title="Reset the view (or double-click the chart)" aria-label="Reset the view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></button></div>
+    <div class="tabs"><button id="shot" type="button" title="Screenshot: saves the chart as an image with the terminal7.xyz link on it" aria-label="Screenshot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="3.5"/></svg></button></div>
   </div>
-  <div class="tools"><label>DRAW</label><span class="tabs" id="draw"></span><button id="clr" type="button" title="Remove every drawing">CLEAR</button>
-    <label>INDICATORS</label><span class="tabs" id="ind"></span>
-    <button class="shot" id="shot" type="button" title="Save the chart as an image, with the terminal7.xyz link on it">📷 SCREENSHOT</button></div>
-  <div id="chart"></div>
+  <div class="body"><div class="side" id="draw" aria-label="Drawing tools"></div><div id="chart"></div></div>
 </div>
 <div id="msg"></div>
 
@@ -188,28 +200,42 @@ chart.setDataLoader({getBars:async({type,timestamp,callback})=>{
       callback(d,{forward:type==='forward'?more:true,backward:type==='backward'?more:true});return}
     callback([],{forward:type!=='forward',backward:type!=='backward'})}catch(e){say('Couldn\'t load candles ('+e.message+')');callback([],false)}}});
 const prec=p=>p>0?Math.min(12,Math.max(2,Math.ceil(-Math.log10(p))+3)):2;
+function resetView(){chart.overrideYAxis({paneId:'candle_pane',createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtP(t.value)}))});fit();say('View reset',1200)}
+$('resetBtn').onclick=resetView;$('chart').addEventListener('dblclick',e=>{if(!chart.getOverlays().some(o=>o.currentStep>0))resetView()});
 $('tf').innerHTML=TFS.map(t=>`<button type="button" data-k="${t[0]}"${t===TF?' class="on"':''}>${t[1]}</button>`).join('');
 $('tf').onclick=e=>{const b=e.target.closest('button');if(!b)return;const was=TF;TF=TFS.find(t=>t[0]===b.dataset.k);store('wrLabTf',TF[0]);
   $('tf').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
   if(was[2]===TF[2])fit();else chart.setPeriod(TF[3])};   // same candle size (5M / 1H): just refit
 
-// ---------- drawing tools ----------
-const DRAW=[['segment','Trend line'],['rayLine','Ray'],['horizontalStraightLine','Horizontal'],['parallelStraightLine','Parallel'],
-  ['priceChannelLine','Channel'],['fibonacciLine','Fib'],['pitchfan','Pitchfan']];
+// ---------- drawing tools: an icon panel on the left of the chart ----------
+const SV=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const DRAW=[['segment','Trend line',SV('<path d="M6 18L18 6"/><circle cx="5" cy="19" r="1.8"/><circle cx="19" cy="5" r="1.8"/>')],
+  ['rayLine','Ray',SV('<path d="M6 18L21 3"/><circle cx="5" cy="19" r="1.8"/>')],
+  ['horizontalStraightLine','Horizontal line',SV('<path d="M2 12h20"/><circle cx="12" cy="12" r="1.8"/>')],
+  ['parallelStraightLine','Parallel lines',SV('<path d="M3 14L14 3M10 21L21 10"/>')],
+  ['priceChannelLine','Price channel',SV('<path d="M3 17L17 5M7 21L21 9"/><path d="M5 19L19 7" stroke-dasharray="2 2.5"/>')],
+  ['fibonacciLine','Fib retracement',SV('<path d="M3 4h18M3 9h18M3 13h18M3 20h18"/><path d="M6 20L18 4" stroke-dasharray="2 2.5"/>')],
+  ['pitchfan','Pitchfan',SV('<path d="M4 20L21 4M4 20L21 11M4 20L13 3"/><circle cx="4" cy="20" r="1.6"/>')]];
 const ok=new Set(klinecharts.getSupportedOverlays());
-$('draw').innerHTML=DRAW.filter(([n])=>ok.has(n)).map(([n,l])=>`<button type="button" data-o="${n}">${l}</button>`).join('');
-$('draw').onclick=e=>{const b=e.target.closest('button');if(!b)return;chart.createOverlay({name:b.dataset.o,
-  onDrawEnd:()=>{b.classList.remove('on');return false}});document.querySelectorAll('#draw button').forEach(x=>x.classList.toggle('on',x===b));
-  say(b.textContent+': click the chart to place its points')};
-$('clr').onclick=()=>{chart.removeOverlay();document.querySelectorAll('#draw button').forEach(x=>x.classList.remove('on'))};
+$('draw').innerHTML=DRAW.filter(([n])=>ok.has(n)).map(([n,l,ic])=>`<button type="button" data-o="${n}" title="${l}" aria-label="${l}">${ic}</button>`).join('')
+  +'<hr><button type="button" id="clr" title="Remove every drawing" aria-label="Remove every drawing">'+SV('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>')+'</button>';
+$('draw').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.id==='clr'){chart.removeOverlay();document.querySelectorAll('#draw button').forEach(x=>x.classList.remove('on'));return}
+  chart.createOverlay({name:b.dataset.o,onDrawEnd:()=>{b.classList.remove('on');return false}});document.querySelectorAll('#draw button').forEach(x=>x.classList.toggle('on',x===b));
+  say(b.title+': click the chart to place its points')};
 
 // ---------- indicators: on the price, or in their own pane below ----------
 const IND=[['ICHIMOKU','Ichimoku',true],['MA','MA',true],['EMA','EMA',true],['BOLL','Bollinger',true],['RSI','RSI',false],['MACD','MACD',false]];
 const live={};
-$('ind').innerHTML=IND.map(([n,l])=>`<button type="button" data-i="${n}">${l}</button>`).join('');
+$('ind').innerHTML=IND.map(([n,l,onPrice],i)=>(i&&!onPrice&&IND[i-1][2]?'<hr>':'')+`<button type="button" role="menuitemcheckbox" data-i="${n}"><span>${l}</span><small>${onPrice?'on price':'own pane'}</small><span class="ck">✓</span></button>`).join('');
+const ddOpen=o=>{$('indDd').classList.toggle('open',o);$('indBtn').setAttribute('aria-expanded',o)};
+$('indBtn').onclick=e=>{e.stopPropagation();ddOpen(!$('indDd').classList.contains('open'))};
+document.addEventListener('click',e=>{if(!e.target.closest('#indDd'))ddOpen(false)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')ddOpen(false)});
 function toggleInd(n){const [,,onPrice]=IND.find(x=>x[0]===n),b=document.querySelector(`#ind [data-i="${n}"]`);
   if(live[n]){chart.removeIndicator({id:live[n]});delete live[n];b.classList.remove('on')}
   else{live[n]=chart.createIndicator(onPrice?{name:n,paneId:'candle_pane'}:n,onPrice);b.classList.add('on')}
+  const cnt=Object.keys(live).length;$('indN').textContent=cnt?'('+cnt+')':'';
   chart.setOffsetRightDistance(live.ICHIMOKU?160:20)}   // room for the Ichimoku cloud's 26 bars ahead
 $('ind').onclick=e=>{const b=e.target.closest('button');if(b)toggleInd(b.dataset.i)};
 chart.setOffsetRightDistance(20);
