@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Chart Lab · Terminal 7</title>
+<link rel="icon" href="/favicon-64.png">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- TEST PAGE, not linked from anywhere: the token page's chart rebuilt on KLineChart (open source, Apache-2.0, pinned below)
+     to try drag / zoom, drawing tools, indicators (Ichimoku included) and a screenshot button before any of it goes live. -->
+<style>
+:root{--bg:#04060f;--panel:#0a0f1f;--line:#1a2444;--dim:#5d6a8f;--txt:#c9d3ee;--blue2:#4a7aff;--green:#39ff6a;--red:#ff3355;--amber:#ffd23f}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px}
+body{display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+header .tk{display:flex;align-items:center;gap:8px;margin-right:auto;min-width:0}
+header .tk img{width:28px;height:28px;border-radius:50%;background:#111}
+header .tk b{font-family:'VT323';font-weight:400;font-size:26px;color:#fff;letter-spacing:1px}
+header .tk .lab{font-size:9px;letter-spacing:2px;color:var(--amber);border:1px solid var(--amber);padding:1px 6px}
+header a{color:var(--dim);text-decoration:none}header a:hover{color:#fff}
+.bar{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.bar label{font-size:9px;letter-spacing:1.5px;color:var(--dim);margin:0 4px 0 8px}
+.bar button{background:transparent;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:11px;padding:4px 9px;cursor:pointer;white-space:nowrap}
+.bar button:hover{color:#fff;border-color:var(--blue2)}
+.bar button.on{color:#fff;border-color:var(--blue2);background:rgba(42,90,218,.2)}
+.bar button.shot{border-color:var(--amber);color:var(--amber)}
+#tools{padding:6px 14px;border-bottom:1px solid var(--line);background:var(--panel)}
+#chart{flex:1;min-height:360px}
+#msg{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:#070c18;border:1px solid var(--amber);color:#fff;padding:8px 14px;display:none;z-index:9}
+@media (max-width:700px){header .tk b{font-size:22px}.bar button{padding:4px 7px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="tk"><img id="tkImg" alt=""><b id="tkSym">…</b><span class="lab">CHART LAB · TEST</span><a id="back" href="/terminal/token">← token page</a></div>
+  <div class="bar" id="tf"></div>
+</header>
+<div id="tools">
+  <div class="bar"><label>DRAW</label><span id="draw"></span><button id="clr" type="button" title="Remove every drawing">CLEAR</button>
+    <label>INDICATORS</label><span id="ind"></span>
+    <button class="shot" id="shot" type="button" title="Save the chart as an image, with the terminal7.xyz link on it">📷 SCREENSHOT</button></div>
+</div>
+<div id="chart"></div>
+<div id="msg"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/klinecharts@10.0.3/dist/umd/klinecharts.min.js"></script>
+<script>
+const MARINE='F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK';
+const CA=((new URLSearchParams(location.search).get('ca')||'').trim().match(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/)||[MARINE])[0];
+const $=id=>document.getElementById(id);
+const say=(t,ms=2500)=>{const m=$('msg');m.textContent=t;m.style.display='block';clearTimeout(say.t);say.t=setTimeout(()=>m.style.display='none',ms)};
+$('back').href='/terminal/token?ca='+CA;
+let SYM='TOKEN';
+
+// ---------- Ichimoku (9 / 26 / 52): conversion, base, the cloud (leading spans A and B, 26 bars ahead, shaded green / red), lagging span ----------
+klinecharts.registerIndicator({
+  name:'ICHIMOKU',shortName:'Ichimoku',series:'price',precision:10,calcParams:[9,26,52],shouldOhlc:false,
+  figures:[{key:'tenkan',title:'Conv: ',type:'line'},{key:'kijun',title:'Base: ',type:'line'},
+    {key:'spanA',title:'Span A: ',type:'line'},{key:'spanB',title:'Span B: ',type:'line'},{key:'chikou',title:'Lag: ',type:'line'}],
+  calc:(d,ind)=>{const [a,b,c]=ind.calcParams,mid=(i,n)=>{if(i<n-1)return null;let h=-Infinity,l=Infinity;for(let k=i-n+1;k<=i;k++){h=Math.max(h,d[k].high);l=Math.min(l,d[k].low)}return(h+l)/2};
+    const T=d.map((_,i)=>mid(i,a)),K=d.map((_,i)=>mid(i,b)),A=d.map((_,i)=>T[i]!=null&&K[i]!=null?(T[i]+K[i])/2:null),B=d.map((_,i)=>mid(i,c));
+    // spans are drawn b bars ahead; kept on the indicator for the cloud past the last candle
+    ind.extendData={A,B,shift:b};
+    return d.map((_,i)=>({tenkan:T[i],kijun:K[i],spanA:i>=b?A[i-b]:null,spanB:i>=b?B[i-b]:null,chikou:i+b<d.length?d[i+b].close:null}))},
+  draw:({ctx,chart,indicator,xAxis,yAxis})=>{
+    const e=indicator.extendData;if(!e||!e.A)return false;const {A,B,shift}=e,n=A.length,vr=chart.getVisibleRange();
+    const from=Math.max(0,vr.from-shift-1),to=Math.min(n-1,vr.to-shift+1);if(to<=from)return false;
+    // the cloud, one quad per bar so the colour can flip where the spans cross
+    for(let i=from;i<to;i++){if(A[i]==null||B[i]==null||A[i+1]==null||B[i+1]==null)continue;
+      const x0=xAxis.convertToPixel(i+shift),x1=xAxis.convertToPixel(i+1+shift);
+      ctx.fillStyle=A[i]>=B[i]?'rgba(57,255,106,.13)':'rgba(255,51,85,.13)';ctx.beginPath();
+      ctx.moveTo(x0,yAxis.convertToPixel(A[i]));ctx.lineTo(x1,yAxis.convertToPixel(A[i+1]));ctx.lineTo(x1,yAxis.convertToPixel(B[i+1]));ctx.lineTo(x0,yAxis.convertToPixel(B[i]));ctx.closePath();ctx.fill()}
+    // the spans' edges ahead of the last candle (the regular lines stop at the last candle)
+    const edge=(S,col)=>{ctx.strokeStyle=col;ctx.lineWidth=1;ctx.beginPath();let on=false;
+      for(let i=Math.max(from,n-shift-1);i<=to;i++){if(S[i]==null)continue;const x=xAxis.convertToPixel(i+shift),y=yAxis.convertToPixel(S[i]);on?ctx.lineTo(x,y):ctx.moveTo(x,y);on=true}ctx.stroke()};
+    edge(A,'#39ff6a');edge(B,'#ff3355');return false},
+  styles:{lines:[{color:'#4a7aff',size:1},{color:'#ff8c3f',size:1},{color:'#39ff6a',size:1},{color:'#ff3355',size:1},{color:'#b48cff',size:1,style:'dashed'}]}
+});
+
+// ---------- pitchfan: from a pivot through two points, with the median and the 0.382 / 0.618 lines between them ----------
+klinecharts.registerOverlay({
+  name:'pitchfan',totalStep:4,needDefaultPointFigure:true,needDefaultXAxisFigure:true,needDefaultYAxisFigure:true,
+  createPointFigures:({coordinates:c,bounding})=>{if(c.length<2)return[];
+    const ray=(p,q,col)=>{const dx=q.x-p.x,dy=q.y-p.y;if(!dx&&!dy)return null;const k=dx>0?(bounding.width-p.x)/dx:dx<0?-p.x/dx:1e4/Math.abs(dy);
+      return{type:'line',attrs:{coordinates:[p,{x:p.x+dx*k,y:p.y+dy*k}]},styles:{color:col}}};
+    if(c.length===2)return[ray(c[0],c[1],'#ffd23f')].filter(Boolean);
+    const [p,b,q]=c,at=f=>({x:b.x+(q.x-b.x)*f,y:b.y+(q.y-b.y)*f});
+    return[{type:'line',attrs:{coordinates:[b,q]},styles:{color:'#5d6a8f',style:'dashed'}},
+      ...[[0,'#ffd23f'],[.382,'#4a7aff'],[.5,'#39ff6a'],[.618,'#4a7aff'],[1,'#ffd23f']].map(([f,col])=>ray(p,at(f),col)).filter(Boolean)]}
+});
+
+// ---------- the chart ----------
+const chart=klinecharts.init('chart',{styles:{
+  grid:{horizontal:{color:'#121a33'},vertical:{color:'#121a33'}},
+  candle:{bar:{upColor:'#4a7aff',downColor:'#e8eeff',noChangeColor:'#5d6a8f',upBorderColor:'#4a7aff',downBorderColor:'#e8eeff',upWickColor:'#4a7aff',downWickColor:'#e8eeff'},
+    priceMark:{last:{upColor:'#4a7aff',downColor:'#e8eeff'}},tooltip:{text:{color:'#c9d3ee'}}},
+  xAxis:{axisLine:{color:'#1a2444'},tickText:{color:'#5d6a8f'}},yAxis:{axisLine:{color:'#1a2444'},tickText:{color:'#5d6a8f'}},
+  separator:{color:'#1a2444'},crosshair:{horizontal:{text:{backgroundColor:'#2a5ada',family:'IBM Plex Mono'}},vertical:{text:{backgroundColor:'#2a5ada',family:'IBM Plex Mono'}}}}});
+// the terminal's font in the chart's text, and room on the right for the Ichimoku cloud's 26 bars ahead
+const F='IBM Plex Mono';
+chart.setStyles({candle:{tooltip:{title:{family:F,color:'#c9d3ee'},legend:{family:F,color:'#c9d3ee'}},priceMark:{last:{text:{family:'IBM Plex Mono'}},high:{textFamily:'IBM Plex Mono'},low:{textFamily:'IBM Plex Mono'}}},
+  indicator:{tooltip:{title:{family:F},legend:{family:F}}},overlay:{text:{family:F},rectText:{family:F}},xAxis:{tickText:{family:'IBM Plex Mono'}},yAxis:{tickText:{family:'IBM Plex Mono'}}});
+chart.setOffsetRightDistance(160);
+
+// candles from Jupiter (all pools, USD): 500 at a time; dragging left loads older ones
+const TFS=[['1m','1_MINUTE',{type:'minute',span:1}],['5m','5_MINUTE',{type:'minute',span:5}],['15m','15_MINUTE',{type:'minute',span:15}],
+  ['1h','1_HOUR',{type:'hour',span:1}],['4h','4_HOUR',{type:'hour',span:4}],['1D','1_DAY',{type:'day',span:1}]];
+let IV='1_HOUR';
+async function bars(to){const r=await fetch(`https://datapi.jup.ag/v2/charts/${CA}?interval=${IV}&to=${to}&candles=500&type=price&quote=usd`);
+  if(!r.ok)throw new Error(r.status);return((await r.json()).candles||[]).map(c=>({timestamp:c.time*1000,open:+c.open,high:+c.high,low:+c.low,close:+c.close,volume:+c.volume||0}))}
+chart.setDataLoader({getBars:async({type,timestamp,callback})=>{
+  try{if(type==='init'){const d=await bars(Date.now());callback(d,{forward:d.length>=500,backward:d.length>=500});return}
+    // more history when the chart is dragged past its oldest candle (whichever direction name the library gives it)
+    const first=(chart.getDataList()[0]||{}).timestamp;
+    if(timestamp&&first&&timestamp<=first){const d=(await bars(timestamp-1)).filter(b=>b.timestamp<timestamp),more=d.length>=499;
+      callback(d,{forward:type==='forward'?more:true,backward:type==='backward'?more:true});return}
+    callback([],{forward:type!=='forward',backward:type!=='backward'})}catch(e){say('Couldn\'t load candles ('+e.message+')');callback([],false)}}});
+const prec=p=>p>0?Math.min(12,Math.max(2,Math.ceil(-Math.log10(p))+3)):2;
+
+$('tf').innerHTML=TFS.map(([l,iv])=>`<button type="button" data-iv="${iv}"${iv===IV?' class="on"':''}>${l}</button>`).join('');
+$('tf').onclick=e=>{const b=e.target.closest('button');if(!b)return;IV=b.dataset.iv;$('tf').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+  chart.setPeriod(TFS.find(t=>t[1]===IV)[2])};
+
+// ---------- drawing tools ----------
+const DRAW=[['segment','Trend line'],['rayLine','Ray'],['horizontalStraightLine','Horizontal'],['parallelStraightLine','Parallel'],
+  ['priceChannelLine','Channel'],['fibonacciLine','Fib retracement'],['pitchfan','Pitchfan']];
+const ok=new Set(klinecharts.getSupportedOverlays());
+$('draw').innerHTML=DRAW.filter(([n])=>ok.has(n)).map(([n,l])=>`<button type="button" data-o="${n}">${l}</button>`).join('');
+$('draw').onclick=e=>{const b=e.target.closest('button');if(!b)return;chart.createOverlay({name:b.dataset.o,
+  onDrawEnd:()=>{b.classList.remove('on');return false}});document.querySelectorAll('#draw button').forEach(x=>x.classList.toggle('on',x===b));
+  say(b.textContent+': click the chart to place its points')};
+$('clr').onclick=()=>{chart.removeOverlay();document.querySelectorAll('#draw button').forEach(x=>x.classList.remove('on'))};
+
+// ---------- indicators: on the price, or in their own pane below ----------
+const IND=[['ICHIMOKU','Ichimoku',true],['MA','MA',true],['EMA','EMA',true],['BOLL','Bollinger',true],['VOL','Volume',false],['RSI','RSI',false],['MACD','MACD',false]];
+const live={};
+$('ind').innerHTML=IND.map(([n,l])=>`<button type="button" data-i="${n}">${l}</button>`).join('');
+function toggleInd(n){const [,,onPrice]=IND.find(x=>x[0]===n),b=document.querySelector(`#ind [data-i="${n}"]`);
+  if(live[n]){chart.removeIndicator({id:live[n]});delete live[n];b.classList.remove('on');return}
+  live[n]=chart.createIndicator(onPrice?{name:n,paneId:'candle_pane'}:n,onPrice);b.classList.add('on')}
+$('ind').onclick=e=>{const b=e.target.closest('button');if(b)toggleInd(b.dataset.i)};
+toggleInd('VOL');
+
+// ---------- screenshot: the chart with the token, timeframe, time and the terminal7.xyz link on it ----------
+$('shot').onclick=async()=>{
+  const src=chart.getConvertPictureUrl(true,'png','#0a0f1f'),img=new Image();img.src=src;await img.decode();
+  const pad=44,c=document.createElement('canvas');c.width=img.width;c.height=img.height+pad*2;const x=c.getContext('2d');
+  x.fillStyle='#04060f';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,pad);
+  x.fillStyle='#fff';x.font='28px VT323, monospace';x.textBaseline='middle';x.fillText('$'+SYM+' · '+$('tf').querySelector('.on').textContent,14,pad/2);
+  x.font='12px "IBM Plex Mono", monospace';x.fillStyle='#5d6a8f';x.textAlign='right';x.fillText(new Date().toUTCString().replace(' GMT',' UTC'),c.width-14,pad/2);
+  x.textAlign='left';x.fillStyle='#ffd23f';x.font='600 15px "IBM Plex Mono", monospace';x.fillText('terminal7.xyz',14,img.height+pad*1.5);
+  x.fillStyle='#5d6a8f';x.font='12px "IBM Plex Mono", monospace';x.textAlign='right';x.fillText('terminal7.xyz/terminal/token?ca='+CA,c.width-14,img.height+pad*1.5);
+  c.toBlob(async b=>{let copied=false;try{await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);copied=true}catch(e){}
+    const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`${SYM}-${$('tf').querySelector('.on').textContent}-terminal7.png`;a.click();
+    say(copied?'Saved, and copied to your clipboard':'Saved')},'image/png')};
+
+// ---------- the token ----------
+// name, logo and price first (the price sets how many decimals the axis shows); the symbol is set once: setting it again reloads the chart
+fetch('https://lite-api.jup.ag/tokens/v2/search?query='+CA).then(r=>r.json()).then(L=>{const t=(L||[]).find(t=>t.id===CA);if(!t)return 8;
+  SYM=String(t.symbol||'TOKEN').replace(/^\$/,'');$('tkSym').textContent='$'+SYM;document.title='$'+SYM+' · Chart Lab';if(t.icon)$('tkImg').src=t.icon;
+  return prec(+t.usdPrice||0)}).catch(()=>8)
+  .then(pp=>{chart.setSymbol({ticker:SYM,pricePrecision:pp||8,volumePrecision:0});chart.setPeriod(TFS.find(t=>t[1]===IV)[2])});
+addEventListener('resize',()=>chart.resize());
+</script>
+</body>
+</html>
