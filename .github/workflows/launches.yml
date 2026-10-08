@@ -34,5 +34,6 @@ jobs:
             start=$(date +%s)
             python3 main/intel/launches.py data/terminal || echo "pass failed"
             (cd data && bash ../main/intel/push-data.sh "launch radar") || echo "save failed"
-            left=$(( 300 - ($(date +%s) - start) )); if [ $left -gt 0 ] && [ $(( $(date +%s) + left )) -lt $end ]; then sleep $left; fi   # an if: the last pass isn't a failed step
+            left=$(( 300 - ($(date +%s) - start) )); if [ $(( $(date +%s) + left )) -ge $end ]; then break; fi   # no room for another pass before the next run
+            if [ $left -gt 0 ]; then sleep $left; fi
           done
