@@ -67,3 +67,5 @@
 #lr .infob{background:none;border:1px solid var(--blue2);color:var(--blue2);font:inherit;font-size:9.5px;letter-spacing:1px;padding:1px 6px;margin-left:6px;cursor:pointer;vertical-align:1px;white-space:nowrap}
 #lr .infob:hover{background:rgba(74,122,255,.14);color:#fff}
 #lr #lr-rows tr[data-m]{cursor:pointer}
+#lr .it.go{cursor:pointer}#lr .it.go:hover{background:rgba(255,255,255,.03)}#lr .it.go .lr-nm a{color:inherit;text-decoration:none}
+#lr .vdl{font-size:10.5px;letter-spacing:1px;color:var(--blue2);text-decoration:none;white-space:nowrap}#lr .vdl:hover{color:#fff;text-decoration:underline}
