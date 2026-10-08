@@ -73,7 +73,14 @@ a{color:inherit;text-decoration:none}
 .side button:hover{color:#fff;background:#141f36}.side button.on{color:#fff;border-color:var(--blue2);background:rgba(42,90,218,.2)}
 .side hr{width:24px;border:0;border-top:1px solid var(--line);margin:4px 0}
 .side #clr:hover{color:var(--red)}
+.cw{position:relative;flex:1;min-width:0;display:flex}
 #chart{flex:1;min-width:0;min-height:300px}
+/* zoom / scroll / reset over the chart, like Jupiter's: shown while the pointer is on the chart (always on touch screens) */
+.zbar{position:absolute;left:50%;bottom:44px;transform:translateX(-50%);display:flex;gap:6px;opacity:0;transition:opacity .15s;pointer-events:none;z-index:5}
+.cw:hover .zbar,.zbar:focus-within{opacity:1;pointer-events:auto}
+@media (pointer:coarse){.zbar{opacity:.85;pointer-events:auto}}
+.zbar button{width:32px;height:32px;display:grid;place-items:center;border:0;border-radius:6px;background:rgba(26,36,68,.85);color:#c9d3ee;cursor:pointer}
+.zbar button:hover{background:#2a3a66;color:#fff}.zbar button svg{width:16px;height:16px}
 html.embed .top{display:none}html.embed .panel{min-height:0}
 html.nohdr .tkb,html.nohdr .tkl,html.nohdr .pchips{display:none!important}html.nohdr .ph{padding-top:8px}
 #fsBtn{padding:3px 9px;display:grid;place-items:center}#fsBtn svg{width:17px;height:17px}
@@ -106,7 +113,7 @@ html.nohdr .tkb,html.nohdr .tkl,html.nohdr .pchips{display:none!important}html.n
       <div class="tabs dd" id="shotDd"><button id="shot" type="button" title="Chart snapshot" aria-haspopup="true" aria-expanded="false" aria-label="Screenshot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="3.5"/></svg></button><div class="menu r" id="shotMenu" role="menu"><div class="mh">CHART SNAPSHOT</div><button type="button" data-s="save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M4 20h16"/></svg><span>Download image</span></button><button type="button" data-s="copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V4H4v12h4"/></svg><span>Copy image</span></button><button type="button" data-s="x"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.8 3h3.1l-6.8 7.8L22 21h-6.2l-4.9-6.4L5.3 21H2.2l7.3-8.3L2 3h6.4l4.4 5.8zm-1.1 16.2h1.7L7.4 4.7H5.6z"/></svg><span>Share on X</span></button></div></div>
     </div>
   </div>
-  <div class="body"><div class="side" id="draw" aria-label="Drawing tools"></div><div id="chart"></div></div>
+  <div class="body"><div class="side" id="draw" aria-label="Drawing tools"></div><div class="cw"><div id="chart"></div><div class="zbar" id="zbar"><button type="button" data-z="out" title="Zoom out" aria-label="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg></button><button type="button" data-z="in" title="Zoom in" aria-label="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button><button type="button" data-z="left" title="Scroll back" aria-label="Scroll back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button><button type="button" data-z="right" title="Scroll forward" aria-label="Scroll forward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button><button type="button" data-z="reset" title="Reset the view (Alt+R)" aria-label="Reset the view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></button></div></div></div>
 </div>
 <div id="msg"></div>
 <div class="cmenu" id="ctx" role="menu"></div>
@@ -249,7 +256,12 @@ chart.setDataLoader({getBars:async({type,timestamp,callback})=>{
     callback([],{forward:type!=='forward',backward:type!=='backward'})}catch(e){say('Couldn\'t load candles ('+e.message+')');callback([],false)}}});
 const prec=p=>p>0?Math.min(12,Math.max(2,Math.ceil(-Math.log10(p))+3)):2;
 function resetView(){chart.overrideYAxis({paneId:'candle_pane',createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtP(t.value)}))});fit();say('View reset',1200)}
-$('resetBtn').onclick=resetView;$('chart').addEventListener('dblclick',e=>{if(!chart.getOverlays().some(o=>o.currentStep>0))resetView()});
+$('resetBtn').onclick=resetView;
+$('zbar').onclick=e=>{const b=e.target.closest('[data-z]');if(!b)return;const z=b.dataset.z,L=chart.getDataList().length,
+    w=(chart.getSize('candle_pane','main')||{}).width||600;
+  if(z==='reset')return resetView();
+  if(z==='in'||z==='out')return chart.zoomAtDataIndex(z==='in'?1.25:.8,Math.max(0,Math.min(L-1,chart.getVisibleRange().to-1)),200);   // around the newest candle on screen
+  chart.scrollByDistance((z==='left'?1:-1)*w*.3,200)};$('chart').addEventListener('dblclick',e=>{if(!chart.getOverlays().some(o=>o.currentStep>0))resetView()});
 function tfBar(){const fav=TFS.filter(t=>FAV.includes(t[0])),extra=TF[0]!=='all'&&!FAV.includes(TF[0])?TF:null;
   $('tf').innerHTML=fav.concat(extra?[extra]:[]).map(t=>`<button type="button" data-k="${t[0]}"${t===TF?' class="on"':''}>${t[1]}</button>`).join('')
     +`<button type="button" data-k="all"${TF[0]==='all'?' class="on"':''} title="The whole history">ALL</button>`
