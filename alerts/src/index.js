@@ -135,7 +135,7 @@ async function markPaid(env, o, sig, payer) {
   else await push(env, o.user_id, { type: 'held', id: o.id });
   return true;
 }
-const getTx = (env, sig) => rpc(env, 'getTransaction', [sig, { commitment: 'confirmed', encoding: 'json', maxSupportedTransactionVersion: 0 }]);
+const getTx = (env, sig) => rpc(env, 'getTransaction', [sig, { commitment: 'confirmed', encoding: 'json', maxSupportedTransactionVersion: 1 }]);
 async function checkSig(env, o, sig) {
   const tx = await getTx(env, sig);
   const r = S.checkPayment(tx, { token: o.token, legs: JSON.parse(o.legs), reference: o.reference });

@@ -180,7 +180,7 @@ for w in sorted(whale, key=lambda w: min(x['rank'] for x in whale[w])):
         bots.add(w); log('skipping busy wallet (bot or pool)', w[:6]); continue
     for s in fresh[:budget]:
         budget -= 1
-        try: tx = rpc('getTransaction', [s['signature'], {'encoding': 'jsonParsed', 'maxSupportedTransactionVersion': 0}])
+        try: tx = rpc('getTransaction', [s['signature'], {'encoding': 'jsonParsed', 'maxSupportedTransactionVersion': 1}])
         except Exception as e: log('tx', s['signature'][:8], e); continue
         if not tx or (tx.get('meta') or {}).get('err'): continue
         m = tx['meta']; keys = [k['pubkey'] for k in tx['transaction']['message']['accountKeys']]
