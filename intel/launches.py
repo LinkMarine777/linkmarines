@@ -20,7 +20,7 @@ The REAL score (0-100) of each launch from the last 24 h that trades ($2,500+ vo
   organic buyers 25  Jupiter's distinct organic buyers in 24 h (bots and wash wallets filtered out by Jupiter)
   fee-backed     20  what the coin paid its holders divided by its tax rate, against the volume it reports. A taxed
                      trade always pays: real trading comes out near 1.0, washed volume far below (farms 0.15-0.45)
-  bundles        15  the bigger of: bundlers' peak share of the supply (Jupiter) and linked holders (top 100 holders
+  bundles        15  held now: the bigger of what bundlers hold (Jupiter's Bundlers H.) and linked holders (top 100 holders
                      funded by one private wallet: not an exchange or a service that funds wallets across many coins)
   dev            15  the deployer's lifetime record (Jupiter's 👑 graduated / coins launched, this coin left out):
                      1 in 5 graduated = 15, a serial launcher (5+ coins, under 1 in 20 graduated) = 0; 2,000+ coins is
@@ -281,7 +281,7 @@ for t in cand:
     rw = state['rw'].get(m) if t.get('mode') == 'reward' else None
     fb = rw[0] / (rw[1] / 1e4) / vol if rw and rw[1] and vol else None   # fee-backed share of the volume
     fees = a.get('fees'); fpt = fees / trades * 1000 if fees is not None and trades else None   # mSOL a trade
-    bs = au.get('bundlerStats') or {}; bpk = bs.get('holdingPctATH') or 0
+    bs = au.get('bundlerStats') or {}; bpk = bs.get('holdingPctATH') or 0; bh = bs.get('holdingPct') or 0   # Jupiter's Bundlers H.: what they hold now (left out at 0)
     # dev record, this coin left out (Jupiter's 👑 graduated / launched)
     grad = t.get('status') == 'graduated'
     dn = (au.get('devMints') or 1) - 1; dg = max(0, (au.get('devMigrations') or 0) - (1 if grad else 0))
@@ -291,7 +291,7 @@ for t in cand:
         try: sc = holder_scan(m, a, ts(t.get('createdAt'))) or sc; state['scan'][m] = sc
         except Exception as e: log('holders', t.get('symbol'), e)
         time.sleep(0.4)
-    bund = max(bpk, (sc or {}).get('lk') or 0)
+    bund = max(bh, (sc or {}).get('lk') or 0)   # bundled now: what bundlers and linked holders hold today, not the peak
     # the score
     s_ob = 25 * min(1, math.log10(1 + ob) / 2)
     s_fb = 20 * min(1, fb / 0.7) if fb is not None else 12 * min(1, (ov / jv if jv else 0) / 0.08)   # no payouts to check: organic share, at most 12
@@ -315,7 +315,7 @@ for t in cand:
            'os': round(a.get('organicScore') or 0, 1), 'paid': rw[0] if rw else None, 'tax': rw[1] if rw else None,
            'fb': round(fb, 2) if fb is not None else None, 'fees': round(fees, 2) if fees is not None else None,
            'fpt': round(fpt, 2) if fpt is not None else None, 'feesUsd': round(fees * sol) if fees and sol else None,
-           'bn': bs.get('totalBundles') or 0, 'bpk': round(bpk, 1), 'bot': round(au.get('botHoldersPercentage') or 0, 1),
+           'bn': bs.get('totalBundles') or 0, 'bpk': round(bpk, 1), 'bh': round(bh, 1), 'bot': round(au.get('botHoldersPercentage') or 0, 1),
            'dev': a.get('dev'), 'dn': dn, 'dg': dg, 'scan': sc, 'flags': flags,
            'vr': {'lane': vr['lane'], 'st': vr['st']} if vr else None, 'score': score, 'vd': verdict}
     rows.append(row)
