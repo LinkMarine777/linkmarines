@@ -151,6 +151,7 @@ def audit(mint):
     for pg in range(1, 101):
         d = get(f'https://www.stonkfun.xyz/api/public/v1/rewards?pageSize=1000&page={pg}')['data']
         rw = next((x for x in d.get('launches') or [] if x['mint'] == mint), None)
+        if rw and not rw.get('quote'): rw['quote'] = {'mint': rw.get('quoteMint'), 'symbol': ((d.get('quotes') or {}).get(rw.get('quoteMint')) or {}).get('symbol')}
         if rw or pg >= ((d.get('launchesPagination') or {}).get('totalPages') or 1): break
     if rw is None: raise SystemExit(f'{mint}: not in stonkfun launch list')
     quote = rw['quote']['mint']; since, until = state['since'], state['at']; W = list(state['bal'])
