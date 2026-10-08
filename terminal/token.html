@@ -127,6 +127,11 @@ main{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 440px;gap:1px;backg
 .chartP .tabs button{min-width:52px}
 .chartP{display:flex;flex-direction:column}
 #chartWrap{position:relative;height:clamp(340px,24vw,460px)}
+/* the chart: the new one (KLineChart, /terminal/lab.html in a frame) unless &chart=old */
+html.newChart #chart,html.newChart #tip{display:none}
+html.newChart #chartWrap{height:clamp(470px,33vw,600px)}
+#labFrame{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:var(--panel)}
+@media (min-width:1000px){html.newChart .chartP>.ph{display:none}html.newChart .chartP{padding:0}}
 #chart{width:100%;height:100%;display:block}
 #tip{position:absolute;pointer-events:none;background:#000d;border:1px solid var(--line);padding:6px 8px;font-size:11px;display:none;white-space:nowrap}
 
@@ -478,7 +483,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   .stat.hero{order:1}.stat.pulse{order:2}.stat.mkt{order:3}.stat.pay{order:4;border-right:1px solid var(--line)}.stat.qt{order:5;border-right:0}.stat.duo{order:6}
   .stat.duo{padding-top:8px;padding-bottom:8px;gap:2px}.duo.both .half+.half{padding-top:4px}.duo .half b{font-size:24px}
   main{grid-template-columns:minmax(0,1fr)}.lower{grid-template-columns:minmax(0,1fr)}.ph{flex-wrap:wrap}.legend{display:none}.chartP .legend{display:flex;order:9;flex-basis:100%;justify-content:center;align-items:center;font-size:11px;margin:2px 0 0!important}header nav{margin-left:0}
-  header nav .btn:not(.primary):not(.tts):not(#menuBtn){display:none}#chartWrap{height:260px}.brand{font-size:24px}.brand small{font-size:14px}header{gap:10px;flex-wrap:wrap}
+  header nav .btn:not(.primary):not(.tts):not(#menuBtn){display:none}#chartWrap{height:260px}html.newChart #chartWrap{height:560px}html.newChart .chartP>.ph .legend,html.newChart .chartP>.ph .tabs,html.newChart .chartP>.ph .brk{display:none!important}.brand{font-size:24px}.brand small{font-size:14px}header{gap:10px;flex-wrap:wrap}
   .hide-sm{display:none}#ttsPop{min-width:0;width:92%}#ttsPop .msg{font-size:30px}
   /* ---- mobile: collapsible sections, fewer things fighting for space ---- */
   #stage{padding-bottom:64px}
@@ -771,6 +776,12 @@ const CA=((new URLSearchParams(location.search).get('ca')||'').trim().match(/^[1
 // BUY/SELL → Jupiter's swap widget on the page, for everyone (&swap=0 in the address turns it off: BUY goes to jup.ag, as before)
 const SWAP_ON=new URLSearchParams(location.search).get('swap')!=='0';
 document.documentElement.classList.toggle('swap',SWAP_ON);
+// the chart: the new one (drag / zoom, drawing tools, indicators, snapshots) in the chart panel; &chart=old brings back the old one
+const NEWCHART=new URLSearchParams(location.search).get('chart')!=='old';document.documentElement.classList.toggle('newChart',NEWCHART);
+if(NEWCHART){const f=document.createElement('iframe');f.id='labFrame';f.title='Chart';f.allow='clipboard-write; fullscreen';f.allowFullscreen=true;
+  const ph=matchMedia('(max-width:999px)');   // phones: the badge, links and chips are already above the numbers
+  f.src='/terminal/lab.html?embed=1'+(ph.matches?'&hdr=0':'')+'&ca='+CA;document.getElementById('chartWrap').appendChild(f);
+  ph.addEventListener('change',()=>{try{f.contentDocument.documentElement.classList.toggle('nohdr',ph.matches)}catch(e){}})}
 let TK={mint:CA,symbol:'…',quote:'…',quoteMint:null,image:null},TKR=null,POOL='',GT='',PAIR=null;
 const WHALE=2500;
 const $=id=>document.getElementById(id);
