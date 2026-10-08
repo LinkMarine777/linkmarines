@@ -17,6 +17,10 @@
     {
       "source": "/tts/checkout",
       "destination": "/tts/checkout.html"
+    },
+    {
+      "source": "/launches/",
+      "destination": "/trending/index.html"
     }
   ],
   "redirects": [

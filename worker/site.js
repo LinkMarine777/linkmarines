@@ -47,6 +47,10 @@ export default {
       try { const g = await env.ASSETS.fetch(new Request(new URL('/share-terminal7-v2.png', req.url))); if (g.ok) return new Response(g.body, { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=60' } }); } catch (e) {}
       return Response.redirect(`${BOT}/card/${card[1]}.png`, 302);
     }
+    // /launches/: the trending page, which opens on its NEW LAUNCHES view (the two are one page with a switch)
+    const lp = new URL(req.url).pathname;
+    if (lp === '/launches') return Response.redirect(new URL('/launches/' + new URL(req.url).search, req.url).toString(), 301);
+    if (lp === '/launches/' || lp === '/launches/index.html') return env.ASSETS.fetch(new Request(new URL('/trending/' + new URL(req.url).search, req.url), req));
     // a wallet's own page, /wallet/<address>: the Wallet X-Ray (terminal/wallet.html), with the wallet's card as its link preview
     const wpage = /^\/wallet\/([1-9A-HJ-NP-Za-km-z]{32,44})\/?$/.exec(new URL(req.url).pathname);
     const res = wpage ? await env.ASSETS.fetch(new Request(new URL('/terminal/wallet', req.url), req)) : await env.ASSETS.fetch(req);
