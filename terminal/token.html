@@ -1231,8 +1231,8 @@ function clobrLive(){const t=$('scoreDly'),live=!!(CL&&CL.delayed===false)||/^\s
   const d=$('clobrDelay');d.classList.toggle('lv',live);
   d.textContent=live?'● Live · real-time CLOBr data via your CLOBr extension ▸':'⏱ Delayed'+(CL&&CL.fetchedAt?' · updated '+ago(CL.fetchedAt).split(' ')[0]+' ago':' up to 1h')+' · real-time with CLOBr Pro + the CLOBr extension · free 7-day trial ▸'}
 try{new MutationObserver(()=>clobrLive()).observe(document.getElementById('scoreDly'),{childList:true,characterData:true,subtree:true})}catch(e){}
-function paintScore(sc){$('scoreStat').style.display=sc||DESK?'':'none';syncScores();
-  if(!sc&&DESK){$('sScore').textContent='—';$('sScore').style.color='var(--dim)';$('sScoreMsg').textContent='no CLOBr data';$('sScoreWhy').textContent=' '}
+function paintScore(sc){$('scoreStat').style.display='';syncScores();
+  if(!sc){$('sScore').textContent='—';$('sScore').style.color='var(--dim)';$('sScoreMsg').textContent='no CLOBr data';$('sScoreWhy').textContent=' '}
   if(sc){$('sScore').textContent=sc.score!=null?Math.round(+sc.score):'—';$('sScore').style.color=sc.score>=60?'var(--green)':sc.score<=40?'var(--red)':'var(--amber)';
     // CLOBr's message is "verdict: reason"; the tile shows both lines so the score explains itself
     const [v,...why]=String(sc.msg||'').split(':');$('sScoreMsg').textContent=v.trim();$('sScoreWhy').textContent=why.join(':').trim()||' ';
@@ -1392,7 +1392,7 @@ function renderCompound(){if(!CMP)return;const W=CMP.win[cmpW]||{},sc=W.score,sy
 // desktop keeps every panel in the same place for every token: a panel with nothing for this token says so instead of
 // disappearing (phones still fold empty ones away)
 const DESK=matchMedia('(min-width:1000px)').matches;
-if(DESK)setTimeout(()=>{if($('cmpStat').style.display==='none'){$('cmpStat').style.display='';$('sCmp').style.color='var(--dim)';$('sCmpMsg').textContent='no data'}syncScores()},0);
+setTimeout(()=>{if($('cmpStat').style.display==='none'){$('cmpStat').style.display='';$('sCmp').style.color='var(--dim)';$('sCmpMsg').textContent='no data'}syncScores()},0);
 function syncScores(){const v=['cmpStat','scoreStat','radarStat'].filter(id=>$(id).style.display!=='none');$('scoresStat').style.display=v.length?'':'none';$('scoresStat').classList.toggle('both',v.length>1);
   ['cmpStat','scoreStat','radarStat'].forEach(id=>$(id).classList.toggle('f',id===v[0]))}   // the first one shown: no divider
 $('cmpStat').onclick=()=>{setTapeView('holders');document.querySelector('.tapeP').scrollIntoView({behavior:'smooth',block:'start'})};
