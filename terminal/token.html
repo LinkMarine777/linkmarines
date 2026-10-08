@@ -574,6 +574,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
     <div class="menu"><button class="btn" id="menuBtn" type="button" aria-haspopup="true" aria-expanded="false" title="More">☰</button>
       <div class="mnu" id="mnu" role="menu">
         <a href="/trending/">🔥 Trending tokens</a>
+        <a href="/launches/">🧪 Launch radar: real or farm, next pairs</a>
         <a id="homeTk" href="?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">⚓ $MARINE terminal</a>
         <a href="/stream/">📺 The War Room (stream)</a>
         <a href="/flywheel/">♻️ How $LINK rewards work</a>
@@ -1930,6 +1931,7 @@ $('infoPop').addEventListener('click',closeInfo);
 const DB_HEAD=x=>{const k=x.kind,sd=x.side;
   if(k==='buy'&&/whale watch/i.test(x.text))return['🐋 WHALE WATCH','buy'];
   return({convergence:['🐋 WHALES PILING IN','buy'],dumping:['🐋 WHALES DUMPING','sell'],rotation:['🔄 WHALE ROTATION'],exit:['🚪 WHALE EXIT','sell'],
+    newpair:['🆕 NEW STONKFUN PAIR','buy'],vrfd:['📝 VRFD SUBMISSION'],verified:['✅ JUPITER VERIFIED'],launch:['🧪 REAL LAUNCH','buy'],
     dip:['🩸 WHALES BUYING THE DIP','buy'],rewards:['♻️ WHALE REWARDS'],score:['🧱 CLOBr SCORE'],board:['📋 STONK BOARD'],top10:['🚀 STONKFUN TOP 10'],
     milestone:['🏆 MILESTONE'],payout:['💸 HOLDER PAYOUT'],pulse:['⚡ PULSE INCOMING'],link:[sd==='down'?'🔗 $LINK DIPPING':'🔗 $LINK PUMPING'],
     mover:[sd==='down'?'📉 BIG MOVER':'📈 BIG MOVER'],bigtrade:[sd==='sell'?'🐳 BIG SELL':'🐳 BIG BUY',sd==='sell'?'sell':'buy']})[k]||['🐋 WHALE RADAR']};

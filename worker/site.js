@@ -10,7 +10,7 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '
 // opened on themarines.link go to terminal7.xyz; the terminal's HQ links (href="/") go to themarines.link. The stream is served
 // on both as is (nothing pointing at it may break). Every other host (workers.dev, previews) is served unchanged.
 const HQ = 'themarines.link', T7 = 'terminal7.xyz';
-const TERMINAL = /^\/(trending|terminal|terminal2|terminal1\.1|flywheel|wallet)(\/|\.html|$)/;
+const TERMINAL = /^\/(trending|launches|terminal|terminal2|terminal1\.1|flywheel|wallet)(\/|\.html|$)/;
 function domains(req) {
   const u = new URL(req.url), host = u.hostname.replace(/^www\./, '');
   if (u.hostname === 'www.' + HQ || u.hostname === 'www.' + T7) return Response.redirect(`https://${host}${u.pathname}${u.search}`, 301);   // www -> the bare domain

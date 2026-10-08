@@ -1,0 +1,40 @@
+# Launch radar (intel/launches.py): what's about to be listed on stonkfun (Jupiter VRFD submissions, newly verified stocks),
+# new stonkfun pairs, and a REAL / WATCH / THIN / FARM score for every launch of the last 24 h. A pass every ~5 min,
+# written to terminal/launches.json on the data branch (the /launches page reads it, the whale radar folds its alerts in).
+# Free: stonkfun's public API, Jupiter's token API, a few Solana RPC calls a pass.
+name: launch radar
+on:
+  schedule:
+    - cron: '13,43 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: launches
+  cancel-in-progress: false
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: main
+          sparse-checkout: intel
+      - uses: actions/checkout@v4
+        with:
+          ref: data
+          path: data
+      - name: a pass every ~5 min until the next run
+        env:
+          HELIUS_KEY: ${{ secrets.HELIUS_KEY }}
+          SOLANA_RPC: ${{ secrets.SOLANA_RPC }}
+          FILES: terminal/launches.json terminal/launches-state.json
+        run: |
+          end=$(( $(date +%s) + 27 * 60 ))
+          while [ $(date +%s) -lt $end ]; do
+            start=$(date +%s)
+            python3 main/intel/launches.py data/terminal || echo "pass failed"
+            (cd data && bash ../main/intel/push-data.sh "launch radar") || echo "save failed"
+            left=$(( 300 - ($(date +%s) - start) )); [ $left -gt 0 ] && [ $(( $(date +%s) + left )) -lt $end ] && sleep $left
+          done

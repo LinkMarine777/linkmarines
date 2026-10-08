@@ -49,6 +49,11 @@
       "source": "/flywheel",
       "destination": "/flywheel/",
       "permanent": false
+    },
+    {
+      "source": "/launches",
+      "destination": "/launches/",
+      "permanent": false
     }
   ]
 }
