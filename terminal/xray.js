@@ -51,6 +51,7 @@
 .xr .wchips button{font:inherit;font-size:10px;letter-spacing:1px;padding:3px 7px;background:#050914;border:1px solid var(--line);color:var(--dim);cursor:pointer}
 .xr .wchips button:hover{color:#fff;border-color:var(--blue2)}.xr .wchips button.on{color:#fff;border-color:var(--blue2);background:rgba(74,122,255,.16)}
 .xr .wchips button i{font-style:normal;opacity:.7;margin-left:4px}
+.xr .wchips select{font:inherit;font-size:10px;letter-spacing:1px;padding:3px 4px;background:#050914;border:1px solid var(--line);color:var(--txt);cursor:pointer}.xr .wchips select:hover,.xr .wchips select:focus,.xr .wchips select.on{border-color:var(--blue2);outline:none}.xr .wchips select.on{color:#fff;background:rgba(74,122,255,.16)}
 #walCard{display:block;width:100%;aspect-ratio:1200/630;border:1px solid var(--line);background:var(--panel)}
 .xr .acts{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:6px;margin-top:8px}.xr .acts .btn{text-align:center;text-decoration:none;font-size:11.5px;letter-spacing:1px;padding:9px 4px;white-space:nowrap}
 .xr .foot{font-size:10px;color:var(--dim);margin-top:10px;line-height:1.5}
@@ -73,11 +74,10 @@
 
   // the coins list: sort (column, direction) and filters, remembered on this browser
   const SORTS = [['v', 'VALUE'], ['pnl', 'P&L'], ['R', 'REWARDS'], ['N', 'NET BOUGHT'], ['score', 'SCORE'], ['p', '% HELD'], ['n', 'TRADES']];
-  const FILTERS = [['held', 'HOLDING'], ['exited', 'EXITED'], ['Compounder', 'COMPOUNDER'], ['Partial', 'PARTIAL'], ['Collector', 'COLLECTOR'],
-    ['Trader', 'TRADER'], ['Seller', 'SELLER'], ['none', 'NOT SCORED']];
-  const STATUS = new Set(['held', 'exited']);
-  let view = { k: 'v', dir: -1, f: [] };
-  try { const s = JSON.parse(localStorage.getItem('xrView') || 'null'); if (s && SORTS.some(x => x[0] === s.k)) view = { k: s.k, dir: s.dir === 1 ? 1 : -1, f: (s.f || []).filter(f => FILTERS.some(x => x[0] === f)) }; } catch (e) {}
+  const TAGS = [['Compounder', 'COMPOUNDERS'], ['Partial', 'PARTIAL'], ['Collector', 'COLLECTORS'], ['Trader', 'TRADERS'], ['Seller', 'SELLERS'], ['none', 'NOT SCORED']];
+  let view = { k: 'v', dir: -1, st: '', tag: '' };   // sort column + direction, held / exited, tag
+  try { const s = JSON.parse(localStorage.getItem('xrView') || 'null');
+    if (s && SORTS.some(x => x[0] === s.k)) view = { k: s.k, dir: s.dir === 1 ? 1 : -1, st: ['held', 'exited'].includes(s.st) ? s.st : '', tag: TAGS.some(x => x[0] === s.tag) ? s.tag : '' }; } catch (e) {}
   const keep = () => { try { localStorage.setItem('xrView', JSON.stringify(view)); } catch (e) {} };
 
   let cur = null, all = false, last = null, isPage = false;
@@ -91,10 +91,8 @@
     return out;
   }
   const fkey = c => c.score != null && c.tag ? c.tag : 'none';
-  function pick(list) {
-    const st = view.f.filter(f => STATUS.has(f)), tg = view.f.filter(f => !STATUS.has(f));
-    return list.filter(c => (!st.length || st.includes(c.held === false ? 'exited' : 'held')) && (!tg.length || tg.includes(fkey(c))));
-  }
+  const stOf = c => c.held === false ? 'exited' : 'held';
+  const pick = list => list.filter(c => (!view.st || stOf(c) === view.st) && (!view.tag || fkey(c) === view.tag));
   function order(list) {
     const k = view.k, dir = view.dir;
     return list.slice().sort((a, b) => { const x = a[k], y = b[k];
@@ -163,14 +161,15 @@
   function drawCoins(d) {
     const list = rows(d);
     if (!list.length) { $('walCtl').innerHTML = ''; $('walCoins').innerHTML = `<div class="dim" style="font-size:11px">${d.live === false ? 'Holdings unavailable right now (the chain read failed) · try again in a minute' : 'No stonkfun coins, trades or rewards found for this wallet.'}</div>`; return; }
-    // filter chips: only the ones that match something, with how many
-    const cnt = f => list.filter(c => STATUS.has(f) ? (f === 'held') === (c.held !== false) : fkey(c) === f).length;
-    const chip = (k, t, n) => `<button type="button" data-f="${k}" class="${view.f.includes(k) ? 'on' : ''}">${t}<i>${n}</i></button>`;
-    $('walCtl').innerHTML = `<div class="wchips"><span>SORT</span>${SORTS.map(([k, t]) => `<button type="button" data-s="${k}" class="${view.k === k ? 'on' : ''}">${esc(t)}${view.k === k ? (view.dir < 0 ? ' ↓' : ' ↑') : ''}</button>`).join('')}</div>
-      <div class="wchips"><span>SHOW</span><button type="button" data-f="" class="${view.f.length ? '' : 'on'}">ALL<i>${list.length}</i></button>${FILTERS.map(([k, t]) => [k, t, cnt(k)]).filter(x => x[2]).map(x => chip(...x)).join('')}</div>`;
-    $('walCtl').querySelectorAll('button[data-s]').forEach(b => b.onclick = () => sortBy(b.dataset.s));
-    $('walCtl').querySelectorAll('button[data-f]').forEach(b => b.onclick = () => { const f = b.dataset.f;
-      view.f = !f ? [] : view.f.includes(f) ? view.f.filter(x => x !== f) : [...view.f, f]; all = false; keep(); drawCoins(last); });
+    // one row: ALL / HOLDING / EXITED, a tag menu (tags it has, with counts) and a sort menu (the column headers sort too)
+    const n = f => list.filter(f).length, opt = (v, t, on) => `<option value="${v}"${on ? ' selected' : ''}>${t}</option>`;
+    $('walCtl').innerHTML = `<div class="wchips">${[['', 'ALL', list.length], ['held', 'HOLDING', n(c => stOf(c) === 'held')], ['exited', 'EXITED', n(c => stOf(c) === 'exited')]]
+      .map(([k, t, c]) => `<button type="button" data-st="${k}" class="${view.st === k ? 'on' : ''}">${t}<i>${c}</i></button>`).join('')}
+      <select id="walTag" aria-label="tag" class="${view.tag ? 'on' : ''}">${opt('', 'ANY TAG', !view.tag)}${TAGS.map(([k, t]) => [k, t, n(c => fkey(c) === k)]).filter(x => x[2] || x[0] === view.tag).map(([k, t, c]) => opt(k, `${t} (${c})`, view.tag === k)).join('')}</select>
+      <select id="walSort" aria-label="sort">${SORTS.flatMap(([k, t]) => [-1, 1].map(d => opt(k + ':' + d, `${t} ${d < 0 ? '↓' : '↑'}`, view.k === k && view.dir === d))).join('')}</select></div>`;
+    $('walCtl').querySelectorAll('button[data-st]').forEach(b => b.onclick = () => { view.st = b.dataset.st; all = false; keep(); drawCoins(last); });
+    $('walTag').onchange = e => { view.tag = e.target.value; all = false; keep(); drawCoins(last); };
+    $('walSort').onchange = e => { const [k, d] = e.target.value.split(':'); view = { ...view, k, dir: +d }; keep(); drawCoins(last); };
 
     const shown = order(pick(list));
     // every coin gets a logo: its own, else the Stonk Board's copy, else the helmet
