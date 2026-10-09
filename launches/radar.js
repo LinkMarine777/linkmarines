@@ -5,7 +5,7 @@
 (() => {
 const ROOT = document.getElementById('lr'); if (!ROOT || window.LR || !window.LRS) return;
 const { SITE, bundOf, short } = LRS;
-const SRC = ['https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/launches.json', 'https://war-room-bot.linkmarine777.workers.dev/data/terminal/launches.json'];
+const SRC = ['https://war-room-bot.linkmarine777.workers.dev/data/terminal/launches.json', 'https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/launches.json'];
 const $ = id => document.getElementById('lr-' + id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const compact = n => n == null ? '—' : '$' + (n >= 1e9 ? (n / 1e9).toFixed(2) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(1) + 'K' : Math.round(n));

@@ -1490,7 +1490,7 @@ async function loadTicker(){
 }
 // ---------- new launches ticker: the radar's last-24h launches with the best REAL scores (launches.json, every ~5 min) ----------
 async function loadLaunchTicker(){try{
-  const d=await j('https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/launches.json?'+Math.floor(Date.now()/60e3));
+  const d=await j(DATA+'launches.json').catch(()=>j('https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/launches.json'));
   const L=(d.launches||[]).filter(r=>r.score!=null).sort((a,b)=>b.score-a.score).slice(0,10);if(!L.length)return;
   setTrack('lnTicker',L.map((r,i)=>`<a class="tk" href="${esc(tokLink(r.m))}" target="_blank" rel="noopener">
       <span class="dim">#${i+1}</span>${r.i?`<img src="${esc(r.i)}" alt="" loading="lazy" onerror="this.remove()">`:''}

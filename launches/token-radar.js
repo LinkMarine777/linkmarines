@@ -5,7 +5,7 @@
 // A launch the radar scored in its first 24 h (terminal/launches.json) adds its VRFD request and fees per trade.
 (() => {
   const CA = ((new URLSearchParams(location.search).get('ca') || '').trim().match(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/) || ['F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK'])[0];
-  const SRC = ['https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/launches.json', 'https://war-room-bot.linkmarine777.workers.dev/data/terminal/launches.json'];
+  const SRC = ['https://war-room-bot.linkmarine777.workers.dev/data/terminal/launches.json', 'https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/launches.json'];
   const DAPI = 'https://datapi.jup.ag/v1';
   const P = document.getElementById('radarP'); if (!P || !window.LRS) return;
   const { esc, num, bundOf } = LRS;
