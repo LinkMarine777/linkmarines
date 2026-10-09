@@ -858,7 +858,7 @@ async function resolveToken(){
   $('menuBtn').onclick=e=>{e.stopPropagation();const m=$('menuBtn').parentNode,o=!m.classList.contains('open');m.classList.toggle('open',o);$('menuBtn').setAttribute('aria-expanded',o)};
   document.addEventListener('click',e=>{if(!e.target.closest('.menu'))$('menuBtn').parentNode.classList.remove('open')});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')$('menuBtn').parentNode.classList.remove('open')});
-  document.title=sym+' · WAR ROOM TERMINAL 7';
+  TSYM=sym;tabTitle();
   renderLinks(PAIRS);
 }
 // The token's own links as DexScreener lists them (X, website, Telegram), plus a live X search for its cashtag
@@ -1012,14 +1012,14 @@ let marinePx=null;
 // the pool is looked for again every 2 min.
 async function jupMarket(){const ids=[CA,TK.quoteMint].filter(Boolean);
   try{const d=await j('https://lite-api.jup.ag/price/v3?ids='+ids.join(',')),b=d[CA]?.usdPrice,q=TK.quoteMint&&d[TK.quoteMint]?.usdPrice;
-    if(b>0){marinePx=b;$('sPrice').textContent=px(b)}if(q>0){$('sLink').textContent=px(q);QPX=q}}catch(e){}}
+    if(b>0){marinePx=b;$('sPrice').textContent=px(b);tabTitle()}if(q>0){$('sLink').textContent=px(q);QPX=q}}catch(e){}}
 async function loadMarket(){
   if(!POOL&&Date.now()-(loadMarket.poolAt||0)>120e3){loadMarket.poolAt=Date.now();try{await findPool()}catch(e){}}
   try{
     if(!POOL)return jupMarket();const d=await j('https://api.dexscreener.com/latest/dex/pairs/solana/'+POOL);
     const p=d.pair||(d.pairs||[])[0];if(!p)return jupMarket();const flip=p.baseToken.address!==CA;
     marinePx=flip?(+p.priceUsd/+p.priceNative):+p.priceUsd;
-    $('sPrice').textContent=px(marinePx);chg24=p.priceChange?.h24;renderChg();
+    $('sPrice').textContent=px(marinePx);chg24=p.priceChange?.h24;renderChg();tabTitle();
     const pc=p.priceChange||{};PC=flip?{}:pc;const ct={m5:'5m',h1:'1h',h6:'6h',h24:'1d'};   // tap 1h / 6h / 24h: the chart switches to it
     if(!flip&&pc.m5==null&&pc.h1!=null)pc.m5=0;
     $('pChips').innerHTML=flip?'':[['m5','5m'],['h1','1h'],['h6','6h'],['h24','24h']].map(([k,l])=>pc[k]==null?'':`<span${ct[k]?` data-tf="${ct[k]}" role="button" title="Show the ${l} chart"`:''}${ct[k]===tf?' class="on"':''}><i>${l}</i><b class="${pc[k]>=0?'up':'dn'}">${pc[k]>=0?'':'−'}${Math.abs(pc[k]).toFixed(2)}%</b></span>`).join('');renderChg();
@@ -1056,6 +1056,12 @@ function setSeries(){const raw=CH[tf];if(!raw||!raw.length)return false;
   renderChg();return true}
 // the token's price change over the chart's timeframe: DexScreener's own for 1H / 6H / 24H, the chart's first-to-last otherwise
 let chg24=null,PC={};
+// the browser tab shows the live price, so it can be watched from other tabs: "$MARINE $0.0₃1775 ▲107% · WAR ROOM TERMINAL 7"
+let TSYM='';
+function tabPx(n){if(!(n>0))return'';if(n>=1)return px(n);const z=Math.ceil(-Math.log10(n))-1;if(z<3)return px(n);
+  let sig=Math.round(n*10**(z+4));if(sig>=1e4){return px(n)}return'$0.0'+String(z).split('').map(c=>'₀₁₂₃₄₅₆₇₈₉'[c]).join('')+String(sig).replace(/0+$/,'')}
+function tabTitle(){const p=tabPx(marinePx),c=chg24!=null&&isFinite(chg24)?' '+(chg24>=0?'▲':'▼')+Math.abs(+chg24).toFixed(Math.abs(chg24)>=100?0:1)+'%':'';
+  document.title=(TSYM?TSYM+' ':'')+(p?p+c+' · ':'')+'WAR ROOM TERMINAL 7'}
 function renderChg(){let c=PC[TFPC[tf]]??(tf==='1d'?chg24:null),lab=TFL[tf];
   if(c==null&&series&&series.length>1&&CH[tf]){const a=series[0].m,b=series[series.length-1].m;if(a&&b)c=(b-a)/a*100}
   document.querySelectorAll('#pChips span[data-tf]').forEach(x=>x.classList.toggle('on',x.dataset.tf===tf));
