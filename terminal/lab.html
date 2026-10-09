@@ -395,7 +395,7 @@ Promise.all([sfInfo,dsInfo,jupInfo]).then(([sf,pairs,jt])=>{
   const qm=sf&&sf.quote&&sf.quote.mint,P=(qm&&pairs.filter(p=>other(p).address===qm).sort((a,b)=>liq(b)-liq(a))[0])||pairs.sort((a,b)=>liq(b)-liq(a))[0]||null;
   const me=P?(P.baseToken.address===CA?P.baseToken:P.quoteToken):{};
   SYM=String((sf&&sf.symbol)||(jt&&jt.symbol)||me.symbol||'TOKEN').replace(/^\$/,'');
-  const name=(sf&&sf.name)||(jt&&jt.name)||me.name||'',img=CA===MARINE?'/terminal/img/marine.webp':(sf&&sf.image)||(jt&&jt.icon)||(P&&P.info&&P.info.imageUrl)||'';
+  const name=(sf&&sf.name)||(jt&&jt.name)||me.name||'',img=CA===MARINE?'/terminal/img/marine.webp':pairs.map(p=>p.info&&p.info.imageUrl).find(Boolean)||(sf&&sf.image)||(jt&&jt.icon)||'';   // DexScreener's: the project's current logo
   if(img)$('tkImg').src=img;$('tkSym').textContent='$'+SYM;$('lgB').textContent='$'+SYM+(MODE==='mcap'?' MC':'');document.title='$'+SYM+' · Chart Lab';
   $('tkName').textContent=name&&name.replace(/^\$/,'').toLowerCase()!==SYM.toLowerCase()?name:'';
   const q=qm?{mint:qm,sym:String(sf.quote.symbol||'').replace(/^\$/,'')}:P?{mint:other(P).address,sym:String(other(P).symbol||'').replace(/^\$/,'')}:null;

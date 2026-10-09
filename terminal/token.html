@@ -740,7 +740,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
   </div>
 </section>
 
-<div class="src"><span class="fx">Data: stonkfun (distributions) · thestonkboard.com (APY) · GeckoTerminal (chart, tape) · DexScreener (market) · </span>APY figures are modeled by thestonkboard.com, not a promise. Nothing here is financial advice.</div>
+<div class="src"><span class="fx">Data: stonkfun (distributions) · thestonkboard.com (APY) · GeckoTerminal (chart, tape) · DexScreener (market) · </span>APY figures are modeled by thestonkboard.com, not a promise. Nothing here is financial advice. <a class="t7x" href="https://x.com/Terminal7xyz" target="_blank" rel="noopener" style="color:#4a7aff;text-decoration:none;white-space:nowrap">𝕏 @Terminal7xyz</a></div>
 
 </div>
 
@@ -834,6 +834,8 @@ async function resolveToken(){
   const other=p=>p.baseToken.address===CA?p.quoteToken:p.baseToken;
   if(PAIR){
     if(!t||t.error){const me=PAIR.baseToken.address===CA?PAIR.baseToken:PAIR.quoteToken,o=other(PAIR);TK={mint:CA,symbol:me.symbol,quote:o.symbol,quoteMint:o.address,image:PAIR.info?.imageUrl||null}}}
+  // the token's current logo: DexScreener's (set by the project), else stonkfun's (often still the launch image)
+  {const ds=(PAIRS||[]).map(p=>p.info&&p.info.imageUrl).find(Boolean);if(ds)TK.image=ds}
   if(CA===MARINE)TK.image='/terminal/img/marine.webp';   // the current logo (stonkfun keeps the launch image)
   $('tkMsg').textContent=t&&!t.error?'':t&&t.temporary?'stonkfun is down right now: market data only until it\'s back':PAIR?'not a stonkfun token: market data only':'no market found for that address';
   const sym='$'+String(TK.symbol).replace(/^\$/,''),qs='$'+String(TK.quote).replace(/^\$/,'');
