@@ -46,7 +46,7 @@ a{color:inherit;text-decoration:none}
 .brk{flex-basis:100%;height:0}
 .tabs{display:flex;gap:4px}
 .tabs button{background:transparent;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:11px;padding:4px 12px;cursor:pointer;white-space:nowrap}
-.tabs button:hover{color:#fff;border-color:var(--blue2)}
+@media (hover:hover){.tabs button:hover{color:#fff;border-color:var(--blue2)}}   /* touch screens: no hover look stuck on after a tap */
 .tabs button.on{color:#fff;border-color:var(--blue2);background:rgba(42,90,218,.2)}
 .rgt{display:flex;gap:4px;margin-left:12px}
 .tb{display:contents}
@@ -63,7 +63,12 @@ a{color:inherit;text-decoration:none}
   #dtab[style*="hidden"]{display:none}
   #tf>button[data-k]:not(.on):not([data-k="all"]){display:none}   /* just the current size and ALL (every size is in ▾), room for ƒx, Price/MC, DEPTH */
   .tb{gap:3px}.tb .tabs button{padding:4px 7px}#ctab,#indDd,#pmTab,#dtab{margin-left:1px;padding-left:4px}#candleBtn{padding:3px 6px!important}
-  .body .side{width:32px}.body .side button{width:27px;height:27px}
+  /* the drawing tools fold away behind ✎ (they slide over the chart's left edge), the zoom buttons show when the chart is
+     touched (pinch and drag zoom too), so the chart gets the whole width; reset lives in the zoom buttons */
+  .body{position:relative}#rsTab{display:none}#drTab{display:block!important}
+  .body .side{position:absolute;left:0;top:0;bottom:0;z-index:6;width:38px;background:#070c18;transform:translateX(-105%);transition:transform .15s;visibility:hidden}
+  .body.drawOpen .side{transform:none;visibility:visible;box-shadow:6px 0 18px #000a}.body .side button{width:30px;height:30px}
+  #drawTog[aria-pressed="true"]{color:#fff;border-color:var(--blue2);background:rgba(42,90,218,.2)}
   #indBtn{font-size:0;gap:3px}#indBtn .fx,#indBtn #indN{font-size:13px}#indN:empty{display:none}   /* ƒx without its ▾ */
 }
 #pmBtn{color:var(--dim)}#pmBtn b{font-weight:400}#pmBtn b.on{color:#fff}#tf{margin-right:6px}#ctab button{padding:3px 10px;display:grid;place-items:center}#ctab svg{width:18px;height:18px}
@@ -97,6 +102,8 @@ a{color:inherit;text-decoration:none}
 .zbar{position:absolute;left:50%;bottom:44px;transform:translateX(-50%);display:flex;gap:6px;opacity:0;transition:opacity .15s;pointer-events:none;z-index:5}
 .cw:hover .zbar,.zbar:focus-within{opacity:1;pointer-events:auto}
 @media (pointer:coarse){.zbar{opacity:.85;pointer-events:auto}}
+@media (max-width:640px){.zbar{opacity:0;pointer-events:none;bottom:34px;gap:5px}.zbar button{width:30px;height:30px}.cw.zshow .zbar{opacity:.9;pointer-events:auto}}
+#drTab{display:none}
 .zbar button{width:32px;height:32px;display:grid;place-items:center;border:0;border-radius:6px;background:rgba(26,36,68,.85);color:#c9d3ee;cursor:pointer}
 .zbar button:hover{background:#2a3a66;color:#fff}.zbar button svg{width:16px;height:16px}
 html.embed .top{display:none}html.embed .panel{min-height:0}
@@ -120,8 +127,9 @@ html.nohdr .tkb,html.nohdr .tkl,html.nohdr .pchips{display:none!important}html.n
     <div class="legend"><a class="dep" id="depLeg" target="_blank" rel="noopener" style="display:none" title="CLOBr market depth, delayed up to 1h"><span><i></i>CLOBr<span class="sd"> depth</span> <span class="dly">delayed</span></span></a>
       <span><i style="background:var(--blue2)"></i><span id="lgB">$TOKEN</span><span class="sd"> (right)</span></span><span id="lgQw" style="display:none"><i class="dq"></i><span id="lgQ"></span><span class="sd"> (left)</span></span></div>
     <div class="rgt">
+      <div class="tabs" id="drTab"><button id="drawTog" type="button" title="Drawing tools" aria-label="Drawing tools" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 7l3 3"/></svg></button></div>
       <div class="tabs"><button id="fsBtn" type="button" title="Full screen (F)" aria-label="Full screen"></button></div>
-      <div class="tabs"><button id="resetBtn" type="button" title="Reset the view (or double-click the chart)" aria-label="Reset the view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></button></div>
+      <div class="tabs" id="rsTab"><button id="resetBtn" type="button" title="Reset the view (or double-click the chart)" aria-label="Reset the view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></button></div>
       <div class="tabs dd" id="shotDd"><button id="shot" type="button" title="Chart snapshot" aria-haspopup="true" aria-expanded="false" aria-label="Screenshot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="3.5"/></svg></button><div class="menu r" id="shotMenu" role="menu"><div class="mh">CHART SNAPSHOT</div><button type="button" data-s="save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M4 20h16"/></svg><span>Download image</span></button><button type="button" data-s="copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V4H4v12h4"/></svg><span>Copy image</span></button><button type="button" data-s="x"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.8 3h3.1l-6.8 7.8L22 21h-6.2l-4.9-6.4L5.3 21H2.2l7.3-8.3L2 3h6.4l4.4 5.8zm-1.1 16.2h1.7L7.4 4.7H5.6z"/></svg><span>Share on X</span></button></div></div>
     </div>
     <i class="brk"></i>
@@ -200,12 +208,17 @@ klinecharts.registerIndicator({name:'QUOTE',shortName:'',series:'normal',precisi
     return{name:'',calcParamsText:'',features:[],legends:v==null?[]:[{title:{text:indicator.shortName+'  ',color:'#5d6a8f'},value:{text:'$'+fmtQ(v),color:'#ffd23f'}}]}},
   styles:{lines:[{color:'rgba(255,210,63,.8)',size:1.25,style:'dashed',dashedValue:[4,3]}]}});
 const QS=()=>MODE==='mcap'?1e8:1;
-const fmtQ=v=>v>=1000?v.toFixed(0):v>=1?v.toFixed(2):+v>=.01?v.toFixed(4):(+v).toPrecision(3);
+const fmtQ=v=>v>=1000?v.toFixed(0):(v>=1?v.toFixed(2):+v>=.01?v.toFixed(4):String(+(+v).toPrecision(3))).replace(/(\.\d*?)0+$/,'$1').replace(/\.$/,'');   // no trailing zeros
 // Price or MC (market cap), like Jupiter's toggle: Jupiter's own market-cap candles; kept per browser
 let MODE=store('wrLabMode')==='mcap'?'mcap':'price',SUPPLY=null,PPREC=8;
 const fmtC=v=>{v=+v;const a=Math.abs(v);return a>=1e9?(v/1e9).toFixed(2)+'B':a>=1e6?(v/1e6).toFixed(2)+'M':a>=1e3?(v/1e3).toFixed(1)+'K':v.toFixed(0)};
 const fmtV=v=>MODE==='mcap'?fmtC(v):fmtP(v);   // the token's axis, crosshair and copy
-const fmtP=v=>{v=+v;if(!v)return'0';if(Math.abs(v)>=1)return v.toFixed(2);const d=Math.max(2,Math.ceil(-Math.log10(Math.abs(v)))+2);return v.toFixed(Math.min(12,d)).replace(/(\.\d*?[1-9])0+$/,'$1')};
+const SUB='₀₁₂₃₄₅₆₇₈₉';
+// tiny prices count their zeros like DexScreener / Jupiter (0.0001664 → 0.0₃1664), so the scale and price tag stay narrow
+const fmtP=v=>{v=+v;if(!v)return'0';const a=Math.abs(v);if(a>=1)return v.toFixed(2);let z=Math.ceil(-Math.log10(a))-1,sig=Math.round(a*10**(z+4));
+  if(sig>=1e4){z--;sig=Math.round(sig/10)}
+  if(z>=3)return(v<0?'-':'')+'0.0'+String(z).split('').map(c=>SUB[c]).join('')+(String(sig).replace(/0+$/,'')||'0');
+  return v.toFixed(Math.min(12,z+4)).replace(/\.?0+$/,'')};
 
 // ---------- volume along the bottom of the chart (blue up, grey down), like the live chart; drawn by the depth layer below
 // (an indicator of its own threw the price scale off on narrow screens) ----------
@@ -216,14 +229,15 @@ function drawVol({ctx,chart,bounding,xAxis}){const L=chart.getDataList(),vr=char
       ctx.fillRect(xAxis.convertToPixel(i)-w/2,yb-h,w,h)}}
 
 // ---------- CLOBr depth on the right edge: liquidity per price band on the token's scale, green support / red resistance ----------
-let DEPTH=null,depthOn=store('wrDepth')!=='0';
+const DKEYS=matchMedia('(max-width:640px)').matches?'wrDepthM':'wrDepth';   // phones keep their own setting: off unless turned on
+let DEPTH=null,depthOn=DKEYS==='wrDepthM'?store(DKEYS)==='1':store(DKEYS)!=='0';
 // (price precision and each candle's close, so it can't pull the price scale away from the candles; nothing in the legend)
 klinecharts.registerIndicator({name:'DEPTHB',shortName:'',series:'price',precision:12,figures:[{key:'c',title:''}],calc:d=>d.map(k=>({c:k.close})),
   createTooltipDataSource:()=>({name:'',calcParamsText:'',features:[],legends:[]}),
   draw:args=>{drawVol(args);const {ctx,bounding,yAxis}=args;if(!depthOn||!DEPTH)return true;const h=bounding.height,w=bounding.width,rows=Math.max(12,Math.min(140,Math.floor(h/5))),bh=h/rows;
     const bins=Array.from({length:rows},()=>[0,0]);
     DEPTH.forEach(([p,su,re])=>{const y=yAxis.convertToPixel(MODE==='mcap'?(SUPPLY?p*SUPPLY:NaN):p);if(y<0||y>h)return;const i=Math.min(rows-1,Math.max(0,Math.floor((h-y)/bh)));bins[i][0]+=su;bins[i][1]+=re});
-    const mx=Math.max(...bins.map(b=>b[0]+b[1]));if(!(mx>0))return true;const maxW=w*.26;
+    const mx=Math.max(...bins.map(b=>b[0]+b[1]));if(!(mx>0))return true;const maxW=w*(DKEYS==='wrDepthM'?.18:.26);
     bins.forEach(([su,re],i)=>{const v=su+re;if(!v)return;const bw=Math.max(2,v/mx*maxW),y=h-(i+1)*bh+1,bhh=Math.max(1,bh-2),sup=su>=re;
       ctx.fillStyle=sup?'rgba(57,255,106,.16)':'rgba(255,51,85,.16)';ctx.fillRect(w-bw,y,bw,bhh);
       ctx.fillStyle=sup?'rgba(57,255,106,.75)':'rgba(255,51,85,.75)';ctx.fillRect(w-bw,y,2,bhh)});return true}});
@@ -246,8 +260,9 @@ const chart=klinecharts.init('chart',{decimalFold:{threshold:99},formatter:{form
   separator:{color:'#1a2444'},crosshair:{horizontal:{text:{backgroundColor:'#2a5ada',family:F}},vertical:{text:{backgroundColor:'#2a5ada',family:F}}}}});
 const YID=chart.getYAxes({paneId:'candle_pane'})[0].id;   // the token's own axis (a paneId alone would hit the pair token's too)
 // the token's scale on the right ($, no trailing zeros); the pair token's on the left, in amber
-chart.overrideYAxis({paneId:'candle_pane',id:YID,createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtV(t.value)}))});
+chart.overrideYAxis({paneId:'candle_pane',id:YID,displayValueToText:v=>fmtV(v),createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtV(t.value)}))});
 const QAX=chart.createYAxis({id:'quote_axis',paneId:'candle_pane',position:'left',gap:{top:.08,bottom:.25},
+  displayValueToText:v=>fmtQ(+v/QS()),   // the crosshair's label on this side: short, like its ticks
   createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtQ(+t.value/QS())}))});
 chart.createIndicator({name:'DEPTHB',paneId:'candle_pane'},true);
 // phones: both price scales stay, in smaller text with tighter padding
@@ -255,10 +270,18 @@ function axesFit(){const i=PHONE.matches,z=i?10:12;
   chart.setStyles({yAxis:{tickText:{size:z,marginStart:i?3:4,marginEnd:i?2:4}},candle:{priceMark:{last:{text:{size:z,paddingLeft:i?3:4,paddingRight:i?3:4}}}},
     crosshair:{horizontal:{text:{size:z,paddingLeft:i?3:4,paddingRight:i?3:4}},vertical:{text:{size:z}}}})}
 axesFit();PHONE.addEventListener('change',axesFit);
-// the pair token's scale on the left is only as wide as its own numbers (the chart otherwise reserves room for the price tag there too)
-{const qa=chart.getYAxes({paneId:'candle_pane',id:'quote_axis'})[0],cx=document.createElement('canvas').getContext('2d');
-  if(qa)qa.getAutoSize=function(){const t=chart.getStyles().yAxis.tickText;cx.font=`${t.size}px ${t.family}`;
-    return Math.ceil(this.getTicks().reduce((w,k)=>Math.max(w,cx.measureText(k.text).width),0))+t.marginStart+t.marginEnd+2}}
+// each price scale is as wide as the text it really shows (its ticks; the right one also its price tag), not the long
+// unformatted number the library would measure (12 decimals on a tiny price)
+{const cx=document.createElement('canvas').getContext('2d'),tw=(t,z)=>{cx.font=`${z}px ${F}`;return cx.measureText(t).width},
+  P=Object.getPrototypeOf(chart.getYAxes({paneId:'candle_pane',id:YID})[0]),auto=P.getAutoSize;
+  P.getAutoSize=function(){if(this.id!==YID&&this.id!=='quote_axis')return auto.call(this);
+    const S=chart.getStyles(),t=S.yAxis.tickText;let w=this.getTicks().reduce((m,k)=>Math.max(m,tw(k.text,t.size)),0)+t.marginStart+t.marginEnd;
+    if(this.id===YID){const L=chart.getDataList(),last=L[L.length-1],x=S.candle.priceMark.last.text;
+      if(last)w=Math.max(w,tw(fmtV(last.close),x.size)+x.paddingLeft+x.paddingRight+2)}
+    // room for the crosshair's label too (a value between ticks has more digits than the ticks: 109.41 vs 115)
+    const c=S.crosshair.horizontal.text,top=Math.max(...this.getTicks().map(k=>Math.abs(+k.value)),0)*1.00037;
+    if(top)w=Math.max(w,tw(this.id===YID?fmtV(top):fmtQ(top/QS()),c.size)+c.paddingLeft+c.paddingRight+2)
+    return Math.ceil(w)+2}}
 
 // line (the live chart's default) or candles: one button showing the type you're on
 const ICO_LINE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 4-7 5 5"/><path d="M3 21h18"/></svg>',
@@ -266,7 +289,7 @@ const ICO_LINE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 let candleOn=store('wrCandle')==='1';
 function setType(){chart.setStyles({candle:{type:candleOn?'candle_solid':'area'}});$('candleBtn').innerHTML=candleOn?ICO_CANDLE:ICO_LINE;$('candleBtn').title=candleOn?'Candles (click for the line)':'Line (click for candles)'}
 $('candleBtn').onclick=()=>{candleOn=!candleOn;store('wrCandle',candleOn?'1':'0');setType()};setType();
-$('depthBtn').onclick=()=>{depthOn=!depthOn;store('wrDepth',depthOn?'1':'0');$('depthBtn').classList.toggle('on',depthOn);$('depLeg').classList.toggle('off',!depthOn);chart.resize()};
+$('depthBtn').onclick=()=>{depthOn=!depthOn;store(DKEYS,depthOn?'1':'0');$('depthBtn').classList.toggle('on',depthOn);$('depLeg').classList.toggle('off',!depthOn);chart.resize()};
 $('depthBtn').classList.toggle('on',depthOn);
 
 // timeframes like the live chart; each loads candles of a fitting size and fits that window on screen, the rest of the
@@ -296,7 +319,7 @@ chart.setDataLoader({getBars:async({type,timestamp,callback})=>{
       callback(d,{forward:type==='forward'?more:true,backward:type==='backward'?more:true});return}
     callback([],{forward:type!=='forward',backward:type!=='backward'})}catch(e){say('Couldn\'t load candles ('+e.message+')');callback([],false)}}});
 const prec=p=>p>0?Math.min(12,Math.max(2,Math.ceil(-Math.log10(p))+3)):2;
-function resetView(){chart.overrideYAxis({paneId:'candle_pane',id:YID,createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtV(t.value)}))});fit();say('View reset',1200)}
+function resetView(){chart.overrideYAxis({paneId:'candle_pane',id:YID,displayValueToText:v=>fmtV(v),createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtV(t.value)}))});fit();say('View reset',1200)}
 $('resetBtn').onclick=resetView;
 $('zbar').onclick=e=>{const b=e.target.closest('[data-z]');if(!b)return;const z=b.dataset.z,L=chart.getDataList().length,
     w=(chart.getSize('candle_pane','main')||{}).width||600;
@@ -330,10 +353,13 @@ const ok=new Set(klinecharts.getSupportedOverlays());
 $('draw').innerHTML=DRAW.filter(([n])=>ok.has(n)).map(([n,l,ic])=>`<button type="button" data-o="${n}" title="${l}" aria-label="${l}">${ic}</button>`).join('')
   +'<hr><button type="button" id="lockBtn"></button>'
   +'<button type="button" id="clr" title="Remove every drawing" aria-label="Remove every drawing">'+SV('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>')+'</button>';
+const drawOpen=o=>{document.querySelector('.body').classList.toggle('drawOpen',o);$('drawTog').setAttribute('aria-pressed',o)};
+$('drawTog').onclick=()=>drawOpen(!document.querySelector('.body').classList.contains('drawOpen'));
+{const cw=document.querySelector('.cw');let t;cw.addEventListener('touchstart',()=>{cw.classList.add('zshow');clearTimeout(t);t=setTimeout(()=>cw.classList.remove('zshow'),3000)},{passive:true})}
 $('draw').onclick=e=>{const b=e.target.closest('button');if(!b)return;
   if(b.id==='lockBtn'){LOCK=!LOCK;store('wrLabLock',LOCK?'1':'0');chart.overrideOverlay({lock:LOCK});lockIco();return say(LOCK?'Drawings locked':'Drawings unlocked',1200)}
   if(b.id==='clr'){chart.removeOverlay();SEL=null;saveDraw();document.querySelectorAll('#draw button').forEach(x=>x.classList.remove('on'));return}
-  mkOverlay(b.dataset.o,null,b);document.querySelectorAll('#draw button').forEach(x=>x.classList.toggle('on',x===b));
+  mkOverlay(b.dataset.o,null,b);document.querySelectorAll('#draw button').forEach(x=>x.classList.toggle('on',x===b));drawOpen(false);   // phones: out of the way while placing it
   say(b.title+': click the chart to place its points')};
 
 // drawings are kept per token in this browser (by time and price, so they sit right on any candle size); click one to
