@@ -49,7 +49,7 @@
 #lr .pill.ok{color:#c7f284;border-color:rgba(199,242,132,.4);background:rgba(199,242,132,.08)}#lr .pill.no{color:var(--red);border-color:rgba(255,51,85,.4);background:rgba(255,51,85,.08)}
 #lr .pill.wait{color:#aab4d4;background:rgba(255,255,255,.04)}#lr .pill.ex{color:#c7f284;border-color:rgba(199,242,132,.4)}#lr .pill.info{color:var(--amber);border-color:rgba(255,210,63,.4)}
 #lr .pills{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
-#lr .chip{display:inline-block;font-size:9.5px;letter-spacing:.8px;padding:0 5px;margin-left:5px;border:1px solid;vertical-align:1px}
+#lr .chip{display:inline-block;font-size:9.5px;letter-spacing:.8px;padding:0;margin-left:7px;border:0!important;vertical-align:1px;font-weight:600}
 #lr .chip.bad{color:var(--red);border-color:rgba(255,51,85,.5)}#lr .chip.warn{color:var(--amber);border-color:rgba(255,210,63,.45)}#lr .chip.ok{color:#c7f284;border-color:rgba(199,242,132,.45)}
 #lr .sol{color:#c7f284}
 #lr .pfc{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#fff;border:1px solid var(--blue2);padding:2px 4px 2px 8px}#lr .pfc button{background:none;border:0;color:var(--dim);font:inherit;cursor:pointer;padding:0 4px}#lr .pfc button:hover{color:#fff}
@@ -64,17 +64,18 @@
 #lr-dr .buyb{background:var(--green);color:#04060f;border:0;font:inherit;font-size:11px;font-weight:600;letter-spacing:1px;padding:4px 12px;cursor:pointer;margin-left:10px}#lr-dr .buyb:hover{filter:brightness(1.1)}
 #lr-swap{min-height:330px;border:1px solid var(--line)}#lr-swap .ld{padding:40px 0;text-align:center;font-size:12px;color:var(--dim)}
 /* ⓘ INFO next to the ticker: the coin's panel here; the rest of the row opens its terminal */
-#lr .infob{background:none;border:1px solid var(--blue2);color:var(--blue2);font:inherit;font-size:9.5px;letter-spacing:1px;padding:1px 6px;margin-left:6px;cursor:pointer;vertical-align:1px;white-space:nowrap}
-#lr .infob:hover{background:rgba(74,122,255,.14);color:#fff}
+#lr .infob{background:none;border:0;color:var(--blue2);font:inherit;font-size:9.5px;letter-spacing:.8px;font-weight:600;padding:0;margin-left:8px;cursor:pointer;vertical-align:1px;white-space:nowrap}
+#lr .infob:hover{color:#fff;text-decoration:underline}
 #lr #lr-rows tr[data-m]{cursor:pointer}
 #lr .it.go{cursor:pointer}#lr .it.go:hover{background:rgba(255,255,255,.03)}#lr .it.go .lr-nm a{color:inherit;text-decoration:none}
 #lr .vdl{font-size:10.5px;letter-spacing:1px;color:var(--blue2);text-decoration:none;white-space:nowrap}#lr .vdl:hover{color:#fff;text-decoration:underline}
-/* PAIR ▾: search every stonkfun pair, filter the launches to one */
-#lr .lr-pp{position:relative;display:flex;align-items:center;gap:4px}
-#lr .lr-ppb{background:none;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:11px;letter-spacing:1px;padding:5px 10px;cursor:pointer;white-space:nowrap}
-#lr .lr-ppb b{color:#fff;font-weight:600;letter-spacing:0;margin:0 2px}#lr .lr-ppb:hover,#lr .lr-ppb.on{border-color:var(--blue2);color:var(--txt)}
-#lr .lr-ppx{background:none;border:1px solid var(--line);color:var(--dim);font:inherit;width:26px;height:26px;cursor:pointer}#lr .lr-ppx:hover{color:#fff;border-color:var(--red)}
-#lr .lr-ppd{position:absolute;top:calc(100% + 6px);left:0;z-index:40;width:min(380px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--blue2);box-shadow:0 18px 50px rgba(0,0,0,.6)}
+/* PAIR (the column's header): sort A-Z / Z-A, or search every stonkfun pair and show one */
+#lr .lr-panel{position:relative}#lr .lr-pth{cursor:pointer}#lr .lr-pth:hover,#lr .lr-pth.pick{color:#fff}
+#lr .lr-pth b{color:var(--blue2);font-weight:600;letter-spacing:0}#lr .lr-pth .car{font-size:8px;margin-left:4px}#lr .lr-pth.on::after{content:none}
+#lr .lr-ppd{position:absolute;z-index:40;width:min(380px,calc(100% - 16px));background:var(--panel);border:1px solid var(--blue2);box-shadow:0 18px 50px rgba(0,0,0,.6)}
+#lr .lr-pps{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);font-size:10px;letter-spacing:1.2px;color:var(--dim)}
+#lr .lr-pps button{background:none;border:1px solid var(--line);color:var(--txt);font:inherit;font-size:10.5px;letter-spacing:1px;padding:3px 8px;cursor:pointer}#lr .lr-pps button.on,#lr .lr-pps button:hover{border-color:var(--blue2);color:#fff}
+#lr .lr-pps .lr-ppx{margin-left:auto;color:var(--dim)}#lr .lr-pps .lr-ppx:hover{border-color:var(--red)}
 #lr .lr-ppd input{width:100%;box-sizing:border-box;background:#060a17;border:0;border-bottom:1px solid var(--line);color:#fff;font:inherit;font-size:13px;padding:11px 12px;outline:none}
 #lr .lr-ppL{max-height:360px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#24345e transparent}
 #lr .it.pp{width:100%;background:none;border:0;border-bottom:1px solid var(--line);text-align:left;font:inherit;font-size:12px;color:inherit;cursor:pointer}

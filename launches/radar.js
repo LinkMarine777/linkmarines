@@ -37,16 +37,17 @@ ROOT.innerHTML = `
   <section class="lr-panel">
     <div class="lr-ph"><h2>LAUNCHES · LAST 24H</h2><span class="n" id="lr-nRows"></span>
       <div class="lr-tabs" id="lr-tabs">${['REAL', 'WATCH', 'FARM', 'BUNDLED', 'THIN', 'ALL'].map(v => `<button type="button" data-v="${v}">${v}</button>`).join('')}</div>
-      <div class="lr-pp" id="lr-pp"><button type="button" class="lr-ppb" id="lr-ppB" aria-haspopup="listbox" title="filter by the quote asset a coin launched against">PAIR <b id="lr-ppN">ALL</b> ▾</button><span id="lr-pf"></span>
-        <div class="lr-ppd" id="lr-ppD" hidden><input id="lr-ppQ" type="search" autocomplete="off" placeholder="Search every stonkfun pair: symbol, name, category"><div class="lr-ppL" id="lr-ppL" role="listbox"></div></div></div>
       <span class="hint">tap a coin for its terminal · <span id="lr-upd"></span></span></div>
     <div class="lr-tw"><table><thead><tr>
-      <th class="l" data-k="score">SCORE</th><th class="l" data-k="s">COIN</th><th class="l" data-k="q">PAIR</th><th data-k="c">AGE</th>
+      <th class="l" data-k="score">SCORE</th><th class="l" data-k="s">COIN</th><th class="l lr-pth" id="lr-pth" aria-haspopup="listbox" title="sort by pair, or pick one">PAIR<b id="lr-ppN"></b><span class="car">▾</span></th><th data-k="c">AGE</th>
       <th data-k="mc">MC</th><th data-k="v">24H VOL</th><th data-k="fees" title="priority fees + tips traders paid (Jupiter's Fees Paid), and per trade">FEES PAID</th>
       <th data-k="fb" title="what the coin paid its holders ÷ its tax rate, against the volume it reports: real trading lands near 1.0">FEE-BACKED</th>
       <th data-k="ob">ORG BUYERS</th><th data-k="h">HOLDERS</th><th data-k="bund" title="held now: the bigger of what bundlers hold (Jupiter's Bundlers H.) and holders linked by one private funder">BUNDLED</th>
       <th data-k="dg" title="the dev's other coins: 👑 graduated · launched (Jupiter)">DEV</th><th></th>
     </tr></thead><tbody id="lr-rows"><tr><td class="l dim" colspan="13">loading…</td></tr></tbody></table></div>
+    <div class="lr-ppd" id="lr-ppD" hidden>
+      <div class="lr-pps"><span>SORT</span><button type="button" data-ps="1">A → Z</button><button type="button" data-ps="-1">Z → A</button><button type="button" class="lr-ppx" data-act="unpair" id="lr-ppX">ALL PAIRS ✕</button></div>
+      <input id="lr-ppQ" type="search" autocomplete="off" placeholder="Search every stonkfun pair: symbol, name, category"><div class="lr-ppL" id="lr-ppL" role="listbox"></div></div>
   </section>
   <section class="lr-panel">
     <div class="lr-ph"><h2>WHERE THE REAL LAUNCHES ARE · PAIRS</h2><span class="hint">tap a pair to see its launches</span></div>
@@ -120,8 +121,7 @@ const devCell = r => r.dn > 2000 ? `<span class="dim" title="a launch tool's wal
 function renderRows() {
   let L = (D.launches || []).map(r => (r.bund = bundOf(r), r)).filter(r => (!pq || r.qm === pq) && (vf === 'ALL' || (vf === 'BUNDLED' ? r.flags && r.flags.includes('BUNDLED') : r.vd === vf)));
   const ph = pq && (D.hot || []).find(h => h.qm === pq);
-  $('ppN').textContent = pq ? pairName(pq, ph) : 'ALL'; $('ppB').classList.toggle('on', !!pq);
-  $('pf').innerHTML = pq ? '<button type="button" class="lr-ppx" title="all pairs" data-act="unpair">✕</button>' : '';
+  $('ppN').textContent = pq ? ' ' + pairName(pq, ph) : ''; $('pth').classList.toggle('on', sk === 'q'); $('pth').classList.toggle('asc', sk === 'q' && sd > 0); $('pth').classList.toggle('pick', !!pq);
   ROOT.querySelectorAll('#lr-hot tr[data-q]').forEach(t => t.classList.toggle('on', t.dataset.q === pq));
   L = L.slice().sort(cmp(sk, sd));
   ROOT.querySelectorAll('#lr-tabs button').forEach(b => b.classList.toggle('on', b.dataset.v === vf));
@@ -205,22 +205,27 @@ function renderPP() {
     + show.map(p => `<button type="button" class="it pp${p.m === pq ? ' on' : ''}" data-pp="${esc(p.m)}" role="option">${pic(p.i)}<span class="lr-nm"><b>${sy(p.s)}</b>${p.c ? `<span class="lr-tag">${esc(p.c)}</span>` : ''}<small>${esc(p.n)}</small></span><span class="lr-ct${cnt[p.m] ? '' : ' dim'}">${cnt[p.m] ? num(cnt[p.m]) + ' launch' + (cnt[p.m] === 1 ? '' : 'es') : '—'}</span></button>`).join('')
     + (L.length > show.length ? `<div class="empty">${num(L.length - show.length)} more: type to narrow it down</div>` : '') + (L.length ? '' : '<div class="empty">no pair matches</div>');
 }
-async function openPP() { $('ppD').hidden = false; $('ppB').setAttribute('aria-expanded', 'true'); $('ppL').innerHTML = '<div class="empty">loading pairs…</div>'; await pairs(); renderPP(); $('ppQ').focus(); }
-function closePP() { const d = $('ppD'); if (d && !d.hidden) { d.hidden = true; $('ppB').setAttribute('aria-expanded', 'false'); $('ppQ').value = ''; } }
+async function openPP() {
+  const th = $('pth'), pn = th.closest('.lr-panel'), a = th.getBoundingClientRect(), b = pn.getBoundingClientRect(), d = $('ppD');
+  d.style.left = Math.max(8, Math.min(a.left - b.left, b.width - Math.min(380, b.width - 16) - 8)) + 'px'; d.style.top = (a.bottom - b.top + 4) + 'px';
+  $('ppX').hidden = !pq; d.querySelectorAll('[data-ps]').forEach(x => x.classList.toggle('on', sk === 'q' && String(sd) === x.dataset.ps));
+  d.hidden = false; th.setAttribute('aria-expanded', 'true'); $('ppL').innerHTML = '<div class="empty">loading pairs…</div>'; await pairs(); renderPP(); $('ppQ').focus(); }
+function closePP() { const d = $('ppD'); if (d && !d.hidden) { d.hidden = true; $('pth').setAttribute('aria-expanded', 'false'); $('ppQ').value = ''; } }
 
 DR.addEventListener('click', e => {
   if (e.target === DR) return closeCoin(); const a = e.target.closest('[data-act]'); if (!a) return;
   if (a.dataset.act === 'close') closeCoin(); else if (a.dataset.act === 'tobuy') $('swap').scrollIntoView({ behavior: 'smooth', block: 'center' });
 });
 addEventListener('keydown', e => { if (e.key === 'Escape') { closePP(); closeCoin(); } });
-document.addEventListener('click', e => { if (!e.target.closest('#lr-pp')) closePP(); });
+document.addEventListener('click', e => { if (!e.target.closest('#lr-ppD,#lr-pth')) closePP(); });
 $('ppQ').addEventListener('input', renderPP);
 $('ppQ').addEventListener('keydown', e => { if (e.key === 'Enter') { const f = $('ppL').querySelector('[data-pp]:not([data-pp=""])'); if (f) setPair(f.dataset.pp, false); } });
 if (pq) pairs().then(() => { if (D) renderRows(); });   // a ?pair= link: its name in the picker
 ROOT.addEventListener('click', e => {
   const act = e.target.closest('[data-act]');
   if (act) { e.preventDefault(); if (act.dataset.act === 'unpair') setPair(null); else if (act.dataset.act === 'all') { vf = 'ALL'; renderRows(); } return; }
-  if (e.target.closest('#lr-ppB')) return $('ppD').hidden ? openPP() : closePP();
+  if (e.target.closest('#lr-pth')) return $('ppD').hidden ? openPP() : closePP();
+  const ps = e.target.closest('[data-ps]'); if (ps) { sk = 'q'; sd = +ps.dataset.ps; try { localStorage.setItem('lrSort', JSON.stringify([sk, sd])); } catch (x) {} closePP(); return renderRows(); }
   const pp = e.target.closest('[data-pp]'); if (pp) return setPair(pp.dataset.pp || null, false);
   if (e.target.closest('#lr-ppD')) return;
   const lb = e.target.closest('[data-pair]'); if (lb) return setPair(lb.dataset.pair);
