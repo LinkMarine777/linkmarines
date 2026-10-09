@@ -620,7 +620,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
 </header>
 
 <div class="tape-bar top">
-  <div class="lbl">STONK<span class="lg">&nbsp;BOARD TOP 10</span>&nbsp;APY <button data-k="apy3d" class="on">3D</button><button data-k="apy24h">24H</button></div>
+  <div class="lbl">STONK<span class="lg">&nbsp;BOARD TOP 10 · 24H</span>&nbsp;APY</div>
   <div class="tape"><div class="track" id="boardTicker"><span class="tk dim">loading…</span></div></div>
 </div>
 <div class="tape-bar vol">
@@ -1503,20 +1503,27 @@ async function loadLaunchTicker(){try{
 // it carries on a moment later). Everywhere else they use the smooth CSS slide (scrolling snaps to whole pixels and looks
 // shaky), paused while the mouse is over them and moving again the moment it leaves.
 const IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+// smooth = whole pixels at an even beat: 1 px every 1/60 s (60 px a second). The old 45 px/s was 3/4 of a pixel a frame, so the
+// text moved 1 px on some frames and 0 on others, which reads as shaking.
+const TAPE_PX_S=60;
 function setTrack(id,html){const tr=$(id);tr.innerHTML=html+html;
-  if(!IOS)requestAnimationFrame(()=>{const half=tr.scrollWidth/2;tr.style.animation=half>0?`scroll ${Math.max(20,half/45)}s linear infinite`:''})}
+  if(!IOS)requestAnimationFrame(()=>{if(tr._anim)tr._anim.cancel();const half=Math.round(tr.scrollWidth/2);if(!(half>0))return;
+    // one compositor animation stepping exactly 1 px at a time (steps), so page scrolling or a busy page can't make it stutter
+    tr._anim=tr.animate([{transform:'translate3d(0,0,0)'},{transform:`translate3d(${-half}px,0,0)`}],{duration:half/TAPE_PX_S*1000,iterations:Infinity,easing:`steps(${half})`});
+    const box=tr.parentNode;if(!box._hov){box._hov=1;box.addEventListener('mouseenter',()=>tr._anim&&tr._anim.pause());box.addEventListener('mouseleave',()=>tr._anim&&tr._anim.play())}})}
 if(!IOS)document.documentElement.classList.add('slideTape');
-else document.querySelectorAll('.tape').forEach(el=>{const tr=el.firstElementChild;let x=0,last=0,hold=0;const SPEED=45;   // px a second
+else document.querySelectorAll('.tape').forEach(el=>{const tr=el.firstElementChild;let x=0,last=0,hold=0,acc=0;const TICK=1000/TAPE_PX_S;   // ms per pixel
   const stop=()=>{hold=Date.now()+1e9},go=()=>{hold=Date.now()+2500;x=el.scrollLeft};
   el.addEventListener('touchstart',stop,{passive:true});el.addEventListener('touchend',go,{passive:true});
   function step(t){const dt=last?Math.min(t-last,100):0;last=t;const half=tr.scrollWidth/2;
-    if(Date.now()>hold&&!document.hidden){if(half>el.clientWidth){x+=SPEED*dt/1000;if(x>=half)x-=half;el.scrollLeft=x}}
+    // whole pixels only (scrollLeft snaps to them anyway): 1 px per 1/60 s, carried over between frames so the beat stays even
+    if(Date.now()>hold&&!document.hidden){if(half>el.clientWidth){acc+=dt;const n=Math.floor(acc/TICK);acc-=n*TICK;if(n){x=Math.round(x)+n;if(x>=half)x-=Math.round(half);el.scrollLeft=x}}}
     else if(half>0&&el.scrollLeft>=half)el.scrollLeft-=half;
     requestAnimationFrame(step)}
   requestAnimationFrame(step)});
 
 // ---------- top ticker: thestonkboard.com top 10 by APY ----------
-let board=null,boardKey='apy3d';
+let board=null;const boardKey='apy24h';   // 24h, like the other tapes
 function renderBoard(){if(!board)return;const L=board[boardKey]||[],lab=boardKey==='apy3d'?'3d':'24h';
   let html=L.map((t,i)=>`<a class="tk" href="${esc(tokLink(t.mint))}" target="_blank" rel="noopener">
     <span class="dim">#${i+1}</span>${t.logo?`<img src="${esc(t.logo)}" alt="" loading="lazy" onerror="this.remove()">`:''}
@@ -1528,11 +1535,6 @@ function renderBoard(){if(!board)return;const L=board[boardKey]||[],lab=boardKey
 let boardX=null;
 async function loadBoard(){try{board=await j(DATA+'board.json?'+Date.now());renderBoard();renderApy()}catch(e){}
   try{boardX=await j(DATA+'board-x.json?'+Date.now());renderApy()}catch(e){}}
-document.querySelector('.top .lbl').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
-  document.querySelectorAll('.top .lbl button').forEach(x=>x.classList.toggle('on',x===b));boardKey=b.dataset.k;renderBoard();renderApy()});
-// on stream nobody clicks, so alternate 3D / 24H every few minutes
-setInterval(()=>{if(!document.documentElement.classList.contains('fit'))return;
-  const nx=boardKey==='apy3d'?'apy24h':'apy3d';document.querySelector(`.top .lbl button[data-k="${nx}"]`).click()},240000);
 
 // ---------- Terminal 7 panels: CLOBr (score tile + analytics) and the Stonk Board card ----------
 // Flip a flag to false to hide that data. CLOBr also needs its key on the bot, or it stays hidden.
