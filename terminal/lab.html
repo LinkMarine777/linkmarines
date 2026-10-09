@@ -48,7 +48,7 @@ a{color:inherit;text-decoration:none}
 .tabs button{background:transparent;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:11px;padding:4px 12px;cursor:pointer;white-space:nowrap}
 .tabs button:hover{color:#fff;border-color:var(--blue2)}
 .tabs button.on{color:#fff;border-color:var(--blue2);background:rgba(42,90,218,.2)}
-.rgt{display:flex;gap:4px;margin-left:auto}
+.rgt{display:flex;gap:4px;margin-left:12px}
 #pmBtn{color:var(--dim)}#pmBtn b{font-weight:400}#pmBtn b.on{color:#fff}#tf{margin-right:6px}#ctab button{padding:3px 10px;display:grid;place-items:center}#ctab svg{width:18px;height:18px}
 .dd{position:relative}
 .dd>button{display:flex;align-items:center;gap:6px}.dd>button .fx{font-style:italic;font-family:Georgia,serif;font-size:13px;color:var(--amber)}
@@ -102,18 +102,18 @@ html.nohdr .tkb,html.nohdr .tkl,html.nohdr .pchips{display:none!important}html.n
     <div class="tkb"><img id="tkImg" alt=""><span class="nm"><b><span id="tkSym">…</span><span class="q" id="tkQ"></span></b><small id="tkName"></small></span><button type="button" class="mca" id="mCa" title="Copy the contract address"></button></div><span class="tkl" id="tkLinks"></span>
     <div class="legend"><a class="dep" id="depLeg" target="_blank" rel="noopener" style="display:none" title="CLOBr market depth, delayed up to 1h"><span><i></i>CLOBr depth <span class="dly">delayed</span></span></a>
       <span><i style="background:var(--blue2)"></i><span id="lgB">$TOKEN</span> (right)</span><span id="lgQw" style="display:none"><i class="dq"></i><span id="lgQ"></span> (left)</span></div>
-    <i class="brk"></i>
-    <div class="pchips" id="pChips"></div>
-    <div class="tabs" id="tf"></div>
-    <div class="tabs" id="ctab"><button id="candleBtn" type="button" aria-label="Line or candles"></button></div>
-    <div class="tabs dd" id="indDd"><button type="button" id="indBtn" aria-haspopup="true" aria-expanded="false"><span class="fx">f</span>INDICATORS <span id="indN"></span>▾</button><div class="menu" id="ind" role="menu"></div></div>
-    <div class="tabs" id="pmTab"><button type="button" id="pmBtn" title="Price or market cap"><b data-m="price">Price</b> / <b data-m="mcap">MC</b></button></div>
-    <div class="tabs" id="dtab" style="visibility:hidden"><button id="depthBtn" class="on" type="button" title="CLOBr market depth: support (green) and resistance (red) liquidity by price">DEPTH</button></div>
     <div class="rgt">
       <div class="tabs"><button id="fsBtn" type="button" title="Full screen (F)" aria-label="Full screen"></button></div>
       <div class="tabs"><button id="resetBtn" type="button" title="Reset the view (or double-click the chart)" aria-label="Reset the view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></button></div>
       <div class="tabs dd" id="shotDd"><button id="shot" type="button" title="Chart snapshot" aria-haspopup="true" aria-expanded="false" aria-label="Screenshot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="3.5"/></svg></button><div class="menu r" id="shotMenu" role="menu"><div class="mh">CHART SNAPSHOT</div><button type="button" data-s="save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M4 20h16"/></svg><span>Download image</span></button><button type="button" data-s="copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V4H4v12h4"/></svg><span>Copy image</span></button><button type="button" data-s="x"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.8 3h3.1l-6.8 7.8L22 21h-6.2l-4.9-6.4L5.3 21H2.2l7.3-8.3L2 3h6.4l4.4 5.8zm-1.1 16.2h1.7L7.4 4.7H5.6z"/></svg><span>Share on X</span></button></div></div>
     </div>
+    <i class="brk"></i>
+    <div class="pchips" id="pChips"></div>
+    <div class="tabs" id="tf"></div>
+    <div class="tabs" id="ctab"><button id="candleBtn" type="button" aria-label="Line or candles"></button></div>
+    <div class="tabs dd" id="indDd"><button type="button" id="indBtn" title="Indicators" aria-label="Indicators" aria-haspopup="true" aria-expanded="false"><span class="fx">ƒx</span><span id="indN"></span>▾</button><div class="menu" id="ind" role="menu"></div></div>
+    <div class="tabs" id="pmTab"><button type="button" id="pmBtn" title="Price or market cap"><b data-m="price">Price</b> / <b data-m="mcap">MC</b></button></div>
+    <div class="tabs" id="dtab" style="visibility:hidden"><button id="depthBtn" class="on" type="button" title="CLOBr market depth: support (green) and resistance (red) liquidity by price">DEPTH</button></div>
   </div>
   <div class="body"><div class="side" id="draw" aria-label="Drawing tools"></div><div class="cw"><div id="chart"></div><div class="zbar" id="zbar"><button type="button" data-z="out" title="Zoom out" aria-label="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg></button><button type="button" data-z="in" title="Zoom in" aria-label="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button><button type="button" data-z="left" title="Scroll back" aria-label="Scroll back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button><button type="button" data-z="right" title="Scroll forward" aria-label="Scroll forward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button><button type="button" data-z="reset" title="Reset the view (Alt+R)" aria-label="Reset the view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></button></div></div></div>
 </div>
@@ -174,8 +174,13 @@ klinecharts.registerOverlay({
 let QMAP=new Map();   // candle time -> the pair token's close
 klinecharts.registerIndicator({name:'QUOTE',shortName:'',series:'normal',precision:4,
   figures:[{key:'q',title:'',type:'line'}],
-  calc:d=>{let last=null;return d.map(k=>{const v=QMAP.get(k.timestamp);if(v!=null)last=v;return{q:v??last}})},
+  // in MC the chart rounds to whole numbers (market caps), so the pair token's price is carried scaled up (QS) and its labels and
+  // hover value scaled back down; in Price QS is 1
+  calc:d=>{let last=null;return d.map(k=>{const v=QMAP.get(k.timestamp);if(v!=null)last=v;const q=v??last;return{q:q==null?q:q*QS()}})},
+  createTooltipDataSource:({indicator,crosshair})=>{const r=(indicator.result||[])[crosshair.dataIndex],v=r&&r.q!=null?r.q/QS():null;
+    return{name:'',calcParamsText:'',features:[],legends:v==null?[]:[{title:{text:indicator.shortName+'  ',color:'#5d6a8f'},value:{text:'$'+fmtQ(v),color:'#ffd23f'}}]}},
   styles:{lines:[{color:'rgba(255,210,63,.8)',size:1.25,style:'dashed',dashedValue:[4,3]}]}});
+const QS=()=>MODE==='mcap'?1e8:1;
 const fmtQ=v=>v>=1000?v.toFixed(0):v>=1?v.toFixed(2):+v>=.01?v.toFixed(4):(+v).toPrecision(3);
 // Price or MC (market cap), like Jupiter's toggle: Jupiter's own market-cap candles; kept per browser
 let MODE=store('wrLabMode')==='mcap'?'mcap':'price',SUPPLY=null,PPREC=8;
@@ -222,7 +227,7 @@ const chart=klinecharts.init('chart',{decimalFold:{threshold:99},formatter:{form
 // the token's scale on the right ($, no trailing zeros); the pair token's on the left, in amber
 chart.overrideYAxis({paneId:'candle_pane',createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtV(t.value)}))});
 const QAX=chart.createYAxis({id:'quote_axis',paneId:'candle_pane',position:'left',gap:{top:.08,bottom:.25},
-  createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtQ(+t.value)}))});
+  createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtQ(+t.value/QS())}))});
 chart.createIndicator({name:'DEPTHB',paneId:'candle_pane'},true);
 
 // line (the live chart's default) or candles: one button showing the type you're on
@@ -390,7 +395,7 @@ Promise.all([sfInfo,dsInfo,jupInfo]).then(([sf,pairs,jt])=>{
   const qm=sf&&sf.quote&&sf.quote.mint,P=(qm&&pairs.filter(p=>other(p).address===qm).sort((a,b)=>liq(b)-liq(a))[0])||pairs.sort((a,b)=>liq(b)-liq(a))[0]||null;
   const me=P?(P.baseToken.address===CA?P.baseToken:P.quoteToken):{};
   SYM=String((sf&&sf.symbol)||(jt&&jt.symbol)||me.symbol||'TOKEN').replace(/^\$/,'');
-  const name=(sf&&sf.name)||(jt&&jt.name)||me.name||'',img=CA===MARINE?'/terminal/img/marine.webp':(sf&&sf.image)||(jt&&jt.icon)||(P&&P.info&&P.info.imageUrl)||'';
+  const name=(sf&&sf.name)||(jt&&jt.name)||me.name||'',img=CA===MARINE?'/terminal/img/marine.webp':pairs.map(p=>p.info&&p.info.imageUrl).find(Boolean)||(sf&&sf.image)||(jt&&jt.icon)||'';   // DexScreener's: the project's current logo
   if(img)$('tkImg').src=img;$('tkSym').textContent='$'+SYM;$('lgB').textContent='$'+SYM+(MODE==='mcap'?' MC':'');document.title='$'+SYM+' · Chart Lab';
   $('tkName').textContent=name&&name.replace(/^\$/,'').toLowerCase()!==SYM.toLowerCase()?name:'';
   const q=qm?{mint:qm,sym:String(sf.quote.symbol||'').replace(/^\$/,'')}:P?{mint:other(P).address,sym:String(other(P).symbol||'').replace(/^\$/,'')}:null;
@@ -413,7 +418,7 @@ Promise.all([sfInfo,dsInfo,jupInfo]).then(([sf,pairs,jt])=>{
 fetch(BOT+'/depth?mint='+CA+'&d=1').then(r=>r.json()).then(d=>{if(!d||!d.levels||!d.levels.length)return;DEPTH=d.levels;
   $('dtab').style.visibility='';const l=$('depLeg');l.style.display='';l.href='https://clobr.io/token/'+encodeURIComponent(CA);l.classList.toggle('off',!depthOn);chart.resize()}).catch(()=>{});
 addEventListener('resize',()=>chart.resize());
-function pmShow(){document.querySelectorAll('#pmBtn b').forEach(b=>b.classList.toggle('on',b.dataset.m===MODE));$('lgB').textContent='$'+SYM+(MODE==='mcap'?' MC':'')}
+function pmShow(){chart.setStyles({crosshair:{horizontal:{text:{show:MODE!=='mcap'}}}});document.querySelectorAll('#pmBtn b').forEach(b=>b.classList.toggle('on',b.dataset.m===MODE));$('lgB').textContent='$'+SYM+(MODE==='mcap'?' MC':'')}
 $('pmBtn').onclick=()=>{MODE=MODE==='mcap'?'price':'mcap';store('wrLabMode',MODE);pmShow();
   // this mode's drawings, and the candles again (setting the symbol reloads them)
   saveDraw.off=1;chart.removeOverlay();SEL=null;DKEY='wrLabDraw:'+CA+(MODE==='mcap'?':mc':'');restoreDraw.done=0;

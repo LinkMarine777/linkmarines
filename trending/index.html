@@ -262,6 +262,7 @@ main.lrOn>:not(.vt):not(#lr){display:none!important}
     </div>
   </div>
 </main>
+<footer class="t7f" style="text-align:center;font-size:12px;padding:16px 16px 26px;color:#5d6a8f;letter-spacing:.5px"><a href="https://x.com/Terminal7xyz" target="_blank" rel="noopener" style="color:#4a7aff;text-decoration:none">𝕏 Follow Terminal 7 · @Terminal7xyz</a></footer>
 
 <script>
 const MLOGO='/terminal/img/marine.webp';   // $MARINE's current logo (stonkfun keeps the launch image)
@@ -293,11 +294,11 @@ let ROWS=[],sortK='vol',sortD=-1,showAll=false,SC={};   // sortD -1: biggest (or
 let LIVE={},liveAt=0;
 // DexScreener misprices some pools (BOP/BONK, MINECAT/ORE: $30-90M "volume" on $80K of liquidity), so its volume is used only
 // when it's within 5x of the saved one (stonkfun's or the Stonk Board's)
-function applyLive(){ROWS.forEach(r=>{const q=LIVE[r.mint];if(!q)return;r.price=q.price;if(q.chg!=null)r.chg=q.chg;if(q.vol)r.vol=r.vol0&&q.vol>5*r.vol0?r.vol0:q.vol;if(q.mcap)r.mcap=q.mcap})}
+function applyLive(){ROWS.forEach(r=>{const q=LIVE[r.mint];if(!q)return;r.price=q.price;if(q.chg!=null)r.chg=q.chg;if(q.vol)r.vol=r.vol0&&q.vol>5*r.vol0?r.vol0:q.vol;if(q.mcap)r.mcap=q.mcap;if(q.img&&r.mint!==MARINE)r.image=q.img})}   // DexScreener's logo: the project's current one
 async function loadQuotes(){const ms=[...new Set([MARINE,...ROWS.slice().sort((a,b)=>(b.vol||0)-(a.vol||0)).slice(0,59).map(r=>r.mint)])],next={};
   for(let i=0;i<ms.length;i+=30){try{const d=await j('https://api.dexscreener.com/tokens/v1/solana/'+ms.slice(i,i+30).join(','));
     (Array.isArray(d)?d:[]).forEach(p=>{const m=p.baseToken&&p.baseToken.address;if(!m||!ms.includes(m))return;const l=(p.liquidity||{}).usd||0,q=next[m]||(next[m]={l:-1,vol:0});
-      q.vol+=(p.volume||{}).h24||0;if(l>q.l){q.l=l;q.price=+p.priceUsd;q.chg=(p.priceChange||{}).h24;q.mcap=p.marketCap||p.fdv}})}catch(e){}}
+      q.vol+=(p.volume||{}).h24||0;if(!q.img&&p.info&&p.info.imageUrl)q.img=p.info.imageUrl;if(l>q.l){q.l=l;q.price=+p.priceUsd;q.chg=(p.priceChange||{}).h24;q.mcap=p.marketCap||p.fdv}})}catch(e){}}
   if(!Object.keys(next).length)return;Object.assign(LIVE,next);liveAt=Date.now();applyLive();render()}
 // paid out for reward tokens the bot's list has no total for yet (it only knows the ones the payout alerts follow): stonkfun's
 // own total (through the bot, which caches it), a few tokens at most, kept in this browser for an hour
