@@ -64,7 +64,8 @@ a{color:inherit;text-decoration:none}
   .tb>*{flex:none}.tb .tabs button{padding:4px 8px;font-size:11px}#tf{margin-right:0}
   #ctab,#indDd,#pmTab,#dtab{margin-left:4px;padding-left:6px;border-left:1px solid var(--line)}
   #dtab[style*="hidden"]{display:none}
-  #tf>button[data-k]:not(.on):not([data-k="all"]){display:none}   /* just the current size and ALL (every size is in ▾), room for ƒx, Price/MC, DEPTH */
+  #tf>button[data-k]:not(.on):not([data-k="all"]){display:none}
+  #tfMore{display:none!important}#tf>button.on .car{display:inline;margin-left:3px;font-size:9px;opacity:.7}   /* the current size opens the menu */   /* just the current size and ALL (every size is in ▾), room for ƒx, Price/MC, DEPTH */
   .tb{gap:3px}.tb .tabs button{padding:4px 7px}#ctab,#indDd,#pmTab,#dtab{margin-left:1px;padding-left:4px}#candleBtn{padding:3px 6px!important}
   /* the drawing tools fold away behind ✎ (they slide over the chart's left edge), the zoom buttons show when the chart is
      touched (pinch and drag zoom too), so the chart gets the whole width; reset lives in the zoom buttons */
@@ -82,6 +83,8 @@ a{color:inherit;text-decoration:none}
   .tb{gap:2px}.tb .tabs button{padding:4px 6px}
   .tb.tight .tabs button{padding:3px 4px;font-size:10px}.tb.tight #ctab button{padding:3px 4px}.tb.tight #pmBtn{padding:4px 4px}
   .tb.tight .rgt button{padding:3px 3px!important}.tb.tight #indBtn .fx{font-size:12px}
+  .tb.tighter{gap:1px}.tb.tighter .tabs button{padding:3px 3px;font-size:9.5px}.tb.tighter .rgt{padding-left:2px;gap:1px}
+  .tb.tighter .rgt svg,.tb.tighter #ctab svg{width:13px!important;height:13px!important}
 }
 #pmBtn{color:var(--dim)}#pmBtn b{font-weight:400}#pmBtn b.on{color:#fff}#tf{margin-right:6px}#ctab button{padding:3px 10px;display:grid;place-items:center}#ctab svg{width:18px;height:18px}
 .dd{position:relative}
@@ -116,6 +119,7 @@ a{color:inherit;text-decoration:none}
 @media (pointer:coarse){.zbar{opacity:.85;pointer-events:auto}}
 @media (min-width:641px){#drawTog{display:none}}   /* the drawing tools are always out on wider screens */
 #depItem,#depHr{display:none}
+.car{display:none;font-style:normal}
 @media (max-width:640px){.zbar{opacity:0;pointer-events:none;bottom:34px;gap:5px}.zbar button{width:30px;height:30px}.cw.zshow .zbar{opacity:.9;pointer-events:auto}}
 .zbar button{width:32px;height:32px;display:grid;place-items:center;border:0;border-radius:6px;background:rgba(26,36,68,.85);color:#c9d3ee;cursor:pointer}
 .zbar button:hover{background:#2a3a66;color:#fff}.zbar button svg{width:16px;height:16px}
@@ -293,7 +297,8 @@ axesFit();PHONE.addEventListener('change',axesFit);
 // phones: refresh, full screen and snapshot sit at the end of the toolbar row, level with the other buttons
 {const r=document.querySelector('.rgt'),home=r.parentNode,next=r.nextSibling,go=()=>PHONE.matches?$('tbRow').appendChild(r):home.insertBefore(r,next);go();PHONE.addEventListener('change',go)}
 // …and the row never cuts a button off: if this phone's font makes it overflow, it steps down to a tighter size
-{const t=$('tbRow'),fitRow=()=>{t.classList.remove('tight');if(PHONE.matches&&t.scrollWidth>t.clientWidth+1)t.classList.add('tight')};
+{const t=$('tbRow'),fitRow=()=>{t.classList.remove('tight','tighter');if(!PHONE.matches)return;const over=()=>t.scrollWidth>t.clientWidth+1;
+    if(over())t.classList.add('tight');if(over())t.classList.add('tighter')};
   fitRow();addEventListener('resize',fitRow);new MutationObserver(fitRow).observe(t,{childList:true,subtree:true,characterData:true});
   document.fonts&&document.fonts.ready.then(fitRow)}
 // each price scale is as wide as the text it really shows (its ticks; the right one also its price tag), not the long
@@ -353,16 +358,21 @@ $('zbar').onclick=e=>{const b=e.target.closest('[data-z]');if(!b)return;const z=
   if(z==='in'||z==='out')return chart.zoomAtDataIndex(z==='in'?1.25:.8,Math.max(0,Math.min(L-1,chart.getVisibleRange().to-1)),200);   // around the newest candle on screen
   chart.scrollByDistance((z==='left'?1:-1)*w*.3,200)};$('chart').addEventListener('dblclick',e=>{if(!chart.getOverlays().some(o=>o.currentStep>0))resetView()});
 function tfBar(){const fav=TFS.filter(t=>FAV.includes(t[0])),extra=TF[0]!=='all'&&!FAV.includes(TF[0])?TF:null;
-  $('tf').innerHTML=fav.concat(extra?[extra]:[]).map(t=>`<button type="button" data-k="${t[0]}"${t===TF?' class="on"':''}>${t[1]}</button>`).join('')
-    +`<button type="button" data-k="all"${TF[0]==='all'?' class="on"':''} title="The whole history">ALL</button>`
+  $('tf').innerHTML=fav.concat(extra?[extra]:[]).map(t=>`<button type="button" data-k="${t[0]}"${t===TF?' class="on"':''}>${t[1]}<i class="car">▾</i></button>`).join('')
+    +`<button type="button" data-k="all"${TF[0]==='all'?' class="on"':''} title="The whole history">ALL<i class="car">▾</i></button>`
     +`<span class="dd" id="tfDd"><button type="button" id="tfMore" title="All candle sizes" aria-haspopup="true" aria-expanded="false">▾</button><div class="menu" id="tfMenu" role="menu">`
     +GROUPS.map(([g,re])=>`<div class="mh">${g}</div>`+TFS.filter(t=>t[0]!=='all'&&re.test(t[0])).map(t=>`<button type="button" data-k="${t[0]}"${t===TF?' class="on"':''}><span>${t[1]}</span><span class="star${FAV.includes(t[0])?' fav':''}" data-star="${t[0]}" title="${FAV.includes(t[0])?'Remove from':'Add to'} the toolbar">${FAV.includes(t[0])?'★':'☆'}</span></button>`).join('')).join('')
     +'</div></span>'}
 function setTf(k){const was=TF;TF=TFS.find(t=>t[0]===k);store('wrLabTf',k);tfBar();if(was[2]===TF[2])fit();else chart.setPeriod(TF[3])}
 $('tf').onclick=e=>{const st=e.target.closest('[data-star]');
-  if(st){e.stopPropagation();const k=st.dataset.star;FAV=FAV.includes(k)?FAV.filter(x=>x!==k):FAV.concat(k);store('wrLabFav',FAV.join(','));tfBar();$('tfDd').classList.add('open');placeMenu($('tfDd'));return}
-  if(e.target.closest('#tfMore')){e.stopPropagation();const d=$('tfDd'),o=!d.classList.contains('open');d.classList.toggle('open',o);$('tfMore').setAttribute('aria-expanded',o);if(o)placeMenu(d);return}
-  const b=e.target.closest('[data-k]');if(b)setTf(b.dataset.k)};
+  if(st){e.stopPropagation();const k=st.dataset.star;FAV=FAV.includes(k)?FAV.filter(x=>x!==k):FAV.concat(k);store('wrLabFav',FAV.join(','));tfBar();tfOpen(true);return}
+  if(e.target.closest('#tfMore')){e.stopPropagation();tfOpen(!$('tfDd').classList.contains('open'));return}
+  const b=e.target.closest('[data-k]');if(!b)return;
+  // phones: the current size is the menu's button ("4h ▾"), so tapping it opens every size
+  if(PHONE.matches&&b.classList.contains('on')&&!b.closest('#tfMenu')){e.stopPropagation();tfOpen(!$('tfDd').classList.contains('open'));return}
+  setTf(b.dataset.k)};
+function tfOpen(o){const d=$('tfDd');d.classList.toggle('open',o);$('tfMore').setAttribute('aria-expanded',o);
+  if(o)placeMenu(d,PHONE.matches?$('tf').querySelector(':scope>button.on'):null)}
 document.addEventListener('click',e=>{const d=$('tfDd');if(d&&!e.target.closest('#tfDd'))d.classList.remove('open')});
 tfBar();
 
@@ -414,8 +424,8 @@ const live={};
 $('ind').innerHTML='<button type="button" role="menuitemcheckbox" id="depItem"><span>Market depth</span><small>CLOBr</small><span class="ck">✓</span></button><hr id="depHr">'+IND.map(([n,l,onPrice],i)=>(i&&!onPrice&&IND[i-1][2]?'<hr>':'')+`<button type="button" role="menuitemcheckbox" data-i="${n}"><span>${l}</span><small>${onPrice?'on price':'own pane'}</small><span class="ck">✓</span></button>`).join('');
 $('depItem').classList.toggle('on',depthOn);$('depItem').onclick=e=>{e.stopPropagation();$('depthBtn').click()};
 // a dropdown opens under its button, placed against the window (the phone toolbar row scrolls sideways and would clip it)
-function placeMenu(dd){const m=dd.querySelector('.menu');if(!m)return;if(!matchMedia('(max-width:640px)').matches){m.style.position=m.style.top=m.style.left=m.style.right='';return}
-  const r=dd.getBoundingClientRect();m.style.position='fixed';m.style.right='auto';m.style.top=(r.bottom+4)+'px';
+function placeMenu(dd,at){const m=dd.querySelector('.menu');if(!m)return;if(!matchMedia('(max-width:640px)').matches){m.style.position=m.style.top=m.style.left=m.style.right='';return}
+  const r=(at||dd).getBoundingClientRect();m.style.position='fixed';m.style.right='auto';m.style.top=(r.bottom+4)+'px';
   m.style.left=Math.max(6,Math.min(r.left,innerWidth-m.offsetWidth-6))+'px'}
 const ddOpen=o=>{$('indDd').classList.toggle('open',o);$('indBtn').setAttribute('aria-expanded',o);if(o)placeMenu($('indDd'))};
 $('indBtn').onclick=e=>{e.stopPropagation();shotOpen(false);ddOpen(!$('indDd').classList.contains('open'))};
