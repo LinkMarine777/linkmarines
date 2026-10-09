@@ -1503,22 +1503,25 @@ async function loadLaunchTicker(){try{
 // it carries on a moment later). Everywhere else they use the smooth CSS slide (scrolling snaps to whole pixels and looks
 // shaky), paused while the mouse is over them and moving again the moment it leaves.
 const IOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-// smooth = whole pixels at an even beat: 1 px every 1/60 s (60 px a second). The old 45 px/s was 3/4 of a pixel a frame, so the
-// text moved 1 px on some frames and 0 on others, which reads as shaking.
-const TAPE_PX_S=60;
+// smooth = an even beat. Ordinary (1x) screens: whole CSS pixels, 1 every 1/30 s (30 px a second; 3/4 of a pixel a frame stepped
+// 1 px on some frames and 0 on others, which read as shaking). Sharp screens (2x+, phones): continuous motion, which they draw
+// in their own finer pixels. iPhones / iPads (scrolled, see below): 1 screen pixel a frame.
+const TAPE_PX_S=30,SHARP=devicePixelRatio>=1.75;
 function setTrack(id,html){const tr=$(id);tr.innerHTML=html+html;
   if(!IOS)requestAnimationFrame(()=>{if(tr._anim)tr._anim.cancel();const half=Math.round(tr.scrollWidth/2);if(!(half>0))return;
     // one compositor animation stepping exactly 1 px at a time (steps), so page scrolling or a busy page can't make it stutter
-    tr._anim=tr.animate([{transform:'translate3d(0,0,0)'},{transform:`translate3d(${-half}px,0,0)`}],{duration:half/TAPE_PX_S*1000,iterations:Infinity,easing:`steps(${half})`});
+    tr._anim=tr.animate([{transform:'translate3d(0,0,0)'},{transform:`translate3d(${-half}px,0,0)`}],{duration:half/TAPE_PX_S*1000,iterations:Infinity,easing:SHARP?'linear':`steps(${half})`});
     const box=tr.parentNode;if(!box._hov){box._hov=1;box.addEventListener('mouseenter',()=>tr._anim&&tr._anim.pause());box.addEventListener('mouseleave',()=>tr._anim&&tr._anim.play())}})}
 if(!IOS)document.documentElement.classList.add('slideTape');
-else document.querySelectorAll('.tape').forEach(el=>{const tr=el.firstElementChild;let x=0,last=0,hold=0,acc=0;const TICK=1000/TAPE_PX_S;   // ms per pixel
-  const stop=()=>{hold=Date.now()+1e9},go=()=>{hold=Date.now()+2500;x=el.scrollLeft};
+// iPhones / iPads: one very wide moving layer comes out blank there, so each ticker item slides on its own (small layers), in
+// fractions of a pixel (drawn in the screen's own pixels: smooth); a swipe scrolls the box to look around, and it carries on after
+else document.querySelectorAll('.tape').forEach(el=>{const tr=el.firstElementChild;let off=0,last=0,hold=0;
+  const stop=()=>{hold=Date.now()+1e9},go=()=>{hold=Date.now()+2500};
   el.addEventListener('touchstart',stop,{passive:true});el.addEventListener('touchend',go,{passive:true});
   function step(t){const dt=last?Math.min(t-last,100):0;last=t;const half=tr.scrollWidth/2;
-    // whole pixels only (scrollLeft snaps to them anyway): 1 px per 1/60 s, carried over between frames so the beat stays even
-    if(Date.now()>hold&&!document.hidden){if(half>el.clientWidth){acc+=dt;const n=Math.floor(acc/TICK);acc-=n*TICK;if(n){x=Math.round(x)+n;if(x>=half)x-=Math.round(half);el.scrollLeft=x}}}
-    else if(half>0&&el.scrollLeft>=half)el.scrollLeft-=half;
+    if(Date.now()>hold&&!document.hidden&&half>el.clientWidth&&dt>0){off+=TAPE_PX_S*dt/1000;if(off>=half)off-=half;
+      const tf=`translate3d(${(-off).toFixed(2)}px,0,0)`;for(const c of tr.children)c.style.transform=tf}
+    if(half>0&&el.scrollLeft>=half)el.scrollLeft-=half;
     requestAnimationFrame(step)}
   requestAnimationFrame(step)});
 

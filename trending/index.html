@@ -120,7 +120,8 @@ tr.me{background:rgba(42,90,218,.1)}
   .hide-sm{display:none}main{padding:10px}
   .rk{display:none}.tok{min-width:0;gap:7px}.tok img{width:22px;height:22px}td,th{padding:8px 6px}.ph h1{font-size:22px}.ph{padding:10px 12px}
   .tabs{margin-left:0;width:100%;flex-wrap:wrap}.tabs button{flex:1 1 0;min-width:0;padding:6px 2px;letter-spacing:.5px}
-  #fk button{flex-basis:calc(25% - 3px)}   /* seven alert filters: a row of four, then three stretched to the full width */
+  #fk{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}#fk button{min-width:0}   /* six alert filters: two even rows of three */
+  nav.vt{width:100%}nav.vt a{flex:1 1 0;text-align:center;padding-left:8px;padding-right:8px}   /* trending | new launches: two equal halves, the full width */   /* seven alert filters: a row of four, then three stretched to the full width */
   .hero>div:not(.pin){display:flex;flex-direction:column}.hero>div:not(.pin) b{margin-top:auto}   /* phones: the numbers sit level even when a label wraps */
   .hero .pin .s{display:block;margin-top:2px}   /* keep the $MARINE price / 24h / mcap / vol line on phones */
   header{flex-wrap:nowrap!important;gap:8px!important;padding:8px 10px}header .brand{display:none}header img{width:28px;height:28px}
@@ -160,7 +161,7 @@ header nav{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:cen
 @media (min-width:1000px){.dash .d-al .ph,.dash .d-wh .ph,.dash .d-fl .ph{row-gap:10px}.dash .ph .per{margin-left:auto}
   .dash #fk,.dash #wk,.dash .d-fl .ph .meta{order:3;width:100%;margin-left:0}.dash #wk button{flex:1 1 0}
   .dash .d-fl .ph .meta{display:flex;align-items:center;min-height:26px}}   /* desktop: alerts, whale radar and flow share one header layout: title + period, then a full-width row */
-.d-al{container-type:inline-size}@container (max-width:470px){#fk{width:100%;margin-left:0;flex-wrap:wrap}#fk button{flex:1 1 calc(25% - 3px);min-width:0;padding-left:2px;padding-right:2px}}   /* alert filters: when the panel's too narrow for one row, four then three instead of running off the edge */
+.d-al{container-type:inline-size}@container (max-width:470px){#fk{width:100%;margin-left:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}#fk button{min-width:0;padding-left:2px;padding-right:2px}}   /* alert filters: when the panel's too narrow for one row, four then three instead of running off the edge */
 .lr{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--line);color:inherit;text-decoration:none;font-size:12px}.lr:hover{background:rgba(74,122,255,.06);text-decoration:none}
 .lr img,.lr .ph0{width:22px;height:22px;border-radius:50%;object-fit:cover;background:#0b1a2e;flex:none}.lr .ln{flex:1;min-width:0;overflow:hidden}.lr .ln b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lr small{display:block;color:var(--dim);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lr .r{text-align:right;flex:none}.lr .r b{display:block}.lr .rk2{color:var(--dim);width:22px;text-align:right;flex:none}
