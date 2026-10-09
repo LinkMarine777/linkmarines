@@ -27,7 +27,7 @@
     return +(w.tokens * (r.distributedUsd / r.distributedTokens) / (tax / 1e4) / vol).toFixed(2);
   }
   // Jupiter's asset + our scan (+ a scored launch's radar row) → the row scan.js draws, scored live
-  function rowOf(a, sc, L, rw) {
+  function rowOf(a, sc, L, rw, PA) {
     const au = a.audit || {}, bs = au.bundlerStats || {}, st = a.stats24h || {};
     const dn = Math.max(0, (au.devMints || 1) - 1), dg = Math.max(0, (au.devMigrations || 0) - (a.graduatedPool ? 1 : 0));
     const jv = (st.buyVolume || 0) + (st.sellVolume || 0), ov = (st.buyOrganicVolume || 0) + (st.sellOrganicVolume || 0);
@@ -37,9 +37,11 @@
       scan: sc && { ...sc, sn: +(au.sniperPct || 0).toFixed(2), in: +(au.insiderPct || 0).toFixed(2) } };
     r.fb = fbOf(rw, jv); if (r.fb == null && L) r.fb = L.fb;   // a launch's first 24 h: the radar's own figure
     // the drop from the peak: a launch's peak from stonkfun (the radar), today's market cap from Jupiter
+    // what the price did: a launch's from the radar (5-minute candles), any other coin's from its last 30 days (hourly)
     if (a.mcap) r.mc = a.mcap;
-    const dd = r.pk ? Math.max(0, 1 - r.mc / r.pk) : 0;
-    const s = LRS.score({ ob: r.ob, fb: r.fb, jv, ov, bund: bundOf(r), dn, dg, audit: !!a.audit, h: r.h, top: r.top, fpt: L ? L.fpt : null, vol: jv, dd, pk: r.pk || 0, bpk: r.bpk, bh: r.bh });
+    const pa = (L && L.pa) || PA || null; r.pa = pa; if (!L && pa) r.pk = pa.pk;
+    const dd = pa ? pa.dd : r.pk ? Math.max(0, 1 - r.mc / r.pk) : 0;
+    const s = LRS.score({ ob: r.ob, fb: r.fb, jv, ov, bund: bundOf(r), dn, dg, audit: !!a.audit, h: r.h, top: r.top, fpt: L ? L.fpt : null, vol: jv, dd, pa, pk: r.pk || 0, bpk: r.bpk, bh: r.bh });
     return Object.assign(r, s);
   }
   // the score in the scores box (with CLOBr's and Compound's); a click opens TOKEN INFO
@@ -56,7 +58,7 @@
     const sc = r.scan, chk = checking ? ' · checking funders…' : sc && sc.apps ? ` · ${sc.apps} app / exchange wallet${sc.apps === 1 ? '' : 's'} not counted` : '';
     document.getElementById('radarMeta').textContent = (L ? 'launched ' + ago(L.c) + ' ago' : 'last 24 h · live from Jupiter') + chk;
     document.getElementById('radarBody').innerHTML = `<div class="lrscan">
-      <div class="rtop">${LRS.vd(r)}<span class="dim">${r.dumped ? `the trading was real, but it's down ${Math.round((1 - r.mc / r.pk) * 100)}% from its peak` : WHY[r.vd]}</span></div>
+      <div class="rtop">${LRS.vd(r)}<span class="dim">${r.pnd ? 'a pump and dump: up fast after launch, half of it gone within the hour' : r.dumped ? `the trading was real, but it's down ${Math.round((r.pa ? r.pa.dd : 1 - r.mc / r.pk) * 100)}% from its peak` : WHY[r.vd]}</span></div>
       <div class="rstats">
         ${r.fb != null ? stat('Fee-backed', r.fb.toFixed(2), fbc, 'what holders were paid in 24 h ÷ the tax ÷ the 24 h volume: real trading comes out near 1.0') : stat('Organic volume', r.org == null ? '—' : r.org + '%', r.org >= 8 ? 'up' : r.org < 2 ? 'dn' : '', 'Jupiter\'s organic share of the 24 h volume (no payouts to check)')}
         ${stat('Org buyers 24h', num(r.ob), r.ob >= 40 ? 'up' : r.ob < 5 ? 'dn' : '')}
@@ -85,7 +87,10 @@
     window.LRS_CEX = DATA && DATA.cex; window.LRS_SVC = DATA && DATA.svc;
     let sc = LRS.scanHolders(holders, asset.circSupply || asset.totalSupply, created, window.LRS_CEX, window.LRS_SVC) || null;
     let rw = null; try { rw = typeof rewards !== 'undefined' ? rewards : null; } catch (e) {}
-    const show = (s, checking) => { (window.LRS_SCANS = window.LRS_SCANS || {})[CA] = s; render(rowOf(asset, s, L, rw), L, checking); };
+    let PA = null;
+    if (!(L && L.pa)) PA = await getJ(`https://datapi.jup.ag/v2/charts/${CA}?interval=1_HOUR&to=${Date.now()}&candles=720&type=mcap&quote=usd`)
+      .then(d => LRS.priceAction(d.candles, created)).catch(() => null);
+    const show = (s, checking) => { (window.LRS_SCANS = window.LRS_SCANS || {})[CA] = s; render(rowOf(asset, s, L, rw, PA), L, checking); };
     show(sc, !!(sc && sc.cl.length));
     // then again with the payouts (when they land) and app / exchange wallets taken out of the links
     const [v, r2] = await Promise.all([sc && sc.cl.length ? LRS.vetFunders(sc) : sc, rw ? rw : paid24()]);
