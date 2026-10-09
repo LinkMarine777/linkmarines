@@ -31,8 +31,10 @@ The REAL score (0-100) of each launch from the last 24 h that trades ($2,500+ vo
   organic vol     5  Jupiter's organic share of the volume
   fees / trade    5  priority fees + tips traders paid per trade (Jupiter's Fees Paid). Farm bots pay to land their
                      bundles: farms measured 2.3-5 mSOL a trade, real coins 0.7-2.7
-REAL 60+ (and not bundled: 20%+ bundled or linked caps it at WATCH), WATCH 35+, FARM = $20,000+ volume the fees don't
-back up (under 0.45, with under 20 organic buyers or 60 holders; with no payouts to check: under 5 organic buyers),
+minus up to 30 for the drop from the peak market cap (none down to 50% off, all 30 at 95% off), minus up to 10 when
+bundlers held 10%+ at their peak and have sold most of it (sold into the pump)
+REAL 60+ (not bundled: 20%+ bundled or linked caps it at WATCH; not dumped: 85%+ below a $20K+ peak does too), WATCH 35+,
+FARM = $20,000+ volume the fees don't back up (under 0.45, with under 20 organic buyers or 60 holders; with no payouts to check: under 5 organic buyers),
 THIN otherwise.
 """
 import calendar, json, math, os, re, sys, time, urllib.request
@@ -337,12 +339,19 @@ for t in cand:
     s_top = 5 * max(0, min(1, (80 - top) / 50)) if top is not None else 2.5
     s_ov = 5 * min(1, (ov / jv if jv else 0) / 0.08)
     s_fpt = 5 * max(0, min(1, (4 - fpt) / 2.5)) if fpt is not None else 2.5
-    score = round(s_ob + s_fb + s_bu + s_dev + s_h + s_top + s_ov + s_fpt)
+    # what the price did: real trading that ends 95% below the peak is a pump that dumped, not a real coin; and bundlers who
+    # held 10%+ at their peak and have sold most of it sold into the pump
+    mc, pk = mk.get('marketCapUsd') or 0, mk.get('peakMarketCapUsd') or 0
+    dd = max(0, 1 - mc / pk) if pk else 0
+    p_dd = 30 * max(0, min(1, (dd - 0.5) / 0.45))
+    p_bs = 10 * min(1, bpk / 25) if bpk >= 10 and bh < bpk / 2 else 0
+    score = max(0, round(s_ob + s_fb + s_bu + s_dev + s_h + s_top + s_ov + s_fpt - p_dd - p_bs))
+    dumped = dd >= 0.85 and pk >= 20000
     farm = vol >= 20000 and (fb < 0.45 and (ob < 20 or holders < 60) if fb is not None else ob < 5)   # payouts lag: a coin with real buyers isn't a farm
     bundled = bund >= 20
-    verdict = 'FARM' if farm else 'REAL' if score >= 60 and not bundled else 'WATCH' if score >= 35 else 'THIN'
+    verdict = 'FARM' if farm else 'REAL' if score >= 60 and not bundled and not dumped else 'WATCH' if score >= 35 else 'THIN'
     q = t.get('quote') or {}
-    flags = ['BUNDLED'] if bundled else []
+    flags = (['BUNDLED'] if bundled else []) + (['DUMPED'] if dumped else [])
     vr = state['vr'].get(m)
     row = {'m': m, 's': t.get('symbol'), 'n': t.get('name'), 'i': img(t.get('imageUrl')), 'c': ts(t.get('createdAt')),
            'q': q.get('symbol'), 'qm': q.get('mint'), 'qc': q.get('categoryLabel'), 'mode': t.get('mode'), 'st': t.get('status'),
