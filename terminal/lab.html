@@ -57,7 +57,7 @@ a{color:inherit;text-decoration:none}
   .legend span{gap:4px}.legend .dly{font-size:8px;padding:0 3px}.legend .sd{display:none}   /* line styles say which is which */
   .tb .rgt{margin-left:auto;padding-left:4px;gap:2px}.tb .rgt button{padding:3px 4px!important}.tb .rgt svg{width:14px!important;height:14px!important}
   .tb #ctab,.tb #indDd,.tb #pmTab,.tb #dtab{border-left:0;margin-left:0;padding-left:0}.tb #ctab button{padding:3px 5px}.tb #pmBtn{padding:4px 6px}
-  .body.drawOpen .cw{margin-left:52px}   /* the open drawing panel pushes the chart over instead of covering its prices */
+  .body.drawOpen .cw{margin-left:38px}   /* the open drawing panel pushes the chart over instead of covering its prices */
   .rgt{margin-left:0;gap:3px}.rgt button{padding:3px 6px!important}.rgt svg{width:15px!important;height:15px!important}
   .tb{display:flex;flex-wrap:nowrap;align-items:center;gap:4px;width:100%;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
   .tb::-webkit-scrollbar{display:none}
@@ -72,12 +72,16 @@ a{color:inherit;text-decoration:none}
   .body .side{position:absolute;left:0;top:0;bottom:0;z-index:6;width:38px;background:#070c18;transform:translateX(-105%);transition:transform .15s;visibility:hidden}
   .body.drawOpen .side{transform:none;visibility:visible;box-shadow:6px 0 18px #000a}.body .side button{width:30px;height:30px}
   .tb #dtab{display:none}html.hasDepth #depItem{display:flex}html.hasDepth #depHr{display:block}   /* DEPTH lives in the ƒx menu on phones */
-  .body .cw{margin-left:14px;transition:margin-left .15s}   /* the folded panel's strip */
-  #drawTog{display:grid;place-items:center;position:absolute;left:0;top:0;bottom:0;z-index:7;width:14px;padding:0;
-    border:0;border-right:1px solid var(--line);background:#0b1120;color:var(--dim);cursor:pointer;transition:left .15s}
-  #drawTog svg{width:13px;height:13px;transition:transform .15s}
+  .body .cw{transition:margin-left .15s}
+  /* the folded panel's arrow: a small tab in the chart's empty bottom-left corner (under the left prices, beside the dates) */
+  #drawTog{display:grid;place-items:center;position:absolute;left:0;bottom:2px;z-index:7;width:24px;height:24px;padding:0;
+    border:1px solid var(--line);border-left:0;border-radius:0 6px 6px 0;background:#0d1426;color:#c9d3ee;cursor:pointer;transition:left .15s}
+  #drawTog svg{width:14px;height:14px;transition:transform .15s}
   .body.drawOpen #drawTog{left:38px;color:#fff;background:#070c18}.body.drawOpen #drawTog svg{transform:rotate(180deg)}
   #indBtn{font-size:0;gap:3px}#indBtn .fx,#indBtn #indN{font-size:13px}#indN:empty{display:none}   /* ƒx without its ▾ */
+  .tb{gap:2px}.tb .tabs button{padding:4px 6px}
+  .tb.tight .tabs button{padding:3px 4px;font-size:10px}.tb.tight #ctab button{padding:3px 4px}.tb.tight #pmBtn{padding:4px 4px}
+  .tb.tight .rgt button{padding:3px 3px!important}.tb.tight #indBtn .fx{font-size:12px}
 }
 #pmBtn{color:var(--dim)}#pmBtn b{font-weight:400}#pmBtn b.on{color:#fff}#tf{margin-right:6px}#ctab button{padding:3px 10px;display:grid;place-items:center}#ctab svg{width:18px;height:18px}
 .dd{position:relative}
@@ -288,6 +292,10 @@ function axesFit(){const i=PHONE.matches,z=i?10:12;
 axesFit();PHONE.addEventListener('change',axesFit);
 // phones: refresh, full screen and snapshot sit at the end of the toolbar row, level with the other buttons
 {const r=document.querySelector('.rgt'),home=r.parentNode,next=r.nextSibling,go=()=>PHONE.matches?$('tbRow').appendChild(r):home.insertBefore(r,next);go();PHONE.addEventListener('change',go)}
+// …and the row never cuts a button off: if this phone's font makes it overflow, it steps down to a tighter size
+{const t=$('tbRow'),fitRow=()=>{t.classList.remove('tight');if(PHONE.matches&&t.scrollWidth>t.clientWidth+1)t.classList.add('tight')};
+  fitRow();addEventListener('resize',fitRow);new MutationObserver(fitRow).observe(t,{childList:true,subtree:true,characterData:true});
+  document.fonts&&document.fonts.ready.then(fitRow)}
 // each price scale is as wide as the text it really shows (its ticks; the right one also its price tag), not the long
 // unformatted number the library would measure (12 decimals on a tiny price)
 {const cx=document.createElement('canvas').getContext('2d'),tw=(t,z)=>{cx.font=`${z}px ${F}`;return cx.measureText(t).width},
