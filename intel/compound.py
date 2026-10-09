@@ -143,10 +143,15 @@ def all_launches():
     while True:
         d = get(f'{SF}/api/public/v1/rewards?pageSize=1000&page={p}')['data']
         for x in d.get('launches') or []: out[x['mint']] = launch(x, d.get('quotes'))
-        tp = (d.get('launchesPagination') or {}).get('totalPages') or 1
-        if p >= tp or not d.get('launches') or p >= 100: return out
+        # (since 2026-10-09 totalPages comes back null: a page with fewer than 1,000 launches is the last one)
+        tp = (d.get('launchesPagination') or {}).get('totalPages')
+        if not d.get('launches') or len(d['launches']) < 1000 or (tp and p >= tp) or p >= 100: return out
         p += 1; time.sleep(0.3)
 G = all_launches()
+# a launch list far smaller than the last one saved (stonkfun's paging changed again, or it's down) replaces nothing
+_lp = len((load('compound/px/launches.json', {}) or {}).get('m') or {})
+if _lp >= 10000 and len(G) < _lp / 2:
+    log(f'only {len(G)} launches read (last saved {_lp}): stonkfun list looks broken, nothing saved'); sys.exit(1)
 watch = [m for m in [MARINE] + ranked if m in G]
 # then stonkfun's biggest coins by holders, up to 200 tracked in all (the long tail is covered on demand by the bot's wallet reader)
 watch += [m for m in sorted(G, key=lambda m: -(G[m].get('holderCount') or 0)) if m not in watch][:max(0, int(os.environ.get('WATCH_N', 200)) - len(watch))]
