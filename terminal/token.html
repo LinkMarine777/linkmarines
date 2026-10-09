@@ -620,7 +620,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
 </header>
 
 <div class="tape-bar top">
-  <div class="lbl">STONK<span class="lg">&nbsp;BOARD TOP 10 · 24H</span>&nbsp;APY</div>
+  <div class="lbl">STONK<span class="lg">&nbsp;BOARD TOP 10</span>&nbsp;APY</div>
   <div class="tape"><div class="track" id="boardTicker"><span class="tk dim">loading…</span></div></div>
 </div>
 <div class="tape-bar vol">
@@ -1524,12 +1524,12 @@ else document.querySelectorAll('.tape').forEach(el=>{const tr=el.firstElementChi
 
 // ---------- top ticker: thestonkboard.com top 10 by APY ----------
 let board=null;const boardKey='apy24h';   // 24h, like the other tapes
-function renderBoard(){if(!board)return;const L=board[boardKey]||[],lab=boardKey==='apy3d'?'3d':'24h';
+function renderBoard(){if(!board)return;const L=board[boardKey]||[];
   let html=L.map((t,i)=>`<a class="tk" href="${esc(tokLink(t.mint))}" target="_blank" rel="noopener">
     <span class="dim">#${i+1}</span>${t.logo?`<img src="${esc(t.logo)}" alt="" loading="lazy" onerror="this.remove()">`:''}
     <b>$${esc(String(t.symbol).replace(/^\$/,''))}</b><span class="q">/${esc(t.quote)}</span>
-    <span class="apy">${apyFmt(t.apy)} APY ${lab}</span><span class="dim">mc ${compact(t.mcap)}</span></a>`).join('');
-  const m=boardStats();if(m&&m.rank)html+=`<a class="tk me" href="${esc(tokLink(TK.mint))}" target="_blank" rel="noopener"><span class="dim">board #${m.rank}</span><b>$${TK.symbol}</b><span class="q">/${TK.quote}</span><span class="apy">${apyFmt(m[boardKey])} APY ${lab}</span></a>`
+    <span class="apy">${apyFmt(t.apy)} APY</span><span class="dim">mc ${compact(t.mcap)}</span></a>`).join('');
+  const m=boardStats();if(m&&m.rank)html+=`<a class="tk me" href="${esc(tokLink(TK.mint))}" target="_blank" rel="noopener"><span class="dim">board #${m.rank}</span><b>$${TK.symbol}</b><span class="q">/${TK.quote}</span><span class="apy">${apyFmt(m[boardKey])} APY</span></a>`
   setTrack('boardTicker',html)}
 // board-x.json: the hourly extras for each coin (launch, flywheel rank, transfers, holder growth, concentration)
 let boardX=null;
