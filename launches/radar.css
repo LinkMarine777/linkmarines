@@ -69,3 +69,14 @@
 #lr #lr-rows tr[data-m]{cursor:pointer}
 #lr .it.go{cursor:pointer}#lr .it.go:hover{background:rgba(255,255,255,.03)}#lr .it.go .lr-nm a{color:inherit;text-decoration:none}
 #lr .vdl{font-size:10.5px;letter-spacing:1px;color:var(--blue2);text-decoration:none;white-space:nowrap}#lr .vdl:hover{color:#fff;text-decoration:underline}
+/* PAIR ▾: search every stonkfun pair, filter the launches to one */
+#lr .lr-pp{position:relative;display:flex;align-items:center;gap:4px}
+#lr .lr-ppb{background:none;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:11px;letter-spacing:1px;padding:5px 10px;cursor:pointer;white-space:nowrap}
+#lr .lr-ppb b{color:#fff;font-weight:600;letter-spacing:0;margin:0 2px}#lr .lr-ppb:hover,#lr .lr-ppb.on{border-color:var(--blue2);color:var(--txt)}
+#lr .lr-ppx{background:none;border:1px solid var(--line);color:var(--dim);font:inherit;width:26px;height:26px;cursor:pointer}#lr .lr-ppx:hover{color:#fff;border-color:var(--red)}
+#lr .lr-ppd{position:absolute;top:calc(100% + 6px);left:0;z-index:40;width:min(380px,calc(100vw - 32px));background:var(--panel);border:1px solid var(--blue2);box-shadow:0 18px 50px rgba(0,0,0,.6)}
+#lr .lr-ppd input{width:100%;box-sizing:border-box;background:#060a17;border:0;border-bottom:1px solid var(--line);color:#fff;font:inherit;font-size:13px;padding:11px 12px;outline:none}
+#lr .lr-ppL{max-height:360px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#24345e transparent}
+#lr .it.pp{width:100%;background:none;border:0;border-bottom:1px solid var(--line);text-align:left;font:inherit;font-size:12px;color:inherit;cursor:pointer}
+#lr .it.pp:hover,#lr .it.pp.on{background:rgba(74,122,255,.1)}#lr .lr-ct{font-size:11px;color:var(--txt);white-space:nowrap}
+#lr .lr-lb{background:none;border:1px solid var(--blue2);color:var(--blue2);font:inherit;font-size:10px;letter-spacing:1px;padding:3px 8px;cursor:pointer;white-space:nowrap}#lr .lr-lb:hover{background:rgba(74,122,255,.14);color:#fff}
