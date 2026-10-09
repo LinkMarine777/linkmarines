@@ -233,6 +233,7 @@ const F='IBM Plex Mono';
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const fmtD=({timestamp:t,type})=>{const d=new Date(t),h=d.getHours(),hm=(h%12||12)+(d.getMinutes()?':'+String(d.getMinutes()).padStart(2,'0'):'')+(h<12?' AM':' PM');
   return type==='xAxis'?(/SECOND|MINUTE/.test(TF[2])?hm:MON[d.getMonth()]+' '+d.getDate()+' '+hm):MON[d.getMonth()]+' '+d.getDate()+', '+hm};
+const PHONE=matchMedia('(max-width:640px)');
 const chart=klinecharts.init('chart',{decimalFold:{threshold:99},formatter:{formatDate:fmtD},layout:{yAxis:{gap:{top:.08,bottom:.25}}},styles:{
   grid:{horizontal:{color:'#121a33'},vertical:{show:false}},
   candle:{bar:{upColor:'#4a7aff',downColor:'#e8eeff',noChangeColor:'#5d6a8f',upBorderColor:'#4a7aff',downBorderColor:'#e8eeff',upWickColor:'#4a7aff',downWickColor:'#e8eeff'},
@@ -247,11 +248,13 @@ const YID=chart.getYAxes({paneId:'candle_pane'})[0].id;   // the token's own axi
 // the token's scale on the right ($, no trailing zeros); the pair token's on the left, in amber
 chart.overrideYAxis({paneId:'candle_pane',id:YID,createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtV(t.value)}))});
 const QAX=chart.createYAxis({id:'quote_axis',paneId:'candle_pane',position:'left',gap:{top:.08,bottom:.25},
-  createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtQ(+t.value/QS())}))});
+  createTicks:({defaultTicks})=>PHONE.matches?[]:defaultTicks.map(t=>({...t,text:'$'+fmtQ(+t.value/QS())}))});
 chart.createIndicator({name:'DEPTHB',paneId:'candle_pane'},true);
-// phones: both price scales sit inside the chart's edges instead of taking their own columns
-const PHONE=matchMedia('(max-width:640px)');
-function axesFit(){const i=PHONE.matches;chart.overrideYAxis({paneId:'candle_pane',id:YID,inside:i});chart.overrideYAxis({id:'quote_axis',paneId:'candle_pane',inside:i})}
+// phones: one compact price scale on the right; the pair token's scale folds away (its line and legend stay)
+function axesFit(){const i=PHONE.matches,z=i?10:12;
+  chart.overrideYAxis({id:'quote_axis',paneId:'candle_pane',inside:i});
+  chart.setStyles({yAxis:{tickText:{size:z,marginStart:i?3:4,marginEnd:i?2:4}},candle:{priceMark:{last:{text:{size:z,paddingLeft:i?3:4,paddingRight:i?3:4}}}},
+    crosshair:{horizontal:{text:{size:z,paddingLeft:i?3:4,paddingRight:i?3:4}},vertical:{text:{size:z}}}})}
 axesFit();PHONE.addEventListener('change',axesFit);
 
 // line (the live chart's default) or candles: one button showing the type you're on
