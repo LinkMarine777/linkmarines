@@ -818,6 +818,7 @@ document.documentElement.classList.toggle('swap',SWAP_ON);
 const NEWCHART=new URLSearchParams(location.search).get('chart')!=='old';document.documentElement.classList.toggle('newChart',NEWCHART);
 if(NEWCHART){const f=document.createElement('iframe');f.id='labFrame';f.title='Chart';f.allow='clipboard-write; fullscreen';f.allowFullscreen=true;
   const ph=matchMedia('(max-width:999px)');   // phones: the badge, links and chips are already above the numbers
+  f.addEventListener('load',()=>{if(marinePx)sendTick({t:'tick',mint:CA,price:marinePx,ts:pxAt||Date.now(),side:null,usd:0,tx:null})});
   f.src='/terminal/lab.html?embed=1'+(ph.matches?'&hdr=0':'')+'&ca='+CA;document.getElementById('chartWrap').appendChild(f);
   ph.addEventListener('change',()=>{try{f.contentDocument.documentElement.classList.toggle('nohdr',ph.matches)}catch(e){}})}
 let TK={mint:CA,symbol:'…',quote:'…',quoteMint:null,image:null},TKR=null,POOL='',GT='',PAIR=null;
@@ -1007,19 +1008,28 @@ function tickLast(){if(rewards&&rewards.lastPayoutAt)$('pLast').textContent='las
 
 // ---------- market (DexScreener) ----------
 let marinePx=null;
+// ---------- one price for the whole page ----------
+// The newest trade on the tape sets the price (loadTrades); DexScreener's / Jupiter's quote only when no trade came in for 3 min
+// (a quiet coin). The price above the chart, the old chart's last point and the new chart (the lab iframe, {t:'tick'}) all
+// follow it, so they never disagree. pxAt: when the trade the price came from happened (ms).
+let pxAt=0,tradePxAt=0;
+function sendTick(m){const f=document.getElementById('labFrame');if(f&&f.contentWindow)try{f.contentWindow.postMessage(m,location.origin)}catch(e){}}
+function setPrice(price,ts,trade){if(!(price>0)||(trade&&ts<pxAt))return;if(trade)pxAt=ts;marinePx=price;$('sPrice').textContent=px(price);tabTitle();
+  sendTick({t:'tick',mint:CA,price,ts,side:trade?trade.side:null,usd:trade?trade.usd:0,tx:trade?trade.tx:null});
+  if(hover==null&&CH[tf]){liveTail();setSeries()}}
+const quotePx=price=>{if(Date.now()-tradePxAt>180e3)setPrice(price,Date.now())};   // a quote, not a trade: only on a quiet tape
 // DexScreener is the only source of both prices (the token's and its quote's): when it refuses (rate limit, outage) both
 // froze, and a page opened during one never found its pool (no prices until a reload). Now Jupiter's prices fill in, and
 // the pool is looked for again every 2 min.
 async function jupMarket(){const ids=[CA,TK.quoteMint].filter(Boolean);
   try{const d=await j('https://lite-api.jup.ag/price/v3?ids='+ids.join(',')),b=d[CA]?.usdPrice,q=TK.quoteMint&&d[TK.quoteMint]?.usdPrice;
-    if(b>0){marinePx=b;$('sPrice').textContent=px(b);tabTitle()}if(q>0){$('sLink').textContent=px(q);QPX=q}}catch(e){}}
+    if(b>0)quotePx(b);if(q>0){$('sLink').textContent=px(q);QPX=q}}catch(e){}}
 async function loadMarket(){
   if(!POOL&&Date.now()-(loadMarket.poolAt||0)>120e3){loadMarket.poolAt=Date.now();try{await findPool()}catch(e){}}
   try{
     if(!POOL)return jupMarket();const d=await j('https://api.dexscreener.com/latest/dex/pairs/solana/'+POOL);
     const p=d.pair||(d.pairs||[])[0];if(!p)return jupMarket();const flip=p.baseToken.address!==CA;
-    marinePx=flip?(+p.priceUsd/+p.priceNative):+p.priceUsd;
-    $('sPrice').textContent=px(marinePx);chg24=p.priceChange?.h24;renderChg();tabTitle();
+    quotePx(flip?(+p.priceUsd/+p.priceNative):+p.priceUsd);chg24=p.priceChange?.h24;renderChg();tabTitle();
     const pc=p.priceChange||{};PC=flip?{}:pc;const ct={m5:'5m',h1:'1h',h6:'6h',h24:'1d'};   // tap 1h / 6h / 24h: the chart switches to it
     if(!flip&&pc.m5==null&&pc.h1!=null)pc.m5=0;
     $('pChips').innerHTML=flip?'':[['m5','5m'],['h1','1h'],['h6','6h'],['h24','24h']].map(([k,l])=>pc[k]==null?'':`<span${ct[k]?` data-tf="${ct[k]}" role="button" title="Show the ${l} chart"`:''}${ct[k]===tf?' class="on"':''}><i>${l}</i><b class="${pc[k]>=0?'up':'dn'}">${pc[k]>=0?'':'−'}${Math.abs(pc[k]).toFixed(2)}%</b></span>`).join('');renderChg();
@@ -1029,7 +1039,7 @@ async function loadMarket(){
     if(flip)loadMarket.mc.then(v=>{if(v){MCAP=v;$('sMcap').textContent=compact(v)}});$('sLiq').textContent=compact(p.liquidity?.usd);
     $('sVol').textContent=compact(p.volume?.h24);
     const t=p.txns?.h24||{};$('sVolC').title=num(t.buys)+' buys / '+num(t.sells)+' sells in 24h';
-    const linkPx=flip?+p.priceUsd:marinePx/(+p.priceNative);
+    const linkPx=flip?+p.priceUsd:+p.priceUsd/(+p.priceNative);
     if(isFinite(linkPx)){$('sLink').textContent=px(linkPx);QPX=linkPx}
     if(hover==null&&CH[tf]){liveTail();setSeries()}
   }catch(e){jupMarket()}
@@ -1478,7 +1488,13 @@ function nextBuy(){if(!alertsOn){bpQ.length=0;return}while(bpQ.length&&!akOn(bpQ
 var bpTimer=null;
 function closeBuy(){clearTimeout(bpTimer);if(!$('buyPop').classList.contains('show'))return;$('buyPop').classList.remove('show');setTimeout(()=>{bpBusy=false;nextBuy()},500)}
 // a rate-limited call (GeckoTerminal 429) retries in 5 s instead of waiting for the next 20 s round
-async function loadTrades(){if(!GT)return;clearTimeout(loadTrades.r);try{const d=await j(GT+'/trades');tapeRaw=d.data.map(t=>t.attributes);renderTape();try{localStorage.setItem('wrTape:'+CA,JSON.stringify({at:Date.now(),pool:POOL,v:tapeRaw.slice(0,60)}))}catch(e){}checkBuys(tapeRaw);if(tf==='5m'&&hover==null){const t=tape5m();if(t){CH['5m']=t;liveTail();setSeries()}}}catch(e){loadTrades.r=setTimeout(loadTrades,5000)}}
+const ticked=new Set();
+function tapeTicks(list){const boot=!ticked.size,fresh=[];
+  for(const a of list){if(ticked.has(a.tx_hash))continue;ticked.add(a.tx_hash);fresh.push(a)}
+  // first load: the newest trade only (the chart already has the history); then every new one, in the order they happened
+  (boot?fresh.slice(0,1):fresh).reverse().forEach(a=>{const buy=a.to_token_address===CA,price=+(buy?a.price_to_in_usd:a.price_from_in_usd),ts=Date.parse(a.block_timestamp);
+    if(!(price>0)||!ts)return;tradePxAt=Math.max(tradePxAt,ts);setPrice(price,ts,{side:buy?'buy':'sell',usd:+a.volume_in_usd||0,tx:a.tx_hash})})}
+async function loadTrades(){if(!GT)return;clearTimeout(loadTrades.r);try{const d=await j(GT+'/trades');tapeRaw=d.data.map(t=>t.attributes);renderTape();tapeTicks(tapeRaw);try{localStorage.setItem('wrTape:'+CA,JSON.stringify({at:Date.now(),pool:POOL,v:tapeRaw.slice(0,60)}))}catch(e){}checkBuys(tapeRaw);if(tf==='5m'&&hover==null){const t=tape5m();if(t){CH['5m']=t;liveTail();setSeries()}}}catch(e){loadTrades.r=setTimeout(loadTrades,5000)}}
 $('tapeF').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   [...$('tapeF').children].forEach(x=>x.classList.toggle('on',x===b));tapeMin=+b.dataset.min;renderTape()});
 
@@ -1984,7 +2000,7 @@ resolveToken().finally(()=>{loadRewards();loadMarket();
     for(const k of Object.keys(CH))if(CA!==MARINE||k==='1h'||k==='6h'){delete CH[k];delete CHAT[k]}}
   if(CA!==MARINE?!POOL0||POOL!==POOL0||!CHAT[tf]:!CH[tf]||!CHAT[tf])loadChart();if(CA===MARINE||!POOL0||POOL!==POOL0)loadTrades();loadTicker();loadBoard();loadLaunchTicker();setInterval(loadLaunchTicker,300e3);loadTTS();loadPay();loadAds();});
 setInterval(()=>{if(!document.hidden)loadAds()},15000);setInterval(loadPay,300000);setTimeout(()=>{renderAds();setInterval(renderAds,20000)},20000-Date.now()%20000);
-setInterval(loadTrades,20000);setInterval(loadMarket,30000);setInterval(loadRewards,60000);
+setInterval(()=>{if(!document.hidden)loadTrades()},10000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadTrades()});setInterval(loadMarket,30000);setInterval(loadRewards,60000);
 setInterval(loadChart,120000);setTimeout(loadDepth,1500);const vis=f=>()=>{if(!document.hidden)f()};setInterval(vis(loadDepth),600000);setTimeout(loadClobr,2000);setInterval(vis(loadClobr),600000);setInterval(loadTicker,300000);setInterval(loadBoard,300000);
 setInterval(()=>{if(!document.hidden)loadTTS()},10000);setInterval(tickLast,1000);
 document.fonts?.ready.then(draw);
