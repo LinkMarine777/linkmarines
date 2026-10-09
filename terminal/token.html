@@ -1253,11 +1253,18 @@ try{const c=JSON.parse(localStorage.getItem('clobrS:'+CA)||'null');if(c&&Date.no
 async function loadClobr(){if(!FLAGS.CLOBR_ENABLED)return;try{const d=await j(BOT+'/clobr?mint='+CA+'&d=1');CL=d&&!d.error?d:null}catch(e){}renderClobr();draw()}
 // live vs delayed: live when the data came live (the CLOBr extension serves a visitor's own key, or marks our tag live);
 // otherwise our hour-delayed copy. The score tag and the analytics header always agree.
-function clobrLive(){const t=$('scoreDly'),live=!!(CL&&CL.delayed===false)||/^\s*live\s*$/i.test(t.textContent);
-  if(t.textContent.trim().toLowerCase()!==(live?'live':'delayed'))t.textContent=live?'live':'delayed';t.classList.toggle('lv',live);
-  const d=$('clobrDelay');d.classList.toggle('lv',live);
-  d.textContent=live?'● Live · real-time CLOBr data via your CLOBr extension ▸':'⏱ Delayed'+(CL&&CL.fetchedAt?' · updated '+ago(CL.fetchedAt).split(' ')[0]+' ago':' up to 1h')+' · real-time with CLOBr Pro + the CLOBr extension · free 7-day trial ▸'}
+// The extension marks the tag a moment after the page opens. A browser it marked before (remembered 30 days) shows live at once
+// (class 'guess': the tag's own text stays as the extension left it, so its next mark still tells); if it hasn't marked the tag
+// within 20 s, back to delayed and forgotten.
+let clxGuess=false;try{clxGuess=Date.now()-(+localStorage.getItem('clobrExt')||0)<30*864e5}catch(e){}
+if(clxGuess)setTimeout(()=>{if(!/^\s*live\s*$/i.test($('scoreDly').textContent)){clxGuess=false;try{localStorage.removeItem('clobrExt')}catch(e){}clobrLive()}},20000);
+function clobrLive(){const t=$('scoreDly'),ext=/^\s*live\s*$/i.test(t.textContent),live=!!(CL&&CL.delayed===false)||ext,show=live||clxGuess;
+  if(ext&&!clobrLive.saved){clobrLive.saved=1;try{localStorage.setItem('clobrExt',Date.now())}catch(e){}}
+  if(t.textContent.trim().toLowerCase()!==(live?'live':'delayed'))t.textContent=live?'live':'delayed';t.classList.toggle('lv',show);t.classList.toggle('guess',show&&!live);
+  const d=$('clobrDelay');d.classList.toggle('lv',show);
+  d.textContent=show?'● Live · real-time CLOBr data via your CLOBr extension ▸':'⏱ Delayed'+(CL&&CL.fetchedAt?' · updated '+ago(CL.fetchedAt).split(' ')[0]+' ago':' up to 1h')+' · real-time with CLOBr Pro + the CLOBr extension · free 7-day trial ▸'}
 try{new MutationObserver(()=>clobrLive()).observe(document.getElementById('scoreDly'),{childList:true,characterData:true,subtree:true})}catch(e){}
+if(clxGuess)clobrLive();
 function paintScore(sc){$('scoreStat').style.display='';syncScores();
   if(!sc){$('sScore').textContent='—';$('sScore').style.color='var(--dim)';$('sScoreMsg').textContent='no CLOBr data';$('sScoreWhy').textContent=' '}
   if(sc){$('sScore').textContent=sc.score!=null?Math.round(+sc.score):'—';$('sScore').style.color=sc.score>=60?'var(--green)':sc.score<=40?'var(--red)':'var(--amber)';
