@@ -36,7 +36,10 @@
       os: +(a.organicScore || 0).toFixed(1), ob: st.numOrganicBuyers || 0, h: a.holderCount || 0, dn, dg,
       scan: sc && { ...sc, sn: +(au.sniperPct || 0).toFixed(2), in: +(au.insiderPct || 0).toFixed(2) } };
     r.fb = fbOf(rw, jv); if (r.fb == null && L) r.fb = L.fb;   // a launch's first 24 h: the radar's own figure
-    const s = LRS.score({ ob: r.ob, fb: r.fb, jv, ov, bund: bundOf(r), dn, dg, audit: !!a.audit, h: r.h, top: r.top, fpt: L ? L.fpt : null, vol: jv });
+    // the drop from the peak: a launch's peak from stonkfun (the radar), today's market cap from Jupiter
+    if (a.mcap) r.mc = a.mcap;
+    const dd = r.pk ? Math.max(0, 1 - r.mc / r.pk) : 0;
+    const s = LRS.score({ ob: r.ob, fb: r.fb, jv, ov, bund: bundOf(r), dn, dg, audit: !!a.audit, h: r.h, top: r.top, fpt: L ? L.fpt : null, vol: jv, dd, pk: r.pk || 0, bpk: r.bpk, bh: r.bh });
     return Object.assign(r, s);
   }
   // the score in the scores box (with CLOBr's and Compound's); a click opens TOKEN INFO
@@ -53,7 +56,7 @@
     const sc = r.scan, chk = checking ? ' · checking funders…' : sc && sc.apps ? ` · ${sc.apps} app / exchange wallet${sc.apps === 1 ? '' : 's'} not counted` : '';
     document.getElementById('radarMeta').textContent = (L ? 'launched ' + ago(L.c) + ' ago' : 'last 24 h · live from Jupiter') + chk;
     document.getElementById('radarBody').innerHTML = `<div class="lrscan">
-      <div class="rtop">${LRS.vd(r)}<span class="dim">${WHY[r.vd]}</span></div>
+      <div class="rtop">${LRS.vd(r)}<span class="dim">${r.dumped ? `the trading was real, but it's down ${Math.round((1 - r.mc / r.pk) * 100)}% from its peak` : WHY[r.vd]}</span></div>
       <div class="rstats">
         ${r.fb != null ? stat('Fee-backed', r.fb.toFixed(2), fbc, 'what holders were paid in 24 h ÷ the tax ÷ the 24 h volume: real trading comes out near 1.0') : stat('Organic volume', r.org == null ? '—' : r.org + '%', r.org >= 8 ? 'up' : r.org < 2 ? 'dn' : '', 'Jupiter\'s organic share of the 24 h volume (no payouts to check)')}
         ${stat('Org buyers 24h', num(r.ob), r.ob >= 40 ? 'up' : r.ob < 5 ? 'dn' : '')}

@@ -30,7 +30,7 @@ ROOT.innerHTML = `
     <div class="intro"><h1>Real or farm?</h1>
       <p>Every stonkfun launch of the last 24 h checked against the <b>fees it actually paid</b>, Jupiter's organic buyers, bundles, the dev's record and <b>who funded its top holders</b>. Tap a coin for its terminal, TOKEN INFO ↗ for its bundle scan.</p></div>
     <div><label>Launched 24h</label><b id="lr-kL">…</b><span class="lr-s" id="lr-kG"></span></div>
-    <div><label>Real</label><b class="up" id="lr-kR">…</b><span class="lr-s">score 60+, not bundled</span></div>
+    <div><label>Real</label><b class="up" id="lr-kR">…</b><span class="lr-s">score 60+, not bundled or dumped</span></div>
     <div><label>Farms</label><b class="dn" id="lr-kF">…</b><span class="lr-s">volume the fees don't back</span></div>
     <div><label>Bundled</label><b class="am" id="lr-kB">…</b><span class="lr-s">20%+ in bundles or linked wallets</span></div>
   </section>
@@ -69,9 +69,10 @@ ROOT.innerHTML = `
       <li><b>Bundles (15)</b>: what's held <b>now</b>, the bigger of the bundlers' share of the supply (Jupiter's Bundlers H.) and <b>linked holders</b>: top-100 holders funded by one private wallet. An exchange (Binance, Coinbase, OKX, Bybit, MEXC) or any service that funds holders across many coins doesn't count as a link.</li>
       <li><b>Dev (15)</b>: the deployer's other coins, 👑 graduated out of launched (Jupiter). 1 in 5 graduated gives the full 15. A serial launcher (5+ coins, under 1 in 20 graduated) gets 0. A wallet with 2,000+ coins is a launch tool shared by many people, so it counts as neutral.</li>
       <li><b>Holders (10)</b>, <b>top 10 holders' share (5)</b>, <b>organic share of volume (5)</b>.</li>
+      <li><b>The price (−30)</b>: a coin that crashed from its peak loses up to 30: nothing until it's 50% off, all 30 at 95% off. Real trading that ends 95% below the peak is a pump that dumped. <b>Sold bundles (−10)</b>: bundlers held 10%+ at their peak and have sold most of it, into the pump.</li>
       <li><b>Fees per trade (5)</b>: priority fees and tips traders paid per trade (Jupiter's Fees Paid). Farm bots pay to land their bundles: farms measured 2.3–5 mSOL a trade, real coins 0.7–2.7.</li>
     </ul>
-    <p><span class="v-REAL">REAL</span> 60+ and not bundled (20%+ bundled or linked caps it at WATCH) · <span class="v-WATCH">WATCH</span> 35+ · <span class="v-FARM">FARM</span> $20,000+ volume the fees don't back up, with few organic buyers or holders · <span class="v-THIN">THIN</span> the rest.</p>
+    <p><span class="v-REAL">REAL</span> 60+, not bundled (20%+ bundled or linked caps it at WATCH) and not dumped (85%+ below a $20K+ peak, tagged DUMPED, caps it too) · <span class="v-WATCH">WATCH</span> 35+ · <span class="v-FARM">FARM</span> $20,000+ volume the fees don't back up, with few organic buyers or holders · <span class="v-THIN">THIN</span> the rest.</p>
     <p>VRFD: Jupiter's verification desk. Standard requests are free. ⚡ Express costs 1,000 JUP and is reviewed first. Next pairs: the stock issuers stonkfun pairs with (Sunrise, xStocks, PreStocks, Tessera) and their verified stocks that no stonkfun pair trades yet, in any wrapper. xStocks only when one trades, is new or went to VRFD: stonkfun pairs only its busiest. A new stock and a Sunrise VRFD request each pop an alert. Not financial advice: a score reads what already happened on chain.</p>
   </details></section>
   <div class="lr-foot">updated <span id="lr-upd2">…</span> · a pass every ~5 min · data: stonkfun, Jupiter, Jupiter VRFD</div>`;
@@ -128,7 +129,7 @@ function renderRows() {
   $('nRows').textContent = L.length;
   $('rows').innerHTML = L.length ? L.map(r => `<tr data-m="${esc(r.m)}">
     <td class="l"><span class="vd v-${r.vd}"><i>${r.score}</i>${r.vd}</span></td>
-    <td class="l"><div class="coin">${pic(r.i)}<div><b>${sy(r.s)}</b><button type="button" class="infob" data-coin="${esc(r.m)}" title="its score, bundle scan and who funded its holders, without leaving the page">TOKEN INFO ↗</button>${r.st === 'graduated' ? '<span class="chip ok">GRAD</span>' : ''}${(r.flags || []).includes('BUNDLED') ? '<span class="chip bad">BUNDLED</span>' : ''}${r.vr ? `<span class="chip ${r.vr.st === 'verified' ? 'ok' : 'warn'}" title="Jupiter VRFD: ${esc(r.vr.st)} (${esc(r.vr.lane)} lane)">${r.vr.lane === 'express' ? '⚡ ' : ''}VRFD</span>` : ''}<small>${esc(r.n)}</small></div></div></td>
+    <td class="l"><div class="coin">${pic(r.i)}<div><b>${sy(r.s)}</b><button type="button" class="infob" data-coin="${esc(r.m)}" title="its score, bundle scan and who funded its holders, without leaving the page">TOKEN INFO ↗</button>${r.st === 'graduated' ? '<span class="chip ok">GRAD</span>' : ''}${(r.flags || []).includes('BUNDLED') ? '<span class="chip bad">BUNDLED</span>' : ''}${(r.flags || []).includes('DUMPED') ? `<span class="chip bad" title="down ${Math.round((1 - r.mc / r.pk) * 100)}% from its peak">DUMPED</span>` : ''}${r.vr ? `<span class="chip ${r.vr.st === 'verified' ? 'ok' : 'warn'}" title="Jupiter VRFD: ${esc(r.vr.st)} (${esc(r.vr.lane)} lane)">${r.vr.lane === 'express' ? '⚡ ' : ''}VRFD</span>` : ''}<small>${esc(r.n)}</small></div></div></td>
     <td class="l">${sy(r.q)}${r.qc ? `<span class="lr-tag">${esc(r.qc)}</span>` : ''}</td>
     <td class="dim">${ago(r.c)}</td>
     <td>${compact(r.mc)}<small class="dim" style="display:block;font-size:10px">peak ${compact(r.pk)}</small></td>
