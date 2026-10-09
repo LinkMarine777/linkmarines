@@ -245,7 +245,7 @@ function drawVol({ctx,chart,bounding,xAxis}){const L=chart.getDataList(),vr=char
       ctx.fillRect(xAxis.convertToPixel(i)-w/2,yb-h,w,h)}}
 
 // ---------- CLOBr depth on the right edge: liquidity per price band on the token's scale, green support / red resistance ----------
-const DKEYS='wrDepth',DPHONE=matchMedia('(max-width:640px)').matches;   // on unless turned off (phones too: the ƒx menu has it)
+const DKEYS='wrDepth2',DPHONE=matchMedia('(max-width:640px)').matches;   // on unless turned off (phones too: the ƒx menu has it); a new key, so an old "off" from before doesn't stick
 let DEPTH=null,depthOn=store(DKEYS)!=='0';
 // (price precision and each candle's close, so it can't pull the price scale away from the candles; nothing in the legend)
 klinecharts.registerIndicator({name:'DEPTHB',shortName:'',series:'price',precision:12,figures:[{key:'c',title:''}],calc:d=>d.map(k=>({c:k.close})),
