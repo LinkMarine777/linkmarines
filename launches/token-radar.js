@@ -37,7 +37,7 @@
       scan: sc && { ...sc, sn: +(au.sniperPct || 0).toFixed(2), in: +(au.insiderPct || 0).toFixed(2) } };
     r.fb = fbOf(rw, jv); if (r.fb == null && L) r.fb = L.fb;   // a launch's first 24 h: the radar's own figure
     // the drop from the peak: a launch's peak from stonkfun (the radar), today's market cap from Jupiter
-    // what the price did: a launch's from the radar (5-minute candles), any other coin's from its last 30 days (hourly)
+    // what the price did: a launch's from the radar (5-minute candles), any other coin's from its whole price history
     if (a.mcap) r.mc = a.mcap;
     const pa = (L && L.pa) || PA || null; r.pa = pa; if (!L && pa) r.pk = pa.pk;
     const dd = pa ? pa.dd : r.pk ? Math.max(0, 1 - r.mc / r.pk) : 0;
@@ -88,7 +88,9 @@
     let sc = LRS.scanHolders(holders, asset.circSupply || asset.totalSupply, created, window.LRS_CEX, window.LRS_SVC) || null;
     let rw = null; try { rw = typeof rewards !== 'undefined' ? rewards : null; } catch (e) {}
     let PA = null;
-    if (!(L && L.pa)) PA = await getJ(`https://datapi.jup.ag/v2/charts/${CA}?interval=1_HOUR&to=${Date.now()}&candles=720&type=mcap&quote=usd`)
+    // its whole life, at a resolution that fits its age: 5-minute candles under 2 days, hourly under 30, daily back to launch
+    const age = Date.now() / 1000 - (created || 0), [iv, n] = age < 2 * 86400 ? ['5_MINUTE', 600] : age < 30 * 86400 ? ['1_HOUR', 720] : ['1_DAY', 1000];
+    if (!(L && L.pa)) PA = await getJ(`https://datapi.jup.ag/v2/charts/${CA}?interval=${iv}&to=${Date.now()}&candles=${n}&type=mcap&quote=usd`)
       .then(d => LRS.priceAction(d.candles, created)).catch(() => null);
     const show = (s, checking) => { (window.LRS_SCANS = window.LRS_SCANS || {})[CA] = s; render(rowOf(asset, s, L, rw, PA), L, checking); };
     show(sc, !!(sc && sc.cl.length));
