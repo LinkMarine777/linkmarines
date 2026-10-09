@@ -45,7 +45,9 @@ window.LRS = (() => {
     if (sc.sn > 5) F.push(['a', 'snipers hold ' + sc.sn.toFixed(1) + '%']); if (sc.in > 5) F.push(['a', 'insiders hold ' + sc.in.toFixed(1) + '%']);
     if (r.top > 30) F.push(['a', 'top 10 holders hold ' + r.top + '%']);
     const dd = r.pk ? 1 - r.mc / r.pk : 0;
-    if (dd >= 0.5 && r.pk >= 20000) F.push([dd >= 0.85 ? 'r' : 'a', 'down ' + Math.round(dd * 100) + '% from its $' + (r.pk >= 1e6 ? (r.pk / 1e6).toFixed(2) + 'M' : Math.round(r.pk / 1e3) + 'K') + ' peak']);
+    const pa = r.pa, tm = m => m < 90 ? m + ' min' : Math.round(m / 60) + ' h';
+    if (r.pnd || (r.flags || []).includes('PUMP & DUMP')) F.push(['r', `pump and dump: peaked ${tm(pa ? pa.up : 0)} after launch and lost half of it within ${tm(pa && pa.half != null ? pa.half : 0)}`]);
+    if (dd >= 0.5 && r.pk >= 20000) F.push([dd >= 0.85 ? 'r' : 'a', 'down ' + Math.round(dd * 100) + '% from its $' + (r.pk >= 1e6 ? (r.pk / 1e6).toFixed(2) + 'M' : Math.round(r.pk / 1e3) + 'K') + ' peak' + (pa && pa.half != null && !r.pnd ? ', half of it gone ' + tm(pa.half) + ' after the peak' : '')]);
     if (r.bpk >= 10 && (r.bh || 0) < r.bpk / 2) F.push(['a', 'bundlers held ' + r.bpk + '% at their peak and have sold']);
     if (r.dn >= 5 && r.dn <= 2000 && r.dg / r.dn < 0.05) F.push(['r', 'serial launcher: ' + num(r.dg) + ' of ' + num(r.dn) + ' other coins graduated']);
     if (r.vr && r.vr.st === 'rejected') F.push(['r', 'Jupiter VRFD rejected its verification']);
@@ -115,7 +117,24 @@ window.LRS = (() => {
   }
   // the radar's score (intel/launches.py), for any coin: 25 organic buyers, 20 fee-backed volume (or the organic share when
   // there are no payouts to check), 15 bundles, 15 dev, 10 holders, 5 top 10, 5 organic share, 5 fees per trade; minus up
-  // to 30 for the drop from the peak and 10 for bundles sold into the pump
+  // to 40 for what the price did (priceScore) and 10 for bundles sold into the pump
+  // the shape of the move (intel/launches.py price_action / price_score), from market-cap candles: minutes from launch to the
+  // peak (up), from the peak to the first close under half of it (half; null if it never lost half), the close now below
+  // the peak (dd). Score -40 to +5: the drop weighted by how fast it fell, -10 for a pump and dump, +5 for a steady climb.
+  function priceAction(C, created) {
+    C = (C || []).filter(c => c.close); if (C.length < 3) return null;
+    const held = C.slice(0, -1).map((c, k) => Math.min(c.close, C[k + 1].close));   // a peak held two candles: one bad tick isn't one
+    let i = 0; held.forEach((v, k) => { if (v > held[i]) i = k; });
+    const pc = held[i], tp = C[i].time, h = C.slice(i + 1).find(c => c.close < pc / 2);
+    return { pk: Math.round(pc), up: Math.round(Math.max(0, tp - created) / 60), half: h ? Math.round((h.time - tp) / 60) : null, dd: +Math.max(0, 1 - C[C.length - 1].close / pc).toFixed(3) };
+  }
+  function priceScore(dd, pa) {
+    const cap = v => Math.max(0, Math.min(1, v)), half = pa ? pa.half : null, up = pa ? pa.up : null;
+    const sp = !pa ? 0.8 : half == null ? 0.6 : 1 - 0.4 * cap(Math.log(Math.max(half, 60) / 60) / Math.log(12));
+    const crash = 30 * cap((dd - 0.4) / 0.5) * sp, spike = pa && up <= 60 && half != null && half <= 60 && dd >= 0.7 ? 10 : 0;
+    const steady = pa && half == null && dd < 0.4 ? 5 * Math.min(1, up / 360) : 0;
+    return [steady - crash - spike, !!spike];
+  }
   function score(x) {
     const lg = Math.log10, cap = v => Math.max(0, Math.min(1, v)), org = x.jv ? x.ov / x.jv : 0;
     const s = 25 * Math.min(1, lg(1 + x.ob) / 2) + (x.fb != null ? 20 * Math.min(1, x.fb / 0.7) : 12 * Math.min(1, org / 0.08))
@@ -123,11 +142,11 @@ window.LRS = (() => {
       + (x.dn < 1 || x.dn > 2000 || !x.audit ? 7 : x.dg / x.dn >= 0.2 ? 15 : x.dn >= 5 && x.dg / x.dn < 0.05 ? 0 : 7)
       + 10 * Math.min(1, lg(1 + x.h) / 3) + (x.top != null ? 5 * cap((80 - x.top) / 50) : 2.5) + 5 * Math.min(1, org / 0.08)
       + (x.fpt != null ? 5 * cap((4 - x.fpt) / 2.5) : 2.5)
-      - 30 * cap(((x.dd || 0) - 0.5) / 0.45)   // what the price did: none down to 50% off its peak, all 30 at 95% off
+      + priceScore(x.dd || 0, x.pa)[0]   // what the price did
       - (x.bpk >= 10 && (x.bh || 0) < x.bpk / 2 ? 10 * Math.min(1, x.bpk / 25) : 0);   // bundlers who sold into the pump
-    const dumped = (x.dd || 0) >= 0.85 && x.pk >= 20000;
-    const sc = Math.max(0, Math.round(s)), farm = x.vol >= 20000 && (x.fb != null ? x.fb < 0.45 && (x.ob < 20 || x.h < 60) : x.ob < 5);
-    return { score: sc, dumped, vd: farm ? 'FARM' : sc >= 60 && x.bund < 20 && !dumped ? 'REAL' : sc >= 35 ? 'WATCH' : 'THIN', org: x.jv ? +(org * 100).toFixed(1) : null };
+    const pnd = priceScore(x.dd || 0, x.pa)[1], dumped = (x.dd || 0) >= 0.85 && x.pk >= 20000;
+    const sc = Math.max(0, Math.min(100, Math.round(s))), farm = x.vol >= 20000 && (x.fb != null ? x.fb < 0.45 && (x.ob < 20 || x.h < 60) : x.ob < 5);
+    return { score: sc, dumped, pnd, vd: farm ? 'FARM' : sc >= 60 && x.bund < 20 && !dumped ? 'REAL' : sc >= 35 ? 'WATCH' : 'THIN', org: x.jv ? +(org * 100).toFixed(1) : null };
   }
-  return { esc, num, short, SITE, bnow, bundOf, scanHolders, summarize, vetFunders, score, vd, tiles, funding, beforeBuy };
+  return { esc, num, short, SITE, bnow, bundOf, scanHolders, summarize, vetFunders, score, priceAction, priceScore, vd, tiles, funding, beforeBuy };
 })();

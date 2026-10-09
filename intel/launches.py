@@ -31,8 +31,9 @@ The REAL score (0-100) of each launch from the last 24 h that trades ($2,500+ vo
   organic vol     5  Jupiter's organic share of the volume
   fees / trade    5  priority fees + tips traders paid per trade (Jupiter's Fees Paid). Farm bots pay to land their
                      bundles: farms measured 2.3-5 mSOL a trade, real coins 0.7-2.7
-minus up to 30 for the drop from the peak market cap (none down to 50% off, all 30 at 95% off), minus up to 10 when
-bundlers held 10%+ at their peak and have sold most of it (sold into the pump)
+plus what the price did (price_score, -40 to +5): the drop from the peak weighted by how fast it fell, -10 for a pump and
+dump (peaked within an hour, lost half within the next), up to +5 for a steady climb; minus up to 10 when bundlers held
+10%+ at their peak and have sold most of it (sold into the pump)
 REAL 60+ (not bundled: 20%+ bundled or linked caps it at WATCH; not dumped: 85%+ below a $20K+ peak does too), WATCH 35+,
 FARM = $20,000+ volume the fees don't back up (under 0.45, with under 20 organic buyers or 60 holders; with no payouts to check: under 5 organic buyers),
 THIN otherwise.
@@ -97,7 +98,7 @@ def assets(mints):
 
 state = load('launches-state.json', {})
 for k in ('devs', 'bf', 'vrfd', 'subs', 'vrfdLast', 'verified'): state.pop(k, None)   # the first version's on-chain VRFD feed + dev backfill
-for k, v in (('pairs', {}), ('live', {}), ('rw', {}), ('fired', {}), ('vr', {}), ('sun', {}), ('sf', {}), ('fan', {}), ('scan', {}), ('busy', {})):
+for k, v in (('pairs', {}), ('live', {}), ('rw', {}), ('fired', {}), ('vr', {}), ('sun', {}), ('sf', {}), ('fan', {}), ('scan', {}), ('busy', {}), ('pa', {})):
     state.setdefault(k, v)
 FULL = os.environ.get('FULL') == '1' or now - state.get('fullAt', 0) > 1800   # Jupiter's verified list: every 30 min
 signals = []
@@ -240,7 +241,7 @@ if FULL:
 # ---------- score the launches that trade ----------
 first_live = not state['live']
 for m in [m for m, x in state['live'].items() if x['c'] < now - WINDOW]:   # out of the window
-    state['live'].pop(m); state['rw'].pop(m, None); state['fired'].pop(m, None); state['scan'].pop(m, None)
+    state['live'].pop(m); state['rw'].pop(m, None); state['fired'].pop(m, None); state['scan'].pop(m, None); state['pa'].pop(m, None)
 for m, t in by_mint.items(): state['live'].setdefault(m, {'c': ts(t['createdAt'])})
 cand = sorted([t for t in feed if ((t.get('market') or {}).get('volume24hUsd') or 0) >= 2500 or t.get('status') == 'graduated'],
               key=lambda t: -((t.get('market') or {}).get('volume24hUsd') or 0))[:400]
@@ -309,7 +310,45 @@ def holder_scan(m, a, created):
             'sp': {k: round(v, 2) for k, v in sp.items()},
             'src': {k: v for k, v in sorted(src.items(), key=lambda kv: -kv[1]) if v}, 'fresh': fresh, 'n': len(H), 'at': now}
 
-rows, hot, scanned = [], {}, 0
+def price_action(C, created):
+    """The shape of the move, from 5-minute market-cap candles (closes: a wick isn't a price anyone held): minutes from launch
+    to the peak (up), minutes from the peak to the first close under half of it (half; None if it never lost half), and how
+    far below the peak it closes now (dd)."""
+    C = [c for c in C if c.get('close')]
+    if len(C) < 3: return None
+    held = [min(C[k]['close'], C[k + 1]['close']) for k in range(len(C) - 1)]   # a peak held two candles: one bad tick isn't one
+    i = max(range(len(held)), key=lambda k: held[k]); pc, tp = held[i], C[i]['time']
+    half = next(((c['time'] - tp) / 60 for c in C[i + 1:] if c['close'] < pc / 2), None)
+    return {'up': round(max(0, tp - created) / 60), 'half': None if half is None else round(half), 'dd': round(max(0, 1 - C[-1]['close'] / pc), 3)}
+def chart(m, created):
+    """A launch's price action, kept 15 min (a few dozen charts a pass)."""
+    global charted
+    c = state['pa'].get(m)
+    if c and now - c[1] < 900: return c[0]
+    if charted >= 60: return c[0] if c else None
+    charted += 1
+    try:
+        d = get(f"https://datapi.jup.ag/v2/charts/{m}?interval=5_MINUTE&to={now * 1000}&candles=300&type=mcap&quote=usd")
+        pa = price_action(d.get('candles') or [], created)
+    except Exception as e: log('chart', m[:6], e); return c[0] if c else None
+    state['pa'][m] = [pa, now]; time.sleep(0.15)
+    return pa
+
+
+def price_score(dd, pa):
+    """What the price did, -40 to +5. crash: up to -30 for the drop from the peak (none to 40% off, all at 90% off), weighted
+    by how fast it fell (under half the peak within an hour: all of it; after 12 h or more: 60%). spike: -10 when it peaked
+    within an hour of launch and lost half within an hour of the peak, ending 70%+ down (a pump and dump). steady: up to +5
+    for climbing over hours (6 h for all of it) without ever losing half of the peak."""
+    half, up = (pa or {}).get('half'), (pa or {}).get('up')
+    sp = 0.8 if not pa else 0.6 if half is None else 1 - 0.4 * max(0, min(1, math.log(max(half, 60) / 60) / math.log(12)))
+    crash = 30 * max(0, min(1, (dd - 0.4) / 0.5)) * sp
+    spike = 10 if pa and up <= 60 and half is not None and half <= 60 and dd >= 0.7 else 0
+    steady = 5 * min(1, up / 360) if pa and half is None and dd < 0.4 else 0
+    return steady - crash - spike, bool(spike)
+
+
+rows, hot, scanned, charted = [], {}, 0, 0
 for t in cand:
     m = t['mint']; mk = t.get('market') or {}; a = A.get(m) or {}; au = a.get('audit') or {}; st = a.get('stats24h') or {}
     vol = mk.get('volume24hUsd') or 0
@@ -339,23 +378,24 @@ for t in cand:
     s_top = 5 * max(0, min(1, (80 - top) / 50)) if top is not None else 2.5
     s_ov = 5 * min(1, (ov / jv if jv else 0) / 0.08)
     s_fpt = 5 * max(0, min(1, (4 - fpt) / 2.5)) if fpt is not None else 2.5
-    # what the price did: real trading that ends 95% below the peak is a pump that dumped, not a real coin; and bundlers who
-    # held 10%+ at their peak and have sold most of it sold into the pump
+    # what the price did (price_score): how far it fell from its peak and how fast, a pump and dump, a steady climb; and
+    # bundlers who held 10%+ at their peak and have sold most of it (sold into the pump)
     mc, pk = mk.get('marketCapUsd') or 0, mk.get('peakMarketCapUsd') or 0
-    dd = max(0, 1 - mc / pk) if pk else 0
-    p_dd = 30 * max(0, min(1, (dd - 0.5) / 0.45))
+    pa = chart(m, ts(t.get('createdAt'))) if pk >= 10000 or vol >= 10000 else None
+    dd = pa['dd'] if pa else max(0, 1 - mc / pk) if pk else 0
+    s_px, pnd = price_score(dd, pa)
     p_bs = 10 * min(1, bpk / 25) if bpk >= 10 and bh < bpk / 2 else 0
-    score = max(0, round(s_ob + s_fb + s_bu + s_dev + s_h + s_top + s_ov + s_fpt - p_dd - p_bs))
+    score = max(0, min(100, round(s_ob + s_fb + s_bu + s_dev + s_h + s_top + s_ov + s_fpt + s_px - p_bs)))
     dumped = dd >= 0.85 and pk >= 20000
     farm = vol >= 20000 and (fb < 0.45 and (ob < 20 or holders < 60) if fb is not None else ob < 5)   # payouts lag: a coin with real buyers isn't a farm
     bundled = bund >= 20
     verdict = 'FARM' if farm else 'REAL' if score >= 60 and not bundled and not dumped else 'WATCH' if score >= 35 else 'THIN'
     q = t.get('quote') or {}
-    flags = (['BUNDLED'] if bundled else []) + (['DUMPED'] if dumped else [])
+    flags = (['BUNDLED'] if bundled else []) + (['PUMP & DUMP'] if pnd else ['DUMPED'] if dumped else [])
     vr = state['vr'].get(m)
     row = {'m': m, 's': t.get('symbol'), 'n': t.get('name'), 'i': img(t.get('imageUrl')), 'c': ts(t.get('createdAt')),
            'q': q.get('symbol'), 'qm': q.get('mint'), 'qc': q.get('categoryLabel'), 'mode': t.get('mode'), 'st': t.get('status'),
-           'mc': round(mk.get('marketCapUsd') or 0), 'pk': round(mk.get('peakMarketCapUsd') or 0), 'v': round(vol),
+           'mc': round(mk.get('marketCapUsd') or 0), 'pk': round(mk.get('peakMarketCapUsd') or 0), 'pa': pa, 'v': round(vol),
            'ob': ob, 'h': holders, 'top': round(top, 1) if top is not None else None, 'org': round(ov / jv * 100, 1) if jv else None,
            'os': round(a.get('organicScore') or 0, 1), 'paid': rw[0] if rw else None, 'tax': rw[1] if rw else None,
            'fb': round(fb, 2) if fb is not None else None, 'fees': round(fees, 2) if fees is not None else None,
