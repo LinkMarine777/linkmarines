@@ -9,6 +9,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+  id-token: write   # the bot's /ingest checks GitHub's signed token for this job (intel/push-data.sh)
 concurrency:
   group: launches
   cancel-in-progress: false

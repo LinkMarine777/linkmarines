@@ -5,6 +5,19 @@ set +e
 git config user.name "war-room-radar"
 git config user.email "radar@users.noreply.github.com"
 FILES=${FILES:-"terminal/whales.json terminal/whales-state.json terminal/chart.json"}
+# first hand the changed files to the bot (its /data serves them at once; GitHub's copy lags up to 5 min behind its CDN). Best
+# effort: the bot proves who we are with GitHub's signed token (needs `id-token: write`); git below stays the record and the fallback.
+if [ -n "$ACTIONS_ID_TOKEN_REQUEST_URL" ]; then
+  tok=$(curl -s -m 10 -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=war-room-bot" \
+    | python3 -c 'import json, sys; print(json.load(sys.stdin).get("value", ""))' 2>/dev/null)
+  for f in $FILES; do
+    case "$f" in terminal/whales.json|terminal/whales-state.json|terminal/launches.json|terminal/chart.json) ;; *) continue ;; esac
+    [ -n "$tok" ] && [ -f "$f" ] || continue
+    git diff --quiet HEAD -- "$f" 2>/dev/null && continue   # unchanged since the last save
+    curl -s -m 20 -o /dev/null -w "bot <- $f %{http_code}\n" -X POST -H "Authorization: Bearer $tok" -H 'content-type: application/json' \
+      --data-binary @"$f" "https://war-room-bot.linkmarine777.workers.dev/ingest?path=$f" || true
+  done
+fi
 mkdir -p "$RUNNER_TEMP/save"
 for f in $FILES; do [ -f "$f" ] && cp "$f" "$RUNNER_TEMP/save/"; done
 for i in 1 2 3 4 5; do
