@@ -55,6 +55,9 @@ a{color:inherit;text-decoration:none}
   .ph{padding:8px 10px 6px;row-gap:6px;gap:6px}
   .legend{flex:1 1 0;min-width:0;margin-left:0!important;flex-wrap:nowrap!important;gap:10px!important;font-size:10.5px;overflow:hidden}
   .legend span{gap:4px}.legend .dly{font-size:8px;padding:0 3px}.legend .sd{display:none}   /* line styles say which is which */
+  .tb .rgt{margin-left:auto;padding-left:4px;gap:2px}.tb .rgt button{padding:3px 4px!important}.tb .rgt svg{width:14px!important;height:14px!important}
+  .tb #ctab,.tb #indDd,.tb #pmTab,.tb #dtab{border-left:0;margin-left:0;padding-left:0}.tb #ctab button{padding:3px 5px}.tb #pmBtn{padding:4px 6px}
+  .body.drawOpen .cw{margin-left:52px}   /* the open drawing panel pushes the chart over instead of covering its prices */
   .rgt{margin-left:0;gap:3px}.rgt button{padding:3px 6px!important}.rgt svg{width:15px!important;height:15px!important}
   .tb{display:flex;flex-wrap:nowrap;align-items:center;gap:4px;width:100%;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
   .tb::-webkit-scrollbar{display:none}
@@ -65,10 +68,15 @@ a{color:inherit;text-decoration:none}
   .tb{gap:3px}.tb .tabs button{padding:4px 7px}#ctab,#indDd,#pmTab,#dtab{margin-left:1px;padding-left:4px}#candleBtn{padding:3px 6px!important}
   /* the drawing tools fold away behind ✎ (they slide over the chart's left edge), the zoom buttons show when the chart is
      touched (pinch and drag zoom too), so the chart gets the whole width; reset lives in the zoom buttons */
-  .body{position:relative}#rsTab{display:none}#drTab{display:block!important}
+  .body{position:relative}
   .body .side{position:absolute;left:0;top:0;bottom:0;z-index:6;width:38px;background:#070c18;transform:translateX(-105%);transition:transform .15s;visibility:hidden}
   .body.drawOpen .side{transform:none;visibility:visible;box-shadow:6px 0 18px #000a}.body .side button{width:30px;height:30px}
-  #drawTog[aria-pressed="true"]{color:#fff;border-color:var(--blue2);background:rgba(42,90,218,.2)}
+  .tb #dtab{display:none}html.hasDepth #depItem{display:flex}html.hasDepth #depHr{display:block}   /* DEPTH lives in the ƒx menu on phones */
+  .body .cw{margin-left:14px;transition:margin-left .15s}   /* the folded panel's strip */
+  #drawTog{display:grid;place-items:center;position:absolute;left:0;top:0;bottom:0;z-index:7;width:14px;padding:0;
+    border:0;border-right:1px solid var(--line);background:#0b1120;color:var(--dim);cursor:pointer;transition:left .15s}
+  #drawTog svg{width:13px;height:13px;transition:transform .15s}
+  .body.drawOpen #drawTog{left:38px;color:#fff;background:#070c18}.body.drawOpen #drawTog svg{transform:rotate(180deg)}
   #indBtn{font-size:0;gap:3px}#indBtn .fx,#indBtn #indN{font-size:13px}#indN:empty{display:none}   /* ƒx without its ▾ */
 }
 #pmBtn{color:var(--dim)}#pmBtn b{font-weight:400}#pmBtn b.on{color:#fff}#tf{margin-right:6px}#ctab button{padding:3px 10px;display:grid;place-items:center}#ctab svg{width:18px;height:18px}
@@ -102,8 +110,9 @@ a{color:inherit;text-decoration:none}
 .zbar{position:absolute;left:50%;bottom:44px;transform:translateX(-50%);display:flex;gap:6px;opacity:0;transition:opacity .15s;pointer-events:none;z-index:5}
 .cw:hover .zbar,.zbar:focus-within{opacity:1;pointer-events:auto}
 @media (pointer:coarse){.zbar{opacity:.85;pointer-events:auto}}
+@media (min-width:641px){#drawTog{display:none}}   /* the drawing tools are always out on wider screens */
+#depItem,#depHr{display:none}
 @media (max-width:640px){.zbar{opacity:0;pointer-events:none;bottom:34px;gap:5px}.zbar button{width:30px;height:30px}.cw.zshow .zbar{opacity:.9;pointer-events:auto}}
-#drTab{display:none}
 .zbar button{width:32px;height:32px;display:grid;place-items:center;border:0;border-radius:6px;background:rgba(26,36,68,.85);color:#c9d3ee;cursor:pointer}
 .zbar button:hover{background:#2a3a66;color:#fff}.zbar button svg{width:16px;height:16px}
 html.embed .top{display:none}html.embed .panel{min-height:0}
@@ -127,9 +136,8 @@ html.nohdr .tkb,html.nohdr .tkl,html.nohdr .pchips{display:none!important}html.n
     <div class="legend"><a class="dep" id="depLeg" target="_blank" rel="noopener" style="display:none" title="CLOBr market depth, delayed up to 1h"><span><i></i>CLOBr<span class="sd"> depth</span> <span class="dly">delayed</span></span></a>
       <span><i style="background:var(--blue2)"></i><span id="lgB">$TOKEN</span><span class="sd"> (right)</span></span><span id="lgQw" style="display:none"><i class="dq"></i><span id="lgQ"></span><span class="sd"> (left)</span></span></div>
     <div class="rgt">
-      <div class="tabs" id="drTab"><button id="drawTog" type="button" title="Drawing tools" aria-label="Drawing tools" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 7l3 3"/></svg></button></div>
       <div class="tabs"><button id="fsBtn" type="button" title="Full screen (F)" aria-label="Full screen"></button></div>
-      <div class="tabs" id="rsTab"><button id="resetBtn" type="button" title="Reset the view (or double-click the chart)" aria-label="Reset the view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></button></div>
+      <div class="tabs"><button id="resetBtn" type="button" title="Reset the view (or double-click the chart)" aria-label="Reset the view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></button></div>
       <div class="tabs dd" id="shotDd"><button id="shot" type="button" title="Chart snapshot" aria-haspopup="true" aria-expanded="false" aria-label="Screenshot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="3.5"/></svg></button><div class="menu r" id="shotMenu" role="menu"><div class="mh">CHART SNAPSHOT</div><button type="button" data-s="save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M4 20h16"/></svg><span>Download image</span></button><button type="button" data-s="copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V4H4v12h4"/></svg><span>Copy image</span></button><button type="button" data-s="x"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.8 3h3.1l-6.8 7.8L22 21h-6.2l-4.9-6.4L5.3 21H2.2l7.3-8.3L2 3h6.4l4.4 5.8zm-1.1 16.2h1.7L7.4 4.7H5.6z"/></svg><span>Share on X</span></button></div></div>
     </div>
     <i class="brk"></i>
@@ -142,7 +150,7 @@ html.nohdr .tkb,html.nohdr .tkl,html.nohdr .pchips{display:none!important}html.n
     <div class="tabs" id="dtab" style="visibility:hidden"><button id="depthBtn" class="on" type="button" title="CLOBr market depth: support (green) and resistance (red) liquidity by price">DEPTH</button></div>
     </div>
   </div>
-  <div class="body"><div class="side" id="draw" aria-label="Drawing tools"></div><div class="cw"><div id="chart"></div><div class="zbar" id="zbar"><button type="button" data-z="out" title="Zoom out" aria-label="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg></button><button type="button" data-z="in" title="Zoom in" aria-label="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button><button type="button" data-z="left" title="Scroll back" aria-label="Scroll back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button><button type="button" data-z="right" title="Scroll forward" aria-label="Scroll forward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button><button type="button" data-z="reset" title="Reset the view (Alt+R)" aria-label="Reset the view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></button></div></div></div>
+  <div class="body"><div class="side" id="draw" aria-label="Drawing tools"></div><button type="button" id="drawTog" title="Drawing tools" aria-label="Show the drawing tools" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button><div class="cw"><div id="chart"></div><div class="zbar" id="zbar"><button type="button" data-z="out" title="Zoom out" aria-label="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg></button><button type="button" data-z="in" title="Zoom in" aria-label="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button><button type="button" data-z="left" title="Scroll back" aria-label="Scroll back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button><button type="button" data-z="right" title="Scroll forward" aria-label="Scroll forward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button><button type="button" data-z="reset" title="Reset the view (Alt+R)" aria-label="Reset the view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></button></div></div></div>
 </div>
 <div id="msg"></div>
 <div class="cmenu" id="ctx" role="menu"></div>
@@ -258,18 +266,28 @@ const chart=klinecharts.init('chart',{decimalFold:{threshold:99},formatter:{form
   xAxis:{axisLine:{color:'#1a2444'},tickLine:{show:false},tickText:{color:'#5d6a8f',family:F}},
   yAxis:{axisLine:{show:false},tickLine:{show:false},tickText:{color:'#4a7aff',family:F}},
   separator:{color:'#1a2444'},crosshair:{horizontal:{text:{backgroundColor:'#2a5ada',family:F}},vertical:{text:{backgroundColor:'#2a5ada',family:F}}}}});
+// the token's scale: every tick with the same zero count and digits ($0.0₃10, $0.0₃08), not a mix like 0.0₃1 / 0.0₄8
+function yTicks({defaultTicks}){const v=defaultTicks.map(t=>+t.value),top=Math.max(0,...v.map(Math.abs));
+  if(MODE==='mcap'||!(top>0&&top<1e-3))return defaultTicks.map(t=>({...t,text:'$'+fmtV(t.value)}));
+  const z=Math.ceil(-Math.log10(top))-1;let d=1;while(d<4&&v.some(x=>Math.abs(x*10**(z+d)-Math.round(x*10**(z+d)))>1e-6))d++;
+  const sub=String(z).split('').map(c=>SUB[c]).join('');
+  return defaultTicks.map((t,i)=>({...t,text:(v[i]<0?'-':'')+'$0.0'+sub+String(Math.round(Math.abs(v[i])*10**(z+d))).padStart(d,'0')}))}
 const YID=chart.getYAxes({paneId:'candle_pane'})[0].id;   // the token's own axis (a paneId alone would hit the pair token's too)
 // the token's scale on the right ($, no trailing zeros); the pair token's on the left, in amber
-chart.overrideYAxis({paneId:'candle_pane',id:YID,displayValueToText:v=>fmtV(v),createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtV(t.value)}))});
+chart.overrideYAxis({paneId:'candle_pane',id:YID,displayValueToText:v=>fmtV(v),createTicks:yTicks});
 const QAX=chart.createYAxis({id:'quote_axis',paneId:'candle_pane',position:'left',gap:{top:.08,bottom:.25},
   displayValueToText:v=>fmtQ(+v/QS()),   // the crosshair's label on this side: short, like its ticks
-  createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtQ(+t.value/QS())}))});
+  createTicks:({defaultTicks})=>{const v=defaultTicks.map(t=>+t.value/QS()),big=v.every(x=>Math.abs(x)>=1),   // same decimals on every tick: $13.0, $12.8
+    dec=big?Math.max(0,...v.map(x=>((fmtQ(x).split('.')[1])||'').length)):0;
+    return defaultTicks.map((t,i)=>({...t,text:'$'+(big?v[i].toFixed(dec):fmtQ(v[i]))}))}});
 chart.createIndicator({name:'DEPTHB',paneId:'candle_pane'},true);
 // phones: both price scales stay, in smaller text with tighter padding
 function axesFit(){const i=PHONE.matches,z=i?10:12;
   chart.setStyles({yAxis:{tickText:{size:z,marginStart:i?3:4,marginEnd:i?2:4}},candle:{priceMark:{last:{text:{size:z,paddingLeft:i?3:4,paddingRight:i?3:4}}}},
     crosshair:{horizontal:{text:{size:z,paddingLeft:i?3:4,paddingRight:i?3:4}},vertical:{text:{size:z}}}})}
 axesFit();PHONE.addEventListener('change',axesFit);
+// phones: refresh, full screen and snapshot sit at the end of the toolbar row, level with the other buttons
+{const r=document.querySelector('.rgt'),home=r.parentNode,next=r.nextSibling,go=()=>PHONE.matches?$('tbRow').appendChild(r):home.insertBefore(r,next);go();PHONE.addEventListener('change',go)}
 // each price scale is as wide as the text it really shows (its ticks; the right one also its price tag), not the long
 // unformatted number the library would measure (12 decimals on a tiny price)
 {const cx=document.createElement('canvas').getContext('2d'),tw=(t,z)=>{cx.font=`${z}px ${F}`;return cx.measureText(t).width},
@@ -289,7 +307,7 @@ const ICO_LINE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strok
 let candleOn=store('wrCandle')==='1';
 function setType(){chart.setStyles({candle:{type:candleOn?'candle_solid':'area'}});$('candleBtn').innerHTML=candleOn?ICO_CANDLE:ICO_LINE;$('candleBtn').title=candleOn?'Candles (click for the line)':'Line (click for candles)'}
 $('candleBtn').onclick=()=>{candleOn=!candleOn;store('wrCandle',candleOn?'1':'0');setType()};setType();
-$('depthBtn').onclick=()=>{depthOn=!depthOn;store(DKEYS,depthOn?'1':'0');$('depthBtn').classList.toggle('on',depthOn);$('depLeg').classList.toggle('off',!depthOn);chart.resize()};
+$('depthBtn').onclick=()=>{depthOn=!depthOn;$('depItem').classList.toggle('on',depthOn);store(DKEYS,depthOn?'1':'0');$('depthBtn').classList.toggle('on',depthOn);$('depLeg').classList.toggle('off',!depthOn);chart.resize()};
 $('depthBtn').classList.toggle('on',depthOn);
 
 // timeframes like the live chart; each loads candles of a fitting size and fits that window on screen, the rest of the
@@ -319,7 +337,7 @@ chart.setDataLoader({getBars:async({type,timestamp,callback})=>{
       callback(d,{forward:type==='forward'?more:true,backward:type==='backward'?more:true});return}
     callback([],{forward:type!=='forward',backward:type!=='backward'})}catch(e){say('Couldn\'t load candles ('+e.message+')');callback([],false)}}});
 const prec=p=>p>0?Math.min(12,Math.max(2,Math.ceil(-Math.log10(p))+3)):2;
-function resetView(){chart.overrideYAxis({paneId:'candle_pane',id:YID,displayValueToText:v=>fmtV(v),createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtV(t.value)}))});fit();say('View reset',1200)}
+function resetView(){chart.overrideYAxis({paneId:'candle_pane',id:YID,displayValueToText:v=>fmtV(v),createTicks:yTicks});fit();say('View reset',1200)}
 $('resetBtn').onclick=resetView;
 $('zbar').onclick=e=>{const b=e.target.closest('[data-z]');if(!b)return;const z=b.dataset.z,L=chart.getDataList().length,
     w=(chart.getSize('candle_pane','main')||{}).width||600;
@@ -353,7 +371,7 @@ const ok=new Set(klinecharts.getSupportedOverlays());
 $('draw').innerHTML=DRAW.filter(([n])=>ok.has(n)).map(([n,l,ic])=>`<button type="button" data-o="${n}" title="${l}" aria-label="${l}">${ic}</button>`).join('')
   +'<hr><button type="button" id="lockBtn"></button>'
   +'<button type="button" id="clr" title="Remove every drawing" aria-label="Remove every drawing">'+SV('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>')+'</button>';
-const drawOpen=o=>{document.querySelector('.body').classList.toggle('drawOpen',o);$('drawTog').setAttribute('aria-pressed',o)};
+const drawOpen=o=>{setTimeout(()=>chart.resize(),170);document.querySelector('.body').classList.toggle('drawOpen',o);$('drawTog').setAttribute('aria-expanded',o);$('drawTog').setAttribute('aria-label',(o?'Hide':'Show')+' the drawing tools')};
 $('drawTog').onclick=()=>drawOpen(!document.querySelector('.body').classList.contains('drawOpen'));
 {const cw=document.querySelector('.cw');let t;cw.addEventListener('touchstart',()=>{cw.classList.add('zshow');clearTimeout(t);t=setTimeout(()=>cw.classList.remove('zshow'),3000)},{passive:true})}
 $('draw').onclick=e=>{const b=e.target.closest('button');if(!b)return;
@@ -385,7 +403,8 @@ document.addEventListener('keydown',e=>{if((e.key==='Delete'||e.key==='Backspace
 // ---------- indicators: on the price, or in their own pane below ----------
 const IND=[['ICHIMOKU','Ichimoku',true],['MA','MA',true],['EMA','EMA',true],['BOLL','Bollinger',true],['RSI','RSI',false],['MACD','MACD',false]];
 const live={};
-$('ind').innerHTML=IND.map(([n,l,onPrice],i)=>(i&&!onPrice&&IND[i-1][2]?'<hr>':'')+`<button type="button" role="menuitemcheckbox" data-i="${n}"><span>${l}</span><small>${onPrice?'on price':'own pane'}</small><span class="ck">✓</span></button>`).join('');
+$('ind').innerHTML='<button type="button" role="menuitemcheckbox" id="depItem"><span>Market depth</span><small>CLOBr</small><span class="ck">✓</span></button><hr id="depHr">'+IND.map(([n,l,onPrice],i)=>(i&&!onPrice&&IND[i-1][2]?'<hr>':'')+`<button type="button" role="menuitemcheckbox" data-i="${n}"><span>${l}</span><small>${onPrice?'on price':'own pane'}</small><span class="ck">✓</span></button>`).join('');
+$('depItem').classList.toggle('on',depthOn);$('depItem').onclick=e=>{e.stopPropagation();$('depthBtn').click()};
 // a dropdown opens under its button, placed against the window (the phone toolbar row scrolls sideways and would clip it)
 function placeMenu(dd){const m=dd.querySelector('.menu');if(!m)return;if(!matchMedia('(max-width:640px)').matches){m.style.position=m.style.top=m.style.left=m.style.right='';return}
   const r=dd.getBoundingClientRect();m.style.position='fixed';m.style.right='auto';m.style.top=(r.bottom+4)+'px';
@@ -476,7 +495,7 @@ Promise.all([sfInfo,dsInfo,jupInfo]).then(([sf,pairs,jt])=>{
   PPREC=prec(jt&&+jt.usdPrice||+(P&&P.priceUsd)||0)||8;SUPPLY=jt&&+jt.circSupply||(jt&&+jt.mcap&&+jt.usdPrice?jt.mcap/jt.usdPrice:null);
   chart.setSymbol({ticker:SYM,pricePrecision:MODE==='mcap'?0:PPREC,volumePrecision:0});chart.setPeriod(TF[3])});
 fetch(BOT+'/depth?mint='+CA+'&d=1').then(r=>r.json()).then(d=>{if(!d||!d.levels||!d.levels.length)return;DEPTH=d.levels;
-  $('dtab').style.visibility='';const l=$('depLeg');l.style.display='';l.href='https://clobr.io/token/'+encodeURIComponent(CA);l.classList.toggle('off',!depthOn);chart.resize()}).catch(()=>{});
+  $('dtab').style.visibility='';document.documentElement.classList.add('hasDepth');const l=$('depLeg');l.style.display='';l.href='https://clobr.io/token/'+encodeURIComponent(CA);l.classList.toggle('off',!depthOn);chart.resize()}).catch(()=>{});
 addEventListener('resize',()=>chart.resize());
 $('tbRow').addEventListener('scroll',()=>document.querySelectorAll('.dd.open').forEach(d=>d.classList.remove('open')),{passive:true});
 function pmShow(){chart.setStyles({crosshair:{horizontal:{text:{show:MODE!=='mcap'}}}});document.querySelectorAll('#pmBtn b').forEach(b=>b.classList.toggle('on',b.dataset.m===MODE));$('lgB').textContent='$'+SYM+(MODE==='mcap'?' MC':'')}
