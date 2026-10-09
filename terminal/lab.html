@@ -245,15 +245,15 @@ function drawVol({ctx,chart,bounding,xAxis}){const L=chart.getDataList(),vr=char
       ctx.fillRect(xAxis.convertToPixel(i)-w/2,yb-h,w,h)}}
 
 // ---------- CLOBr depth on the right edge: liquidity per price band on the token's scale, green support / red resistance ----------
-const DKEYS=matchMedia('(max-width:640px)').matches?'wrDepthM':'wrDepth';   // phones keep their own setting: off unless turned on
-let DEPTH=null,depthOn=DKEYS==='wrDepthM'?store(DKEYS)==='1':store(DKEYS)!=='0';
+const DKEYS='wrDepth',DPHONE=matchMedia('(max-width:640px)').matches;   // on unless turned off (phones too: the ƒx menu has it)
+let DEPTH=null,depthOn=store(DKEYS)!=='0';
 // (price precision and each candle's close, so it can't pull the price scale away from the candles; nothing in the legend)
 klinecharts.registerIndicator({name:'DEPTHB',shortName:'',series:'price',precision:12,figures:[{key:'c',title:''}],calc:d=>d.map(k=>({c:k.close})),
   createTooltipDataSource:()=>({name:'',calcParamsText:'',features:[],legends:[]}),
   draw:args=>{drawVol(args);const {ctx,bounding,yAxis}=args;if(!depthOn||!DEPTH)return true;const h=bounding.height,w=bounding.width,rows=Math.max(12,Math.min(140,Math.floor(h/5))),bh=h/rows;
     const bins=Array.from({length:rows},()=>[0,0]);
     DEPTH.forEach(([p,su,re])=>{const y=yAxis.convertToPixel(MODE==='mcap'?(SUPPLY?p*SUPPLY:NaN):p);if(y<0||y>h)return;const i=Math.min(rows-1,Math.max(0,Math.floor((h-y)/bh)));bins[i][0]+=su;bins[i][1]+=re});
-    const mx=Math.max(...bins.map(b=>b[0]+b[1]));if(!(mx>0))return true;const maxW=w*(DKEYS==='wrDepthM'?.18:.26);
+    const mx=Math.max(...bins.map(b=>b[0]+b[1]));if(!(mx>0))return true;const maxW=w*(DPHONE?.22:.26);
     bins.forEach(([su,re],i)=>{const v=su+re;if(!v)return;const bw=Math.max(2,v/mx*maxW),y=h-(i+1)*bh+1,bhh=Math.max(1,bh-2),sup=su>=re;
       ctx.fillStyle=sup?'rgba(57,255,106,.16)':'rgba(255,51,85,.16)';ctx.fillRect(w-bw,y,bw,bhh);
       ctx.fillStyle=sup?'rgba(57,255,106,.75)':'rgba(255,51,85,.75)';ctx.fillRect(w-bw,y,2,bhh)});return true}});
@@ -276,7 +276,9 @@ const chart=klinecharts.init('chart',{decimalFold:{threshold:99},formatter:{form
   separator:{color:'#1a2444'},crosshair:{horizontal:{text:{backgroundColor:'#2a5ada',family:F}},vertical:{text:{backgroundColor:'#2a5ada',family:F}}}}});
 // the token's scale: every tick with the same zero count and digits ($0.0₃10, $0.0₃08), not a mix like 0.0₃1 / 0.0₄8
 function yTicks({defaultTicks}){const v=defaultTicks.map(t=>+t.value),top=Math.max(0,...v.map(Math.abs));
-  if(MODE==='mcap'||!(top>0&&top<1e-3))return defaultTicks.map(t=>({...t,text:'$'+fmtV(t.value)}));
+  if(MODE==='mcap'||!(top>0))return defaultTicks.map(t=>({...t,text:'$'+fmtV(t.value)}));
+  if(top>=1e-3){const dec=Math.max(...v.map(x=>((fmtP(x).split('.')[1])||'').length));   // $0.020 / $0.019, $1.50 / $1.25
+    return defaultTicks.map((t,i)=>({...t,text:'$'+(Math.abs(v[i])>=1&&top>=1?v[i].toFixed(Math.max(2,dec)):v[i].toFixed(dec))}))}
   const z=Math.ceil(-Math.log10(top))-1;let d=1;while(d<4&&v.some(x=>Math.abs(x*10**(z+d)-Math.round(x*10**(z+d)))>1e-6))d++;
   const sub=String(z).split('').map(c=>SUB[c]).join('');
   return defaultTicks.map((t,i)=>({...t,text:(v[i]<0?'-':'')+'$0.0'+sub+String(Math.round(Math.abs(v[i])*10**(z+d))).padStart(d,'0')}))}
