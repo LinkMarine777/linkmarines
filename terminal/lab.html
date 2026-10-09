@@ -248,14 +248,17 @@ const YID=chart.getYAxes({paneId:'candle_pane'})[0].id;   // the token's own axi
 // the token's scale on the right ($, no trailing zeros); the pair token's on the left, in amber
 chart.overrideYAxis({paneId:'candle_pane',id:YID,createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtV(t.value)}))});
 const QAX=chart.createYAxis({id:'quote_axis',paneId:'candle_pane',position:'left',gap:{top:.08,bottom:.25},
-  createTicks:({defaultTicks})=>PHONE.matches?[]:defaultTicks.map(t=>({...t,text:'$'+fmtQ(+t.value/QS())}))});
+  createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtQ(+t.value/QS())}))});
 chart.createIndicator({name:'DEPTHB',paneId:'candle_pane'},true);
-// phones: one compact price scale on the right; the pair token's scale folds away (its line and legend stay)
+// phones: both price scales stay, in smaller text with tighter padding
 function axesFit(){const i=PHONE.matches,z=i?10:12;
-  chart.overrideYAxis({id:'quote_axis',paneId:'candle_pane',inside:i});
   chart.setStyles({yAxis:{tickText:{size:z,marginStart:i?3:4,marginEnd:i?2:4}},candle:{priceMark:{last:{text:{size:z,paddingLeft:i?3:4,paddingRight:i?3:4}}}},
     crosshair:{horizontal:{text:{size:z,paddingLeft:i?3:4,paddingRight:i?3:4}},vertical:{text:{size:z}}}})}
 axesFit();PHONE.addEventListener('change',axesFit);
+// the pair token's scale on the left is only as wide as its own numbers (the chart otherwise reserves room for the price tag there too)
+{const qa=chart.getYAxes({paneId:'candle_pane',id:'quote_axis'})[0],cx=document.createElement('canvas').getContext('2d');
+  if(qa)qa.getAutoSize=function(){const t=chart.getStyles().yAxis.tickText;cx.font=`${t.size}px ${t.family}`;
+    return Math.ceil(this.getTicks().reduce((w,k)=>Math.max(w,cx.measureText(k.text).width),0))+t.marginStart+t.marginEnd+2}}
 
 // line (the live chart's default) or candles: one button showing the type you're on
 const ICO_LINE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 4-7 5 5"/><path d="M3 21h18"/></svg>',
