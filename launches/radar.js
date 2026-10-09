@@ -22,12 +22,13 @@ const lanePill = l => l === 'express' ? '<span class="pill ex">⚡ Express</span
 // COIN / PAIR A-Z), a second tap turns it around
 const DIR = { score: -1, c: -1, bund: 1, v: -1, fb: -1, ob: -1, h: -1, mc: -1, fees: -1, dg: -1, s: 1, q: 1 };
 let D = null, vf = 'REAL', sk = 'score', sd = -1, pq = null, hk = 'real', hd = -1;   // pq: the pair the launches are filtered to
+try { pq = new URLSearchParams(location.search).get('pair') || null; if (pq && !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(pq)) pq = null; } catch (e) {}
 try { vf = localStorage.getItem('lrTab') || 'REAL'; const s = JSON.parse(localStorage.getItem('lrSort') || 'null'); if (s && s[0] in DIR) [sk, sd] = s; } catch (e) {}
 
 ROOT.innerHTML = `
   <section class="lr-hero">
     <div class="intro"><h1>Real or farm?</h1>
-      <p>Every stonkfun launch of the last 24 h checked against the <b>fees it actually paid</b>, Jupiter's organic buyers, bundles, the dev's record and <b>who funded its top holders</b>. Tap a coin for its bundle scan.</p></div>
+      <p>Every stonkfun launch of the last 24 h checked against the <b>fees it actually paid</b>, Jupiter's organic buyers, bundles, the dev's record and <b>who funded its top holders</b>. Tap a coin for its terminal, TOKEN INFO ↗ for its bundle scan.</p></div>
     <div><label>Launched 24h</label><b id="lr-kL">…</b><span class="lr-s" id="lr-kG"></span></div>
     <div><label>Real</label><b class="up" id="lr-kR">…</b><span class="lr-s">score 60+, not bundled</span></div>
     <div><label>Farms</label><b class="dn" id="lr-kF">…</b><span class="lr-s">volume the fees don't back</span></div>
@@ -36,7 +37,9 @@ ROOT.innerHTML = `
   <section class="lr-panel">
     <div class="lr-ph"><h2>LAUNCHES · LAST 24H</h2><span class="n" id="lr-nRows"></span>
       <div class="lr-tabs" id="lr-tabs">${['REAL', 'WATCH', 'FARM', 'BUNDLED', 'THIN', 'ALL'].map(v => `<button type="button" data-v="${v}">${v}</button>`).join('')}</div>
-      <span id="lr-pf"></span><span class="hint">tap a coin for its bundle scan · <span id="lr-upd"></span></span></div>
+      <div class="lr-pp" id="lr-pp"><button type="button" class="lr-ppb" id="lr-ppB" aria-haspopup="listbox" title="filter by the quote asset a coin launched against">PAIR <b id="lr-ppN">ALL</b> ▾</button><span id="lr-pf"></span>
+        <div class="lr-ppd" id="lr-ppD" hidden><input id="lr-ppQ" type="search" autocomplete="off" placeholder="Search every stonkfun pair: symbol, name, category"><div class="lr-ppL" id="lr-ppL" role="listbox"></div></div></div>
+      <span class="hint">tap a coin for its terminal · <span id="lr-upd"></span></span></div>
     <div class="lr-tw"><table><thead><tr>
       <th class="l" data-k="score">SCORE</th><th class="l" data-k="s">COIN</th><th class="l" data-k="q">PAIR</th><th data-k="c">AGE</th>
       <th data-k="mc">MC</th><th data-k="v">24H VOL</th><th data-k="fees" title="priority fees + tips traders paid (Jupiter's Fees Paid), and per trade">FEES PAID</th>
@@ -92,14 +95,14 @@ function render() {
   const IL = D.issListed || (D.sunListed ? { Sunrise: D.sunListed } : null);
   $('sunHint').textContent = IL ? Object.entries(IL).map(([k, v]) => k + ' ' + v[0] + '/' + v[1]).join(' · ') + ' paired' : '';
   $('sunHint').title = 'stonkfun pairs out of each issuer\'s verified stocks';
-  const N = D.next || []; $('next').innerHTML = N.length ? N.map(p => `<a class="it" href="https://jup.ag/tokens/${esc(p.m)}" target="_blank" rel="noopener">${pic(p.i)}
-    <span class="lr-nm"><b>${sy(p.s)}</b><span class="lr-tag">${esc(p.iss || 'Sunrise')}</span>${p.new ? '<span class="lr-tag new">NEW</span>' : ''}<small>${esc(p.n)}${p.v ? ' · vol ' + compact(p.v) : ''}${p.liq ? ' · liq ' + compact(p.liq) : ' · no market yet'}</small></span>
-    <span class="pills">${p.ver ? stPill('verified') : p.st ? stPill(p.st) : ''}${lanePill(p.lane)}</span></a>`).join('') : '<div class="empty">every stock these issuers put on chain has a stonkfun pair. The next one pops here and as an alert.</div>';
+  const N = D.next || []; $('next').innerHTML = N.length ? N.map(p => `<div class="it go" data-go="${tok(p.m)}">${pic(p.i)}
+    <span class="lr-nm"><a href="${tok(p.m)}"><b>${sy(p.s)}</b></a><span class="lr-tag">${esc(p.iss || 'Sunrise')}</span>${p.new ? '<span class="lr-tag new">NEW</span>' : ''}<small>${esc(p.n)}${p.v ? ' · vol ' + compact(p.v) : ''}${p.liq ? ' · liq ' + compact(p.liq) : ' · no market yet'}</small></span>
+    <span class="pills">${p.ver ? stPill('verified') : p.st ? stPill(p.st) : ''}${lanePill(p.lane)}</span></div>`).join('') : '<div class="empty">every stock these issuers put on chain has a stonkfun pair. The next one pops here and as an alert.</div>';
   // new pairs
   const P = D.newPairs || []; $('pairsN').textContent = 'watching ' + num(D.pairs) + ' pairs';
-  $('pairs').innerHTML = P.length ? P.map(p => `<a class="it" href="https://jup.ag/tokens/${esc(p.m)}" target="_blank" rel="noopener">${pic(p.i)}
-    <span class="lr-nm"><b>${sy(p.s)}</b><span class="lr-tag">${esc(p.cat || '')}</span><small>${esc(p.n)}</small></span>
-    <span class="lr-rt"><b>${ago(p.t)}</b>ago</span></a>`).join('') : '<div class="empty">no new pair since the radar started. The next one pops here and as an alert on every page.</div>';
+  $('pairs').innerHTML = P.length ? P.map(p => `<div class="it go" data-go="${tok(p.m)}">${pic(p.i)}
+    <span class="lr-nm"><a href="${tok(p.m)}"><b>${sy(p.s)}</b></a><span class="lr-tag">${esc(p.cat || '')}</span><small>${esc(p.n)} · added ${ago(p.t)} ago</small></span>
+    <button type="button" class="lr-lb" data-pair="${esc(p.m)}" title="its launches in the table above">LAUNCHES ↓</button></div>`).join('') : '<div class="empty">no new pair since the radar started. The next one pops here and as an alert on every page.</div>';
   renderRows(); renderHot();
 }
 const cmp = (k, d) => (a, b) => { const x = a[k], y = b[k]; if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1; return (typeof x === 'string' ? x.localeCompare(y) : x - y) * d; };   // no value: last, either way
@@ -117,7 +120,8 @@ const devCell = r => r.dn > 2000 ? `<span class="dim" title="a launch tool's wal
 function renderRows() {
   let L = (D.launches || []).map(r => (r.bund = bundOf(r), r)).filter(r => (!pq || r.qm === pq) && (vf === 'ALL' || (vf === 'BUNDLED' ? r.flags && r.flags.includes('BUNDLED') : r.vd === vf)));
   const ph = pq && (D.hot || []).find(h => h.qm === pq);
-  $('pf').innerHTML = pq ? `<span class="pfc">${ph ? sy(ph.q) : 'one'} pair<button type="button" title="all pairs" data-act="unpair">✕</button></span>` : '';
+  $('ppN').textContent = pq ? pairName(pq, ph) : 'ALL'; $('ppB').classList.toggle('on', !!pq);
+  $('pf').innerHTML = pq ? '<button type="button" class="lr-ppx" title="all pairs" data-act="unpair">✕</button>' : '';
   ROOT.querySelectorAll('#lr-hot tr[data-q]').forEach(t => t.classList.toggle('on', t.dataset.q === pq));
   L = L.slice().sort(cmp(sk, sd));
   ROOT.querySelectorAll('#lr-tabs button').forEach(b => b.classList.toggle('on', b.dataset.v === vf));
@@ -125,7 +129,7 @@ function renderRows() {
   $('nRows').textContent = L.length;
   $('rows').innerHTML = L.length ? L.map(r => `<tr data-m="${esc(r.m)}">
     <td class="l"><span class="vd v-${r.vd}"><i>${r.score}</i>${r.vd}</span></td>
-    <td class="l"><div class="coin">${pic(r.i)}<div><b>${sy(r.s)}</b><button type="button" class="infob" data-coin="${esc(r.m)}" title="more info: its score, bundle scan and who funded its holders, without leaving the page">ⓘ INFO</button>${r.st === 'graduated' ? '<span class="chip ok">GRAD</span>' : ''}${(r.flags || []).includes('BUNDLED') ? '<span class="chip bad">BUNDLED</span>' : ''}${r.vr ? `<span class="chip ${r.vr.st === 'verified' ? 'ok' : 'warn'}" title="Jupiter VRFD: ${esc(r.vr.st)} (${esc(r.vr.lane)} lane)">${r.vr.lane === 'express' ? '⚡ ' : ''}VRFD</span>` : ''}<small>${esc(r.n)}</small></div></div></td>
+    <td class="l"><div class="coin">${pic(r.i)}<div><b>${sy(r.s)}</b><button type="button" class="infob" data-coin="${esc(r.m)}" title="its score, bundle scan and who funded its holders, without leaving the page">TOKEN INFO ↗</button>${r.st === 'graduated' ? '<span class="chip ok">GRAD</span>' : ''}${(r.flags || []).includes('BUNDLED') ? '<span class="chip bad">BUNDLED</span>' : ''}${r.vr ? `<span class="chip ${r.vr.st === 'verified' ? 'ok' : 'warn'}" title="Jupiter VRFD: ${esc(r.vr.st)} (${esc(r.vr.lane)} lane)">${r.vr.lane === 'express' ? '⚡ ' : ''}VRFD</span>` : ''}<small>${esc(r.n)}</small></div></div></td>
     <td class="l">${sy(r.q)}${r.qc ? `<span class="lr-tag">${esc(r.qc)}</span>` : ''}</td>
     <td class="dim">${ago(r.c)}</td>
     <td>${compact(r.mc)}<small class="dim" style="display:block;font-size:10px">peak ${compact(r.pk)}</small></td>
@@ -174,16 +178,52 @@ function styleSwap(n = 0) {
 }
 function closeCoin() { DR.classList.remove('on'); }
 // a pair: the launches show just its coins (the pair is many coins), scrolled into view; its best launch opens that coin's panel
-function setPair(q) { pq = q; if (D) renderRows(); if (q) $('tabs').closest('section').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+function setPair(q, scroll = true) {
+  pq = q; closePP(); if (D) { renderRows(); renderHot(); }
+  try { const u = new URL(location.href); q ? u.searchParams.set('pair', q) : u.searchParams.delete('pair'); history.replaceState(history.state, '', u); } catch (e) {}   // a link to this pair's launches
+  if (q && scroll) $('tabs').closest('section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+// the pair picker: every stonkfun pair (its public list, all categories), searched by symbol, name, category or mint; the
+// ones with launches in the last 24 h first
+const SF = 'https://www.stonkfun.xyz';
+let PL = null;
+async function pairs() {
+  if (PL) return PL;
+  try { const d = await fetch(SF + '/api/public/v1/pairs').then(r => r.json());
+    PL = d.data.pairs.map(p => ({ m: p.mint, s: p.symbol, n: p.name, c: p.categoryLabel || p.category || '', i: p.logoUrl ? (/^https?:/.test(p.logoUrl) ? p.logoUrl : SF + p.logoUrl) : null })); }
+  catch (e) { PL = (D && D.hot || []).map(h => ({ m: h.qm, s: h.q, n: '', c: h.qc || '', i: null })); }   // stonkfun's list didn't load: the pairs with launches
+  return PL;
+}
+function pairName(m, ph) { const p = (PL || []).find(x => x.m === m); return p ? sy(p.s).replace(/&amp;/g, '&') : ph ? '$' + String(ph.q).replace(/^\$+/, '') : short(m); }
+function renderPP() {
+  const q = $('ppQ').value.trim().toLowerCase(), cnt = {};
+  (D && D.launches || []).forEach(r => { cnt[r.qm] = (cnt[r.qm] || 0) + 1; });
+  const L = (PL || []).filter(p => !q || [p.s, p.n, p.c, p.m].some(v => String(v || '').toLowerCase().includes(q)))
+    .sort((a, b) => (cnt[b.m] || 0) - (cnt[a.m] || 0) || String(a.s).localeCompare(String(b.s)));
+  const show = L.slice(0, 120);
+  $('ppL').innerHTML = (q ? '' : `<button type="button" class="it pp${pq ? '' : ' on'}" data-pp=""><span class="ph0"></span><span class="lr-nm"><b>All pairs</b><small>${num(PL ? PL.length : 0)} pairs</small></span><span></span></button>`)
+    + show.map(p => `<button type="button" class="it pp${p.m === pq ? ' on' : ''}" data-pp="${esc(p.m)}" role="option">${pic(p.i)}<span class="lr-nm"><b>${sy(p.s)}</b>${p.c ? `<span class="lr-tag">${esc(p.c)}</span>` : ''}<small>${esc(p.n)}</small></span><span class="lr-ct${cnt[p.m] ? '' : ' dim'}">${cnt[p.m] ? num(cnt[p.m]) + ' launch' + (cnt[p.m] === 1 ? '' : 'es') : '—'}</span></button>`).join('')
+    + (L.length > show.length ? `<div class="empty">${num(L.length - show.length)} more: type to narrow it down</div>` : '') + (L.length ? '' : '<div class="empty">no pair matches</div>');
+}
+async function openPP() { $('ppD').hidden = false; $('ppB').setAttribute('aria-expanded', 'true'); $('ppL').innerHTML = '<div class="empty">loading pairs…</div>'; await pairs(); renderPP(); $('ppQ').focus(); }
+function closePP() { const d = $('ppD'); if (d && !d.hidden) { d.hidden = true; $('ppB').setAttribute('aria-expanded', 'false'); $('ppQ').value = ''; } }
 
 DR.addEventListener('click', e => {
   if (e.target === DR) return closeCoin(); const a = e.target.closest('[data-act]'); if (!a) return;
   if (a.dataset.act === 'close') closeCoin(); else if (a.dataset.act === 'tobuy') $('swap').scrollIntoView({ behavior: 'smooth', block: 'center' });
 });
-addEventListener('keydown', e => { if (e.key === 'Escape') closeCoin(); });
+addEventListener('keydown', e => { if (e.key === 'Escape') { closePP(); closeCoin(); } });
+document.addEventListener('click', e => { if (!e.target.closest('#lr-pp')) closePP(); });
+$('ppQ').addEventListener('input', renderPP);
+$('ppQ').addEventListener('keydown', e => { if (e.key === 'Enter') { const f = $('ppL').querySelector('[data-pp]:not([data-pp=""])'); if (f) setPair(f.dataset.pp, false); } });
+if (pq) pairs().then(() => { if (D) renderRows(); });   // a ?pair= link: its name in the picker
 ROOT.addEventListener('click', e => {
   const act = e.target.closest('[data-act]');
   if (act) { e.preventDefault(); if (act.dataset.act === 'unpair') setPair(null); else if (act.dataset.act === 'all') { vf = 'ALL'; renderRows(); } return; }
+  if (e.target.closest('#lr-ppB')) return $('ppD').hidden ? openPP() : closePP();
+  const pp = e.target.closest('[data-pp]'); if (pp) return setPair(pp.dataset.pp || null, false);
+  if (e.target.closest('#lr-ppD')) return;
+  const lb = e.target.closest('[data-pair]'); if (lb) return setPair(lb.dataset.pair);
   const coin = e.target.closest('[data-coin]'); if (coin) { e.preventDefault(); return openCoin(coin.dataset.coin); }
   const tab = e.target.closest('#lr-tabs button'); if (tab) { vf = tab.dataset.v; try { localStorage.setItem('lrTab', vf); } catch (x) {} if (D) renderRows(); return; }
   const so = e.target.closest('th[data-k]'); if (so) return setSort(so.dataset.k);
