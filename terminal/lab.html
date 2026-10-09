@@ -63,6 +63,7 @@ a{color:inherit;text-decoration:none}
   #dtab[style*="hidden"]{display:none}
   #tf>button[data-k]:not(.on):not([data-k="all"]){display:none}   /* just the current size and ALL (every size is in ▾), room for ƒx, Price/MC, DEPTH */
   .tb{gap:3px}.tb .tabs button{padding:4px 7px}#ctab,#indDd,#pmTab,#dtab{margin-left:1px;padding-left:4px}#candleBtn{padding:3px 6px!important}
+  .body .side{width:32px}.body .side button{width:27px;height:27px}
   #indBtn{font-size:0;gap:3px}#indBtn .fx,#indBtn #indN{font-size:13px}#indN:empty{display:none}   /* ƒx without its ▾ */
 }
 #pmBtn{color:var(--dim)}#pmBtn b{font-weight:400}#pmBtn b.on{color:#fff}#tf{margin-right:6px}#ctab button{padding:3px 10px;display:grid;place-items:center}#ctab svg{width:18px;height:18px}
@@ -242,11 +243,16 @@ const chart=klinecharts.init('chart',{decimalFold:{threshold:99},formatter:{form
   xAxis:{axisLine:{color:'#1a2444'},tickLine:{show:false},tickText:{color:'#5d6a8f',family:F}},
   yAxis:{axisLine:{show:false},tickLine:{show:false},tickText:{color:'#4a7aff',family:F}},
   separator:{color:'#1a2444'},crosshair:{horizontal:{text:{backgroundColor:'#2a5ada',family:F}},vertical:{text:{backgroundColor:'#2a5ada',family:F}}}}});
+const YID=chart.getYAxes({paneId:'candle_pane'})[0].id;   // the token's own axis (a paneId alone would hit the pair token's too)
 // the token's scale on the right ($, no trailing zeros); the pair token's on the left, in amber
-chart.overrideYAxis({paneId:'candle_pane',createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtV(t.value)}))});
+chart.overrideYAxis({paneId:'candle_pane',id:YID,createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtV(t.value)}))});
 const QAX=chart.createYAxis({id:'quote_axis',paneId:'candle_pane',position:'left',gap:{top:.08,bottom:.25},
   createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtQ(+t.value/QS())}))});
 chart.createIndicator({name:'DEPTHB',paneId:'candle_pane'},true);
+// phones: both price scales sit inside the chart's edges instead of taking their own columns
+const PHONE=matchMedia('(max-width:640px)');
+function axesFit(){const i=PHONE.matches;chart.overrideYAxis({paneId:'candle_pane',id:YID,inside:i});chart.overrideYAxis({id:'quote_axis',paneId:'candle_pane',inside:i})}
+axesFit();PHONE.addEventListener('change',axesFit);
 
 // line (the live chart's default) or candles: one button showing the type you're on
 const ICO_LINE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 4-7 5 5"/><path d="M3 21h18"/></svg>',
@@ -284,7 +290,7 @@ chart.setDataLoader({getBars:async({type,timestamp,callback})=>{
       callback(d,{forward:type==='forward'?more:true,backward:type==='backward'?more:true});return}
     callback([],{forward:type!=='forward',backward:type!=='backward'})}catch(e){say('Couldn\'t load candles ('+e.message+')');callback([],false)}}});
 const prec=p=>p>0?Math.min(12,Math.max(2,Math.ceil(-Math.log10(p))+3)):2;
-function resetView(){chart.overrideYAxis({paneId:'candle_pane',createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtV(t.value)}))});fit();say('View reset',1200)}
+function resetView(){chart.overrideYAxis({paneId:'candle_pane',id:YID,createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtV(t.value)}))});fit();say('View reset',1200)}
 $('resetBtn').onclick=resetView;
 $('zbar').onclick=e=>{const b=e.target.closest('[data-z]');if(!b)return;const z=b.dataset.z,L=chart.getDataList().length,
     w=(chart.getSize('candle_pane','main')||{}).width||600;
