@@ -1,0 +1,22 @@
+# stonkfun payout feed (intel/payout_feed.py): every hour, for up to ~50 min, has the bot read stonkfun's own payout feed for the
+# coins the wallet X-Ray needs (exact rewards per wallet and coin; free, no Helius credits). No secrets.
+name: payout feed
+on:
+  schedule:
+    - cron: '11 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: payout-feed
+  cancel-in-progress: false
+jobs:
+  feed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 58
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: intel
+      - name: read the payout feed
+        run: python3 intel/payout_feed.py
