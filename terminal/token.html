@@ -2032,7 +2032,7 @@ const DB_HEAD=x=>{const k=x.kind,sd=x.side;
   return({convergence:['🐋 WHALES PILING IN','buy'],dumping:['🐋 WHALES DUMPING','sell'],rotation:['🔄 WHALE ROTATION'],exit:['🚪 WHALE EXIT','sell'],
     newpair:['🆕 NEW STONKFUN PAIR','buy'],vrfd:['⚡ JUPITER VRFD'],sunrise:['🔭 NEXT STONKFUN PAIR','buy'],launch:['🧪 REAL LAUNCH','buy'],
     dip:['🩸 WHALES BUYING THE DIP','buy'],rewards:['♻️ WHALE REWARDS'],score:['🧱 CLOBr SCORE'],board:['📋 STONK BOARD'],top10:['🚀 STONKFUN TOP 10'],
-    milestone:['🏆 MILESTONE'],payout:['💸 HOLDER PAYOUT'],pulse:['⚡ PULSE INCOMING'],link:[sd==='down'?'🔗 $LINK DIPPING':'🔗 $LINK PUMPING'],
+    milestone:['🏆 MILESTONE'],payout:['💸 HOLDER PAYOUT'],pulse:['⚡ PULSE'],link:[sd==='down'?'🔗 $LINK DIPPING':'🔗 $LINK PUMPING'],
     mover:[sd==='down'?'📉 BIG MOVER':'📈 BIG MOVER'],bigtrade:[sd==='sell'?'🐳 BIG SELL':'🐳 BIG BUY',sd==='sell'?'sell':'buy']})[k]||['🐋 WHALE RADAR']};
 let dbSeen=null;
 async function dbAlerts(){try{const L=((await j(BOT+'/alerts?limit=50')).signals)||[];
