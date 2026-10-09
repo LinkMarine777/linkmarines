@@ -310,10 +310,10 @@ axesFit();PHONE.addEventListener('change',axesFit);
   P.getAutoSize=function(){if(this.id!==YID&&this.id!=='quote_axis')return auto.call(this);
     const S=chart.getStyles(),t=S.yAxis.tickText;let w=this.getTicks().reduce((m,k)=>Math.max(m,tw(k.text,t.size)),0)+t.marginStart+t.marginEnd;
     if(this.id===YID){const L=chart.getDataList(),last=L[L.length-1],x=S.candle.priceMark.last.text;
-      if(last)w=Math.max(w,tw(fmtV(last.close),x.size)+x.paddingLeft+x.paddingRight+2)}
+      if(last)w=Math.max(w,Math.max(tw(fmtV(last.close),x.size),tw(fmtV(last.close*1.000371),x.size))+x.paddingLeft+x.paddingRight+2)}   // a full 4-digit price fits (the crosshair's)
     // room for the crosshair's label too (a value between ticks has more digits than the ticks: 109.41 vs 115)
     const c=S.crosshair.horizontal.text,top=Math.max(...this.getTicks().map(k=>Math.abs(+k.value)),0)*1.00037;
-    if(top)w=Math.max(w,tw(this.id===YID?fmtV(top):fmtQ(top/QS()),c.size)+c.paddingLeft+c.paddingRight+2)
+    if(top&&this.id!==YID)w=Math.max(w,tw(fmtQ(top/QS()),c.size)+c.paddingLeft+c.paddingRight+2)   // (the right side's label is as long as its price tag)
     return Math.ceil(w)+2}}
 
 // line (the live chart's default) or candles: one button showing the type you're on
@@ -438,9 +438,9 @@ function toggleInd(n){const [,,onPrice]=IND.find(x=>x[0]===n),b=document.querySe
   else{live[n]=chart.createIndicator(onPrice?{name:n,paneId:'candle_pane'}:n,onPrice);b.classList.add('on')}
   const cnt=Object.keys(live).length;$('indN').textContent=cnt?'('+cnt+')':'';
   store('wrLabInd',Object.keys(live).join(','));   // the same indicators next time, on any token
-  chart.setOffsetRightDistance(live.ICHIMOKU?160:20)}   // room for the Ichimoku cloud's 26 bars ahead
+  chart.setOffsetRightDistance(live.ICHIMOKU?160:PHONE.matches?8:20)}   // room for the Ichimoku cloud's 26 bars ahead
 $('ind').onclick=e=>{const b=e.target.closest('button');if(b)toggleInd(b.dataset.i)};
-chart.setOffsetRightDistance(20);
+chart.setOffsetRightDistance(PHONE.matches?8:20);   // phones: the last candle close to the price scale
 (store('wrLabInd')||'').split(',').forEach(n=>{if(IND.some(x=>x[0]===n))toggleInd(n)});
 
 // ---------- chart snapshot: the chart with the token, timeframe, time and the terminal7.xyz link on it; download, copy, or share on X ----------
