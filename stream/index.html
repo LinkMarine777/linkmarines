@@ -1320,7 +1320,7 @@ function infoScan(){const first=!IS.init,fire=(...a)=>{if(!first)infoAlert(...a)
   // payouts: pulse loading up, and round-number milestones
   const r=rewards;if(r&&CA===MARINE){
     const load=(r.pendingUsd||0)/(r.minDistributionUsd||1);
-    if(load>=.9&&IS.pulseWarned!==r.lastPayoutAt){IS.pulseWarned=r.lastPayoutAt;fire('⚡ PULSE INCOMING',Math.round(Math.min(load,1)*100)+'% LOADED',num(r.pendingTokens,2)+' '+TK.quote+' (≈ '+usd(r.pendingUsd,0)+') is about to hit $'+TK.symbol+' holders')}
+    // (no 'pulse incoming' alert: the payout itself is announced; the loading bar shows how close the next one is)
     const ms=(k,v,step,fmt)=>{if(v==null)return;const f=Math.floor(v/step)*step;if(IS[k]!=null&&f>IS[k])fire('🏆 MILESTONE',fmt(f),'');IS[k]=Math.max(IS[k]||0,f)};
     ms('msLink',r.distributedTokens,500,f=>num(f)+' '+TK.quote+' PAID TO HOLDERS');ms('msPay',r.payoutCount,5000,f=>num(f)+' PAYOUTS SENT');ms('msHold',holdersNow(r),100,f=>num(f)+' $'+TK.symbol+' HOLDERS')}
   // Stonk Board: $MARINE's rank, a new #1, a new token on the board, a big APY jump
@@ -1361,7 +1361,7 @@ const DB_HEAD=x=>{const k=x.kind,sd=x.side;
   return({convergence:['🐋 WHALES PILING IN','buy'],dumping:['🐋 WHALES DUMPING','sell'],rotation:['🔄 WHALE ROTATION'],exit:['🚪 WHALE EXIT','sell'],
     newpair:['🆕 NEW STONKFUN PAIR','buy'],vrfd:['⚡ JUPITER VRFD'],sunrise:['🌅 NEXT STONKFUN PAIR','buy'],launch:['🧪 REAL LAUNCH','buy'],
     dip:['🩸 WHALES BUYING THE DIP','buy'],rewards:['♻️ WHALE REWARDS'],score:['🧱 CLOBr SCORE'],board:['📋 STONK BOARD'],top10:['🚀 STONKFUN TOP 10'],
-    milestone:['🏆 MILESTONE'],payout:['💸 HOLDER PAYOUT'],pulse:['⚡ PULSE INCOMING'],link:[sd==='down'?'🔗 $LINK DIPPING':'🔗 $LINK PUMPING'],
+    milestone:['🏆 MILESTONE'],payout:['💸 HOLDER PAYOUT'],pulse:['⚡ PULSE'],link:[sd==='down'?'🔗 $LINK DIPPING':'🔗 $LINK PUMPING'],
     mover:[sd==='down'?'📉 BIG MOVER':'📈 BIG MOVER'],bigtrade:[sd==='sell'?'🐳 BIG SELL':'🐳 BIG BUY',sd==='sell'?'sell':'buy']})[k]||['🐋 WHALE RADAR']};
 let dbSeen=null;
 async function dbAlerts(){try{const L=((await j(BOT+'/alerts?limit=50')).signals)||[];
@@ -1381,7 +1381,7 @@ setTimeout(()=>{dbAlerts();setInterval(dbAlerts,20e3)},5000);
 if(TEST){const tp=$('testPanel');tp.style.display='flex';
   const T=[['$MARINE buy',()=>{bpQ.push({v:250,amt:2.5e6,w:'TEST'});nextBuy()}],['$MARINE large buy',()=>{bpQ.push({v:3200,amt:3e7,w:'TEST'});nextBuy()}],
     ['$LINK buy',()=>{bpQ.push({k:'link',v:1850,amt:132,w:'TEST'});nextBuy()}],['TTS',()=>{ttsQ.push({id:'test'+Date.now(),from:'@tester',text:'this is a test of the war room text to speech',at:Date.now()/1000});nextTTS()}],
-    ['Pulse fired',()=>pulseTakeover(12.5,175,2626,7100)],['Pulse incoming',()=>infoAlert('⚡ PULSE INCOMING','93% LOADED','8.12 LINK (≈ $113) is about to hit $MARINE holders')],
+    ['Pulse fired',()=>pulseTakeover(12.5,175,2626,7100)],
     ['Milestone',()=>infoAlert('🏆 MILESTONE','7,500 LINK PAID TO HOLDERS','')],['Board entry',()=>infoAlert('📋 STONK BOARD','$MARINE ENTERS THE TOP 100','Now #87 on thestonkboard.com')],
     ['New #1 APY',()=>infoAlert('👑 NEW #1 APY','$GP TAKES THE TOP SPOT','609.8M% APY 24H · mc $3.82M')],['New on board',()=>infoAlert('🆕 NEW ON THE BOARD','$POKE JOINS AT #64','2.7M% APY 24H · mc $163.2K')],
     ['APY jump',()=>infoAlert('📈 APY JUMP','$MARINE APY 1,240%','Up from 610% (24H, modeled)')],['Stonkfun top 10',()=>infoAlert('🚀 STONKFUN TOP 10','$SNDK BREAKS INTO THE TOP 10','mc $5.66M · +116.2% 24h')],
