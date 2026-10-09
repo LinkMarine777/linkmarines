@@ -69,13 +69,10 @@
 #lr #lr-rows tr[data-m]{cursor:pointer}
 #lr .it.go{cursor:pointer}#lr .it.go:hover{background:rgba(255,255,255,.03)}#lr .it.go .lr-nm a{color:inherit;text-decoration:none}
 #lr .vdl{font-size:10.5px;letter-spacing:1px;color:var(--blue2);text-decoration:none;white-space:nowrap}#lr .vdl:hover{color:#fff;text-decoration:underline}
-/* PAIR (the column's header): sort A-Z / Z-A, or search every stonkfun pair and show one */
+/* PAIR (the column's header): search every stonkfun pair and show its launches */
 #lr .lr-panel{position:relative}#lr .lr-pth{cursor:pointer}#lr .lr-pth:hover,#lr .lr-pth.pick{color:#fff}
 #lr .lr-pth b{color:var(--blue2);font-weight:600;letter-spacing:0}#lr .lr-pth .car{font-size:8px;margin-left:4px}#lr .lr-pth.on::after{content:none}
 #lr .lr-ppd{position:absolute;z-index:40;width:min(380px,calc(100% - 16px));background:var(--panel);border:1px solid var(--blue2);box-shadow:0 18px 50px rgba(0,0,0,.6)}
-#lr .lr-pps{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);font-size:10px;letter-spacing:1.2px;color:var(--dim)}
-#lr .lr-pps button{background:none;border:1px solid var(--line);color:var(--txt);font:inherit;font-size:10.5px;letter-spacing:1px;padding:3px 8px;cursor:pointer}#lr .lr-pps button.on,#lr .lr-pps button:hover{border-color:var(--blue2);color:#fff}
-#lr .lr-pps .lr-ppx{margin-left:auto;color:var(--dim)}#lr .lr-pps .lr-ppx:hover{border-color:var(--red)}
 #lr .lr-ppd input{width:100%;box-sizing:border-box;background:#060a17;border:0;border-bottom:1px solid var(--line);color:#fff;font:inherit;font-size:13px;padding:11px 12px;outline:none}
 #lr .lr-ppL{max-height:360px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#24345e transparent}
 #lr .it.pp{width:100%;background:none;border:0;border-bottom:1px solid var(--line);text-align:left;font:inherit;font-size:12px;color:inherit;cursor:pointer}
