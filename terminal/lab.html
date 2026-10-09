@@ -48,7 +48,8 @@ a{color:inherit;text-decoration:none}
 .tabs button{background:transparent;border:1px solid var(--line);color:var(--dim);font:inherit;font-size:11px;padding:4px 12px;cursor:pointer;white-space:nowrap}
 .tabs button:hover{color:#fff;border-color:var(--blue2)}
 .tabs button.on{color:#fff;border-color:var(--blue2);background:rgba(42,90,218,.2)}
-.rgt{display:flex;gap:4px;margin-left:auto}#tf{margin-right:6px}#ctab button{padding:3px 10px;display:grid;place-items:center}#ctab svg{width:18px;height:18px}
+.rgt{display:flex;gap:4px;margin-left:auto}
+#pmBtn{color:var(--dim)}#pmBtn b{font-weight:400}#pmBtn b.on{color:#fff}#tf{margin-right:6px}#ctab button{padding:3px 10px;display:grid;place-items:center}#ctab svg{width:18px;height:18px}
 .dd{position:relative}
 .dd>button{display:flex;align-items:center;gap:6px}.dd>button .fx{font-style:italic;font-family:Georgia,serif;font-size:13px;color:var(--amber)}
 .dd .menu{position:absolute;top:calc(100% + 4px);left:0;z-index:20;background:#070c18;border:1px solid var(--line);box-shadow:0 10px 30px #000a;min-width:200px;padding:4px;display:none}
@@ -106,6 +107,7 @@ html.nohdr .tkb,html.nohdr .tkl,html.nohdr .pchips{display:none!important}html.n
     <div class="tabs" id="tf"></div>
     <div class="tabs" id="ctab"><button id="candleBtn" type="button" aria-label="Line or candles"></button></div>
     <div class="tabs dd" id="indDd"><button type="button" id="indBtn" aria-haspopup="true" aria-expanded="false"><span class="fx">f</span>INDICATORS <span id="indN"></span>▾</button><div class="menu" id="ind" role="menu"></div></div>
+    <div class="tabs" id="pmTab"><button type="button" id="pmBtn" title="Price or market cap"><b data-m="price">Price</b> / <b data-m="mcap">MC</b></button></div>
     <div class="tabs" id="dtab" style="visibility:hidden"><button id="depthBtn" class="on" type="button" title="CLOBr market depth: support (green) and resistance (red) liquidity by price">DEPTH</button></div>
     <div class="rgt">
       <div class="tabs"><button id="fsBtn" type="button" title="Full screen (F)" aria-label="Full screen"></button></div>
@@ -175,6 +177,10 @@ klinecharts.registerIndicator({name:'QUOTE',shortName:'',series:'normal',precisi
   calc:d=>{let last=null;return d.map(k=>{const v=QMAP.get(k.timestamp);if(v!=null)last=v;return{q:v??last}})},
   styles:{lines:[{color:'rgba(255,210,63,.8)',size:1.25,style:'dashed',dashedValue:[4,3]}]}});
 const fmtQ=v=>v>=1000?v.toFixed(0):v>=1?v.toFixed(2):+v>=.01?v.toFixed(4):(+v).toPrecision(3);
+// Price or MC (market cap), like Jupiter's toggle: Jupiter's own market-cap candles; kept per browser
+let MODE=store('wrLabMode')==='mcap'?'mcap':'price',SUPPLY=null,PPREC=8;
+const fmtC=v=>{v=+v;const a=Math.abs(v);return a>=1e9?(v/1e9).toFixed(2)+'B':a>=1e6?(v/1e6).toFixed(2)+'M':a>=1e3?(v/1e3).toFixed(1)+'K':v.toFixed(0)};
+const fmtV=v=>MODE==='mcap'?fmtC(v):fmtP(v);   // the token's axis, crosshair and copy
 const fmtP=v=>{v=+v;if(!v)return'0';if(Math.abs(v)>=1)return v.toFixed(2);const d=Math.max(2,Math.ceil(-Math.log10(Math.abs(v)))+2);return v.toFixed(Math.min(12,d)).replace(/(\.\d*?[1-9])0+$/,'$1')};
 
 // ---------- volume along the bottom of the chart (blue up, grey down), like the live chart; drawn by the depth layer below
@@ -192,7 +198,7 @@ klinecharts.registerIndicator({name:'DEPTHB',shortName:'',series:'price',precisi
   createTooltipDataSource:()=>({name:'',calcParamsText:'',features:[],legends:[]}),
   draw:args=>{drawVol(args);const {ctx,bounding,yAxis}=args;if(!depthOn||!DEPTH)return true;const h=bounding.height,w=bounding.width,rows=Math.max(12,Math.min(140,Math.floor(h/5))),bh=h/rows;
     const bins=Array.from({length:rows},()=>[0,0]);
-    DEPTH.forEach(([p,su,re])=>{const y=yAxis.convertToPixel(p);if(y<0||y>h)return;const i=Math.min(rows-1,Math.max(0,Math.floor((h-y)/bh)));bins[i][0]+=su;bins[i][1]+=re});
+    DEPTH.forEach(([p,su,re])=>{const y=yAxis.convertToPixel(MODE==='mcap'?(SUPPLY?p*SUPPLY:NaN):p);if(y<0||y>h)return;const i=Math.min(rows-1,Math.max(0,Math.floor((h-y)/bh)));bins[i][0]+=su;bins[i][1]+=re});
     const mx=Math.max(...bins.map(b=>b[0]+b[1]));if(!(mx>0))return true;const maxW=w*.26;
     bins.forEach(([su,re],i)=>{const v=su+re;if(!v)return;const bw=Math.max(2,v/mx*maxW),y=h-(i+1)*bh+1,bhh=Math.max(1,bh-2),sup=su>=re;
       ctx.fillStyle=sup?'rgba(57,255,106,.16)':'rgba(255,51,85,.16)';ctx.fillRect(w-bw,y,bw,bhh);
@@ -214,7 +220,7 @@ const chart=klinecharts.init('chart',{decimalFold:{threshold:99},formatter:{form
   yAxis:{axisLine:{show:false},tickLine:{show:false},tickText:{color:'#4a7aff',family:F}},
   separator:{color:'#1a2444'},crosshair:{horizontal:{text:{backgroundColor:'#2a5ada',family:F}},vertical:{text:{backgroundColor:'#2a5ada',family:F}}}}});
 // the token's scale on the right ($, no trailing zeros); the pair token's on the left, in amber
-chart.overrideYAxis({paneId:'candle_pane',createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtP(t.value)}))});
+chart.overrideYAxis({paneId:'candle_pane',createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtV(t.value)}))});
 const QAX=chart.createYAxis({id:'quote_axis',paneId:'candle_pane',position:'left',gap:{top:.08,bottom:.25},
   createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtQ(+t.value)}))});
 chart.createIndicator({name:'DEPTHB',paneId:'candle_pane'},true);
@@ -242,7 +248,7 @@ const GROUPS=[['SECONDS',/s$/],['MINUTES',/m$/],['HOURS',/h$/],['DAYS',/[dw]$/]]
 let FAV=(store('wrLabFav')||'5m,15m,1h,4h,1d').split(',').filter(k=>TFS.some(t=>t[0]===k&&k!=='all'));
 let TF=TFS.find(t=>t[0]===store('wrLabTf'))||TFS.find(t=>t[0]==='1h');
 const IV=()=>TF[2];
-async function bars(m,to,n=500){const r=await fetch(`https://datapi.jup.ag/v2/charts/${m}?interval=${IV()}&to=${to}&candles=${n}&type=price&quote=usd`);
+async function bars(m,to,n=500){const r=await fetch(`https://datapi.jup.ag/v2/charts/${m}?interval=${IV()}&to=${to}&candles=${n}&type=${m===CA?MODE:'price'}&quote=usd`);
   if(!r.ok)throw new Error(r.status);return((await r.json()).candles||[]).map(c=>({timestamp:c.time*1000,open:+c.open,high:+c.high,low:+c.low,close:+c.close,volume:+c.volume||0}))}
 async function quoteFor(to){if(!Q)return;try{(await bars(Q.mint,to)).forEach(b=>QMAP.set(b.timestamp,b.close))}catch(e){}}
 function fit(){const L=chart.getDataList().length,w=(chart.getSize('candle_pane','main')||chart.getSize('candle_pane')||{}).width||800;   // ALL: every candle loaded on screen; else the usual candle width
@@ -255,7 +261,7 @@ chart.setDataLoader({getBars:async({type,timestamp,callback})=>{
       callback(d,{forward:type==='forward'?more:true,backward:type==='backward'?more:true});return}
     callback([],{forward:type!=='forward',backward:type!=='backward'})}catch(e){say('Couldn\'t load candles ('+e.message+')');callback([],false)}}});
 const prec=p=>p>0?Math.min(12,Math.max(2,Math.ceil(-Math.log10(p))+3)):2;
-function resetView(){chart.overrideYAxis({paneId:'candle_pane',createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtP(t.value)}))});fit();say('View reset',1200)}
+function resetView(){chart.overrideYAxis({paneId:'candle_pane',createTicks:({defaultTicks})=>defaultTicks.map(t=>({...t,text:'$'+fmtV(t.value)}))});fit();say('View reset',1200)}
 $('resetBtn').onclick=resetView;
 $('zbar').onclick=e=>{const b=e.target.closest('[data-z]');if(!b)return;const z=b.dataset.z,L=chart.getDataList().length,
     w=(chart.getSize('candle_pane','main')||{}).width||600;
@@ -297,20 +303,22 @@ $('draw').onclick=e=>{const b=e.target.closest('button');if(!b)return;
 
 // drawings are kept per token in this browser (by time and price, so they sit right on any candle size); click one to
 // select it, Delete or Backspace removes it
-const DKEY='wrLabDraw:'+CA;let SEL=null;
+let DKEY='wrLabDraw:'+CA+(MODE==='mcap'?':mc':'');   // drawings are kept apart for Price and MC (a line at a price isn't at that MC)
+let SEL=null;
 // lock: drawings can't be moved or deleted by accident (new ones too); kept per browser
 let LOCK=store('wrLabLock')==='1';
 function lockIco(){const b=$('lockBtn');b.classList.toggle('on',LOCK);b.title=LOCK?'Drawings locked (click to unlock)':'Lock drawings';b.setAttribute('aria-label',b.title);
   b.innerHTML=SV(LOCK?'<rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>':'<rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V7a4 4 0 0 1 7.6-1.8"/>')}
 lockIco();
-function saveDraw(){const L=chart.getOverlays().filter(o=>o.currentStep===-1&&o.points.length).map(o=>({name:o.name,points:o.points.map(p=>({timestamp:p.timestamp,value:p.value}))}));
+function saveDraw(){if(saveDraw.off)return;   // off while switching Price / MC
+  const L=chart.getOverlays().filter(o=>o.currentStep===-1&&o.points.length).map(o=>({name:o.name,points:o.points.map(p=>({timestamp:p.timestamp,value:p.value}))}));
   store(DKEY,JSON.stringify(L))}
 const later=f=>()=>{setTimeout(f,0);return false};
 function mkOverlay(name,points,btn){return chart.createOverlay({name,lock:LOCK,...(points?{points}:{}),
   onDrawEnd:()=>{if(btn)btn.classList.remove('on');setTimeout(saveDraw,0);return false},onPressedMoveEnd:later(saveDraw),onRemoved:later(saveDraw),
   onSelected:e=>{SEL=e.overlay.id;return false},onDeselected:e=>{if(SEL===e.overlay.id)SEL=null;return false}})}
 function restoreDraw(){if(restoreDraw.done)return;restoreDraw.done=1;let L=[];try{L=JSON.parse(store(DKEY)||'[]')}catch(e){}
-  L.forEach(o=>{if(o&&o.name&&Array.isArray(o.points))mkOverlay(o.name,o.points)})}
+  L.forEach(o=>{if(o&&o.name&&Array.isArray(o.points))mkOverlay(o.name,o.points)});setTimeout(()=>saveDraw.off=0,50)}
 document.addEventListener('keydown',e=>{if((e.key==='Delete'||e.key==='Backspace')&&SEL&&!LOCK&&!e.target.closest('input,textarea')){e.preventDefault();chart.removeOverlay({id:SEL});SEL=null;saveDraw()}});
 
 // ---------- indicators: on the price, or in their own pane below ----------
@@ -337,7 +345,7 @@ async function snapshot(){
   const src=chart.getConvertPictureUrl(true,'png','#0a0f1f'),img=new Image();img.src=src;await img.decode();
   const pad=44,c=document.createElement('canvas');c.width=img.width;c.height=img.height+pad*2;const x=c.getContext('2d');
   x.fillStyle='#04060f';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,pad);
-  x.fillStyle='#fff';x.font='28px VT323, monospace';x.textBaseline='middle';x.fillText('$'+SYM+(Q?' / $'+Q.sym:'')+' · '+TF[1],14,pad/2);
+  x.fillStyle='#fff';x.font='28px VT323, monospace';x.textBaseline='middle';x.fillText('$'+SYM+(MODE==='mcap'?' MC':'')+(Q?' / $'+Q.sym:'')+' · '+TF[1],14,pad/2);
   x.font='12px "IBM Plex Mono", monospace';x.fillStyle='#5d6a8f';x.textAlign='right';x.fillText(new Date().toUTCString().replace(' GMT',' UTC'),c.width-14,pad/2);
   x.textAlign='left';x.fillStyle='#ffd23f';x.font='600 15px "IBM Plex Mono", monospace';x.fillText('terminal7.xyz',14,img.height+pad*1.5);
   x.fillStyle='#5d6a8f';x.font='12px "IBM Plex Mono", monospace';x.textAlign='right';x.fillText(LINK.replace('https://',''),c.width-14,img.height+pad*1.5);
@@ -383,7 +391,7 @@ Promise.all([sfInfo,dsInfo,jupInfo]).then(([sf,pairs,jt])=>{
   const me=P?(P.baseToken.address===CA?P.baseToken:P.quoteToken):{};
   SYM=String((sf&&sf.symbol)||(jt&&jt.symbol)||me.symbol||'TOKEN').replace(/^\$/,'');
   const name=(sf&&sf.name)||(jt&&jt.name)||me.name||'',img=CA===MARINE?'/terminal/img/marine.webp':(sf&&sf.image)||(jt&&jt.icon)||(P&&P.info&&P.info.imageUrl)||'';
-  if(img)$('tkImg').src=img;$('tkSym').textContent='$'+SYM;$('lgB').textContent='$'+SYM;document.title='$'+SYM+' · Chart Lab';
+  if(img)$('tkImg').src=img;$('tkSym').textContent='$'+SYM;$('lgB').textContent='$'+SYM+(MODE==='mcap'?' MC':'');document.title='$'+SYM+' · Chart Lab';
   $('tkName').textContent=name&&name.replace(/^\$/,'').toLowerCase()!==SYM.toLowerCase()?name:'';
   const q=qm?{mint:qm,sym:String(sf.quote.symbol||'').replace(/^\$/,'')}:P?{mint:other(P).address,sym:String(other(P).symbol||'').replace(/^\$/,'')}:null;
   if(q&&q.mint){Q=q;chart.createIndicator({name:'QUOTE',shortName:'$'+q.sym,paneId:'candle_pane',yAxisId:'quote_axis'},true);$('tkQ').textContent='/$'+q.sym;$('lgQ').textContent='$'+q.sym;$('lgQw').style.display=''}
@@ -400,10 +408,17 @@ Promise.all([sfInfo,dsInfo,jupInfo]).then(([sf,pairs,jt])=>{
   // the change chips: DexScreener's, for a pool where the token is the base (a pool listed the other way round describes the other token)
   const pc=P&&P.baseToken.address===CA?(P.priceChange||{}):null;if(pc&&pc.m5==null&&pc.h1!=null)pc.m5=0;
   $('pChips').innerHTML=pc?[['m5','5m'],['h1','1h'],['h6','6h'],['h24','24h']].map(([k,l])=>pc[k]==null?'':`<span><i>${l}</i><b class="${pc[k]>=0?'up':'dn'}">${pc[k]>=0?'':'−'}${Math.abs(pc[k]).toFixed(2)}%</b></span>`).join(''):'';
-  chart.setSymbol({ticker:SYM,pricePrecision:prec(jt&&+jt.usdPrice||+(P&&P.priceUsd)||0)||8,volumePrecision:0});chart.setPeriod(TF[3])});
+  PPREC=prec(jt&&+jt.usdPrice||+(P&&P.priceUsd)||0)||8;SUPPLY=jt&&+jt.circSupply||(jt&&+jt.mcap&&+jt.usdPrice?jt.mcap/jt.usdPrice:null);
+  chart.setSymbol({ticker:SYM,pricePrecision:MODE==='mcap'?0:PPREC,volumePrecision:0});chart.setPeriod(TF[3])});
 fetch(BOT+'/depth?mint='+CA+'&d=1').then(r=>r.json()).then(d=>{if(!d||!d.levels||!d.levels.length)return;DEPTH=d.levels;
   $('dtab').style.visibility='';const l=$('depLeg');l.style.display='';l.href='https://clobr.io/token/'+encodeURIComponent(CA);l.classList.toggle('off',!depthOn);chart.resize()}).catch(()=>{});
 addEventListener('resize',()=>chart.resize());
+function pmShow(){document.querySelectorAll('#pmBtn b').forEach(b=>b.classList.toggle('on',b.dataset.m===MODE));$('lgB').textContent='$'+SYM+(MODE==='mcap'?' MC':'')}
+$('pmBtn').onclick=()=>{MODE=MODE==='mcap'?'price':'mcap';store('wrLabMode',MODE);pmShow();
+  // this mode's drawings, and the candles again (setting the symbol reloads them)
+  saveDraw.off=1;chart.removeOverlay();SEL=null;DKEY='wrLabDraw:'+CA+(MODE==='mcap'?':mc':'');restoreDraw.done=0;
+  chart.setSymbol({ticker:SYM+(MODE==='mcap'?' ':''),pricePrecision:MODE==='mcap'?0:PPREC,volumePrecision:0})};
+pmShow();
 
 // ---------- full screen: the browser's own where it has one (Esc leaves), else the chart fills the window ----------
 const FS_ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
@@ -424,13 +439,13 @@ $('chart').addEventListener('contextmenu',e=>{e.preventDefault();
   const main=chart.getDom('candle_pane','main'),r=main&&main.getBoundingClientRect();ctxPrice=null;
   if(r&&e.clientY>=r.top&&e.clientY<=r.bottom){const pt=chart.convertFromPixel([{x:e.clientX-r.left,y:e.clientY-r.top}],{paneId:'candle_pane'});ctxPrice=(Array.isArray(pt)?pt[0]:pt).value}
   const m=$('ctx');m.innerHTML=`<button data-c="reset">${ci('reset')}Reset chart view<span class="k">Alt+R</span></button>`
-    +(ctxPrice>0?`<button data-c="price">${ci('copy')}Copy price $${fmtP(ctxPrice)}</button>`:'')+'<hr>'
+    +(ctxPrice>0?`<button data-c="price">${ci('copy')}Copy ${MODE==='mcap'?'MC':'price'} $${fmtV(ctxPrice)}</button>`:'')+'<hr>'
     +`<button data-c="save">${ci('save')}Download image</button><button data-c="copyimg">${ci('copy')}Copy image</button><button data-c="x">${ci('share')}Share on X</button><hr>`
     +`<button data-c="draw">${ci('draw')}Remove drawings</button><button data-c="ind">${ci('ind')}Remove indicators</button>`;
   m.classList.add('open');const w=m.offsetWidth,h=m.offsetHeight;m.style.left=Math.min(e.clientX,innerWidth-w-6)+'px';m.style.top=Math.min(e.clientY,innerHeight-h-6)+'px'});
 $('ctx').onclick=async e=>{const b=e.target.closest('[data-c]');if(!b)return;$('ctx').classList.remove('open');const c=b.dataset.c;
   if(c==='reset')resetView();
-  else if(c==='price'){try{await navigator.clipboard.writeText(fmtP(ctxPrice))}catch(err){}say('Copied $'+fmtP(ctxPrice),1500)}
+  else if(c==='price'){try{await navigator.clipboard.writeText(fmtV(ctxPrice))}catch(err){}say('Copied $'+fmtV(ctxPrice),1500)}
   else if(c==='draw')$('clr').click();
   else if(c==='ind')Object.keys(live).forEach(toggleInd);
   else doShot(c==='copyimg'?'copy':c)};
