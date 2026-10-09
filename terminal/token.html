@@ -79,6 +79,8 @@ html.fit #soundBtn{font-size:24px;padding:4px 10px}
 .tape-bar.vol .lbl{background:var(--blue)}
 .tape-bar .lbl{box-shadow:12px 0 16px #02030a;position:absolute;left:0;top:0;bottom:0;z-index:2;background:var(--blue);color:#fff;font-family:'VT323';font-size:18px;padding:0 12px;display:flex;align-items:center;gap:8px}
 .tape-bar.top .lbl{background:#6b3cff}
+.tape-bar.lnch .lbl{background:#12803d}
+.tk .vdk{font-weight:600;letter-spacing:.5px}.tk .vdk.v-REAL{color:var(--green)}.tk .vdk.v-WATCH{color:var(--blue2)}.tk .vdk.v-THIN{color:var(--dim)}.tk .vdk.v-FARM{color:var(--red)}
 .tape-bar .lbl button{background:#0005;border:1px solid #fff4;color:#fff;font:inherit;font-size:15px;padding:0 6px;cursor:pointer}
 .tape-bar .lbl button.on{background:#fff;color:#000}
 .tape{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch}.tape::-webkit-scrollbar{display:none}
@@ -624,6 +626,10 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
 <div class="tape-bar vol">
   <div class="lbl">STONKFUN<span class="lg">&nbsp;TOP 10 · 24H</span>&nbsp;VOL</div>
   <div class="tape"><div class="track" id="ticker"><span class="tk dim">loading…</span></div></div>
+</div>
+<div class="tape-bar lnch">
+  <div class="lbl">NEW<span class="lg">&nbsp;LAUNCHES TOP 10 ·</span>&nbsp;REAL</div>
+  <div class="tape"><div class="track" id="lnTicker"><span class="tk dim">loading…</span></div></div>
 </div>
 
 <section class="mtok" id="mtok"><div class="mtl" id="mtl"><button type="button" class="mca" id="mCa" title="Copy contract address"></button></div></section>
@@ -1482,6 +1488,14 @@ async function loadTicker(){
     setTrack('ticker',html);
   }catch(e){}
 }
+// ---------- new launches ticker: the radar's last-24h launches with the best REAL scores (launches.json, every ~5 min) ----------
+async function loadLaunchTicker(){try{
+  const d=await j('https://raw.githubusercontent.com/LinkMarine777/linkmarines/data/terminal/launches.json?'+Math.floor(Date.now()/60e3));
+  const L=(d.launches||[]).filter(r=>r.score!=null).sort((a,b)=>b.score-a.score).slice(0,10);if(!L.length)return;
+  setTrack('lnTicker',L.map((r,i)=>`<a class="tk" href="${esc(tokLink(r.m))}" target="_blank" rel="noopener">
+      <span class="dim">#${i+1}</span>${r.i?`<img src="${esc(r.i)}" alt="" loading="lazy" onerror="this.remove()">`:''}
+      <b>$${esc(r.s)}</b>${r.q?`<span class="q">/${esc(r.q)}</span>`:''}
+      <span class="vdk v-${esc(r.vd)}">${r.score} ${esc(r.vd||'')}</span>${r.mc?`<span>mc ${compact(r.mc)}</span>`:''}${r.v?`<span class="dim">· vol ${compact(r.v)}</span>`:''}</a>`).join(''))}catch(e){}}
 // keep scroll speed constant (px/sec) no matter how long the content is
 // the tickers move by scrolling their box, not by animating one very wide layer (iOS Safari leaves a layer that wide
 // blank). Hover pauses; on phones a swipe looks around and it carries on a moment later
@@ -1957,7 +1971,7 @@ resolveToken().finally(()=>{loadRewards();loadMarket();
   if(CA!==MARINE&&POOL!==POOL0){try{localStorage.setItem('wrPool:'+CA,POOL)}catch(e){}if(POOL0){CH={};for(const k in CHAT)delete CHAT[k]}}   // its best pool changed: start over on the new one
   if(TK.quoteMint&&TK.quoteMint!==Q0){try{localStorage.setItem('wrQ:'+CA,TK.quoteMint)}catch(e){}   // first visit / its quote changed: redo the live charts with the quote line
     for(const k of Object.keys(CH))if(CA!==MARINE||k==='1h'||k==='6h'){delete CH[k];delete CHAT[k]}}
-  if(CA!==MARINE?!POOL0||POOL!==POOL0||!CHAT[tf]:!CH[tf]||!CHAT[tf])loadChart();if(CA===MARINE||!POOL0||POOL!==POOL0)loadTrades();loadTicker();loadBoard();loadTTS();loadPay();loadAds();});
+  if(CA!==MARINE?!POOL0||POOL!==POOL0||!CHAT[tf]:!CH[tf]||!CHAT[tf])loadChart();if(CA===MARINE||!POOL0||POOL!==POOL0)loadTrades();loadTicker();loadBoard();loadLaunchTicker();setInterval(loadLaunchTicker,300e3);loadTTS();loadPay();loadAds();});
 setInterval(()=>{if(!document.hidden)loadAds()},15000);setInterval(loadPay,300000);setTimeout(()=>{renderAds();setInterval(renderAds,20000)},20000-Date.now()%20000);
 setInterval(loadTrades,20000);setInterval(loadMarket,30000);setInterval(loadRewards,60000);
 setInterval(loadChart,120000);setTimeout(loadDepth,1500);const vis=f=>()=>{if(!document.hidden)f()};setInterval(vis(loadDepth),600000);setTimeout(loadClobr,2000);setInterval(vis(loadClobr),600000);setInterval(loadTicker,300000);setInterval(loadBoard,300000);

@@ -232,7 +232,7 @@ main.lrOn>:not(.vt):not(#lr){display:none!important}
 
   <div class="dash">
     <section class="panel d-al"><div class="ph"><h2>🔔 ALERTS</h2><span class="meta hide-sm">every alert the terminals show, in order · whales · big trades · movers · Stonk Board · CLOBr</span>
-      <div class="tabs" id="fk"><button data-f="all" class="on">ALL</button><button data-f="marine">$MARINE</button><button data-f="whale">WHALES</button><button data-f="mover">MARKET</button><button data-f="compound">COMPOUND</button><button data-f="score">CLOBr</button><button data-f="payout">PAYOUTS</button></div></div>
+      <div class="tabs" id="fk"><button data-f="all" class="on">ALL</button><button data-f="marine">$MARINE</button><button data-f="whale">WHALES</button><button data-f="mover">MARKET</button><button data-f="payout">PAYOUTS</button><button data-f="launch">PAIRS</button></div></div>
       <div class="feed" id="feed"><p class="nt">loading…</p></div></section>
     <section class="panel d-wh"><div class="ph"><h2>🐋 WHALE RADAR</h2><span class="per" id="wp"><button data-p="1h">1H</button><button data-p="24h" class="on">24H</button></span>
       <div class="tabs" id="wk"><button data-w="buying" class="on">BUYING</button><button data-w="selling">SELLING</button><button data-w="recent">LIVE</button></div></div>
@@ -376,7 +376,8 @@ const CMPA=x=>x.kind==='rewards'&&/compound score/i.test(x.text||'');   // compo
 const kindOf=x=>x.kind==='bigtrade'?(x.side==='sell'?['🐳 BIG SELL','k-dn']:['🐳 BIG BUY','k-up']):x.kind==='mover'?(x.side==='down'?['📉 BIG MOVER','k-bl']:['📈 BIG MOVER','k-bl']):KIND[x.kind]||['🐋 WHALE RADAR','k-up'];
 // holder payouts also get their own tab
 const WRBUY=x=>x.kind==='buy'&&(x.s==='MARINE'||x.s==='LINK'||/whale watch/i.test(x.text));   // other tokens' buys (from 2.0 pages) are market alerts
-const group=(k,x)=>x&&CMPA(x)?'compound':k==='score'?'score':k==='payout'?'payout':['mover','board','top10'].includes(k)||(k==='buy'&&x&&!WRBUY(x))?'mover':['buy','pulse','milestone','link','tts'].includes(k)?'marine':'whale';
+// MARKET also takes CLOBr scores, compound scores and REAL launch scores; PAIRS: new / next stonkfun pairs and Jupiter VRFD
+const group=(k,x)=>x&&CMPA(x)?'mover':['newpair','sunrise','vrfd'].includes(k)?'launch':k==='payout'?'payout':['mover','board','top10','score','launch'].includes(k)||(k==='buy'&&x&&!WRBUY(x))?'mover':['buy','pulse','milestone','link','tts'].includes(k)?'marine':'whale';
 // CLOBr score alerts: CLOBr's logo, then one line per token (no token logos), each one opening that token's terminal
 function scoreRow(x,h,c,icon){const ms=String(x.i||'').startsWith('mints:')?x.i.slice(6).split(','):null;
   const bySym=s=>{s=s.toUpperCase();const t=Object.values(TOK).find(t=>String(t.symbol||'').toUpperCase()===s);return t&&t.mint};
@@ -390,7 +391,7 @@ function renderIntel(){if(!IN)return;const icon=m=>m===MARINE?MLOGO:(TOK[m]&&TOK
   $('feed').innerHTML=L.length?L.map(x=>{const [h,c]=kindOf(x),im=x.m===MARINE?MLOGO:x.i||icon(x.m);if(x.kind==='score')return scoreRow(x,h,c,icon);
     return`<a class="fi" href="${['newpair','sunrise'].includes(x.kind)?'/launches/':x.m?open2(x.m):'#'}"><span class="ft">${ago(x.t*1000)}</span>${im?`<img src="${esc(im)}" alt="" loading="lazy" onerror="imgFb(this)">`:'<span class="ph0"></span>'}
       <span><b class="fk ${c}">${h}</b>${esc(x.text)}</span></a>`}).join('')
-    :`<p class="nt">${{score:'No CLOBr score changes',mover:'No market alerts',payout:'No holder payouts',whale:'No whale alerts',marine:'No $MARINE alerts'}[fk]||'No alerts'} yet.</p>`;
+    :`<p class="nt">${{launch:'No pair alerts',score:'No CLOBr score changes',mover:'No market alerts',payout:'No holder payouts',whale:'No whale alerts',marine:'No $MARINE alerts'}[fk]||'No alerts'} yet.</p>`;
   renderLp()}
 function renderLp(){if(!IN)return;const icon=m=>m===MARINE?MLOGO:(TOK[m]&&TOK[m].image)||'',h1=PER.lpp==='1h';$('lpF').textContent=h1?'Fees 1h':'Fees 24h';$('lpD').textContent=h1?'Last hour':'Per day';
   const has1=IN.lp1&&IN.lp1.length,P=(h1?(has1?IN.lp1:lpHour()):IN.lp)||[];$('lpRows').innerHTML=P.length?P.map(x=>`<tr><td><div class="pp">${(x.i||icon(x.m))?`<img src="${esc(x.i||icon(x.m))}" alt="" loading="lazy" onerror="imgFb(this)">`:'<span style="width:20px;flex:none"></span>'}<span><a href="${open2(x.m)}">${esc(x.pair)}</a><span class="dx">${esc(x.dex)}</span></span></div></td>
