@@ -49,6 +49,19 @@ a{color:inherit;text-decoration:none}
 .tabs button:hover{color:#fff;border-color:var(--blue2)}
 .tabs button.on{color:#fff;border-color:var(--blue2);background:rgba(42,90,218,.2)}
 .rgt{display:flex;gap:4px;margin-left:12px}
+.tb{display:contents}
+/* phones: the legend on one line with the icons beside it, then one toolbar row that swipes sideways */
+@media (max-width:640px){
+  .ph{padding:8px 10px 6px;row-gap:6px;gap:6px}
+  .legend{flex:1 1 0;min-width:0;margin-left:0!important;flex-wrap:nowrap!important;gap:10px!important;font-size:10.5px;overflow:hidden}
+  .legend span{gap:4px}.legend .dly{font-size:8px;padding:0 3px}.legend .sd{display:none}   /* line styles say which is which */
+  .rgt{margin-left:0;gap:3px}.rgt button{padding:3px 6px!important}.rgt svg{width:15px!important;height:15px!important}
+  .tb{display:flex;flex-wrap:nowrap;align-items:center;gap:4px;width:100%;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .tb::-webkit-scrollbar{display:none}
+  .tb>*{flex:none}.tb .tabs button{padding:4px 8px;font-size:11px}#tf{margin-right:0}
+  #ctab,#indDd,#pmTab,#dtab{margin-left:4px;padding-left:6px;border-left:1px solid var(--line)}
+  #dtab[style*="hidden"]{display:none}
+}
 #pmBtn{color:var(--dim)}#pmBtn b{font-weight:400}#pmBtn b.on{color:#fff}#tf{margin-right:6px}#ctab button{padding:3px 10px;display:grid;place-items:center}#ctab svg{width:18px;height:18px}
 .dd{position:relative}
 .dd>button{display:flex;align-items:center;gap:6px}.dd>button .fx{font-style:italic;font-family:Georgia,serif;font-size:13px;color:var(--amber)}
@@ -100,20 +113,22 @@ html.nohdr .tkb,html.nohdr .tkl,html.nohdr .pchips{display:none!important}html.n
 <div class="panel">
   <div class="ph">
     <div class="tkb"><img id="tkImg" alt=""><span class="nm"><b><span id="tkSym">…</span><span class="q" id="tkQ"></span></b><small id="tkName"></small></span><button type="button" class="mca" id="mCa" title="Copy the contract address"></button></div><span class="tkl" id="tkLinks"></span>
-    <div class="legend"><a class="dep" id="depLeg" target="_blank" rel="noopener" style="display:none" title="CLOBr market depth, delayed up to 1h"><span><i></i>CLOBr depth <span class="dly">delayed</span></span></a>
-      <span><i style="background:var(--blue2)"></i><span id="lgB">$TOKEN</span> (right)</span><span id="lgQw" style="display:none"><i class="dq"></i><span id="lgQ"></span> (left)</span></div>
+    <div class="legend"><a class="dep" id="depLeg" target="_blank" rel="noopener" style="display:none" title="CLOBr market depth, delayed up to 1h"><span><i></i>CLOBr<span class="sd"> depth</span> <span class="dly">delayed</span></span></a>
+      <span><i style="background:var(--blue2)"></i><span id="lgB">$TOKEN</span><span class="sd"> (right)</span></span><span id="lgQw" style="display:none"><i class="dq"></i><span id="lgQ"></span><span class="sd"> (left)</span></span></div>
     <div class="rgt">
       <div class="tabs"><button id="fsBtn" type="button" title="Full screen (F)" aria-label="Full screen"></button></div>
       <div class="tabs"><button id="resetBtn" type="button" title="Reset the view (or double-click the chart)" aria-label="Reset the view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></button></div>
       <div class="tabs dd" id="shotDd"><button id="shot" type="button" title="Chart snapshot" aria-haspopup="true" aria-expanded="false" aria-label="Screenshot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="3.5"/></svg></button><div class="menu r" id="shotMenu" role="menu"><div class="mh">CHART SNAPSHOT</div><button type="button" data-s="save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M4 20h16"/></svg><span>Download image</span></button><button type="button" data-s="copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V4H4v12h4"/></svg><span>Copy image</span></button><button type="button" data-s="x"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.8 3h3.1l-6.8 7.8L22 21h-6.2l-4.9-6.4L5.3 21H2.2l7.3-8.3L2 3h6.4l4.4 5.8zm-1.1 16.2h1.7L7.4 4.7H5.6z"/></svg><span>Share on X</span></button></div></div>
     </div>
     <i class="brk"></i>
+    <div class="tb" id="tbRow">
     <div class="pchips" id="pChips"></div>
     <div class="tabs" id="tf"></div>
     <div class="tabs" id="ctab"><button id="candleBtn" type="button" aria-label="Line or candles"></button></div>
     <div class="tabs dd" id="indDd"><button type="button" id="indBtn" title="Indicators" aria-label="Indicators" aria-haspopup="true" aria-expanded="false"><span class="fx">ƒx</span><span id="indN"></span>▾</button><div class="menu" id="ind" role="menu"></div></div>
     <div class="tabs" id="pmTab"><button type="button" id="pmBtn" title="Price or market cap"><b data-m="price">Price</b> / <b data-m="mcap">MC</b></button></div>
     <div class="tabs" id="dtab" style="visibility:hidden"><button id="depthBtn" class="on" type="button" title="CLOBr market depth: support (green) and resistance (red) liquidity by price">DEPTH</button></div>
+    </div>
   </div>
   <div class="body"><div class="side" id="draw" aria-label="Drawing tools"></div><div class="cw"><div id="chart"></div><div class="zbar" id="zbar"><button type="button" data-z="out" title="Zoom out" aria-label="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg></button><button type="button" data-z="in" title="Zoom in" aria-label="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button><button type="button" data-z="left" title="Scroll back" aria-label="Scroll back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button><button type="button" data-z="right" title="Scroll forward" aria-label="Scroll forward"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button><button type="button" data-z="reset" title="Reset the view (Alt+R)" aria-label="Reset the view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v5h5"/></svg></button></div></div></div>
 </div>
@@ -281,8 +296,8 @@ function tfBar(){const fav=TFS.filter(t=>FAV.includes(t[0])),extra=TF[0]!=='all'
     +'</div></span>'}
 function setTf(k){const was=TF;TF=TFS.find(t=>t[0]===k);store('wrLabTf',k);tfBar();if(was[2]===TF[2])fit();else chart.setPeriod(TF[3])}
 $('tf').onclick=e=>{const st=e.target.closest('[data-star]');
-  if(st){e.stopPropagation();const k=st.dataset.star;FAV=FAV.includes(k)?FAV.filter(x=>x!==k):FAV.concat(k);store('wrLabFav',FAV.join(','));tfBar();$('tfDd').classList.add('open');return}
-  if(e.target.closest('#tfMore')){e.stopPropagation();const d=$('tfDd'),o=!d.classList.contains('open');d.classList.toggle('open',o);$('tfMore').setAttribute('aria-expanded',o);return}
+  if(st){e.stopPropagation();const k=st.dataset.star;FAV=FAV.includes(k)?FAV.filter(x=>x!==k):FAV.concat(k);store('wrLabFav',FAV.join(','));tfBar();$('tfDd').classList.add('open');placeMenu($('tfDd'));return}
+  if(e.target.closest('#tfMore')){e.stopPropagation();const d=$('tfDd'),o=!d.classList.contains('open');d.classList.toggle('open',o);$('tfMore').setAttribute('aria-expanded',o);if(o)placeMenu(d);return}
   const b=e.target.closest('[data-k]');if(b)setTf(b.dataset.k)};
 document.addEventListener('click',e=>{const d=$('tfDd');if(d&&!e.target.closest('#tfDd'))d.classList.remove('open')});
 tfBar();
@@ -330,7 +345,11 @@ document.addEventListener('keydown',e=>{if((e.key==='Delete'||e.key==='Backspace
 const IND=[['ICHIMOKU','Ichimoku',true],['MA','MA',true],['EMA','EMA',true],['BOLL','Bollinger',true],['RSI','RSI',false],['MACD','MACD',false]];
 const live={};
 $('ind').innerHTML=IND.map(([n,l,onPrice],i)=>(i&&!onPrice&&IND[i-1][2]?'<hr>':'')+`<button type="button" role="menuitemcheckbox" data-i="${n}"><span>${l}</span><small>${onPrice?'on price':'own pane'}</small><span class="ck">✓</span></button>`).join('');
-const ddOpen=o=>{$('indDd').classList.toggle('open',o);$('indBtn').setAttribute('aria-expanded',o)};
+// a dropdown opens under its button, placed against the window (the phone toolbar row scrolls sideways and would clip it)
+function placeMenu(dd){const m=dd.querySelector('.menu');if(!m)return;if(!matchMedia('(max-width:640px)').matches){m.style.position=m.style.top=m.style.left=m.style.right='';return}
+  const r=dd.getBoundingClientRect();m.style.position='fixed';m.style.right='auto';m.style.top=(r.bottom+4)+'px';
+  m.style.left=Math.max(6,Math.min(r.left,innerWidth-m.offsetWidth-6))+'px'}
+const ddOpen=o=>{$('indDd').classList.toggle('open',o);$('indBtn').setAttribute('aria-expanded',o);if(o)placeMenu($('indDd'))};
 $('indBtn').onclick=e=>{e.stopPropagation();shotOpen(false);ddOpen(!$('indDd').classList.contains('open'))};
 document.addEventListener('click',e=>{if(!e.target.closest('#indDd'))ddOpen(false)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')ddOpen(false)});
@@ -357,7 +376,7 @@ async function snapshot(){
   return new Promise(r=>c.toBlob(r,'image/png'))}
 const fname=()=>`${SYM}-${TF[1]}-terminal7.png`;
 const copyImg=async b=>{try{await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);return true}catch(e){return false}};
-const shotOpen=o=>{$('shotDd').classList.toggle('open',o);$('shot').setAttribute('aria-expanded',o)};
+const shotOpen=o=>{$('shotDd').classList.toggle('open',o);$('shot').setAttribute('aria-expanded',o);if(o)placeMenu($('shotDd'))};
 $('shot').onclick=e=>{e.stopPropagation();ddOpen(false);shotOpen(!$('shotDd').classList.contains('open'))};
 document.addEventListener('click',e=>{if(!e.target.closest('#shotDd'))shotOpen(false)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')shotOpen(false)});
@@ -418,6 +437,7 @@ Promise.all([sfInfo,dsInfo,jupInfo]).then(([sf,pairs,jt])=>{
 fetch(BOT+'/depth?mint='+CA+'&d=1').then(r=>r.json()).then(d=>{if(!d||!d.levels||!d.levels.length)return;DEPTH=d.levels;
   $('dtab').style.visibility='';const l=$('depLeg');l.style.display='';l.href='https://clobr.io/token/'+encodeURIComponent(CA);l.classList.toggle('off',!depthOn);chart.resize()}).catch(()=>{});
 addEventListener('resize',()=>chart.resize());
+$('tbRow').addEventListener('scroll',()=>document.querySelectorAll('.dd.open').forEach(d=>d.classList.remove('open')),{passive:true});
 function pmShow(){chart.setStyles({crosshair:{horizontal:{text:{show:MODE!=='mcap'}}}});document.querySelectorAll('#pmBtn b').forEach(b=>b.classList.toggle('on',b.dataset.m===MODE));$('lgB').textContent='$'+SYM+(MODE==='mcap'?' MC':'')}
 $('pmBtn').onclick=()=>{MODE=MODE==='mcap'?'price':'mcap';store('wrLabMode',MODE);pmShow();
   // this mode's drawings, and the candles again (setting the symbol reloads them)
