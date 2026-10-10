@@ -582,6 +582,7 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
 #radarP .rstats>div{background:var(--panel);padding:8px 10px}#radarP .rstats label{display:block;font-size:9.5px;letter-spacing:1.2px;color:var(--dim);text-transform:uppercase}
 #radarP .rstats b{display:block;font-size:14px;color:#fff;font-weight:600;margin-top:2px}#radarP .rstats b.up{color:var(--green)}#radarP .rstats b.dn{color:var(--red)}#radarP .rstats b.am{color:var(--amber)}
 #radarBfb .bfb{margin:0 0 8px}
+.zc{font-size:.55em;vertical-align:-.1em;margin:0 .04em;line-height:0}
 </style>
 <link rel="stylesheet" href="../launches/scan.css">
 </head>
@@ -922,6 +923,8 @@ function px(n){if(n==null||isNaN(n)||n===0)return'—';if(n>=1000)return usd(n,0
   if(z>=4){let k=Math.ceil(-Math.log10(n))-1,sig=Math.round(n*10**(k+4));if(sig>=1e4){k--;sig=Math.round(sig/10)}   // 5+ zeros: counted (0.00000404 → 0.0₅404), like the chart
     if(k>=4)return'$0.0'+String(k).split('').map(c=>'₀₁₂₃₄₅₆₇₈₉'[c]).join('')+(String(sig).replace(/0+$/,'')||'0')}
   return'$'+n.toFixed(Math.min(z+4,12))}
+// the big prices: the zero count in the headline font's own digit, small and low (that font has no ₀-₉ characters)
+const pxH=n=>px(n).replace(/[₀-₉]+/g,m=>'<sub class="zc">'+[...m].map(c=>c.charCodeAt(0)-0x2080).join('')+'</sub>');
 function apyFmt(n){if(n==null||!isFinite(n))return'—';if(n>=1e12)return'>1T%';
   if(n>=1e9)return(n/1e9).toFixed(1)+'B%';if(n>=1e6)return(n/1e6).toFixed(1)+'M%';if(n>=1e4)return(n/1e3).toFixed(0)+'K%';return n.toFixed(0)+'%'}
 const num=(n,d=0)=>n==null?'—':Number(n).toLocaleString('en-US',{maximumFractionDigits:d,minimumFractionDigits:d});
@@ -1015,7 +1018,7 @@ let marinePx=null;
 // follow it, so they never disagree. pxAt: when the trade the price came from happened (ms).
 let pxAt=0,tradePxAt=0;
 function sendTick(m){const f=document.getElementById('labFrame');if(f&&f.contentWindow)try{f.contentWindow.postMessage(m,location.origin)}catch(e){}}
-function setPrice(price,ts,trade){if(!(price>0)||(trade&&ts<pxAt))return;if(trade)pxAt=ts;marinePx=price;$('sPrice').textContent=px(price);tabTitle();
+function setPrice(price,ts,trade){if(!(price>0)||(trade&&ts<pxAt))return;if(trade)pxAt=ts;marinePx=price;$('sPrice').innerHTML=pxH(price);tabTitle();
   sendTick({t:'tick',mint:CA,price,ts,side:trade?trade.side:null,usd:trade?trade.usd:0,tx:trade?trade.tx:null});
   if(hover==null&&CH[tf]){liveTail();setSeries()}}
 const quotePx=price=>{if(Date.now()-tradePxAt>180e3)setPrice(price,Date.now())};   // a quote, not a trade: only on a quiet tape
@@ -1024,7 +1027,7 @@ const quotePx=price=>{if(Date.now()-tradePxAt>180e3)setPrice(price,Date.now())};
 // the pool is looked for again every 2 min.
 async function jupMarket(){const ids=[CA,TK.quoteMint].filter(Boolean);
   try{const d=await j('https://lite-api.jup.ag/price/v3?ids='+ids.join(',')),b=d[CA]?.usdPrice,q=TK.quoteMint&&d[TK.quoteMint]?.usdPrice;
-    if(b>0)quotePx(b);if(q>0){$('sLink').textContent=px(q);QPX=q}}catch(e){}}
+    if(b>0)quotePx(b);if(q>0){$('sLink').innerHTML=pxH(q);QPX=q}}catch(e){}}
 async function loadMarket(){
   if(!POOL&&Date.now()-(loadMarket.poolAt||0)>120e3){loadMarket.poolAt=Date.now();try{await findPool()}catch(e){}}
   try{
@@ -1041,7 +1044,7 @@ async function loadMarket(){
     $('sVol').textContent=compact(p.volume?.h24);
     const t=p.txns?.h24||{};$('sVolC').title=num(t.buys)+' buys / '+num(t.sells)+' sells in 24h';
     const linkPx=flip?+p.priceUsd:+p.priceUsd/(+p.priceNative);
-    if(isFinite(linkPx)){$('sLink').textContent=px(linkPx);QPX=linkPx}
+    if(isFinite(linkPx)){$('sLink').innerHTML=pxH(linkPx);QPX=linkPx}
     if(hover==null&&CH[tf]){liveTail();setSeries()}
   }catch(e){jupMarket()}
 }
