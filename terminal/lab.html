@@ -274,6 +274,9 @@ const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','De
 const fmtD=({timestamp:t,type})=>{const d=new Date(t),h=d.getHours(),hm=(h%12||12)+(d.getMinutes()?':'+String(d.getMinutes()).padStart(2,'0'):'')+(h<12?' AM':' PM');
   return type==='xAxis'?(/SECOND|MINUTE/.test(TF[2])?hm:MON[d.getMonth()]+' '+d.getDate()+' '+hm):MON[d.getMonth()]+' '+d.getDate()+', '+hm};
 const PHONE=matchMedia('(max-width:640px)');
+// snapshots render the chart at 3-4x (sharp on X): while one is made the canvases' own size watcher (which follows the
+// screen's real pixel density) is paused, so they keep the higher resolution until it's taken
+{const RO=window.ResizeObserver;if(RO)window.ResizeObserver=class extends RO{constructor(cb){super((e,o)=>{if(!window.__snap)cb(e,o)})}}}
 const chart=klinecharts.init('chart',{decimalFold:{threshold:99},formatter:{formatDate:fmtD},layout:{yAxis:{gap:{top:.08,bottom:.25}}},styles:{
   grid:{horizontal:{color:'#121a33'},vertical:{show:false}},
   candle:{bar:{upColor:'#4a7aff',downColor:'#e8eeff',noChangeColor:'#5d6a8f',upBorderColor:'#4a7aff',downBorderColor:'#e8eeff',upWickColor:'#4a7aff',downWickColor:'#e8eeff'},
@@ -467,14 +470,21 @@ chart.setOffsetRightDistance(PHONE.matches?8:20);   // phones: the last candle c
 
 // ---------- chart snapshot: the chart with the token, timeframe, time and the terminal7.xyz link on it; download, copy, or share on X ----------
 const LINK='https://terminal7.xyz/terminal/token?ca='+CA;
+const DPRD=Object.getOwnPropertyDescriptor(window,'devicePixelRatio');   // the browser's own, put back after a snapshot
+const frames=n=>new Promise(r=>{const f=()=>--n?requestAnimationFrame(f):r();requestAnimationFrame(f)});
+async function chartAt(dpr){const el=$('chart');window.__snap=dpr!=null;
+  try{if(dpr!=null)Object.defineProperty(window,'devicePixelRatio',{get:()=>dpr,configurable:true});else if(DPRD)Object.defineProperty(window,'devicePixelRatio',DPRD);else delete window.devicePixelRatio}catch(e){}
+  el.style.width='calc(100% - 1px)';chart.resize();await frames(2);el.style.width='';chart.resize();await frames(3)}
 async function snapshot(){
-  const src=chart.getConvertPictureUrl(true,'png','#0a0f1f'),img=new Image();img.src=src;await img.decode();
-  const pad=44,c=document.createElement('canvas');c.width=img.width;c.height=img.height+pad*2;const x=c.getContext('2d');
+  const W=$('chart').clientWidth,S=Math.min(4,Math.max(window.devicePixelRatio||1,Math.ceil(2400/W)));   // ~2400px+ wide
+  let src;try{await chartAt(S);src=chart.getConvertPictureUrl(true,'png','#0a0f1f')}finally{await chartAt(null)}
+  const img=new Image();img.src=src;await img.decode();const k=img.width/W;
+  const pad=Math.round(44*k),c=document.createElement('canvas');c.width=img.width;c.height=img.height+pad*2;const x=c.getContext('2d');
   x.fillStyle='#04060f';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,pad);
-  x.fillStyle='#fff';x.font='28px VT323, monospace';x.textBaseline='middle';x.fillText('$'+SYM+(MODE==='mcap'?' MC':'')+(Q?' / $'+Q.sym:'')+' · '+TF[1],14,pad/2);
-  x.font='12px "IBM Plex Mono", monospace';x.fillStyle='#5d6a8f';x.textAlign='right';x.fillText(new Date().toUTCString().replace(' GMT',' UTC'),c.width-14,pad/2);
-  x.textAlign='left';x.fillStyle='#ffd23f';x.font='600 15px "IBM Plex Mono", monospace';x.fillText('terminal7.xyz',14,img.height+pad*1.5);
-  x.fillStyle='#5d6a8f';x.font='12px "IBM Plex Mono", monospace';x.textAlign='right';x.fillText(LINK.replace('https://',''),c.width-14,img.height+pad*1.5);
+  x.fillStyle='#fff';x.font=`${Math.round(28*k)}px VT323, monospace`;x.textBaseline='middle';x.fillText('$'+SYM+(MODE==='mcap'?' MC':'')+(Q?' / $'+Q.sym:'')+' · '+TF[1],14*k,pad/2);
+  x.font=`${Math.round(12*k)}px "IBM Plex Mono", monospace`;x.fillStyle='#5d6a8f';x.textAlign='right';x.fillText(new Date().toUTCString().replace(' GMT',' UTC'),c.width-14*k,pad/2);
+  x.textAlign='left';x.fillStyle='#ffd23f';x.font=`600 ${Math.round(15*k)}px "IBM Plex Mono", monospace`;x.fillText('terminal7.xyz',14*k,img.height+pad*1.5);
+  x.fillStyle='#5d6a8f';x.font=`${Math.round(12*k)}px "IBM Plex Mono", monospace`;x.textAlign='right';x.fillText(LINK.replace('https://',''),c.width-14*k,img.height+pad*1.5);
   return new Promise(r=>c.toBlob(r,'image/png'))}
 const fname=()=>`${SYM}-${TF[1]}-terminal7.png`;
 const copyImg=async b=>{try{await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);return true}catch(e){return false}};
