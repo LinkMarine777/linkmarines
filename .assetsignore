@@ -16,3 +16,5 @@ stream/__pycache__
 worker/
 # the streamer alerts service: its own Worker serves its pages (alerts/public)
 alerts/
+# the data-jobs VPS scripts (vps/setup.sh)
+vps/
