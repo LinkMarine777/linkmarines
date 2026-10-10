@@ -135,7 +135,7 @@
     if (d && d.hist && d.hist.done) $('walCard').src = BOT + '/card/wallet/' + w + '.png?h=' + d.hist.txs;
     if (!d || d.error) { $('walSt').textContent = ''; $('walCoins').innerHTML = '<div class="dim" style="font-size:11px">couldn\'t load this wallet right now · try again in a minute</div>'; return true; }
     const h = d.hist; $('walSt').textContent = !h ? 'full history unavailable right now · showing the compounding tracker' : h.stale ? `couldn't reach the chain just now · showing the ${h.txs.toLocaleString('en-US')} transactions read before` : h.done ? `full history from the chain · ${h.txs.toLocaleString('en-US')} transactions` :
-      h.paused ? 'full history paused for today (daily reading limit)' : h.capped ? `a bot-sized wallet: showing its newest ${h.txs.toLocaleString('en-US')} trades, not read further` : `read its newest ${h.txs.toLocaleString('en-US')} transactions so far · the rest next time it's opened`;
+      h.paused ? 'full history paused for today (daily reading limit)' : h.bot === 'app' ? `an app / exchange wallet (${(h.rate || 0).toLocaleString('en-US')} transactions an hour, signed by its users): not one person's history, not read` : h.bot ? `a trading bot (${(h.rate || 0).toLocaleString('en-US')} transactions an hour): its history isn't read` : h.capped ? `a bot-sized wallet: showing its newest ${h.txs.toLocaleString('en-US')} trades, not read further` : `read its newest ${h.txs.toLocaleString('en-US')} transactions so far · the rest next time it's opened`;
     return true;
   }
   function close() { cur = null; }
