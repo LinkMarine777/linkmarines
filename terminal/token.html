@@ -918,10 +918,15 @@ function compact(n,pre='$'){if(n==null||isNaN(n))return'—';if(n===0)return pre
   if(a>=1e9)return pre+(n/1e9).toFixed(2)+'B';if(a>=1e6)return pre+(n/1e6).toFixed(2)+'M';
   if(a>=1e3)return pre+(n/1e3).toFixed(1)+'K';return pre+n.toFixed(a<1?4:2)}
 function px(n){if(n==null||isNaN(n)||n===0)return'—';if(n>=1000)return usd(n,0);if(n>=1)return'$'+n.toFixed(2);
-  const z=Math.floor(-Math.log10(n));return'$'+n.toFixed(Math.min(z+4,12))}
+  const z=Math.floor(-Math.log10(n));
+  if(z>=4){let k=Math.ceil(-Math.log10(n))-1,sig=Math.round(n*10**(k+4));if(sig>=1e4){k--;sig=Math.round(sig/10)}   // 5+ zeros: counted (0.00000404 → 0.0₅404), like the chart
+    if(k>=4)return'$0.0'+String(k).split('').map(c=>'₀₁₂₃₄₅₆₇₈₉'[c]).join('')+(String(sig).replace(/0+$/,'')||'0')}
+  return'$'+n.toFixed(Math.min(z+4,12))}
 function apyFmt(n){if(n==null||!isFinite(n))return'—';if(n>=1e12)return'>1T%';
   if(n>=1e9)return(n/1e9).toFixed(1)+'B%';if(n>=1e6)return(n/1e6).toFixed(1)+'M%';if(n>=1e4)return(n/1e3).toFixed(0)+'K%';return n.toFixed(0)+'%'}
 const num=(n,d=0)=>n==null?'—':Number(n).toLocaleString('en-US',{maximumFractionDigits:d,minimumFractionDigits:d});
+// a reward amount: a million or more is shortened (68.02B PEPE, 74.58M PEPE), so it fits its box; smaller ones as before
+const amt=(n,d=0)=>{if(n==null)return'—';const a=Math.abs(+n);return a>=1e12?(n/1e12).toFixed(2)+'T':a>=1e9?(n/1e9).toFixed(2)+'B':a>=1e6?(n/1e6).toFixed(2)+'M':num(n,d)};
 const pct=n=>n==null?'':`<span class="${n>=0?'up':'dn'}">${n>=0?'▲':'▼'} ${Math.abs(n).toFixed(2)}%</span>`;
 function ago(t){const s=Math.max(0,(Date.now()-t)/1000);if(s<60)return Math.floor(s)+'s';if(s<3600)return Math.floor(s/60)+'m';
   if(s<86400)return Math.floor(s/3600)+'h '+Math.floor(s%3600/60)+'m';return Math.floor(s/86400)+'d '+Math.floor(s%86400/3600)+'h'}
@@ -938,9 +943,9 @@ const onScreen=except=>['buyPop','ttsPop','pulseTO','infoPop'].some(id=>id!==exc
 let pulseQ=[];
 setInterval(()=>{if(onScreen())return;if(pulseQ.length)return pulseTakeover(...pulseQ.shift());
   if(typeof nextTTS==='function')nextTTS();if(!onScreen()&&typeof nextBuy==='function')nextBuy();if(!onScreen()&&typeof nextInfo==='function')nextInfo()},700);
-function pulseTakeover(tok,usdv,holders,total){if(!alertsOn||!akOn('pulse'))return;if(onScreen('pulseTO')){pulseQ.push([tok,usdv,holders,total]);return}$('ptN').textContent='+'+num(tok,tok<10?2:1)+' '+TK.quote;
+function pulseTakeover(tok,usdv,holders,total){if(!alertsOn||!akOn('pulse'))return;if(onScreen('pulseTO')){pulseQ.push([tok,usdv,holders,total]);return}$('ptN').textContent='+'+amt(tok,tok<10?2:1)+' '+TK.quote;
   $('ptS').textContent=(usdv>0?'≈ '+usd(usdv,0)+' ':'')+'paid to '+num(holders)+' $'+TK.symbol+' holders';
-  $('ptD').textContent=num(total,0)+' '+TK.quote+' distributed all time · hold $'+TK.symbol+', get paid in $'+TK.quote;
+  $('ptD').textContent=amt(total,0)+' '+TK.quote+' distributed all time · hold $'+TK.symbol+', get paid in $'+TK.quote;
   const el=$('pulseTO');el.classList.remove('show');void el.offsetWidth;el.classList.add('show');beep(true);setTimeout(()=>beep(true),600);
   clearTimeout(ptTimer);ptTimer=setTimeout(closePulse,12000)}
 var ptTimer=null;
@@ -977,12 +982,12 @@ async function loadRewards(){
     pulseTakeover(r.distributedTokens-prevR.distributedTokens,(r.distributedUsd||0)-(prevR.distributedUsd||0),(HOLD&&(HOLD.over||HOLD.holders))||(CA===MARINE&&WRM&&(WRM.eligible||WRM.holders))||r.holderCount,r.distributedTokens);
   prevR=r;
   const qx=r.distributedTokens>0&&r.distributedUsd>0?Math.max(0,Math.floor(Math.log10(r.distributedUsd/r.distributedTokens))-1):0;   // a pricey reward token (WBTC) gets more decimals
-  $('sDist').textContent=num(r.distributedTokens,1+qx)+' '+TK.quote;
+  $('sDist').textContent=amt(r.distributedTokens,1+qx)+' '+TK.quote;$('sDist').title=num(r.distributedTokens,1+qx)+' '+TK.quote;
   $('sDistUsd').textContent='≈ '+usd(r.distributedUsd,0)+' at today\'s '+TK.quote+' price';
   $('sPayouts').textContent=num(r.payoutCount);
   showHolders();
   const p=Math.min(1,(r.pendingUsd||0)/(r.minDistributionUsd||1));
-  $('pPending').textContent=num(r.pendingTokens,2+qx)+' '+TK.quote;
+  $('pPending').textContent=amt(r.pendingTokens,2+qx)+' '+TK.quote;$('pPending').title=num(r.pendingTokens,2+qx)+' '+TK.quote;
   $('pPendingUsd').innerHTML=usd(r.pendingUsd,0)+(r.pendingTaxUsd?'<span class="fx"> · '+usd(r.pendingTaxUsd,0)+' tax to swap</span>':'');
   $('pBar').querySelector('i').style.width=(p*100).toFixed(1)+'%';
   $('pBar').classList.toggle('ready',p>=1);
@@ -991,7 +996,7 @@ async function loadRewards(){
   pulseBadge();
   PAYMIN=r.minHoldingUsd;payMin();
   const w=r.window24h,w7=r.window7d;
-  $('s24').innerHTML=w&&w.coveredSec>=3600&&w.tokens>=0.05?'<span class="up">+'+num(Math.max(0,w.tokens),1)+' '+TK.quote+'</span> <span class="dim">'+(w.complete?'last 24h':'in '+ago(Date.now()-w.coveredSec*1000))+(w7&&w7.complete?' · '+num(w7.tokens,0)+' last 7d':'')+'</span>':(w?'<span class="dim">24h total: tracking…</span>':'&nbsp;');
+  $('s24').innerHTML=w&&w.coveredSec>=3600&&w.tokens>=0.05?'<span class="up">+'+amt(Math.max(0,w.tokens),1)+' '+TK.quote+'</span> <span class="dim">'+(w.complete?'last 24h':'in '+ago(Date.now()-w.coveredSec*1000))+(w7&&w7.complete?' · '+amt(w7.tokens,0)+' last 7d':'')+'</span>':(w?'<span class="dim">24h total: tracking…</span>':'&nbsp;');
   tickLast();
   const stale=Date.now()/1000-r.snapshotAt>1800;
   $('live').classList.toggle('stale',stale);$('liveTxt').textContent=stale?'DELAYED':'LIVE';
