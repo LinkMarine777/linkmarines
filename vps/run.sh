@@ -2,6 +2,10 @@
 # One Terminal 7 job, forever (systemd restarts it if it stops): kick | payouts | launches | whales. See vps/setup.sh.
 J=${1:?job}; APP=${T7_APP:-/opt/t7}; S=$APP/site; BOT=https://war-room-bot.linkmarine777.workers.dev
 log() { echo "$(date -u +%H:%M:%S) $*"; }
+# the Helius key as typed at setup: the bare key, or the whole RPC address (https://mainnet.helius-rpc.com/?api-key=...), both work
+HELIUS_KEY=$(printf '%s' "${HELIUS_KEY:-}" | tr -d ' "\r'"'"'')
+case "$HELIUS_KEY" in http*) export SOLANA_RPC=$HELIUS_KEY; HELIUS_KEY= ;; *api-key=*) HELIUS_KEY=${HELIUS_KEY##*api-key=}; HELIUS_KEY=${HELIUS_KEY%%&*} ;; esac
+export HELIUS_KEY
 # new code on GitHub (checked at most every 10 min, as this locked-down user): take it and exit; systemd starts the job again on it
 code() { [ $(( $(date +%s) - ${CHK:-0} )) -lt 600 ] && return; CHK=$(date +%s); local old; old=$(git -C $S rev-parse HEAD)
   git -C $S fetch -q --depth 1 origin main 2>/dev/null && git -C $S reset -q --hard FETCH_HEAD
