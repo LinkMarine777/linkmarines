@@ -128,14 +128,14 @@
       let f = null; try { f = await j(BOT + '/wallet/' + w + '?full=1'); } catch (e) {}
       if (cur !== w) return true;
       if (f && !f.error) { render(w, f); d = f; }
-      const h = f && f.hist; if (!h || h.done || h.paused || h.stale) break;
+      const h = f && f.hist; if (!h || h.done || h.paused || h.stale || h.capped) break;
       $('walSt').textContent = `reading its full history from the chain · ${h.txs.toLocaleString('en-US')} transactions so far…`;
     }
     // the share card opened before the history read finished: draw it again with the whole history (the bot keeps an unfinished one a minute)
     if (d && d.hist && d.hist.done) $('walCard').src = BOT + '/card/wallet/' + w + '.png?h=' + d.hist.txs;
     if (!d || d.error) { $('walSt').textContent = ''; $('walCoins').innerHTML = '<div class="dim" style="font-size:11px">couldn\'t load this wallet right now · try again in a minute</div>'; return true; }
     const h = d.hist; $('walSt').textContent = !h ? 'full history unavailable right now · showing the compounding tracker' : h.stale ? `couldn't reach the chain just now · showing the ${h.txs.toLocaleString('en-US')} transactions read before` : h.done ? `full history from the chain · ${h.txs.toLocaleString('en-US')} transactions` :
-      h.paused ? 'full history paused for today (daily reading limit)' : `read its newest ${h.txs.toLocaleString('en-US')} transactions so far · the rest next time it's opened`;
+      h.paused ? 'full history paused for today (daily reading limit)' : h.capped ? `a bot-sized wallet: showing its newest ${h.txs.toLocaleString('en-US')} trades, not read further` : `read its newest ${h.txs.toLocaleString('en-US')} transactions so far · the rest next time it's opened`;
     return true;
   }
   function close() { cur = null; }
