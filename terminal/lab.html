@@ -384,7 +384,27 @@ chart.setDataLoader({getBars:async({type,timestamp,callback})=>{
     const first=(chart.getDataList()[0]||{}).timestamp;
     if(timestamp&&first&&timestamp<=first){const [d0]=await Promise.all([bars(CA,timestamp-1),quoteFor(timestamp-1)]),d=d0.filter(b=>b.timestamp<timestamp),more=d.length>=499;
       callback(d,{forward:type==='forward'?more:true,backward:type==='backward'?more:true});return}
-    callback([],{forward:type!=='forward',backward:type!=='backward'})}catch(e){say('Couldn\'t load candles ('+e.message+')');callback([],false)}}});
+    callback([],{forward:type!=='forward',backward:type!=='backward'})}catch(e){say('Couldn\'t load candles ('+e.message+')');callback([],false)}},
+  subscribeBar:({callback})=>{RT=callback},unsubscribeBar:()=>{RT=null;LASTTK=null}});
+
+// ---------- live: the chart follows the same price as the page above it and the tape ----------
+// The token page sends every trade it reads (postMessage {t:'tick', mint, price, ts, usd, tx}); each one moves the current
+// candle (or opens the next). Every 30 s the last few candles are read again from Jupiter, which fills in the highs, lows and
+// volume of trades the tape didn't carry (that also keeps the chart live when it's opened on its own).
+let RT=null,LASTTK=null;const SEENTX=new Set();
+const PMS={'1_SECOND':1e3,'15_SECOND':15e3,'30_SECOND':3e4,'1_MINUTE':6e4,'3_MINUTE':18e4,'5_MINUTE':3e5,'15_MINUTE':9e5,'30_MINUTE':18e5,
+  '1_HOUR':36e5,'2_HOUR':72e5,'4_HOUR':144e5,'8_HOUR':288e5,'12_HOUR':432e5,'1_DAY':864e5};
+const tickVal=p=>MODE==='mcap'?(SUPPLY?p*SUPPLY:null):p;
+function liveTick(price,ts,usd,tx){const v=tickVal(price),L=chart.getDataList(),last=L[L.length-1];if(!RT||!v||!last||!(ts>=last.timestamp))return;
+  const vol=tx&&SEENTX.has(tx)?0:(+usd||0);if(tx)SEENTX.add(tx);LASTTK={v,ts};const per=PMS[IV()];
+  if(per&&ts>=last.timestamp+per){const t0=Math.floor(ts/per)*per;RT({timestamp:t0,open:last.close,high:Math.max(last.close,v),low:Math.min(last.close,v),close:v,volume:vol})}
+  else RT({...last,high:Math.max(last.high,v),low:Math.min(last.low,v),close:v,volume:(last.volume||0)+vol})}
+addEventListener('message',e=>{const d=e.data;if(e.origin!==location.origin||!d||d.t!=='tick'||d.mint!==CA)return;liveTick(+d.price,+d.ts,d.usd,d.tx)});
+async function liveSync(){if(!RT||document.hidden)return;try{const b=await bars(CA,Date.now(),3),L=chart.getDataList(),last=L[L.length-1];if(!last)return;
+  b.filter(x=>x.timestamp>=last.timestamp).forEach(x=>{const cur=x.timestamp===last.timestamp?last:null,
+      close=LASTTK&&LASTTK.ts>=x.timestamp&&(!PMS[IV()]||LASTTK.ts<x.timestamp+PMS[IV()])?LASTTK.v:x.close;   // a newer trade's price wins over Jupiter's
+    RT({...x,high:Math.max(x.high,cur?cur.high:-Infinity,close),low:Math.min(x.low,cur?cur.low:Infinity,close),close})})}catch(e){}}
+setInterval(liveSync,30e3);
 const prec=p=>p>0?Math.min(12,Math.max(2,Math.ceil(-Math.log10(p))+3)):2;
 function resetView(){chart.overrideYAxis({paneId:'candle_pane',id:YID,displayValueToText:v=>fmtV(v),createTicks:yTicks});fit();say('View reset',1200)}
 $('resetBtn').onclick=resetView;
