@@ -73,7 +73,7 @@ ROOT.innerHTML = `
       <li><b>Fees per trade (5)</b>: priority fees and tips traders paid per trade (Jupiter's Fees Paid). Farm bots pay to land their bundles: farms measured 2.3–5 mSOL a trade, real coins 0.7–2.7.</li>
     </ul>
     <p><span class="v-REAL">REAL</span> 60+, not bundled (20%+ bundled or linked caps it at WATCH) and not dumped (85%+ below a $20K+ peak, tagged DUMPED, caps it too) · <span class="v-WATCH">WATCH</span> 35+ · <span class="v-FARM">FARM</span> $20,000+ volume the fees don't back up, with few organic buyers or holders · <span class="v-THIN">THIN</span> the rest.</p>
-    <p>VRFD: Jupiter's verification desk. Standard requests are free. ⚡ Express costs 1,000 JUP and is reviewed first. Next pairs: the stock issuers stonkfun pairs with (Sunrise, xStocks, PreStocks, Tessera) and their verified stocks that no stonkfun pair trades yet, in any wrapper. xStocks only when one trades, is new or went to VRFD: stonkfun pairs only its busiest. A new stock and a Sunrise VRFD request each pop an alert. Not financial advice: a score reads what already happened on chain.</p>
+    <p>Not financial advice: a score reads what already happened on chain.</p>
   </details></section>
   <div class="lr-foot">updated <span id="lr-upd2">…</span> · a pass every ~5 min · data: stonkfun, Jupiter, Jupiter VRFD</div>`;
 // the coin's panel covers the whole page, so it lives on <body>
