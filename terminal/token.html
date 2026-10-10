@@ -583,6 +583,10 @@ html.fit #infoPop{min-width:900px;max-width:1300px;padding:22px 40px}html.fit #i
 #radarP .rstats b{display:block;font-size:14px;color:#fff;font-weight:600;margin-top:2px}#radarP .rstats b.up{color:var(--green)}#radarP .rstats b.dn{color:var(--red)}#radarP .rstats b.am{color:var(--amber)}
 #radarBfb .bfb{margin:0 0 8px}
 .zc{font-size:.55em;vertical-align:-.1em;margin:0 .04em;line-height:0}
+/* the T7 mark is wider than tall: its own proportions, a little space each side, centred on the header row */
+header img[src$="t7-mark.svg"]{width:46px;height:35px;object-fit:contain;flex:none;margin:0 2px}
+html.fit header img[src$="t7-mark.svg"]{width:60px;height:46px}
+@media (max-width:700px){header img[src$="t7-mark.svg"]{width:34px;height:26px;margin:0 6px 0 -4px;position:relative;top:2px}}
 </style>
 <link rel="stylesheet" href="../launches/scan.css">
 </head>
