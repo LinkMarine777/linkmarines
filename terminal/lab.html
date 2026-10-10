@@ -204,8 +204,8 @@ klinecharts.registerIndicator({
 // ---------- pitchfan: from a pivot through two points, with the median and the 0.382 / 0.618 lines between them ----------
 klinecharts.registerOverlay({
   name:'pitchfan',totalStep:4,needDefaultPointFigure:true,needDefaultXAxisFigure:true,needDefaultYAxisFigure:true,
-  createPointFigures:({coordinates:c,bounding})=>{if(c.length<2)return[];
-    const ray=(p,q,col)=>{const dx=q.x-p.x,dy=q.y-p.y;if(!dx&&!dy)return null;const k=dx>0?(bounding.width-p.x)/dx:dx<0?-p.x/dx:1e4/Math.abs(dy);
+  createPointFigures:({coordinates:c,bounding,overlay:ov})=>{if(c.length<2)return[];const one=ov&&ov.extendData&&ov.extendData.col;
+    const ray=(p,q,col0)=>{const col=one||col0,dx=q.x-p.x,dy=q.y-p.y;if(!dx&&!dy)return null;const k=dx>0?(bounding.width-p.x)/dx:dx<0?-p.x/dx:1e4/Math.abs(dy);
       return{type:'line',attrs:{coordinates:[p,{x:p.x+dx*k,y:p.y+dy*k}]},styles:{color:col}}};
     if(c.length===2)return[ray(c[0],c[1],'#ffd23f')].filter(Boolean);
     const [p,b,q]=c,at=f=>({x:b.x+(q.x-b.x)*f,y:b.y+(q.y-b.y)*f});
@@ -213,6 +213,10 @@ klinecharts.registerOverlay({
       ...[[0,'#ffd23f'],[.382,'#4a7aff'],[.5,'#39ff6a'],[.618,'#4a7aff'],[1,'#ffd23f']].map(([f,col])=>ray(p,at(f),col)).filter(Boolean)]}
 });
 
+// a drawing's colour (extendData.col): its lines, labels and handles; new drawings take the chosen one (DCOL)
+const colStyles=c=>({line:{color:c},text:{color:c},rectText:{color:'#fff',backgroundColor:c,borderColor:c},polygon:{color:c+'22',borderColor:c},
+  point:{color:c,borderColor:c+'55',activeColor:c,activeBorderColor:c+'55'}});
+let DCOL=store('wrDrawCol')||'';
 // Fib retracement (ours): the levels only span the two points (not the whole chart), and they're your own: set in the
 // levels editor (FIB LEVELS button under it); each fib keeps the levels it was drawn with (extendData.lv). 1 = the first point, 0 = the second
 let FIBL=(store('wrFibLv')||'0,0.236,0.382,0.5,0.618,0.786,1').split(',').map(Number).filter(isFinite);
@@ -223,7 +227,7 @@ klinecharts.registerOverlay({
   name:'fibT7',totalStep:3,needDefaultPointFigure:true,needDefaultXAxisFigure:true,needDefaultYAxisFigure:true,
   createPointFigures:({coordinates:c,overlay:o,yAxis})=>{if(c.length<2||!yAxis||o.points.length<2)return[];
     const v1=o.points[0].value,v2=o.points[1].value,x1=Math.min(c[0].x,c[1].x),x2=Math.max(c[0].x,c[1].x),lv=fibLv(o),f=[];
-    [...lv].sort((a,b)=>b-a).forEach((l,i)=>{const v=v2+(v1-v2)*l,y=yAxis.convertToPixel(v),col=FIBC[i%FIBC.length];
+    const one=o.extendData&&o.extendData.col;[...lv].sort((a,b)=>b-a).forEach((l,i)=>{const v=v2+(v1-v2)*l,y=yAxis.convertToPixel(v),col=one||FIBC[i%FIBC.length];
       f.push({type:'line',attrs:{coordinates:[{x:x1,y},{x:x2,y}]},styles:{color:col,size:1}});
       f.push({type:'text',ignoreEvent:true,attrs:{x:x1,y:y-2,text:`${+l.toFixed(4)} (${fmtV(v)})`,baseline:'bottom'},styles:{color:col,size:11,backgroundColor:'transparent',paddingLeft:2,paddingRight:2,paddingTop:0,paddingBottom:0}})});
     f.push({type:'line',attrs:{coordinates:[c[0],c[1]]},styles:{color:'#5d6a8f',style:'dashed',size:1}});
@@ -423,7 +427,8 @@ const DRAW=[['segment','Trend line',SV('<path d="M6 18L18 6"/><circle cx="5" cy=
 const ok=new Set(klinecharts.getSupportedOverlays());
 $('draw').innerHTML=DRAW.filter(([n])=>ok.has(n)).map(([n,l,ic])=>`<button type="button" data-o="${n}" title="${l}" aria-label="${l}">${ic}</button>`
     +(n==='fibT7'?`<button type="button" id="fibSet" title="Fib levels: your own (e.g. 0.25, 0.5, 0.75)" aria-label="Fib levels">${SV('<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>')}</button>`:'')).join('')
-  +'<hr><button type="button" id="lockBtn"></button>'
+  +'<hr><button type="button" id="colBtn" title="Colour: the selected drawing, or new ones" aria-label="Drawing colour"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="currentColor"/></svg></button>'
+  +'<button type="button" id="lockBtn"></button>'
   +'<button type="button" id="clr" title="Remove every drawing" aria-label="Remove every drawing">'+SV('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>')+'</button>';
 const drawOpen=o=>{setTimeout(()=>chart.resize(),170);document.querySelector('.body').classList.toggle('drawOpen',o);$('drawTog').setAttribute('aria-expanded',o);$('drawTog').setAttribute('aria-label',(o?'Hide':'Show')+' the drawing tools')};
 $('drawTog').onclick=()=>drawOpen(!document.querySelector('.body').classList.contains('drawOpen'));
@@ -454,7 +459,25 @@ function fibPop(at){const sel=SEL&&chart.getOverlays().find(o=>o.id===SEL&&o.nam
   setTimeout(()=>$('fibIn').focus(),0)}
 document.addEventListener('mousedown',e=>{if(fp.style.display==='block'&&!e.target.closest('#fibPop,#fibSet'))fp.style.display='none'});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')fp.style.display='none';if(e.key==='Enter'&&e.target.id==='fibIn')$('fibOk').click()});
+// drawing colours: with a drawing selected it changes colour; otherwise new drawings take it (Auto = each tool's own)
+const COLS=[['','Auto'],['#4a7aff','Blue'],['#ffd23f','Amber'],['#39ff6a','Green'],['#ff3355','Red'],['#ffffff','White'],['#a06bff','Purple'],['#39d6ff','Cyan'],['#ff8a3d','Orange']];
+const cp=document.createElement('div');cp.className='cmenu';cp.id='colPop';document.body.appendChild(cp);
+const colDot=()=>{$('colBtn').style.color=DCOL||'#5d6a8f'};colDot();
+function colPop(at){const sel=SEL&&chart.getOverlays().find(o=>o.id===SEL),cur=sel?(sel.extendData&&sel.extendData.col)||'':DCOL;
+  cp.innerHTML=`<div style="padding:6px 8px 4px;color:var(--dim);letter-spacing:1px;font-size:10px">${sel?'COLOUR · THE SELECTED DRAWING':'COLOUR · NEW DRAWINGS'}</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:2px 8px 8px">${COLS.map(([c,n])=>`<button type="button" data-c="${c}" title="${n}" style="display:flex;align-items:center;gap:6px;background:${c===cur?'#141f36':'none'};border:1px solid ${c===cur?'var(--blue2)':'var(--line)'};color:var(--txt);font:inherit;font-size:11px;padding:5px 6px;cursor:pointer"><i style="width:12px;height:12px;border-radius:6px;flex:none;background:${c||'conic-gradient(#4a7aff,#ffd23f,#39ff6a,#ff3355,#4a7aff)'}"></i>${n}</button>`).join('')}</div>`;
+  cp.style.display='block';const r=at.getBoundingClientRect();cp.style.left=Math.min(innerWidth-cp.offsetWidth-6,r.right+6)+'px';cp.style.top=Math.max(6,Math.min(innerHeight-cp.offsetHeight-6,r.top-40))+'px';
+  cp.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{const c=b.dataset.c;
+    if(sel){const ext={...(sel.extendData||{})};
+      if(c){ext.col=c;chart.overrideOverlay({id:sel.id,extendData:ext,styles:colStyles(c)})}
+      else{delete ext.col;const pts=sel.points.map(p=>({timestamp:p.timestamp,value:p.value}));chart.removeOverlay({id:sel.id});SEL=null;mkOverlay(sel.name,pts,null,ext)}   // Auto: drawn again with the tool's own colours
+      setTimeout(saveDraw,0)}
+    else{DCOL=c;store('wrDrawCol',c);colDot()}
+    cp.style.display='none';say(sel?'Colour changed':c?'New drawings: '+b.title:'New drawings: each tool\'s own colours',1500)})}
+document.addEventListener('mousedown',e=>{if(cp.style.display==='block'&&!e.target.closest('#colPop,#colBtn'))cp.style.display='none'});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')cp.style.display='none'});
 $('draw').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.id==='colBtn'){e.stopPropagation();return cp.style.display==='block'?cp.style.display='none':colPop(b)}
   if(b.id==='fibSet'){e.stopPropagation();return fp.style.display==='block'?fp.style.display='none':fibPop(b)}
   if(b.dataset.o==='path'&&b.classList.contains('on')&&pathDone())return;   // the button again: done
   if(b.id==='lockBtn'){LOCK=!LOCK;store('wrLabLock',LOCK?'1':'0');chart.overrideOverlay({lock:LOCK});lockIco();return say(LOCK?'Drawings locked':'Drawings unlocked',1200)}
@@ -475,7 +498,9 @@ function saveDraw(){if(saveDraw.off)return;   // off while switching Price / MC
   const L=chart.getOverlays().filter(o=>o.currentStep===-1&&o.points.length).map(o=>({name:o.name,points:o.points.map(p=>({timestamp:p.timestamp,value:p.value})),...(o.extendData?{ext:o.extendData}:{})}));
   store(DKEY,JSON.stringify(L))}
 const later=f=>()=>{setTimeout(f,0);return false};
-function mkOverlay(name,points,btn,ext){if(!ext&&name==='fibT7')ext={lv:FIBL.join(',')};return chart.createOverlay({name,lock:LOCK,...(points?{points}:{}),...(ext?{extendData:ext}:{}),
+function mkOverlay(name,points,btn,ext){ext={...(ext||{})};if(name==='fibT7'&&ext.lv==null)ext.lv=FIBL.join(',');if(!points&&ext.col==null&&DCOL)ext.col=DCOL;
+  if(!Object.keys(ext).length)ext=null;
+  return chart.createOverlay({name,lock:LOCK,...(points?{points}:{}),...(ext?{extendData:ext}:{}),...(ext&&ext.col?{styles:colStyles(ext.col)}:{}),
   onDrawEnd:()=>{if(btn)btn.classList.remove('on');setTimeout(saveDraw,0);return false},onPressedMoveEnd:later(saveDraw),onRemoved:later(saveDraw),
   onSelected:e=>{SEL=e.overlay.id;return false},onDeselected:e=>{if(SEL===e.overlay.id)SEL=null;return false}})}
 function restoreDraw(){if(restoreDraw.done)return;restoreDraw.done=1;let L=[];try{L=JSON.parse(store(DKEY)||'[]')}catch(e){}
