@@ -394,7 +394,7 @@ $('zbar').onclick=e=>{const b=e.target.closest('[data-z]');if(!b)return;const z=
   if(z==='in'||z==='out')return chart.zoomAtDataIndex(z==='in'?1.25:.8,Math.max(0,Math.min(L-1,chart.getVisibleRange().to-1)),200);   // around the newest candle on screen
   chart.scrollByDistance((z==='left'?1:-1)*w*.3,200)};['mousedown','touchstart'].forEach(t=>$('chart').addEventListener(t,()=>{if(chart.getOverlays().some(o=>o.currentStep!==-1))pathDone.at=Date.now()},{capture:true,passive:true}));
 // a double-click that ends a drawing doesn't reset the view
-$('chart').addEventListener('dblclick',e=>{if(pathDone()||Date.now()-(pathDone.at||0)<800)return;if(!chart.getOverlays().some(o=>o.currentStep>0))resetView()});
+$('chart').addEventListener('dblclick',e=>{if(pathDone()||Date.now()-(pathDone.at||0)<800||Date.now()-(drawDbl.at||0)<800)return;if(!chart.getOverlays().some(o=>o.currentStep>0))resetView()});
 function tfBar(){const fav=TFS.filter(t=>FAV.includes(t[0])),extra=TF[0]!=='all'&&!FAV.includes(TF[0])?TF:null;
   $('tf').innerHTML=fav.concat(extra?[extra]:[]).map(t=>`<button type="button" data-k="${t[0]}"${t===TF?' class="on"':''}>${t[1]}<i class="car">▾</i></button>`).join('')
     +`<button type="button" data-k="all"${TF[0]==='all'?' class="on"':''} title="The whole history">ALL<i class="car">▾</i></button>`
@@ -463,10 +463,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')fp.style.display='no
 const COLS=[['','Auto'],['#4a7aff','Blue'],['#ffd23f','Amber'],['#39ff6a','Green'],['#ff3355','Red'],['#ffffff','White'],['#a06bff','Purple'],['#39d6ff','Cyan'],['#ff8a3d','Orange']];
 const cp=document.createElement('div');cp.className='cmenu';cp.id='colPop';document.body.appendChild(cp);
 const colDot=()=>{$('colBtn').style.color=DCOL||'#5d6a8f'};colDot();
-function colPop(at){const sel=SEL&&chart.getOverlays().find(o=>o.id===SEL),cur=sel?(sel.extendData&&sel.extendData.col)||'':DCOL;
+function colPop(at,pt){const sel=SEL&&chart.getOverlays().find(o=>o.id===SEL),cur=sel?(sel.extendData&&sel.extendData.col)||'':DCOL;
   cp.innerHTML=`<div style="padding:6px 8px 4px;color:var(--dim);letter-spacing:1px;font-size:10px">${sel?'COLOUR · THE SELECTED DRAWING':'COLOUR · NEW DRAWINGS'}</div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:2px 8px 8px">${COLS.map(([c,n])=>`<button type="button" data-c="${c}" title="${n}" style="display:flex;align-items:center;gap:6px;background:${c===cur?'#141f36':'none'};border:1px solid ${c===cur?'var(--blue2)':'var(--line)'};color:var(--txt);font:inherit;font-size:11px;padding:5px 6px;cursor:pointer"><i style="width:12px;height:12px;border-radius:6px;flex:none;background:${c||'conic-gradient(#4a7aff,#ffd23f,#39ff6a,#ff3355,#4a7aff)'}"></i>${n}</button>`).join('')}</div>`;
-  cp.style.display='block';const r=at.getBoundingClientRect();cp.style.left=Math.min(innerWidth-cp.offsetWidth-6,r.right+6)+'px';cp.style.top=Math.max(6,Math.min(innerHeight-cp.offsetHeight-6,r.top-40))+'px';
+  cp.style.display='block';const r=pt?{right:pt.x+4,top:pt.y+40}:at.getBoundingClientRect();cp.style.left=Math.min(innerWidth-cp.offsetWidth-6,r.right+6)+'px';cp.style.top=Math.max(6,Math.min(innerHeight-cp.offsetHeight-6,r.top-40))+'px';
   cp.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{const c=b.dataset.c;
     if(sel){const ext={...(sel.extendData||{})};
       if(c){ext.col=c;chart.overrideOverlay({id:sel.id,extendData:ext,styles:colStyles(c)})}
@@ -498,11 +498,14 @@ function saveDraw(){if(saveDraw.off)return;   // off while switching Price / MC
   const L=chart.getOverlays().filter(o=>o.currentStep===-1&&o.points.length).map(o=>({name:o.name,points:o.points.map(p=>({timestamp:p.timestamp,value:p.value})),...(o.extendData?{ext:o.extendData}:{})}));
   store(DKEY,JSON.stringify(L))}
 const later=f=>()=>{setTimeout(f,0);return false};
+let PTR={x:0,y:0};['pointerdown','pointermove'].forEach(t=>document.addEventListener(t,e=>{PTR={x:e.clientX,y:e.clientY}},{passive:true,capture:true}));
+// double-click (double-tap) a drawing: the colour palette for that one drawing, beside it
+const drawDbl=e=>{SEL=e.overlay.id;drawDbl.at=Date.now();setTimeout(()=>colPop(null,PTR),0);return false};
 function mkOverlay(name,points,btn,ext){ext={...(ext||{})};if(name==='fibT7'&&ext.lv==null)ext.lv=FIBL.join(',');if(!points&&ext.col==null&&DCOL)ext.col=DCOL;
   if(!Object.keys(ext).length)ext=null;
   return chart.createOverlay({name,lock:LOCK,...(points?{points}:{}),...(ext?{extendData:ext}:{}),...(ext&&ext.col?{styles:colStyles(ext.col)}:{}),
   onDrawEnd:()=>{if(btn)btn.classList.remove('on');setTimeout(saveDraw,0);return false},onPressedMoveEnd:later(saveDraw),onRemoved:later(saveDraw),
-  onSelected:e=>{SEL=e.overlay.id;return false},onDeselected:e=>{if(SEL===e.overlay.id)SEL=null;return false}})}
+  onSelected:e=>{SEL=e.overlay.id;return false},onDoubleClick:drawDbl,onDeselected:e=>{if(SEL===e.overlay.id)SEL=null;return false}})}
 function restoreDraw(){if(restoreDraw.done)return;restoreDraw.done=1;let L=[];try{L=JSON.parse(store(DKEY)||'[]')}catch(e){}
   L.forEach(o=>{if(o&&o.name&&Array.isArray(o.points))mkOverlay(o.name,o.points,null,o.ext)});setTimeout(()=>saveDraw.off=0,50)}
 document.addEventListener('keydown',e=>{if((e.key==='Delete'||e.key==='Backspace')&&SEL&&!LOCK&&!e.target.closest('input,textarea')){e.preventDefault();chart.removeOverlay({id:SEL});SEL=null;saveDraw()}});
