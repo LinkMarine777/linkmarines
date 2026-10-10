@@ -61,7 +61,7 @@
   <div class="wl"><a id="walScan" target="_blank" rel="noopener">SOLSCAN ↗</a><a href="#" id="walCa">COPY ADDRESS</a>${page ? '' : '<a id="walPage" title="this wallet on its own page">FULL PAGE ↗</a>'}</div>
   <div id="walKpi"></div>
   <div class="sec">COINS <span class="dim" id="walSt"></span></div><div id="walCtl" class="wctl"></div><div id="walCoins"></div>
-  <div class="sec">SHARE</div><img id="walCard" alt="" onerror="this.onerror=null;this.src='/share-terminal7-v2.png'">
+  <div class="sec">SHARE</div><img id="walCard" alt="" onerror="this.onerror=null;this.src='/share-terminal7-v3.png'">
   <div class="acts"><a class="btn primary" id="walTweet" target="_blank" rel="noopener">SHARE AS TWEET</a><button class="btn" id="walImg" type="button">COPY IMAGE</button>
     <button class="btn" id="walSave" type="button">SAVE IMAGE</button><button class="btn" id="walCopy" type="button">COPY LINK</button></div>
   <div class="foot">Every stonkfun coin this wallet holds now or has traded or earned from, in one list: tap a column to sort by it (again to flip it), or

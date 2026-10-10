@@ -44,7 +44,7 @@ export default {
         if (r.ok) return new Response(r.body, { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=600' } });
       } catch (e) {}
       // the bot didn't answer: the generic Terminal 7 image from this site's own files (never a redirect to workers.dev, which X won't show)
-      try { const g = await env.ASSETS.fetch(new Request(new URL('/share-terminal7-v2.png', req.url))); if (g.ok) return new Response(g.body, { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=60' } }); } catch (e) {}
+      try { const g = await env.ASSETS.fetch(new Request(new URL('/share-terminal7-v3.png', req.url))); if (g.ok) return new Response(g.body, { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=60' } }); } catch (e) {}
       return Response.redirect(`${BOT}/card/${card[1]}.png`, 302);
     }
     // /launches/: the trending page, which opens on its NEW LAUNCHES view (the two are one page with a switch)
