@@ -26,8 +26,7 @@ for j in launches whales; do   # each job its own copy of the data branch (they 
 done
 if [ ! -f $ENV ]; then
   KEY=$(head -c 48 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 48)
-  echo; echo "Helius API key for the whale radar's full passes (app.helius.dev → API Keys). Press Enter to skip (public RPC then):"
-  read -r HK </dev/tty || HK=""
+  HK=""   # (the whale radar runs on the free public RPC; see vps/run.sh)
   printf 'VPS_KEY=%s\nHELIUS_KEY=%s\n' "$KEY" "$HK" > $ENV
 fi
 chmod 600 $ENV
