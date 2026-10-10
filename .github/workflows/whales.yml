@@ -32,10 +32,9 @@ jobs:
         run: |
           python3 main/intel/whales.py data/terminal || echo "fast pass failed"
           (cd data && bash ../main/intel/push-data.sh "whale radar (fast)") || echo "save failed"
+      # public RPC (free): the VPS runs the whale radar now (vps/), and the bot skips this copy while the VPS's is fresh, so
+      # Helius credits here would be spent for nothing. This job is the backup if the VPS stops.
       - name: scan whales
-        env:
-          HELIUS_KEY: ${{ secrets.HELIUS_KEY }}
-          SOLANA_RPC: ${{ secrets.SOLANA_RPC }}
         run: python3 main/intel/whales.py data/terminal
       - name: save to the data branch
         working-directory: data
