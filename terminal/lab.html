@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
 <title>Chart Lab · Terminal 7</title>
-<link rel="icon" href="/favicon-64.png">
+<link rel="icon" href="/t7-favicon-64.png">
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <!-- TEST PAGE, not linked from anywhere: the token page's chart rebuilt on KLineChart (open source, Apache-2.0, pinned below),
      looking like the live one (token line or candles on the right scale, the pair token's dashed line on its own left scale,
@@ -481,9 +481,14 @@ async function snapshot(){
   const img=new Image();img.src=src;await img.decode();const k=img.width/W;
   const pad=Math.round(44*k),c=document.createElement('canvas');c.width=img.width;c.height=img.height+pad*2;const x=c.getContext('2d');
   x.fillStyle='#04060f';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,pad);
+  // the Terminal 7 logo: very faint in the middle of the chart, and small beside terminal7.xyz at the bottom
+  let mk=null;try{mk=new Image();mk.src='/t7-mark.svg';await mk.decode()}catch(e){mk=null}
+  if(mk){const b=chart.getSize('candle_pane','main')||{left:0,top:0,width:W,height:img.height/k},mw=Math.min(b.width,b.height*1.3)*.42*k,mh=mw*65/86;
+    x.globalAlpha=.07;x.drawImage(mk,(b.left+b.width/2)*k-mw/2,pad+(b.top+b.height/2)*k-mh/2,mw,mh);x.globalAlpha=1}
   x.fillStyle='#fff';x.font=`${Math.round(28*k)}px VT323, monospace`;x.textBaseline='middle';x.fillText('$'+SYM+(MODE==='mcap'?' MC':'')+(Q?' / $'+Q.sym:'')+' · '+TF[1],14*k,pad/2);
   x.font=`${Math.round(12*k)}px "IBM Plex Mono", monospace`;x.fillStyle='#5d6a8f';x.textAlign='right';x.fillText(new Date().toUTCString().replace(' GMT',' UTC'),c.width-14*k,pad/2);
-  x.textAlign='left';x.fillStyle='#ffd23f';x.font=`600 ${Math.round(15*k)}px "IBM Plex Mono", monospace`;x.fillText('terminal7.xyz',14*k,img.height+pad*1.5);
+  const lw=mk?22*k:0,lh=lw*65/86;if(mk)x.drawImage(mk,14*k,img.height+pad*1.5-lh/2,lw,lh);
+  x.textAlign='left';x.fillStyle='#ffd23f';x.font=`600 ${Math.round(15*k)}px "IBM Plex Mono", monospace`;x.fillText('terminal7.xyz',14*k+(mk?lw+8*k:0),img.height+pad*1.5);
   x.fillStyle='#5d6a8f';x.font=`${Math.round(12*k)}px "IBM Plex Mono", monospace`;x.textAlign='right';x.fillText(LINK.replace('https://',''),c.width-14*k,img.height+pad*1.5);
   return new Promise(r=>c.toBlob(r,'image/png'))}
 const fname=()=>`${SYM}-${TF[1]}-terminal7.png`;
