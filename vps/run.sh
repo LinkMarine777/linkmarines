@@ -5,6 +5,8 @@ log() { echo "$(date -u +%H:%M:%S) $*"; }
 # the Helius key as typed at setup: the bare key, or the whole RPC address (https://mainnet.helius-rpc.com/?api-key=...), both work
 HELIUS_KEY=$(printf '%s' "${HELIUS_KEY:-}" | tr -d ' "\r'"'"'')
 case "$HELIUS_KEY" in http*) export SOLANA_RPC=$HELIUS_KEY; HELIUS_KEY= ;; *api-key=*) HELIUS_KEY=${HELIUS_KEY##*api-key=}; HELIUS_KEY=${HELIUS_KEY%%&*} ;; esac
+# until the Helius plan renews (Wed 2026-10-14 12:00 UTC; credits ran low 10-10) the whale radar uses the free public RPC
+[ "$(date -u +%s)" -lt "$(date -u -d 2026-10-14T12:00:00Z +%s)" ] && { HELIUS_KEY=; unset SOLANA_RPC; }
 export HELIUS_KEY
 # new code on GitHub (checked at most every 10 min, as this locked-down user): take it and exit; systemd starts the job again on it
 code() { [ $(( $(date +%s) - ${CHK:-0} )) -lt 600 ] && return; CHK=$(date +%s); local old; old=$(git -C $S rev-parse HEAD)
