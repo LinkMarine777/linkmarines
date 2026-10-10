@@ -41,7 +41,7 @@
     const steps = iOS
       ? `<p>Click on <b>${SHARE} Share</b></p><p>Then <b>${ADD} Add to Home Screen</b></p>`
       : `<p>Click on <b>${MENU} Menu</b></p><p>Then <b>${ADD} Add to Home screen</b></p>`;
-    return `<div class="app"><img src="/terminal/img/app-192.png" alt=""><h4>Install Terminal 7 App</h4><p>Optional: open it like an app from your home screen</p>${steps}`
+    return `<div class="app"><img src="/terminal/img/app-t7-192.png" alt=""><h4>Install Terminal 7 App</h4><p>Optional: open it like an app from your home screen</p>${steps}`
       + `${android ? `<button class="inst" id="wlInstall" type="button" style="${installEvt ? '' : 'display:none'}">INSTALL TERMINAL 7</button>` : ''}</div>`;
   }
   function show() {
