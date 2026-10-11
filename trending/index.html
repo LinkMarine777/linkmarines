@@ -294,13 +294,13 @@ function imgFb(i,rm){const a=i.closest('a[href*="ca="]'),m=a&&(/[?&]ca=([1-9A-HJ
 let ROWS=[],sortK='vol',sortD=-1,showAll=false,SC={};   // sortD -1: biggest (or newest) first
 
 // live quotes: the saved token list refreshes every 20 min, so price, 24h change, volume and market cap come straight from
-// DexScreener every minute for the busiest tokens (and $MARINE): the most liquid pair's price and market cap, volume summed
+// DexScreener every minute for every listed token (and $MARINE): the most liquid pair's price and market cap, volume summed
 // over all of a token's pairs. Laid over the saved list, so a reload of the list never shows older numbers.
 let LIVE={},liveAt=0;
 // DexScreener misprices some pools (BOP/BONK, MINECAT/ORE: $30-90M "volume" on $80K of liquidity), so its volume is used only
 // when it's within 5x of the saved one (stonkfun's or the Stonk Board's)
 function applyLive(){ROWS.forEach(r=>{const q=LIVE[r.mint];if(!q)return;r.price=q.price;if(q.chg!=null)r.chg=q.chg;if(q.vol)r.vol=r.vol0&&q.vol>5*r.vol0?r.vol0:q.vol;if(q.mcap)r.mcap=q.mcap;if(q.img&&r.mint!==MARINE)r.image=q.img})}   // DexScreener's logo: the project's current one
-async function loadQuotes(){const ms=[...new Set([MARINE,...ROWS.slice().sort((a,b)=>(b.vol||0)-(a.vol||0)).slice(0,59).map(r=>r.mint)])],next={};
+async function loadQuotes(){const ms=[...new Set([MARINE,...ROWS.slice().sort((a,b)=>(b.vol||0)-(a.vol||0)).slice(0,149).map(r=>r.mint)])],next={};   // every row (~105), 30 a call
   for(let i=0;i<ms.length;i+=30){try{const d=await j('https://api.dexscreener.com/tokens/v1/solana/'+ms.slice(i,i+30).join(','));
     (Array.isArray(d)?d:[]).forEach(p=>{const m=p.baseToken&&p.baseToken.address;if(!m||!ms.includes(m))return;const l=(p.liquidity||{}).usd||0,q=next[m]||(next[m]={l:-1,vol:0});
       q.vol+=(p.volume||{}).h24||0;if(!q.img&&p.info&&p.info.imageUrl)q.img=p.info.imageUrl;if(l>q.l){q.l=l;q.price=+p.priceUsd;q.chg=(p.priceChange||{}).h24;q.mcap=p.marketCap||p.fdv}})}catch(e){}}
