@@ -457,13 +457,14 @@ tfBar();
 
 // ---------- drawing tools: an icon panel on the left of the chart ----------
 const SV=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
-const DRAW=[['segment','Trend line',SV('<path d="M6 18L18 6"/><circle cx="5" cy="19" r="1.8"/><circle cx="19" cy="5" r="1.8"/>')],
+const DRAW=[
+  ['measure','Measure: % move and time',SV('<g transform="rotate(-35 12 12)"><rect x="2" y="8.5" width="20" height="7" rx="1"/><path d="M6 8.5v3M9 8.5v2M12 8.5v3M15 8.5v2M18 8.5v3"/></g>')],
+  ['segment','Trend line',SV('<path d="M6 18L18 6"/><circle cx="5" cy="19" r="1.8"/><circle cx="19" cy="5" r="1.8"/>')],
   ['rayLine','Ray',SV('<path d="M6 18L21 3"/><circle cx="5" cy="19" r="1.8"/>')],
   ['horizontalStraightLine','Horizontal line',SV('<path d="M2 12h20"/><circle cx="12" cy="12" r="1.8"/>')],
   ['parallelStraightLine','Parallel lines',SV('<path d="M3 14L14 3M10 21L21 10"/>')],
   ['priceChannelLine','Price channel',SV('<path d="M3 17L17 5M7 21L21 9"/><path d="M5 19L19 7" stroke-dasharray="2 2.5"/>')],
   ['fibT7','Fib retracement',SV('<path d="M3 4h18M3 9h18M3 13h18M3 20h18"/><path d="M6 20L18 4" stroke-dasharray="2 2.5"/>')],
-  ['measure','Measure: % move and time',SV('<path d="M4 20V4M4 20h16"/><path d="M8 16l9-9M13 7h4v4"/>')],
   ['path','Path',SV('<path d="M3 19l5-7 5 4 7-10"/><path d="M16 6h4v4"/>')],
   ['pitchfan','Pitchfan',SV('<path d="M4 20L21 4M4 20L21 11M4 20L13 3"/><circle cx="4" cy="20" r="1.6"/>')]];
 const ok=new Set(klinecharts.getSupportedOverlays());
