@@ -714,7 +714,7 @@ html.fit header img[src$="t7-mark.svg"]{width:60px;height:46px}
     </section>
     <section class="panel" id="swP">
       <div class="ph"><h2><span class="tkSym">$MARINE</span></h2><div class="tabs rtb"></div><span class="meta">routed by Jupiter</span><button class="x" id="swX" type="button" title="Close (back to the Stonk Board)">✕</button></div>
-      <div id="swT7w"></div>
+      <div id="swT7a"></div>
       <div id="jupSwap"><div class="ld">Loading Jupiter…</div></div>
       <div class="foot">Sent by Jupiter from your own wallet. We add no fee: you pay Jupiter's swap fee, the token's tax and network fees.
         Not financial advice. <a class="buyTk" href="#" target="_blank" rel="noopener">Open on jup.ag ↗</a></div>
@@ -1790,7 +1790,7 @@ if(/[?&]buy=tts\b/.test(location.search))(function tryOpen(n){try{openBuy('t')}c
 document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>openBuy(b.dataset.buy));
 ['1','2','3'].forEach(k=>$('slot'+k).onclick=e=>{if(e.target.closest('a'))return;if(!curAd(k))openBuy('a',k)});
 $('wBtn').onclick=()=>connectWallet(true);
-$('wOpenIn').onclick=e=>{e.preventDefault();$('wCancel').click();window.T7W?.openIn()};
+$('wOpenIn').onclick=e=>{e.preventDefault();$('wCancel').click();window.T7A?.openIn()};
 // ---------- MY ORDERS: every order paid from the connected wallet (receipts.json) ----------
 const ST={live:['✅ played on stream','ok'],approved:['✅ approved','ok'],pending:['⏳ waiting for a mod','wait'],underpaid:['⚠ came in short','bad']};
 // collapsible, newest first: 3 at a time, VIEW MORE for the rest
@@ -1823,7 +1823,7 @@ function loadSwap(){if(loadSwap.ok)return;loadSwap.ok=1;
   const fail=()=>{loadSwap.ok=0;$('jupSwap').innerHTML='<div class="ld">Jupiter\'s swap didn\'t load. <a href="https://jup.ag/tokens/'+CA+'" target="_blank" rel="noopener">Buy on jup.ag ↗</a></div>'};
   const sc=document.createElement('script');sc.src='https://plugin.jup.ag/plugin-v1.js';sc.onerror=fail;
   sc.onload=()=>{try{$('jupSwap').innerHTML='';
-    initSwap().catch(fail)}catch(e){fail()}};
+    initSwap()}catch(e){fail()}};
   document.head.appendChild(sc)}
 // Jupiter draws its form as a fixed 360×550 card inside its own shadow DOM: once it's there, let it fill the panel's width,
 // shrink to its content (no empty black block under the button), square-ish corners
@@ -1836,11 +1836,10 @@ function styleSwap(n=0){const h=[...document.querySelectorAll('#jupSwap *')].fin
   if(h.shadowRoot.getElementById('swCss'))return;
   const st=document.createElement('style');st.id='swCss';st.textContent=SW_CSS;h.shadowRoot.appendChild(st);
   setTimeout(fitSwap,300)}   // the widget just loaded: it's taller than the loading line, fit it again
-// ⚡ INSTANT TRADES (terminal/instant.js): when it's on, the widget gets the instant wallet through its passthrough
-async function initSwap(){const x=window.T7W?await T7W.props().catch(()=>({})):{};
-  window.Jupiter.init({displayMode:'integrated',integratedTargetId:'jupSwap',formProps:swForm(),onSuccess:()=>window.T7W?.refresh(),...x});styleSwap()}
-function mountT7w(){if(window.T7W)T7W.mount($('swT7w'),()=>{if(loadSwap.ok&&window.Jupiter)return initSwap()})}
-addEventListener('t7w-ready',()=>{if(!loadSwap.ok)return;mountT7w();if(window.Jupiter&&T7W.on())initSwap()});   // the swap opened before instant.js loaded
+function initSwap(){window.Jupiter.init({displayMode:'integrated',integratedTargetId:'jupSwap',formProps:swForm()});styleSwap()}
+// OPEN IN WALLET APP above the swap on a phone outside a wallet's browser (terminal/walletapp.js)
+function mountT7a(){if(window.T7A)T7A.mount($('swT7a'))}
+addEventListener('t7a-ready',()=>{if(loadSwap.ok)mountT7a()});   // the swap opened before walletapp.js loaded
 // a token with no Stonk Board data has no STONK BOARD tab to go back to (re-checked when the board's data lands)
 function sbTab(){rtabs()}
 // the right column, one panel at a time: STONK BOARD | TOKEN INFO | BUY/SELL (each only when the coin has it: not every coin is on
@@ -1853,7 +1852,7 @@ function rtabs(){const av={board:$('sbP').style.display!=='none',info:$('radarP'
 function rtab(v){if(v==='swap'){openSwap();return}RTV=v;RTU=true;closeSwap();rtabs()}
 window.rtab=rtab;window.rtabs=rtabs;
 document.addEventListener('click',e=>{const b=e.target.closest('.rtb button');if(b){e.stopPropagation();rtab(b.dataset.v)}});
-function openSwap(){loadSwap();mountT7w();const p=$('swP');sbTab();
+function openSwap(){loadSwap();mountT7a();const p=$('swP');sbTab();
   if(isPhone()){p.classList.add('open');$('swDim').classList.add('open');return}
   document.documentElement.classList.add('swOpen');rtabs();fitSwap()}
 // bring the swap into view on desktop with the token's info strip (payouts, pulse, price…) at the top of the screen and the
@@ -2093,7 +2092,7 @@ addEventListener('touchend',()=>{try{unlockAudio()}catch(e){}},{once:true});
 <script src="/terminal/search.js" defer></script>
 <script src="../launches/scan.js" defer></script>
 <script src="../launches/token-radar.js" defer></script>
-<script src="../terminal/instant.js" defer></script>
+<script src="../terminal/walletapp.js" defer></script>
 <script src="../launches/bubble.js" defer></script>
 <script src="../terminal/welcome.js" defer></script>
 </body>

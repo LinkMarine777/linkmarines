@@ -151,16 +151,15 @@ function openCoin(m) {
   let h = `<div class="top">${pic(r.i)}<div><b>${sy(r.s)}</b><small>${esc(r.n)} · ${sy(r.q)} pair · ${ago(r.c)} old</small></div><button class="x" type="button" data-act="close">✕</button></div>
     <div class="lrscan"><div style="margin-top:10px">${LRS.vd(r)}<button class="buyb" type="button" data-act="tobuy">BUY ↓</button></div>
     <h3>TOKEN INFO</h3>${LRS.tiles(r)}${LRS.funding(r)}
-    <h3>BUY ${sy(r.s)}</h3>${LRS.beforeBuy(r)}</div><div id="lr-t7w"></div><div id="lr-swap"><div class="ld">Loading Jupiter…</div></div>
+    <h3>BUY ${sy(r.s)}</h3>${LRS.beforeBuy(r)}</div><div id="lr-t7a"></div><div id="lr-swap"><div class="ld">Loading Jupiter…</div></div>
     <div class="lr-acts"><a class="btn primary" href="${tok(r.m)}">OPEN IN TERMINAL</a><a class="btn" href="https://jup.ag/tokens/${esc(r.m)}" target="_blank" rel="noopener">OPEN ON JUPITER</a>${r.vr ? `<a class="btn" href="https://verified.jup.ag/dashboard/${esc(r.m)}" target="_blank" rel="noopener">VRFD</a>` : ''}</div>`;
   $('drBox').innerHTML = h; DR.classList.add('on'); swap(r.m);
-  if (window.T7W) T7W.mount($('t7w'), () => swap(r.m));   // ⚡ INSTANT TRADES / OPEN IN WALLET APP (terminal/instant.js); a mode change re-draws the swap
+  if (window.T7A) T7A.mount($('t7a'));   // OPEN IN WALLET APP on a phone outside a wallet's browser (terminal/walletapp.js)
 }
 // ---------- BUY: Jupiter's swap widget in the panel, locked to the coin, SOL in (the same widget as the terminal's) ----------
 const SOL_MINT = 'So11111111111111111111111111111111111111112';
 function swap(m) {
-  const go = async () => { try { const box = $('swap'); if (!box) return; const x = window.T7W ? await T7W.props().catch(() => ({})) : {}; if (!$('swap')) return; $('swap').innerHTML = '';
-      window.Jupiter.init({ displayMode: 'integrated', integratedTargetId: 'lr-swap', formProps: { initialInputMint: SOL_MINT, initialOutputMint: m, fixedMint: m }, onSuccess: () => window.T7W?.refresh(), ...x }); styleSwap(); } catch (e) { fail(); } },
+  const go = () => { try { const box = $('swap'); if (!box) return; box.innerHTML = ''; window.Jupiter.init({ displayMode: 'integrated', integratedTargetId: 'lr-swap', formProps: { initialInputMint: SOL_MINT, initialOutputMint: m, fixedMint: m } }); styleSwap(); } catch (e) { fail(); } },
     fail = () => { const b = $('swap'); if (b) b.innerHTML = `<div class="ld">Jupiter's swap didn't load. <a href="https://jup.ag/tokens/${esc(m)}" target="_blank" rel="noopener">Buy on jup.ag ↗</a></div>`; };
   if (window.Jupiter) return go();
   if (swap.loading) return swap.loading.push(go); swap.loading = [go];
