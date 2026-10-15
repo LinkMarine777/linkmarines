@@ -19,4 +19,4 @@ alerts/
 # the data-jobs VPS scripts (vps/setup.sh)
 vps/
 # wc/: the source of terminal/wc/ (the built WalletConnect bundle), not served
-wc/
+/wc/
