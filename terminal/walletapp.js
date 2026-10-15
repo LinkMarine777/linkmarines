@@ -1,9 +1,10 @@
 // Wallet apps for Jupiter's swap widget (token page, launch radar), e.g. from the home-screen app, which can't get a wallet's
 // answer back through a link:
 // - Jupiter Mobile and WalletConnect in the swap's own wallet list (below): connect and approve in the wallet app over WalletConnect.
-// - OPEN IN WALLET APP (T7A.openIn(), from the token page's payment wallet picker): reopens this page in Phantom's, Solflare's
-//   or Backpack's browser (Jupiter Mobile has no link for it: copy the link, paste it in its browser).
-// The bar above the swap (T7A.mount) only shows the old instant-wallet note, when there is one.
+// - OPEN IN WALLET APP, the button above the swap on a phone that isn't already inside a wallet's browser (and T7A.openIn(), from
+//   the token page's payment wallet picker): reopens this page in Phantom's, Solflare's or Backpack's browser (Jupiter Mobile has
+//   no link for it: copy the link, paste it in its browser). The only way for Phantom and Solflare from the iPhone home-screen
+//   app: neither can be reached there over WalletConnect, and their own links answer back to Safari.
 // The site never makes or keeps a wallet key.
 // Pages: T7A.mount(el) draws the button in el; T7A.openIn() opens the chooser.
 (()=>{
@@ -87,7 +88,8 @@ const BARS=new Set();
 function mount(el){if(!el)return;el.classList.add('t7a');BARS.add(el);css();draw();if(phone()&&!inWallet())warm()}
 function draw(){const o=old()?.sk;
   for(const el of BARS){if(!el.isConnected){BARS.delete(el);continue}
-    el.innerHTML=(o?'<div class="t7a-note">⚠ The instant-wallet test left a wallet key on this device. <a href="#" data-t7a="old">Move it to your wallet app</a></div>':'')}}
+    el.innerHTML=(phone()&&!inWallet()?'<button type="button" data-t7a="openin">📱 OPEN IN PHANTOM · SOLFLARE · BACKPACK · JUPITER</button>':'')
+      +(o?'<div class="t7a-note">⚠ The instant-wallet test left a wallet key on this device. <a href="#" data-t7a="old">Move it to your wallet app</a></div>':'')}}
 let M=null;
 function modal(html){if(!M){M=document.createElement('div');M.id='t7aM';document.body.appendChild(M);M.addEventListener('click',e=>{if(e.target===M)close()})}
   M.innerHTML=`<div class="t7a-box"><button type="button" class="t7a-x" data-t7a="close" title="Close">✕</button>${html}</div>`;M.classList.add('show')}
@@ -99,11 +101,11 @@ function openIn(){const here=location.href,E=encodeURIComponent,ref=E(location.o
   const apps=[['Phantom',`https://phantom.app/ul/browse/${E(here)}?ref=${ref}`],['Solflare',`https://solflare.com/ul/v1/browse/${E(here)}?ref=${ref}`],
     ['Backpack',`https://backpack.app/ul/v1/browse/${E(here)}?ref=${ref}`]];
   modal(`<h3>OPEN IN WALLET APP</h3>
-  <p><b>Jupiter Mobile, Solflare and other WalletConnect wallets</b> don't need this: tap <b>Connect</b> in the swap and pick <b>Jupiter Mobile</b> or <b>WalletConnect</b>. Approve in the wallet app, then come back here.</p>
-  <p>Or open this page inside your wallet app's browser:</p>
+  <p>Opens this page inside your wallet app's browser, where the swap connects to it directly.</p>
   <div class="t7a-list">${apps.map(([n,u])=>`<a class="t7a-btn" href="${esc(u)}" target="_blank" rel="noopener">${n} ↗</a>`).join('')}
   <button type="button" class="t7a-btn" data-t7a="jupm">Jupiter Mobile · copy link</button></div>
   <div class="t7a-note" id="t7aJm" style="display:none"></div>
+  <p class="dim">Jupiter Mobile, Backpack, Trust, OKX and Magic Eden can also stay here: tap <b>Connect</b> in the swap, pick <b>Jupiter Mobile</b> or <b>WalletConnect</b>, approve in the wallet app and come back.</p>
   ${and?'<p class="dim">On Android you can also stay here: tap <b>Connect</b> in the swap and pick <b>Mobile Wallet Adapter</b>. It opens your installed wallet app and brings you back.</p>':''}
   <p class="dim">Fewer approvals: if your wallet has an auto-approve / auto-confirm setting for trusted sites, turn it on there after connecting.</p>`)}
 function oldKey(){const o=old();if(!o?.sk)return close();
