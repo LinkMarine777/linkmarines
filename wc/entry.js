@@ -36,6 +36,11 @@ export function init({ projectId, name, url, icon }) {
   kit.subscribeAccount(() => { const n = account(); if (n !== addr) { addr = n; subs.forEach(f => { try { f(addr) } catch (e) {} }) } }, 'solana')
 }
 export const address = () => addr || (kit && account())
+// AppKit's modal opened (true) / closed (false)
+export const onModal = f => kit.subscribeState(s => f(!!s.open))
+// get the wallet buttons ready ahead of a tap (walletapp.js preloads this on phones), so Jupiter Mobile opens at once
+const btnReady = () => btn.isReady() ? Promise.resolve() : new Promise(r => { const t = setTimeout(r, 8000); btn.subscribeIsReady(({ isReady }) => { if (isReady) { clearTimeout(t); r() } }) })
+export const warm = () => btnReady()
 export const onChange = f => { subs.add(f); return () => subs.delete(f) }
 
 // wait for an address; null if the visitor closes AppKit without connecting
@@ -53,8 +58,8 @@ function waitFor(ms) {
 export async function connect(wallet) {
   const a = account(); if (a) return a
   if (wallet) {
-    if (!btn.isReady()) await new Promise(r => { const t = setTimeout(r, 6000); btn.subscribeIsReady(({ isReady }) => { if (isReady) { clearTimeout(t); r() } }) })
-    btn.connect(wallet).catch(() => {})
+    await btnReady()
+    btn.connect(wallet).catch(() => kit.open({ view: 'Connect', namespace: 'solana' }))   // no button for it: the wallet list
   } else kit.open({ view: 'Connect', namespace: 'solana' })
   return waitFor(5 * 60e3)
 }

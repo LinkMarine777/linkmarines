@@ -19,9 +19,16 @@ const B58='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 function b58d(s){let n=0n;for(const c of s){const i=B58.indexOf(c);if(i<0)throw new Error('not base58');n=n*58n+BigInt(i)}
   const o=[];while(n>0n){o.unshift(Number(n%256n));n/=256n}for(const c of s){if(c!=='1')break;o.unshift(0)}return Uint8Array.from(o)}
 const b64=u8=>{let s='';for(const b of u8)s+=String.fromCharCode(b);return btoa(s)};
-let WC=null;
-async function wc(){if(!WC){WC=await import('/terminal/wc/entry.js');
-  WC.init({projectId:WC_ID,name:'Terminal 7',url:location.origin,icon:location.origin+'/terminal/img/app-t7-192.png'})}return WC}
+let WC=null,WCP=null;
+const wc=()=>WCP||(WCP=import('/terminal/wc/entry.js').then(m=>{
+  m.init({projectId:WC_ID,name:'Terminal 7',url:location.origin,icon:location.origin+'/terminal/img/app-t7-192.png'});return WC=m},e=>{WCP=null;throw e}));
+// preload on a phone outside a wallet's browser when the swap opens: the first tap would otherwise wait seconds on ~3 MB
+let warmed=false;
+function warm(){if(warmed)return;warmed=true;(window.requestIdleCallback||setTimeout)(()=>wc().then(m=>m.warm()).catch(()=>{warmed=false}),1500)}
+// "Opening Jupiter Mobile…" from the tap until AppKit's panel shows (or the error, if it can't)
+let TO=null;
+function toast(t,err){if(!TO){TO=document.createElement('div');TO.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:1001;max-width:calc(100vw - 32px);box-sizing:border-box;background:#0a0f1f;border:1px solid #ffd23f;color:#c9d3ee;font:12px/1.45 ui-monospace,monospace;padding:10px 14px;text-align:center';document.body.appendChild(TO)}
+  clearTimeout(TO._t);TO._t=0;TO.style.borderColor=err?'#ff3355':'#ffd23f';TO.textContent=t;TO.style.display=t?'':'none';if(err)TO._t=setTimeout(()=>toast(''),9000)}
 const FEAT=['solana:signTransaction','solana:signAndSendTransaction','solana:signMessage'];
 function wcWallet(name,icon,pick){
   const ls=new Set();let accts=[],unsub=null;
@@ -33,7 +40,11 @@ function wcWallet(name,icon,pick){
   return{version:'1.0.0',name,icon,chains:['solana:mainnet'],get accounts(){return accts},features:{
     'standard:connect':{version:'1.0.0',connect:async({silent}={})=>{
       if(silent){if(!mine())return{accounts:[]};const m=await wc();watch(m);set(await m.restore());return{accounts:accts}}
-      const m=await wc(),a=await m.connect(pick);if(!a)throw new Error('Connection cancelled');
+      toast('Opening '+name+'…');let m;
+      try{m=await wc()}catch(e){toast('Couldn\'t load '+name+': '+(e.message||e)+'. Check your connection and try again.',true);throw e}
+      const off=m.onModal(o=>{if(o)toast('')});let a;
+      try{a=await m.connect(pick)}catch(e){toast(name+': '+(e.message||e),true);throw e}finally{off&&off();if(TO&&!TO._t)toast('')}
+      if(!a)throw new Error('Connection cancelled');
       try{localStorage.setItem(WCK,name)}catch(e){}watch(m);set(a);return{accounts:accts}}},
     'standard:disconnect':{version:'1.0.0',disconnect:async()=>{try{localStorage.removeItem(WCK)}catch(e){}set(null);if(WC)await WC.disconnect()}},
     'standard:events':{version:'1.0.0',on:(ev,f)=>{if(ev!=='change')return()=>{};ls.add(f);return()=>ls.delete(f)}},
@@ -60,7 +71,7 @@ const inWallet=()=>!!(window.phantom?.solana||window.solflare||window.backpack||
 // what's in it to a wallet app and wipe it; nothing new is ever written
 const OLD='t7iw',old=()=>{try{return JSON.parse(localStorage.getItem(OLD)||'null')}catch(e){return null}};
 const BARS=new Set();
-function mount(el){if(!el)return;el.classList.add('t7a');BARS.add(el);css();draw()}
+function mount(el){if(!el)return;el.classList.add('t7a');BARS.add(el);css();draw();if(phone()&&!inWallet())warm()}
 function draw(){const o=old()?.sk;
   for(const el of BARS){if(!el.isConnected){BARS.delete(el);continue}
     el.innerHTML=(phone()&&!inWallet()?'<button type="button" data-t7a="openin">📱 OPEN IN WALLET APP</button>':'')
