@@ -1790,7 +1790,6 @@ if(/[?&]buy=tts\b/.test(location.search))(function tryOpen(n){try{openBuy('t')}c
 document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>openBuy(b.dataset.buy));
 ['1','2','3'].forEach(k=>$('slot'+k).onclick=e=>{if(e.target.closest('a'))return;if(!curAd(k))openBuy('a',k)});
 $('wBtn').onclick=()=>connectWallet(true);
-$('wOpenIn').onclick=e=>{e.preventDefault();$('wCancel').click();window.T7A?.openIn()};
 // ---------- MY ORDERS: every order paid from the connected wallet (receipts.json) ----------
 const ST={live:['✅ played on stream','ok'],approved:['✅ approved','ok'],pending:['⏳ waiting for a mod','wait'],underpaid:['⚠ came in short','bad']};
 // collapsible, newest first: 3 at a time, VIEW MORE for the rest
