@@ -11,7 +11,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 // ---------- Jupiter Mobile and WalletConnect in the swap's own wallet list ----------
 // Two Wallet Standard wallets Jupiter's widget lists next to the installed ones. Picking one loads terminal/wc/ (built from
 // wc/: Reown AppKit, what Jupiter's own mobile adapter uses): Jupiter Mobile opens the Jupiter app straight away (a QR code on a
-// computer), WalletConnect lists every wallet app that speaks it (Solflare, Trust, OKX…). The wallet app answers through
+// computer), WalletConnect lists every wallet app that speaks it (Backpack, Trust, OKX…; on a phone not Phantom or Solflare: no mobile link). The wallet app answers through
 // WalletConnect's relay, so it works from the home-screen app on an iPhone: approve in the wallet app, switch back. Swaps ask
 // the wallet app the same way (its own auto-approve setting applies). The site keeps only WalletConnect's session.
 // Not offered inside a wallet's own browser (its wallet is already there).
@@ -28,9 +28,21 @@ let warmed=false;
 function warm(){if(warmed)return;warmed=true;(window.requestIdleCallback||setTimeout)(()=>wc().then(m=>m.warm()).catch(()=>{warmed=false}),1500)}
 // "Opening Jupiter Mobile…" from the tap until AppKit's panel shows (or the error, if it can't)
 let TO=null;
-function toast(t,err){if(!TO){TO=document.createElement('div');TO.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:1001;max-width:calc(100vw - 32px);box-sizing:border-box;background:#0a0f1f;border:1px solid #ffd23f;color:#c9d3ee;font:12px/1.45 ui-monospace,monospace;padding:10px 14px;text-align:center';document.body.appendChild(TO)}
-  clearTimeout(TO._t);TO._t=0;TO.style.borderColor=err?'#ff3355':'#ffd23f';TO.textContent=t;TO.style.display=t?'':'none';if(err)TO._t=setTimeout(()=>toast(''),9000)}
+function toast(t,err,ms){if(!TO){TO=document.createElement('div');TO.title='Tap to close';TO.onclick=()=>toast('');TO.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:1001;max-width:calc(100vw - 32px);box-sizing:border-box;background:#0a0f1f;border:1px solid #ffd23f;color:#c9d3ee;font:12px/1.45 ui-monospace,monospace;padding:10px 14px;text-align:center';document.body.appendChild(TO)}
+  clearTimeout(TO._t);TO._t=0;TO.style.borderColor=err?'#ff3355':'#ffd23f';TO.textContent=t;TO.style.display=t?'':'none';if(err)TO._t=setTimeout(()=>toast(''),ms||9000)}
 const FEAT=['solana:signTransaction','solana:signAndSendTransaction','solana:signMessage'];
+// a swap signed in a wallet app that Jupiter turns down shows only "Swap Failed": show Jupiter's own answer (status, code, error)
+// and what the wallet did (how long it took, whether it changed the transaction), so the cause can be told apart
+const ULTRA={'-1':'the order expired before it was sent (took too long to approve?)','-2':'invalid signed transaction','-3':'the wallet changed the transaction (message bytes differ)',
+  '-1000':'it didn\'t land on-chain','-1001':'unknown error','-1002':'invalid transaction','-1003':'it wasn\'t fully signed','-1004':'too late: the block height passed (took too long to approve)',
+  '-2000':'it didn\'t land on-chain','-2001':'unknown error','-2002':'invalid payload','-2003':'the quote expired (took too long to approve)','-2004':'the market maker rejected the swap'};   // developers.jup.ag/docs/swap/order-and-execute
+const F0=window.fetch;
+window.fetch=async function(u,...r){const res=await F0.call(this,u,...r);
+  try{const url=typeof u==='string'?u:u?.url||'';if(WC&&WC.lastSign&&/ultra-api\.jup\.ag\/.*execute/.test(url))res.clone().json().then(d=>{
+    if(d&&d.status&&d.status!=='Success'){const s=WC.lastSign,c=d.code!=null?String(d.code):'';
+      toast('Jupiter turned the swap down: '+(ULTRA[c]||d.error||'no reason given')+(c?' (code '+c+')':'')+(d.error&&ULTRA[c]?' · '+d.error:'')
+        +' · wallet answered in '+Math.round(s.ms/1000)+'s'+(s.changed?' and CHANGED the transaction':''),true,30000)}}).catch(()=>{})}catch(e){}
+  return res};
 function wcWallet(name,icon,pick){
   const ls=new Set();let accts=[],unsub=null;
   const set=a=>{const n=a?[{address:a,publicKey:b58d(a),chains:['solana:mainnet'],features:FEAT}]:[];
