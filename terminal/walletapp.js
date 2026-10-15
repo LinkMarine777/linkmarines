@@ -78,13 +78,27 @@ const WCW=[wcWallet('Jupiter Mobile','data:image/png;base64,iVBORw0KGgoAAAANSUhE
 // switch back to the app and it finishes. Only on an iPhone/iPad outside a wallet's browser (elsewhere: the wallet's own
 // extension, Android's Mobile Wallet Adapter, or the wallet's in-app browser).
 const IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+// Reaching a wallet app from the home-screen app: there an https link to another site opens in a small in-app browser, and
+// iOS won't hand an app's universal link (phantom.app/ul/…, solflare.com/ul/…) over to the app from it: you just see the
+// wallet's website. So in the home-screen app: Phantom by its own phantom:// links (docs.phantom.com: phantom://<version>/
+// <method>, phantom://browse/…); the others through /wr/open, a page of this site with a button linking to the wallet's
+// universal link (a tap on a link to another site, which iOS does hand to the app). Every OPEN also offers the other way.
+// In Safari: the universal link as is.
+const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const PHU=/^https:\/\/phantom\.(app|com)\/ul\//;
+const hop=u=>location.origin+'/wr/open?to='+encodeURIComponent(u);
+const appLink=u=>!standalone()?u:PHU.test(u)?u.replace(PHU,'phantom://'):hop(u);
+const altLink=u=>!standalone()?'':PHU.test(u)?hop(u):u;
+const appA=(u,label,cls)=>{const l=appLink(u),alt=altLink(u);
+  return `<a class="t7a-btn ${cls||''}" href="${esc(l)}"${/^https?:/.test(l)?' target="_blank" rel="noopener"':''}>${label}</a>`
+    +(alt?`<a class="t7a-alt" href="${esc(alt)}" target="_blank" rel="noopener">didn't open? try this</a>`:'')};
 let DLP=null;
 const dl=()=>DLP||(DLP=import('/terminal/wc/dl.js').catch(e=>{DLP=null;throw e}));
 // the "open the wallet" sheet: a real link the visitor taps (iOS opens a wallet app only from a tap), until the answer is in
 function viaWallet(name,req,what){const tok={};
   modal(`<h3>${what==='connect'?'CONNECT '+esc(name).toUpperCase():'APPROVE IN '+esc(name).toUpperCase()}</h3>
   <p>1. Tap <b>OPEN ${esc(name).toUpperCase()}</b> and ${what==='connect'?'approve the connection':'approve the transaction'}.<br>2. ${esc(name)} then opens a page in Safari: <b>switch back to this app</b> and it finishes here.</p>
-  <div class="t7a-list"><a class="t7a-btn pri" href="${esc(req.url)}" target="_blank" rel="noopener">OPEN ${esc(name).toUpperCase()} ↗</a></div>
+  <div class="t7a-list">${appA(req.url,'OPEN '+esc(name).toUpperCase()+' ↗','pri')}</div>
   <div class="t7a-msg">Waiting for ${esc(name)}…</div>`);M._tok=tok;
   return DLM.answer(req.id,()=>!M.classList.contains('show')||M._tok!==tok).finally(()=>{if(M._tok===tok)close()})}
 let DLM=null;
@@ -137,7 +151,7 @@ function openIn(){const here=location.href,E=encodeURIComponent,ref=E(location.o
     ['Backpack',`https://backpack.app/ul/v1/browse/${E(here)}?ref=${ref}`]];
   modal(`<h3>OPEN IN WALLET APP</h3>
   <p>Opens this page inside your wallet app's browser, where the swap connects to it directly.</p>
-  <div class="t7a-list">${apps.map(([n,u])=>`<a class="t7a-btn" href="${esc(u)}" target="_blank" rel="noopener">${n} ↗</a>`).join('')}
+  <div class="t7a-list">${apps.map(([n,u])=>appA(u,n+' ↗')).join('')}
   <button type="button" class="t7a-btn" data-t7a="jupm">Jupiter Mobile · copy link</button></div>
   <div class="t7a-note" id="t7aJm" style="display:none"></div>
   <p class="dim">Jupiter Mobile, Backpack, Trust, OKX and Magic Eden can also stay here: tap <b>Connect</b> in the swap, pick <b>Jupiter Mobile</b> or <b>WalletConnect</b>, approve in the wallet app and come back.</p>
@@ -180,6 +194,7 @@ function css(){if(document.getElementById('t7aCss'))return;const s=document.crea
 .t7a-box p{margin:0 0 10px}.t7a-box .dim{color:var(--dim,#5d6a8f);font-size:11px}
 .t7a-box .t7a-x{position:absolute;top:10px;right:10px;width:30px;height:30px;padding:0}
 .t7a-box .bad{color:var(--red,#ff3355)}
+.t7a-alt{display:block;text-align:right;font-size:10px;margin:-2px 2px 4px;color:var(--dim,#5d6a8f)!important}
 .t7a-box .pri{border-color:var(--amber,#ffd23f);color:var(--amber,#ffd23f)}
 .t7a-list{display:grid;gap:6px;margin:8px 0}.t7a-acts{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
 .t7a-mono{display:block;font-family:ui-monospace,monospace;font-size:11px;word-break:break-all;background:var(--bg,#04060f);border:1px solid var(--line,#1a2444);padding:8px;margin:6px 0;user-select:all;-webkit-user-select:all}
