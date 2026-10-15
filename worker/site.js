@@ -30,8 +30,33 @@ function domains(req) {
   return null;
 }
 
+// Wallet relay (/wr/): Phantom and Solflare answer a connect or signing request by opening a link. On an iPhone that link
+// opens in Safari, never in the home-screen app, so it points here: /wr/back keeps the answer (still encrypted for the app's
+// own key: only the app can read it) for 10 minutes and tells the visitor to switch back; the app picks it up from /wr/get.
+// Held in this data center's cache (Safari and the app on the same phone reach the same one), read once.
+const WR_ID = /^[0-9a-f]{32}$/;
+async function walletRelay(req, u) {
+  const id = u.searchParams.get('s') || '', key = new Request(`https://${u.hostname}/__wr-cache/${id}`), cache = caches.default;
+  if (!WR_ID.test(id)) return new Response('bad id', { status: 400 });
+  if (u.pathname === '/wr/get') {
+    const hit = await cache.match(key);
+    if (!hit) return new Response(null, { status: 204, headers: { 'cache-control': 'no-store' } });
+    await cache.delete(key);
+    return new Response(await hit.text(), { headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+  }
+  const q = {}; for (const [k, v] of u.searchParams) if (k !== 's' && v.length < 6000) q[k] = v;
+  await cache.put(key, new Response(JSON.stringify(q), { headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=600' } }));
+  const ok = !q.errorCode, wallet = q.phantom_encryption_public_key ? 'Phantom' : q.solflare_encryption_public_key ? 'Solflare' : 'your wallet';
+  return new Response(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Back to Terminal 7</title>
+<style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#04060f;color:#c9d3ee;font:15px/1.5 ui-monospace,monospace;text-align:center;padding:24px;box-sizing:border-box}
+b{color:#ffd23f;font-size:20px;display:block;margin-bottom:10px}small{color:#5d6a8f;display:block;margin-top:14px}</style>
+<div><b>${ok ? '✅ Done' : '✖ ' + esc(q.errorMessage || 'Cancelled')}</b>${ok ? `Approved in ${esc(wallet)}.` : ''}<br>Now switch back to the <b style="display:inline;font-size:inherit">Terminal 7</b> app to finish.<small>You can close this tab.</small></div>`,
+    { headers: { 'content-type': 'text/html;charset=utf-8', 'cache-control': 'no-store' } });
+}
+
 export default {
   async fetch(req, env) {
+    { const u = new URL(req.url); if (u.pathname === '/wr/back' || u.pathname === '/wr/get') return walletRelay(req, u); }
     // the streamer alerts service (alerts/, its own Worker): every /alerts request goes to it, on both domains
     if (env.ALERTS && /^\/alerts(\/|$)/.test(new URL(req.url).pathname)) return env.ALERTS.fetch(req);
     try { const r = domains(req); if (r) return r; } catch (e) {}

@@ -1,16 +1,17 @@
 {
   "name": "t7-walletconnect",
   "private": true,
-  "description": "Builds terminal/wc/ (WalletConnect for Jupiter's swap: Jupiter Mobile and other wallet apps). Run: npm ci && npm run build, commit terminal/wc/.",
+  "description": "Builds terminal/wc/: entry.js (WalletConnect: Jupiter Mobile and other wallet apps) and dl.js (Phantom / Solflare deeplinks via the /wr/ relay). Run: npm ci && npm run build, commit terminal/wc/.",
   "type": "module",
   "scripts": {
-    "build": "rm -rf ../terminal/wc && esbuild entry.js --bundle --splitting --format=esm --minify --target=es2020 --outdir=../terminal/wc --chunk-names=c-[hash] --define:process.env.NODE_ENV='\"production\"' --define:global=globalThis --legal-comments=none"
+    "build": "rm -rf ../terminal/wc && esbuild entry.js dl.js --bundle --splitting --format=esm --minify --target=es2020 --outdir=../terminal/wc --chunk-names=c-[hash] --define:process.env.NODE_ENV='\"production\"' --define:global=globalThis --legal-comments=none"
   },
   "dependencies": {
     "@reown/appkit": "1.8.24",
     "@reown/appkit-adapter-solana": "1.8.24",
     "@reown/appkit-wallet-button": "1.8.24",
-    "@solana/web3.js": "1.98.0"
+    "@solana/web3.js": "1.98.0",
+    "tweetnacl": "1.0.3"
   },
   "devDependencies": {
     "esbuild": "0.25.10"
