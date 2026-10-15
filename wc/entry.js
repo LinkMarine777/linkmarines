@@ -9,15 +9,20 @@ import { solana } from '@reown/appkit/networks'
 import { createAppKitWalletButton } from '@reown/appkit-wallet-button'
 import { Transaction, VersionedTransaction } from '@solana/web3.js'
 
-// WalletConnect explorer ids (featured first in the "all wallets" list)
+// WalletConnect explorer ids: featured first in the "all wallets" list
 const IDS = {
   jupiter: '0ef262ca2a56b88d179c93a21383fee4e135bd7bc6680e5c2356ff8e38301037',
-  solflare: '1ca0bdd4747578705b1939af023d120677c64fe6ca76add81fda36e350605e79',
-  phantom: 'a797aa35c0fadbfc1a53e7f675162ed5226968b44a19ee3d24385c64d1d3c393',
   backpack: '2bd8c14e035c2d48f184aaa168559e86b0e3433228d3c4075900a221785019b0',
   trust: '4622a2b2d6af1c9844944291e5e7351a6aa24cd7b23099efac1b2fd875da31a0',
-  okx: '971e689d0a5be527bac79629b4ee9b925e82208e5168b733496a09c0faed0709'
+  okx: '971e689d0a5be527bac79629b4ee9b925e82208e5168b733496a09c0faed0709',
+  magiceden: '8b830a2b724a9c3fbab63af6f55ed29c9dfa8a55e732dc88c80a196a2ba136c6'
 }
+// no mobile link in WalletConnect's directory (Oct 2026): on a phone they only open their app, never get the request.
+// Hidden there; on a computer they stay (scan the QR code with them)
+const NO_MOBILE = ['1ca0bdd4747578705b1939af023d120677c64fe6ca76add81fda36e350605e79', 'a797aa35c0fadbfc1a53e7f675162ed5226968b44a19ee3d24385c64d1d3c393']   // Solflare, Phantom
+// WalletConnect only: AppKit would also list the browser's Wallet Standard wallets, including walletapp.js's own "Jupiter
+// Mobile" (shown as INSTALLED, and picking it would loop back here). Jupiter's own list already has the browser's wallets.
+class WalletConnectOnly extends SolanaAdapter { syncConnectors() {} }
 let kit = null, btn = null, addr = null
 const subs = new Set()
 const account = () => { const a = kit.getAccount('solana'); return a && a.isConnected && a.address ? a.address : null }
@@ -26,11 +31,11 @@ const provider = () => kit.getProvider ? kit.getProvider('solana') : kit.getWall
 export function init({ projectId, name, url, icon }) {
   if (kit) return
   kit = createAppKit({
-    adapters: [new SolanaAdapter({ wallets: [] })], networks: [solana], defaultNetwork: solana, projectId,
+    adapters: [new WalletConnectOnly({ wallets: [] })], networks: [solana], defaultNetwork: solana, projectId,
     metadata: { name, description: name, url, icons: [icon] },
     features: { analytics: false, email: false, socials: false, swaps: false, onramp: false, send: false, receive: false, history: false },
     enableInjected: false, enableCoinbase: false, enableWalletGuide: false,   // wallets in this browser: Jupiter's own list has them
-    featuredWalletIds: Object.values(IDS), themeMode: 'dark', themeVariables: { '--w3m-z-index': 1000 }
+    featuredWalletIds: Object.values(IDS), excludeWalletIds: matchMedia('(pointer:coarse)').matches ? NO_MOBILE : [], themeMode: 'dark', themeVariables: { '--w3m-z-index': 1000 }
   })
   btn = createAppKitWalletButton({ namespace: 'solana' })
   kit.subscribeAccount(() => { const n = account(); if (n !== addr) { addr = n; subs.forEach(f => { try { f(addr) } catch (e) {} }) } }, 'solana')
@@ -67,9 +72,16 @@ export async function restore() { await new Promise(r => setTimeout(r, 1200)); r
 export async function disconnect() { try { await kit.disconnect('solana') } catch (e) {} }
 const tx = b => { try { return VersionedTransaction.deserialize(b) } catch (e) { return Transaction.from(b) } }
 const bytes = t => t instanceof VersionedTransaction ? t.serialize() : t.serialize({ requireAllSignatures: false, verifySignatures: false })
+// lastSign: when the wallet answered, how long it took, and whether it changed the transaction (not just signed it):
+// walletapp.js shows it next to Jupiter's answer when a swap fails
+export let lastSign = null
+const msg = t => t instanceof VersionedTransaction ? t.message.serialize() : t.serializeMessage()
+const same = (a, b) => a.length === b.length && a.every((x, i) => x === b[i])
 export async function signTransaction(b) {
   const p = provider(); if (!p || !account()) throw new Error('Wallet not connected')
-  return bytes(await p.signTransaction(tx(b)))
+  const t0 = Date.now(), m0 = msg(tx(b)), signed = await p.signTransaction(tx(b))
+  lastSign = { ms: Date.now() - t0, changed: !same(m0, msg(signed)) }
+  return bytes(signed)
 }
 export async function signMessage(m) {
   const p = provider(); if (!p || !account()) throw new Error('Wallet not connected')
