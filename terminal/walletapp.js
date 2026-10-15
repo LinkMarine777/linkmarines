@@ -88,7 +88,7 @@ const BARS=new Set();
 function mount(el){if(!el)return;el.classList.add('t7a');BARS.add(el);css();draw();if(phone()&&!inWallet())warm()}
 function draw(){const o=old()?.sk;
   for(const el of BARS){if(!el.isConnected){BARS.delete(el);continue}
-    el.innerHTML=(phone()&&!inWallet()?'<button type="button" data-t7a="openin">📱 OPEN IN PHANTOM · SOLFLARE · BACKPACK · JUPITER</button>':'')
+    el.innerHTML=(phone()&&!inWallet()?'<button type="button" data-t7a="openin">📱 OPEN IN WALLET APP</button>':'')
       +(o?'<div class="t7a-note">⚠ The instant-wallet test left a wallet key on this device. <a href="#" data-t7a="old">Move it to your wallet app</a></div>':'')}}
 let M=null;
 function modal(html){if(!M){M=document.createElement('div');M.id='t7aM';document.body.appendChild(M);M.addEventListener('click',e=>{if(e.target===M)close()})}
@@ -118,6 +118,8 @@ function oldKey(){const o=old();if(!o?.sk)return close();
   <div class="t7a-acts"><button type="button" data-t7a="show">SHOW</button><button type="button" data-t7a="copy">COPY KEY</button><button type="button" class="bad" data-t7a="wipe">REMOVE FROM THIS DEVICE</button></div>
   <div class="t7a-msg"></div>`)}
 const msg=t=>{const e=M&&M.querySelector('.t7a-msg');if(e)e.textContent=t};
+// the payment wallet pickers' OPEN IN WALLET APP link (token page, stream, TTS checkout): close the picker, open the chooser
+document.addEventListener('click',e=>{if(!e.target.closest('#wOpenIn'))return;e.preventDefault();document.getElementById('wCancel')?.click();openIn()});
 document.addEventListener('click',async e=>{const t=e.target.closest('[data-t7a]');if(!t)return;
   if(t.tagName==='A'&&t.getAttribute('href')==='#')e.preventDefault();
   switch(t.dataset.t7a){

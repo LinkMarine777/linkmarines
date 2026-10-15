@@ -585,7 +585,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   <h3>CHOOSE A WALLET</h3>
   <div class="sb">Your call. We don't default you into anything.</div>
   <div id="wList"></div>
-  <div class="foot">On mobile, open themarines.link inside your wallet's browser, or use OPEN IN WALLET APP.
+  <div class="foot">On mobile, open themarines.link inside your wallet's browser: <a href="#" id="wOpenIn">OPEN IN WALLET APP</a>.
   <br><button class="btn" id="wCancel" style="margin-top:9px">CANCEL</button></div>
 </div></div>
 <div id="ttsPop" title="Click to close"><div class="from" id="ttsFrom"></div><div class="msg" id="ttsMsg"></div></div>
@@ -1701,5 +1701,7 @@ addEventListener('touchend',()=>{try{unlockAudio()}catch(e){}},{once:true});
     if(tag===null){tag=t;return}if(t!==tag){const go=()=>busy()?setTimeout(go,5000):location.reload();go()}}catch(e){}};
   chk();setInterval(chk,300e3)})();
 </script>
+<!-- Jupiter Mobile and WalletConnect in the wallet list (works from the iPhone home-screen app) + OPEN IN WALLET APP -->
+<script src="/terminal/walletapp.js" defer></script>
 </body>
 </html>

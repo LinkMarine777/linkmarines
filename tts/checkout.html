@@ -713,5 +713,15 @@ function closeCheckout(){if(window.opener)return window.close();   // closing go
 $('ttsClose').onclick=closeCheckout;$('ttsModal').onclick=e=>{if(e.target.id==='ttsModal')closeCheckout()};
 loadPay().then(()=>{loadAds();openBuy(['t','a','i'].includes(Q.get('k'))?Q.get('k'):'t',Q.get('slot')||undefined)});
 </script>
+<!-- the wallet picker (pickWallet) -->
+<div id="wModal"><div class="box">
+  <h3>CHOOSE A WALLET</h3>
+  <div class="sb">Your call. We don't default you into anything.</div>
+  <div id="wList"></div>
+  <div class="foot">On mobile, open themarines.link inside your wallet's browser: <a href="#" id="wOpenIn">OPEN IN WALLET APP</a>.
+  <br><button class="btn" id="wCancel" style="margin-top:9px">CANCEL</button></div>
+</div></div>
+<!-- Jupiter Mobile and WalletConnect in the wallet list (works from the iPhone home-screen app) + OPEN IN WALLET APP -->
+<script src="/terminal/walletapp.js" defer></script>
 </body>
 </html>
