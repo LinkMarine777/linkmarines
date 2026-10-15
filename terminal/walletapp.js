@@ -29,7 +29,7 @@ let warmed=false;
 function warm(){if(warmed)return;warmed=true;(window.requestIdleCallback||setTimeout)(()=>wc().then(m=>m.warm()).catch(()=>{warmed=false}),1500)}
 // "Opening Jupiter Mobile…" from the tap until AppKit's panel shows (or the error, if it can't)
 let TO=null;
-function toast(t,err,ms){if(!TO){TO=document.createElement('div');TO.title='Tap to close';TO.onclick=()=>toast('');TO.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:1001;max-width:calc(100vw - 32px);box-sizing:border-box;background:#0a0f1f;border:1px solid #ffd23f;color:#c9d3ee;font:12px/1.45 ui-monospace,monospace;padding:10px 14px;text-align:center';document.body.appendChild(TO)}
+function toast(t,err,ms){if(!TO){TO=document.createElement('div');TO.title='Tap to close';TO.onclick=()=>toast('');TO.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:1003;max-width:calc(100vw - 32px);box-sizing:border-box;background:#0a0f1f;border:1px solid #ffd23f;color:#c9d3ee;font:12px/1.45 ui-monospace,monospace;padding:10px 14px;text-align:center';document.body.appendChild(TO)}
   clearTimeout(TO._t);TO._t=0;TO.style.borderColor=err?'#ff3355':'#ffd23f';TO.textContent=t;TO.style.display=t?'':'none';if(err)TO._t=setTimeout(()=>toast(''),ms||9000)}
 const FEAT=['solana:signTransaction','solana:signAndSendTransaction','solana:signMessage'];
 // a swap signed in a wallet app that Jupiter turns down shows only "Swap Failed": show Jupiter's own answer (status, code, error)
@@ -57,15 +57,16 @@ function wcWallet(name,icon,pick){
       toast('Opening '+name+'…');let m;
       try{m=await wc()}catch(e){toast('Couldn\'t load '+name+': '+(e.message||e)+'. Check your connection and try again.',true);throw e}
       const off=m.onModal(o=>{if(o)toast('')});let a;
-      try{a=await m.connect(pick)}catch(e){toast(name+': '+(e.message||e),true);throw e}finally{off&&off();if(TO&&!TO._t)toast('')}
+      WC_NAME=pick?name:'';
+      try{a=await m.connect(pick)}catch(e){toast(name+': '+(e.message||e),true);throw e}finally{off&&off();if(TO&&!TO._t)toast('');closeApp()}
       if(!a)throw new Error('Connection cancelled');
       try{localStorage.setItem(WCK,name)}catch(e){}watch(m);set(a);return{accounts:accts}}},
     'standard:disconnect':{version:'1.0.0',disconnect:async()=>{try{localStorage.removeItem(WCK)}catch(e){}set(null);if(WC)await WC.disconnect()}},
     'standard:events':{version:'1.0.0',on:(ev,f)=>{if(ev!=='change')return()=>{};ls.add(f);return()=>ls.delete(f)}},
     'solana:signTransaction':{version:'1.0.0',supportedTransactionVersions:['legacy',0],signTransaction:async(...ins)=>{const m=await ready(),o=[];
-      for(const i of ins)o.push({signedTransaction:await m.signTransaction(i.transaction)});return o}},
+      WC_NAME=pick?name:'';try{for(const i of ins)o.push({signedTransaction:await m.signTransaction(i.transaction)})}finally{closeApp()}return o}},
     'solana:signAndSendTransaction':{version:'1.0.0',supportedTransactionVersions:['legacy',0],signAndSendTransaction:async(...ins)=>{const m=await ready(),o=[];
-      for(const i of ins){const st=await m.signTransaction(i.transaction);
+      for(const i of ins){WC_NAME=pick?name:'';let st;try{st=await m.signTransaction(i.transaction)}finally{closeApp()}
         const r=await(await fetch(RPC,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'sendTransaction',params:[b64(st),{encoding:'base64'}]})})).json();
         if(r.error)throw new Error(r.error.message);o.push({signature:b58d(r.result)})}return o}},
     'solana:signMessage':{version:'1.0.0',signMessage:async(...ins)=>{const m=await ready(),o=[];
@@ -92,6 +93,19 @@ const altLink=u=>!standalone()?'':PHU.test(u)?hop(u):u;
 const appA=(u,label,cls)=>{const l=appLink(u),alt=altLink(u);
   return `<a class="t7a-btn ${cls||''}" href="${esc(l)}"${/^https?:/.test(l)?' target="_blank" rel="noopener"':''}>${label}</a>`
     +(alt?`<a class="t7a-alt" href="${esc(alt)}" target="_blank" rel="noopener">didn't open? try this</a>`:'')};
+// WalletConnect (AppKit) opens a wallet app's own link (jupiter://wc?uri=…) with window.open(link,'_self'). In the home-screen
+// app that can land in the in-app browser, where an app link dies silently: send app links (any scheme but http(s)) to a
+// plain page navigation instead, which iOS hands to the app.
+// And because iOS lets an app link through for sure only from a tap, it also shows OPEN <WALLET>, a real link to tap (over
+// AppKit's panel), until the connect or the signing it was for is over. Covers connecting and every signing request.
+let WC_NAME='';
+function appSheet(link){const n=WC_NAME||((/^([a-z0-9]+):/i.exec(link)||[])[1]||'wallet').replace(/^./,c=>c.toUpperCase()),N=esc(n).toUpperCase();
+  modal(`<h3>OPEN ${N}</h3><p>Tap <b>OPEN ${N}</b>, approve in ${esc(n)}, then switch back to this app.</p>
+  <div class="t7a-list"><a class="t7a-btn pri" href="${esc(link)}">OPEN ${N} ↗</a></div>`);M._app=true;M.style.zIndex=1002}
+function closeApp(){if(M&&M._app){M._app=false;M.style.zIndex='';close()}}
+{const WO=window.open;window.open=function(u){try{const s=String(u||'');
+  if(/^[a-z][a-z0-9+.-]*:/i.test(s)&&!/^(https?|about|blob|data|javascript):/i.test(s)){appSheet(s);location.href=s;return null}}catch(e){}
+  return WO.apply(this,arguments)}}
 let DLP=null;
 const dl=()=>DLP||(DLP=import('/terminal/wc/dl.js').catch(e=>{DLP=null;throw e}));
 // the "open the wallet" sheet: a real link the visitor taps (iOS opens a wallet app only from a tap), until the answer is in
@@ -147,12 +161,14 @@ async function copy(t){try{await navigator.clipboard.writeText(t);return true}ca
   const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.appendChild(a);a.select();
   let ok=false;try{ok=document.execCommand('copy')}catch(_){}a.remove();return ok}}
 function openIn(){const here=location.href,E=encodeURIComponent,ref=E(location.origin),and=/android/i.test(navigator.userAgent);
+  const ca=new URLSearchParams(location.search).get('ca')||'',mint=/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(ca)?ca:'';   // a token page's coin
   const apps=[['Phantom',`https://phantom.app/ul/browse/${E(here)}?ref=${ref}`],['Solflare',`https://solflare.com/ul/v1/browse/${E(here)}?ref=${ref}`],
     ['Backpack',`https://backpack.app/ul/v1/browse/${E(here)}?ref=${ref}`]];
   modal(`<h3>OPEN IN WALLET APP</h3>
   <p>Opens this page inside your wallet app's browser, where the swap connects to it directly.</p>
   <div class="t7a-list">${apps.map(([n,u])=>appA(u,n+' ↗')).join('')}
-  <button type="button" class="t7a-btn" data-t7a="jupm">Jupiter Mobile · copy link</button></div>
+  ${mint?appA(`https://jup.ag/tokens/${mint}`,'Jupiter Mobile · trade this coin there ↗'):''}
+  <button type="button" class="t7a-btn" data-t7a="jupm">Jupiter Mobile · copy link (open it in its browser)</button></div>
   <div class="t7a-note" id="t7aJm" style="display:none"></div>
   <p class="dim">Jupiter Mobile, Backpack, Trust, OKX and Magic Eden can also stay here: tap <b>Connect</b> in the swap, pick <b>Jupiter Mobile</b> or <b>WalletConnect</b>, approve in the wallet app and come back.</p>
   ${and?'<p class="dim">On Android you can also stay here: tap <b>Connect</b> in the swap and pick <b>Mobile Wallet Adapter</b>. It opens your installed wallet app and brings you back.</p>':''}

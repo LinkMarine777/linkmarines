@@ -37,10 +37,10 @@ function domains(req) {
 const WR_ID = /^[0-9a-f]{32}$/;
 // /wr/open?to=<a wallet's universal link>: one button to it. From the home-screen app, a wallet's universal link opens in an
 // in-app browser that won't hand it to the app; a tap on a link to another site from a page does. Only these wallets' links.
-const WR_OPEN = { 'phantom.app': 'Phantom', 'phantom.com': 'Phantom', 'solflare.com': 'Solflare', 'backpack.app': 'Backpack' };
+const WR_OPEN = { 'phantom.app': 'Phantom', 'phantom.com': 'Phantom', 'solflare.com': 'Solflare', 'backpack.app': 'Backpack', 'jup.ag': 'Jupiter' };
 function walletOpen(u) {
   let to = null; try { to = new URL(u.searchParams.get('to') || ''); } catch (e) {}
-  const name = to && to.protocol === 'https:' && /^\/ul\//.test(to.pathname) && WR_OPEN[to.hostname];
+  const name = to && to.protocol === 'https:' && (to.hostname === 'jup.ag' ? /^\/tokens\/[1-9A-HJ-NP-Za-km-z]{32,44}$/ : /^\/ul\//).test(to.pathname) && WR_OPEN[to.hostname];   // jup.ag: the Jupiter app's /tokens/ links
   if (!name) return new Response('not a wallet link', { status: 400 });
   return new Response(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Open ${name}</title>
 <style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#04060f;color:#c9d3ee;font:15px/1.5 ui-monospace,monospace;text-align:center;padding:24px;box-sizing:border-box}
