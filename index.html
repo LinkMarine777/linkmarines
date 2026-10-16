@@ -2,8 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<script>/* terminal7.xyz is the terminal's own domain: arriving there opens trending; HQ links inside the site still show HQ */
-if(/(^|\.)terminal7\.xyz$/.test(location.hostname)&&!document.referrer.startsWith(location.origin))location.replace('/trending/'+location.search+location.hash)</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LINK MARINES · $MARINE · reflections paid in $LINK</title>
 <meta name="description" content="The first cult that was right. Hold $MARINE, get paid in $LINK. Semper Fidelity.">
@@ -327,16 +325,92 @@ if(/(^|\.)terminal7\.xyz$/.test(location.hostname)&&!document.referrer.startsWit
   footer .semper{font-family:'VT323',monospace;font-size:26px;color:var(--link-blue-bright);letter-spacing:3px}
   footer .links{margin:10px 0}
   footer .links a{margin:0 12px;text-transform:uppercase;letter-spacing:1px;font-size:12px}
+
+  /* ---------- Field Manual layout (owner 10-16: mockup C): HQ's own header, a compact hero, then eight chapters with a contents list ---------- */
+  .tape{position:static}
+  header.hq{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:14px;padding:8px 18px;background:rgba(4,6,15,.95);border-bottom:1px solid rgba(74,122,255,.3);backdrop-filter:blur(6px)}
+  header.hq .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;margin-right:auto;min-width:0}
+  header.hq .logo img{width:46px;height:46px;object-fit:contain;flex:none;filter:drop-shadow(0 0 10px rgba(74,122,255,.45))}
+  header.hq .logo span{font-family:'VT323',monospace;font-size:30px;line-height:.95;letter-spacing:1px;white-space:nowrap}
+  header.hq .logo small{display:block;font-size:15px;color:var(--link-blue-bright);letter-spacing:2px}
+  header.hq nav{display:flex;gap:8px;align-items:center}
+  .hb{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(74,122,255,.45);background:var(--panel);color:#dfe6ff;text-decoration:none;font-size:12px;letter-spacing:1px;padding:8px 12px;white-space:nowrap}
+  .hb:hover{border-color:var(--link-blue-bright);color:#fff}
+  .hb.live{border-color:#3ddc84;color:#3ddc84}.hb.buy{background:var(--link-blue);border-color:var(--link-blue);color:#fff;font-weight:700}
+  .hb.t7 img{width:24px;height:18px}.hb.t7{border-color:var(--link-blue-bright)}
+  .hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);column-gap:40px;align-items:center;text-align:left;padding:34px max(24px,calc((100% - 1240px)/2)) 26px}
+  .hero>*{grid-column:1}.hero .stamp{justify-self:start;margin-bottom:16px}
+  .hero h1{font-size:clamp(60px,8.4vw,128px)}
+  .hero p.sub{margin:14px 0 0;max-width:none}
+  .hero .ca,.hero .cta-row,.hero .tts-link,.hero br{grid-column:2}
+  .hero .ca{grid-row:1/span 2;align-self:end;margin:0;max-width:100%;justify-content:flex-start}
+  .hero .cta-row{grid-row:3/span 2;align-self:start;margin-top:14px;justify-content:flex-start;gap:8px}
+  .hero .cta-row a{min-width:0;padding:11px 16px;font-size:12.5px;letter-spacing:1.5px}
+  .hero .tts-link{justify-self:start;margin-top:8px}
+  .chips{display:none}
+  .manual{display:grid;grid-template-columns:230px minmax(0,1fr);max-width:1240px;margin:0 auto;padding:0 24px}
+  .toc{position:sticky;top:72px;align-self:start;padding:28px 18px 24px 0;border-right:1px solid rgba(74,122,255,.2);max-height:calc(100vh - 72px);overflow-y:auto}
+  .toc .fm{font-family:'Special Elite',monospace;font-size:11.5px;color:var(--red);letter-spacing:2px;line-height:1.5;border:2px solid var(--red);padding:7px 9px;margin-bottom:16px;text-transform:uppercase}
+  .toc ol{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+  .toc a{display:grid;grid-template-columns:28px minmax(0,1fr);padding:6px 8px;color:#9fb0e0;text-decoration:none;border-left:2px solid transparent;font-size:13px}
+  .toc a b{font-family:'VT323',monospace;font-size:22px;line-height:1;color:#5b6c9e;font-weight:400;grid-row:span 2}
+  .toc a span{font-size:10.5px;color:#5b6c9e}
+  .toc a:hover{color:#fff}.toc a.on{border-color:var(--amber);color:#fff;background:rgba(255,210,63,.05)}.toc a.on b{color:var(--amber)}
+  .tacts{display:grid;gap:6px;margin-top:18px}.tacts .hb{justify-content:center}
+  .manual main{min-width:0}
+  details.ch{border-bottom:1px solid rgba(74,122,255,.2);padding:40px 0 30px 34px}
+  details.ch>summary{list-style:none;display:flex;gap:16px;align-items:flex-start;margin-bottom:34px;cursor:default}
+  details.ch>summary::-webkit-details-marker{display:none}
+  details.ch .no{font-family:'VT323',monospace;font-size:80px;line-height:.75;color:var(--link-blue);flex:none;min-width:44px}
+  details.ch .tt{min-width:0}
+  details.ch .dossier{font-family:'Special Elite',monospace;font-size:12px;color:var(--red);letter-spacing:3px;text-transform:uppercase}
+  details.ch h3{font-family:'VT323',monospace;font-size:clamp(38px,5vw,60px);font-weight:400;color:#fff;text-transform:uppercase;line-height:1;margin-top:6px;text-wrap:balance}
+  details.ch h3 em{color:var(--link-blue-bright);font-style:normal}
+  details.ch .fold{display:none;margin-left:auto;font-family:'VT323',monospace;font-size:17px;color:var(--link-blue-bright);letter-spacing:1px;white-space:nowrap;align-self:center}
+  details.ch[open] .fold{display:none!important}
+  #creed .creed{padding:6px 0 10px}
+  .ss{font-family:'VT323',monospace;font-size:20px;color:var(--amber);letter-spacing:2px;text-transform:uppercase;margin:38px 0 10px}
+  .ch .holes{max-width:none;padding:0}.ch .holes-row{flex-wrap:wrap;width:auto;max-width:none;margin:0;padding:0 0 8px;overflow:visible;mask-image:none;-webkit-mask-image:none}
+  .armory.fold figure:nth-child(n+19){display:none}
+  .more{display:block;margin:6px auto 0;background:none;border:1px solid var(--link-blue-bright);color:#fff;font:inherit;font-size:12px;letter-spacing:2px;padding:10px 20px;cursor:pointer}
+  .more:hover{background:var(--link-blue)}
+  html{scroll-padding-top:80px}
+  @media(max-width:899px){
+    header.hq{padding:7px 10px;gap:8px}header.hq .logo img{width:38px;height:38px}header.hq .logo span{font-size:22px}header.hq .logo small{font-size:12px}
+    .hb{padding:8px 9px}.hb.live span,.hb.t7 span{display:none}
+    .hero{grid-template-columns:1fr;padding:22px 16px 18px}.hero>*,.hero .ca,.hero .cta-row,.hero .tts-link{grid-column:1;grid-row:auto}
+    .hero .ca{margin-top:16px}.hero .cta-row a{flex:1 1 40%;text-align:center;padding:11px 8px}
+    .chips{display:flex;gap:6px;position:sticky;top:54px;z-index:55;overflow-x:auto;padding:8px 12px;background:rgba(4,6,15,.96);border-bottom:1px solid rgba(74,122,255,.25);scrollbar-width:none}
+    .chips::-webkit-scrollbar{display:none}
+    .chips a{font-family:'VT323',monospace;font-size:16px;letter-spacing:1px;color:#9fb0e0;border:1px solid rgba(74,122,255,.3);padding:2px 10px;white-space:nowrap;text-decoration:none}
+    .chips a.on{color:#fff;border-color:var(--amber)}
+    .manual{grid-template-columns:1fr;padding:0 16px}.toc{display:none}
+    details.ch{padding:26px 0 18px}details.ch>summary{cursor:pointer;margin-bottom:20px;gap:12px}details.ch .no{font-size:54px;min-width:30px}
+    details.ch .fold{display:inline}details.ch:not([open])>summary{margin-bottom:0}
+    html{scroll-padding-top:100px}
+    .reflect{padding:28px 18px}
+    th,td{padding:9px 6px;font-size:12.5px}th{font-size:17px;letter-spacing:1px}td:first-child{white-space:normal}
+    .rank-flank aside{display:flex;gap:18px;overflow-x:auto;justify-content:flex-start;padding:16px 8px 10px;scrollbar-width:none;min-width:0}.rank-flank aside .field-photo{flex:0 0 62%;margin:0!important}
+    .hero br{display:none}.hero .tts-link{display:block}.hero .stamp{font-size:11px;letter-spacing:2px;white-space:nowrap}
+  }
+  @media(max-width:420px){header.hq .logo small{display:none}.hb.buy span{display:none}}
 </style>
-</head>
 <body>
 
+<header class="hq">
+  <a class="logo" href="/" title="Link Marines HQ"><img src="helmet.png" alt="Link Marines HQ"><span>LINK MARINES<small>HQ · $MARINE</small></span></a>
+  <nav>
+    <a class="hb live" href="/stream/">▶ <span>THE WAR ROOM</span></a>
+    <a class="hb buy" href="https://jup.ag/tokens/F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">BUY <span>$MARINE</span></a>
+    <a class="hb t7" href="https://terminal7.xyz/" title="Terminal 7: trending, launches, leaderboards, the forum"><img src="t7-mark.svg" alt=""><span>TERMINAL 7</span> ▸</a>
+  </nav>
+</header>
 <div class="tape"><div class="tape-inner">
   <span id="tape-a">5,591+ LINK PAID TO MARINES · MY LINKY STAYS SUPER STINKY · 1000 EOY · NOT SELLING · SERGEY IS A VISIONARY · GOD PROTOCOL · ORACLES RUN EVERYTHING · STINKY LINKIES AND PROUD · SEMPER FIDELITY · ACCUMULATE ·&nbsp;</span><span id="tape-b">5,591+ LINK PAID TO MARINES · MY LINKY STAYS SUPER STINKY · 1000 EOY · NOT SELLING · SERGEY IS A VISIONARY · GOD PROTOCOL · ORACLES RUN EVERYTHING · STINKY LINKIES AND PROUD · SEMPER FIDELITY · ACCUMULATE ·&nbsp;</span>
 </div></div>
 
 <div class="hero">
-  <div class="stamp">Declassified // Field Dossier 001</div>
+  <div class="stamp">Field Manual 7-77 // Declassified</div>
   <h1><span class="glitch" data-t="LINK MARINES">LINK MARINES</span></h1>
   <h2>$MARINE</h2>
   <p class="sub">
@@ -349,13 +423,13 @@ if(/(^|\.)terminal7\.xyz$/.test(location.hostname)&&!document.referrer.startsWit
   <div class="cta-row">
     <a class="primary" href="https://jup.ag/tokens/F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">Buy on Jupiter</a>
     <a class="terminal" href="/stream/">▶ The War Room</a>
-    <a href="/trending/">Terminal 7</a>
-    <a href="/terminal/token?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">Chart</a>
+    <a href="https://terminal7.xyz/">Terminal 7</a>
+    <a href="https://terminal7.xyz/terminal/token?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">Chart</a>
     <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener">X</a>
     <a class="warroom" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ War Room Chat</a>
   </div>
   <a class="tts-link" href="/tts/checkout?k=t" onclick="return wrCheckout('t')">📢 Put your message on The War Room stream (TTS)</a><br>
-  <a class="tts-link" href="/flywheel/">♻️ How $LINK rewards work: the flywheel ▸</a>
+  <a class="tts-link" href="https://terminal7.xyz/flywheel/">♻️ How $LINK rewards work: the flywheel ▸</a>
   <a class="tts-link" href="/bridge/">🌉 New to Solana? Learn how to bridge and buy $MARINE ▸</a>
 </div>
 
@@ -389,35 +463,55 @@ if(/(^|\.)terminal7\.xyz$/.test(location.hostname)&&!document.referrer.startsWit
     <a href="#armory"><img src="memes/tonight-poster.jpg" alt="tonight, the movie"></a>
   </div>
 </div>
-<div class="holes">
-  <span class="h-label">▸ declassified index — swipe, pick a rabbit hole</span>
-  <div class="holes-row">
-    <a href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ the war room</a>
-    <a href="https://warosu.org/biz/?task=search&ghost=false&search_text=stinky+linky" target="_blank" rel="noopener">my linky stays super stinky</a>
-    <a href="https://warosu.org/biz/thread/S7773242#p7777777" target="_blank" rel="noopener">the holy GET — No.7777777</a>
-    <a href="https://warosu.org/biz/thread/S5989877" target="_blank" rel="noopener">AB: DON'T SELL</a>
-    <a href="https://warosu.org/biz/?task=search&ghost=false&search_text=chainlink+god" target="_blank" rel="noopener">the chainlink god prophecies</a>
-    <a href="https://warosu.org/biz/?task=search&ghost=false&search_text=1000+eoy" target="_blank" rel="noopener">$1000 EOY</a>
-    <a href="https://warosu.org/biz/?task=search&ghost=false&search_text=big+mac+sergey" target="_blank" rel="noopener">sergey's big mac budget</a>
-    <a href="https://warosu.org/biz/?task=search&ghost=false&search_text=pivotal+tracker" target="_blank" rel="noopener">the pivotal tracker stakeout</a>
+
+<nav class="chips" aria-label="Chapters">
+  <a href="#reflections" class="on">§1 ENLIST</a>
+  <a href="#payroll">§2 PAYDAY</a>
+  <a href="#ranks">§3 RANK</a>
+  <a href="#lore">§4 HISTORY</a>
+  <a href="#threads">§5 INTELLIGENCE</a>
+  <a href="#footage">§6 FOOTAGE</a>
+  <a href="#armory">§7 ARMORY</a>
+  <a href="#creed">§8 THE CREED</a>
+</nav>
+<div class="manual">
+<aside class="toc" aria-label="Contents">
+  <div class="fm">Field Manual 7-77<br>The Link Marine</div>
+  <ol>
+    <li><a href="#reflections" class="on"><b>1</b>Enlist<span>how it works · first buy</span></a></li>
+    <li><a href="#payroll"><b>2</b>Payday<span>the live ledger</span></a></li>
+    <li><a href="#ranks"><b>3</b>Rank<span>reserve · active duty</span></a></li>
+    <li><a href="#lore"><b>4</b>History<span>2017 → now</span></a></li>
+    <li><a href="#threads"><b>5</b>Intelligence<span>threads · reading · holes</span></a></li>
+    <li><a href="#footage"><b>6</b>Footage<span>5 tapes</span></a></li>
+    <li><a href="#armory"><b>7</b>Armory<span>58 artifacts</span></a></li>
+    <li><a href="#creed"><b>8</b>The Creed<span>4 lines</span></a></li>
+  </ol>
+  <div class="tacts">
+    <a class="hb" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener" style="border-color:var(--amber);color:var(--amber)">⚔ War Room chat</a>
+    <a class="hb" href="https://x.com/TheMarinesX" target="_blank" rel="noopener">𝕏 @TheMarinesX</a>
+    <a class="hb" href="https://terminal7.xyz/">Terminal 7 ▸</a>
   </div>
-  <div class="holes-row">
-    <a href="https://research.chain.link/whitepaper-v1.pdf" target="_blank" rel="noopener">the scripture — whitepaper v1</a>
-    <a href="https://eprint.iacr.org/2016/168.pdf" target="_blank" rel="noopener">town crier — the cornell files</a>
-    <a href="https://cointelegraph.com/news/dubious-asset-manager-claims-to-short-chainlink-with-99-target" target="_blank" rel="noopener">"crypto's wirecard" — FUD op 2020</a>
-    <a href="https://www.oraclenovel.com" target="_blank" rel="noopener">the professor's novel</a>
-    <a href="https://www.bloomberg.com/news/articles/2020-08-17/-link-marines-are-making-an-obscure-cryptocurrency-red-hot" target="_blank" rel="noopener">bloomberg finds the basement</a>
-    <a href="https://warosu.org/biz/?task=search&ghost=false&search_text=chainlink" target="_blank" rel="noopener">nine years of breadcrumbs</a>
-    <a href="https://boards.4chan.org/biz/catalog" target="_blank" rel="noopener">the front line — live</a>
-    <a href="https://chainlinkme.me" target="_blank" rel="noopener">the cosmic archive</a>
+</aside>
+<main>
+<details class="ch" id="reflections" open>
+<summary><span class="no">1</span><span class="tt"><span class="dossier">Exhibit E // The Mechanism</span><h3>Reflections, paid in <em>$LINK</em></h3></span><span class="fold">OPEN ▾</span></summary>
+<div class="cb">
+  <div class="reflect">
+    <div class="big">Hold <em>$MARINE</em>.<br>Get paid <em>$LINK</em>.</div>
+    <p>every trade feeds the pool. the pool pays holders in <b>chainlink</b>, automatically. no staking. no claiming. no forms.</p>
+    <div class="steps">
+      <div class="step"><div class="n">01</div><h5>Enlist</h5><p>buy $MARINE on stonkfun. any amount. rank is earned, not bought.</p></div>
+      <div class="step"><div class="n">02</div><h5>Hold the line</h5><p>marines do not sell. you have trained your whole life for this step.</p></div>
+      <div class="step"><div class="n">03</div><h5>Collect</h5><p>$LINK reflections accumulate in your wallet while you sleep, post, and stack.</p></div>
+    </div>
+    <figure class="field-photo r" style="margin:34px auto 0"><img src="memes/goodnight-cube.jpg" alt="goodnight cube" loading="lazy"><figcaption>sleep well, marine. the payroll runs the night shift.</figcaption></figure>
   </div>
 </div>
-
-<section id="payroll">
-  <div class="sec-head">
-    <div class="dossier">Field Report // Payroll Ledger — Live</div>
-    <h3>LINK already paid to <em>marines</em></h3>
-  </div>
+</details>
+<details class="ch" id="payroll" open>
+<summary><span class="no">2</span><span class="tt"><span class="dossier">Field Report // Payroll Ledger — Live</span><h3>LINK already paid to <em>marines</em></h3></span><span class="fold">OPEN ▾</span></summary>
+<div class="cb">
   <div class="paygrid">
     <div class="paycard hero-stat">
       <div class="val" id="stat-link">5,591</div>
@@ -439,13 +533,61 @@ if(/(^|\.)terminal7\.xyz$/.test(location.hostname)&&!document.referrer.startsWit
     every cycle <b>market-buys real $LINK</b> and drops it in holders' wallets.<br>
     not a promise. a <span class="green">running ledger</span>. <b>block after block.</b>
   </p>
-</section>
+</div>
+</details>
+<details class="ch" id="ranks" open>
+<summary><span class="no">3</span><span class="tt"><span class="dossier">Exhibit D // Chain of Command</span><h3>Know your <em>rank</em></h3></span><span class="fold">OPEN ▾</span></summary>
+<div class="cb">
+  <div class="rank-flank">
+  <div class="tables">
+  <div class="corps-label">Reserve Corps // what you hold in $LINK</div>
+  <table>
+    <tr><th>Holding</th><th>Rank</th><th>Notes</th></tr>
+    <tr><td>&lt; 100 LINK</td><td>Boot</td><td>still explaining oracles to your barber</td></tr>
+    <tr><td>100+</td><td>Private</td><td>owns one plaid shirt</td></tr>
+    <tr><td>1,000+</td><td>Corporal</td><td>has screencapped at least one prophecy</td></tr>
+    <tr><td>5,000+</td><td>Sergeant</td><td>survived minus 90% without blinking</td></tr>
+    <tr><td>10,000+</td><td>Lieutenant</td><td>reads CCIP docs recreationally</td></tr>
+    <tr><td>25,000+</td><td>Captain</td><td>dreams in price feeds</td></tr>
+    <tr><td>50,000+</td><td>Colonel</td><td>was in the 2017 threads. has proof</td></tr>
+    <tr><td>100,000+</td><td>General</td><td>sergey knows your wallet by heart</td></tr>
+    <tr class="final-rank"><td>$MARINE holder</td><td>Paid Marine</td><td>the only rank that collects a salary — see active duty below</td></tr>
+  </table>
 
-<section id="lore">
-  <div class="sec-head">
-    <div class="dossier">Exhibit A // The Historical Record</div>
-    <h3>Nine years of being <em>early</em>,<br>not wrong</h3>
+  <div class="corps-label" style="margin-top:46px">Active Duty // what you hold in $MARINE</div>
+  <p class="corps-note">reserve rank is what you held for nine years. <b>active duty rank is what pays you.</b> reflections scale with your stack — every grade below outranks the last on payday. minimum ~$20 of $MARINE to draw a salary.</p>
+  <table>
+    <tr><th>Holding ($MARINE)</th><th>Paygrade</th><th>Notes</th></tr>
+    <tr><td>&lt; 250K</td><td>Stowaway</td><td>on the ship, not on the payroll. below the $20 line</td></tr>
+    <tr><td>250K+</td><td>Recruit</td><td>crossed the payroll line. first LINK deposit inbound</td></tr>
+    <tr><td>1M+</td><td>Lance Corporal</td><td>0.1% of the entire supply. salary noticeable</td></tr>
+    <tr><td>5M+</td><td>Staff Sergeant</td><td>reflections start covering the big mac budget</td></tr>
+    <tr><td>10M+</td><td>Gunnery Sergeant</td><td>1% of all $MARINE. the pool works for you now</td></tr>
+    <tr><td>25M+</td><td>Master Sergeant</td><td>every trade on the chart pays you personally</td></tr>
+    <tr><td>50M+</td><td>Sergeant Major</td><td>5% of supply. your LINK stack compounds itself</td></tr>
+    <tr class="final-rank"><td>100M+</td><td>Commandant</td><td>10% of everything. sergey-tier conviction. the payroll answers to you</td></tr>
+  </table>
   </div>
+  <aside>
+    <figure class="field-photo"><img src="memes/recruitment-poster.jpg" alt="uncle sergey wants you" loading="lazy"><figcaption>RECRUITMENT NOTICE — uncle sergey wants YOU on the payroll.</figcaption></figure>
+    <figure class="field-photo r" style="margin-top:34px"><img src="memes/rank-guide.jpg" alt="link marine rank guide" loading="lazy"><figcaption>DOC 004 — original rank guide, recovered from the archive. the tables at left supersede it.</figcaption></figure>
+    <figure class="field-photo" style="margin-top:34px"><img src="memes/ribbons-medals.jpg" alt="link marine ribbons and medals" loading="lazy"><figcaption>DOC 005 — authorized ribbons &amp; medals. ice cold holder ribbon awarded at -90%.</figcaption></figure>
+    <figure class="field-photo r" style="margin-top:34px"><img src="memes/saint-sergey.jpg" alt="saint sergey" loading="lazy"><figcaption>EVIDENCE 001 — the visionary. plaid shirt confirmed authentic.</figcaption></figure>
+  </aside>
+  </div>
+  <div class="mission" style="margin-top:44px">
+    <div class="order">Standing Order No. 1</div>
+    <h4>Rise up the <em>rankings</em></h4>
+    <p>
+      the mission was never the memecoin. the mission is the <b>rank table above</b>.
+      boot becomes private. private becomes corporal. <b>the payroll promotes you while you sleep.</b>
+    </p>
+  </div>
+</div>
+</details>
+<details class="ch" id="lore" open>
+<summary><span class="no">4</span><span class="tt"><span class="dossier">Exhibit A // The Historical Record</span><h3>Nine years of being <em>early</em>,<br>not wrong</h3></span><span class="fold">OPEN ▾</span></summary>
+<div class="cb">
   <div class="tl">
     <div class="tl-item">
       <div class="date">SEPT 2017</div>
@@ -499,13 +641,11 @@ if(/(^|\.)terminal7\.xyz$/.test(location.hostname)&&!document.referrer.startsWit
       <p><b>$MARINE.</b> a token by the faithful, for the faithful. hold it and reflections arrive in the one asset every marine swore never to sell. the bag that pays you in LINK for existing.</p>
     </div>
   </div>
-</section>
-
-<section id="threads">
-  <div class="sec-head">
-    <div class="dossier">Exhibit B // Recovered Threads</div>
-    <h3>From the <em>archives</em></h3>
-  </div>
+</div>
+</details>
+<details class="ch" id="threads" open>
+<summary><span class="no">5</span><span class="tt"><span class="dossier">Exhibit B // Recovered Threads</span><h3>From the <em>archives</em></h3></span><span class="fold">OPEN ▾</span></summary>
+<div class="cb">
 
   <div class="chan">
     <span class="stamp">Declassified</span>
@@ -568,13 +708,35 @@ if(/(^|\.)terminal7\.xyz$/.test(location.hostname)&&!document.referrer.startsWit
       <li><span class="d">SEP 2023</span><a href="https://blog.chain.link/chainlink-swift-ccip-institutional-blockchain-interoperability/" target="_blank" rel="noopener">SWIFT × Chainlink CCIP</a> — the 2017 breadcrumb, fully baked. the plaid shirt was right the whole time.</li>
     </ul>
   </div>
-</section>
-
-<section id="footage" class="wide">
-  <div class="sec-head">
-    <div class="dossier">Exhibit C // Field Footage — Recovered Reels</div>
-    <h3>Tapes from the <em>front</em></h3>
+  <div class="ss">§5.4 Declassified index — pick a rabbit hole</div>
+<div class="holes">
+  <span class="h-label">▸ declassified index — swipe, pick a rabbit hole</span>
+  <div class="holes-row">
+    <a href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ the war room</a>
+    <a href="https://warosu.org/biz/?task=search&ghost=false&search_text=stinky+linky" target="_blank" rel="noopener">my linky stays super stinky</a>
+    <a href="https://warosu.org/biz/thread/S7773242#p7777777" target="_blank" rel="noopener">the holy GET — No.7777777</a>
+    <a href="https://warosu.org/biz/thread/S5989877" target="_blank" rel="noopener">AB: DON'T SELL</a>
+    <a href="https://warosu.org/biz/?task=search&ghost=false&search_text=chainlink+god" target="_blank" rel="noopener">the chainlink god prophecies</a>
+    <a href="https://warosu.org/biz/?task=search&ghost=false&search_text=1000+eoy" target="_blank" rel="noopener">$1000 EOY</a>
+    <a href="https://warosu.org/biz/?task=search&ghost=false&search_text=big+mac+sergey" target="_blank" rel="noopener">sergey's big mac budget</a>
+    <a href="https://warosu.org/biz/?task=search&ghost=false&search_text=pivotal+tracker" target="_blank" rel="noopener">the pivotal tracker stakeout</a>
   </div>
+  <div class="holes-row">
+    <a href="https://research.chain.link/whitepaper-v1.pdf" target="_blank" rel="noopener">the scripture — whitepaper v1</a>
+    <a href="https://eprint.iacr.org/2016/168.pdf" target="_blank" rel="noopener">town crier — the cornell files</a>
+    <a href="https://cointelegraph.com/news/dubious-asset-manager-claims-to-short-chainlink-with-99-target" target="_blank" rel="noopener">"crypto's wirecard" — FUD op 2020</a>
+    <a href="https://www.oraclenovel.com" target="_blank" rel="noopener">the professor's novel</a>
+    <a href="https://www.bloomberg.com/news/articles/2020-08-17/-link-marines-are-making-an-obscure-cryptocurrency-red-hot" target="_blank" rel="noopener">bloomberg finds the basement</a>
+    <a href="https://warosu.org/biz/?task=search&ghost=false&search_text=chainlink" target="_blank" rel="noopener">nine years of breadcrumbs</a>
+    <a href="https://boards.4chan.org/biz/catalog" target="_blank" rel="noopener">the front line — live</a>
+    <a href="https://chainlinkme.me" target="_blank" rel="noopener">the cosmic archive</a>
+  </div>
+</div>
+</div>
+</details>
+<details class="ch" id="footage" open>
+<summary><span class="no">6</span><span class="tt"><span class="dossier">Exhibit C // Field Footage — Recovered Reels</span><h3>Tapes from the <em>front</em></h3></span><span class="fold">OPEN ▾</span></summary>
+<div class="cb">
   <div class="footage">
     <figure>
       <video controls preload="none" poster="videos/poster-drakelinked.jpg" src="videos/drakelinked.mp4"></video>
@@ -602,82 +764,11 @@ if(/(^|\.)terminal7\.xyz$/.test(location.hostname)&&!document.referrer.startsWit
       <a class="src" href="https://x.com/psychopompish/status/1863756108311179613" target="_blank" rel="noopener">▸ original transmission · @psychopompish</a>
     </figure>
   </div>
-</section>
-
-<section id="ranks">
-  <div class="sec-head">
-    <div class="dossier">Exhibit D // Chain of Command</div>
-    <h3>Know your <em>rank</em></h3>
-  </div>
-  <div class="rank-flank">
-  <div class="tables">
-  <div class="corps-label">Reserve Corps // what you hold in $LINK</div>
-  <table>
-    <tr><th>Holding</th><th>Rank</th><th>Notes</th></tr>
-    <tr><td>&lt; 100 LINK</td><td>Boot</td><td>still explaining oracles to your barber</td></tr>
-    <tr><td>100+</td><td>Private</td><td>owns one plaid shirt</td></tr>
-    <tr><td>1,000+</td><td>Corporal</td><td>has screencapped at least one prophecy</td></tr>
-    <tr><td>5,000+</td><td>Sergeant</td><td>survived minus 90% without blinking</td></tr>
-    <tr><td>10,000+</td><td>Lieutenant</td><td>reads CCIP docs recreationally</td></tr>
-    <tr><td>25,000+</td><td>Captain</td><td>dreams in price feeds</td></tr>
-    <tr><td>50,000+</td><td>Colonel</td><td>was in the 2017 threads. has proof</td></tr>
-    <tr><td>100,000+</td><td>General</td><td>sergey knows your wallet by heart</td></tr>
-    <tr class="final-rank"><td>$MARINE holder</td><td>Paid Marine</td><td>the only rank that collects a salary — see active duty below</td></tr>
-  </table>
-
-  <div class="corps-label" style="margin-top:46px">Active Duty // what you hold in $MARINE</div>
-  <p class="corps-note">reserve rank is what you held for nine years. <b>active duty rank is what pays you.</b> reflections scale with your stack — every grade below outranks the last on payday. minimum ~$20 of $MARINE to draw a salary.</p>
-  <table>
-    <tr><th>Holding ($MARINE)</th><th>Paygrade</th><th>Notes</th></tr>
-    <tr><td>&lt; 250K</td><td>Stowaway</td><td>on the ship, not on the payroll. below the $20 line</td></tr>
-    <tr><td>250K+</td><td>Recruit</td><td>crossed the payroll line. first LINK deposit inbound</td></tr>
-    <tr><td>1M+</td><td>Lance Corporal</td><td>0.1% of the entire supply. salary noticeable</td></tr>
-    <tr><td>5M+</td><td>Staff Sergeant</td><td>reflections start covering the big mac budget</td></tr>
-    <tr><td>10M+</td><td>Gunnery Sergeant</td><td>1% of all $MARINE. the pool works for you now</td></tr>
-    <tr><td>25M+</td><td>Master Sergeant</td><td>every trade on the chart pays you personally</td></tr>
-    <tr><td>50M+</td><td>Sergeant Major</td><td>5% of supply. your LINK stack compounds itself</td></tr>
-    <tr class="final-rank"><td>100M+</td><td>Commandant</td><td>10% of everything. sergey-tier conviction. the payroll answers to you</td></tr>
-  </table>
-  </div>
-  <aside>
-    <figure class="field-photo"><img src="memes/recruitment-poster.jpg" alt="uncle sergey wants you" loading="lazy"><figcaption>RECRUITMENT NOTICE — uncle sergey wants YOU on the payroll.</figcaption></figure>
-    <figure class="field-photo r" style="margin-top:34px"><img src="memes/rank-guide.jpg" alt="link marine rank guide" loading="lazy"><figcaption>DOC 004 — original rank guide, recovered from the archive. the tables at left supersede it.</figcaption></figure>
-    <figure class="field-photo" style="margin-top:34px"><img src="memes/ribbons-medals.jpg" alt="link marine ribbons and medals" loading="lazy"><figcaption>DOC 005 — authorized ribbons &amp; medals. ice cold holder ribbon awarded at -90%.</figcaption></figure>
-    <figure class="field-photo r" style="margin-top:34px"><img src="memes/saint-sergey.jpg" alt="saint sergey" loading="lazy"><figcaption>EVIDENCE 001 — the visionary. plaid shirt confirmed authentic.</figcaption></figure>
-  </aside>
-  </div>
-  <div class="mission" style="margin-top:44px">
-    <div class="order">Standing Order No. 1</div>
-    <h4>Rise up the <em>rankings</em></h4>
-    <p>
-      the mission was never the memecoin. the mission is the <b>rank table above</b>.
-      boot becomes private. private becomes corporal. <b>the payroll promotes you while you sleep.</b>
-    </p>
-  </div>
-</section>
-
-<section id="reflections">
-  <div class="sec-head">
-    <div class="dossier">Exhibit E // The Mechanism</div>
-    <h3>Reflections, paid in <em>$LINK</em></h3>
-  </div>
-  <div class="reflect">
-    <div class="big">Hold <em>$MARINE</em>.<br>Get paid <em>$LINK</em>.</div>
-    <p>every trade feeds the pool. the pool pays holders in <b>chainlink</b>, automatically. no staking. no claiming. no forms.</p>
-    <div class="steps">
-      <div class="step"><div class="n">01</div><h5>Enlist</h5><p>buy $MARINE on stonkfun. any amount. rank is earned, not bought.</p></div>
-      <div class="step"><div class="n">02</div><h5>Hold the line</h5><p>marines do not sell. you have trained your whole life for this step.</p></div>
-      <div class="step"><div class="n">03</div><h5>Collect</h5><p>$LINK reflections accumulate in your wallet while you sleep, post, and stack.</p></div>
-    </div>
-    <figure class="field-photo r" style="margin:34px auto 0"><img src="memes/goodnight-cube.jpg" alt="goodnight cube" loading="lazy"><figcaption>sleep well, marine. the payroll runs the night shift.</figcaption></figure>
-  </div>
-</section>
-
-<section id="armory" class="wide">
-  <div class="sec-head">
-    <div class="dossier">Exhibit F // The Armory — Recovered Artifacts, 2017–2021</div>
-    <h3>Nine years of <em>ammunition</em></h3>
-  </div>
+</div>
+</details>
+<details class="ch" id="armory" open>
+<summary><span class="no">7</span><span class="tt"><span class="dossier">Exhibit F // The Armory — Recovered Artifacts, 2017–2021</span><h3>Nine years of <em>ammunition</em></h3></span><span class="fold">OPEN ▾</span></summary>
+<div class="cb">
   <div class="corps-label" style="margin-bottom:18px">Recruitment Bureau // propaganda recovered from the front</div>
   <div class="armory" style="margin-bottom:56px">
     <figure><img src="memes/enlist-today.jpg" alt="enlist today, fourth industrial revolution" loading="lazy"><figcaption>&gt;enlist today. we have a place for you</figcaption></figure>
@@ -686,7 +777,7 @@ if(/(^|\.)terminal7\.xyz$/.test(location.hostname)&&!document.referrer.startsWit
     <figure><img src="memes/few-proud-linkmarines.jpg" alt="the few the proud the linkmarines" loading="lazy"><figcaption>&gt;the few. the proud. the linkmarines</figcaption></figure>
   </div>
   <div class="corps-label" style="margin-bottom:18px">General Armory // artifacts, 2017–2021</div>
-  <div class="armory">
+  <div class="armory fold" id="armoryAll">
     <figure><img src="memes/recruitment-poster.jpg" alt="recruitment poster" loading="lazy"><figcaption>&gt;uncle sergey wants you</figcaption></figure>
     <figure><img src="memes/7777777.jpg" alt="7777777" loading="lazy"><figcaption>&gt;the prophecy digits</figcaption></figure>
     <figure><img src="memes/saint-sergey.jpg" alt="saint sergey" loading="lazy"><figcaption>&gt;the visionary</figcaption></figure>
@@ -743,24 +834,31 @@ if(/(^|\.)terminal7\.xyz$/.test(location.hostname)&&!document.referrer.startsWit
     <figure><img src="memes/tonight-poster.jpg" alt="tonight, the movie" loading="lazy"><figcaption>&gt;chainlinked presents: TONIGHT</figcaption></figure>
   </div>
   <p class="armory-credit">additional artifacts recovered from <a href="https://chainlinkme.me" target="_blank" rel="noopener">chainlinkme.me</a> — the cosmic archive. 1,800+ memes by linkmarines, for chainlink.</p>
-</section>
-
-<section id="creed">
+  <button class="more" type="button" id="armoryMore">SHOW ALL 54 ▾</button>
+</div>
+</details>
+<details class="ch" id="creed" open>
+<summary><span class="no">8</span><span class="tt"><span class="dossier">Final Orders</span><h3>The <em>creed</em></h3></span><span class="fold">OPEN ▾</span></summary>
+<div class="cb">
   <div class="creed">
     <div class="line">a marine does not sell.</div>
     <div class="line blue">a marine accumulates.</div>
     <div class="line">a marine was never wrong.</div>
     <div class="line green">a marine was early.</div>
   </div>
-</section>
+</div>
+</details>
+</main>
+</div>
 
 <footer>
   <div class="semper">SEMPER FIDELITY</div>
   <div class="links">
     <a href="https://jup.ag/tokens/F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK" target="_blank" rel="noopener">Buy</a>
-    <a href="/terminal/token?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">Chart</a>
+    <a href="https://terminal7.xyz/terminal/token?ca=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK">Chart</a>
     <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener">X</a>
     <a href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">War Room</a>
+    <a href="https://terminal7.xyz/">Terminal 7</a>
   </div>
   <div>$MARINE is a meme token launched on stonkfun. not affiliated with chainlink labs. not financial advice. the only thing we guarantee is the memes.</div>
   <div>CA: F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK</div>
@@ -839,6 +937,25 @@ function copyCA(btn){
 <script>
 // the TTS / billboard checkout opens as its own window (wallet extensions connect normally there); falls back to the page
 function wrCheckout(k){location.href='/tts/checkout?k='+k;return false}   // the checkout is its own page (no pop-up window)
+</script>
+
+
+<script>
+// the manual: phones fold chapters 3-7 (the chip strip and any #link open one); the contents / chips mark where you are; the armory shows 18 until SHOW ALL
+(function(){
+  var CH=[].slice.call(document.querySelectorAll('details.ch')),small=matchMedia('(max-width:899px)');
+  if(small.matches)CH.forEach(function(d,i){if(i>=2&&i<=6)d.open=false});
+  document.querySelectorAll('details.ch>summary').forEach(function(s){s.addEventListener('click',function(e){if(!small.matches)e.preventDefault()})});   // desktop: chapters stay open
+  function go(id){var d=document.getElementById(id);if(!d)return;var c=d.closest('details.ch');if(c)c.open=true}
+  addEventListener('hashchange',function(){go(location.hash.slice(1))});if(location.hash)go(location.hash.slice(1));
+  document.addEventListener('click',function(e){var a=e.target.closest('a[href^="#"]');if(a)go(a.getAttribute('href').slice(1))});
+  var links=[].slice.call(document.querySelectorAll('.toc a,.chips a'));
+  if('IntersectionObserver' in window){var io=new IntersectionObserver(function(es){es.forEach(function(x){if(!x.isIntersecting)return;var id=x.target.id;
+    links.forEach(function(a){var on=a.getAttribute('href')==='#'+id;a.classList.toggle('on',on);if(on&&a.parentElement.classList.contains('chips'))a.parentElement.scrollLeft=a.offsetLeft-40})})},{rootMargin:'-30% 0px -60% 0px'});
+    CH.forEach(function(d){io.observe(d)})}
+  var all=document.getElementById('armoryAll'),more=document.getElementById('armoryMore');
+  if(more)more.onclick=function(){var f=all.classList.toggle('fold');more.textContent=f?'SHOW ALL 54 ▾':'SHOW FEWER ▴';if(f)document.getElementById('armory').scrollIntoView()};
+})();
 </script>
 </body>
 </html>
