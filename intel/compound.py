@@ -20,7 +20,10 @@ Helius credits (getProgramAccountsV2, 1 credit per 10,000 accounts; ~15-30K cred
     by the token itself; a pool sending tokens to / taking them from the wallet while another wallet pays is a router trade;
     a move between two people's wallets is not a trade). The history fill and backfill always read trades this way, from
     every account the wallet has for the token (not only the standard one; closed ones too).
-  added to the wallet's numbers for that day (UTC), kept 90 days.
+  added to the wallet's numbers for that day (UTC), kept 90 days. Coins that also pay holders in their own token (base payouts,
+    since ~09-23): each wallet's share of what the coin paid out in itself since the last run is taken off its balance growth
+    (it's not a buy; not counted as a reward either: the score's rewards are the reward token's). Trade-by-trade reads never
+    counted those payouts (a transfer from stonkfun's payout wallet isn't a trade).
 --history: every token's whole history since launch, read the cheap way (each wallet's token account + the 8 biggest
 wallets' reward accounts for the payout rounds; see history_fill), once; resumable, stops at a credit / time limit.
 --backfill ($MARINE + stonkfun's top 10 by market cap only): the last 7 days read exactly instead (each wallet's token account + reward-token account; payouts counted
@@ -36,7 +39,7 @@ Score per wallet over a window, counting from its first reward (the buy that got
 Token score: the wallets' scores weighted by how much they hold.
 Never prints the RPC URL.
 """
-import base64, bisect, calendar, json, math, os, re, struct, sys, time, urllib.request
+import base64, bisect, calendar, json, math, os, re, struct, sys, time, urllib.parse, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from statistics import median
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -148,6 +151,20 @@ def all_launches():
         if not d.get('launches') or len(d['launches']) < 1000 or (tp and p >= tp) or p >= 100: return out
         p += 1; time.sleep(0.3)
 G = all_launches()
+def base_dists():
+    """Coins that also pay holders in their OWN token (stonkfun's "base" payouts, since ~09-23; ~5.3K coins): tokens paid out so
+    far per coin. In the 6-hourly update a wallet's balance growing by its share of those isn't a buy. None if the list can't be read."""
+    out, cur = {}, None
+    try:
+        for _ in range(100):
+            d = get(f'{SF}/api/v2/rewards/launches?sort=recent&limit=100&asset=base' + ('&cursor=' + urllib.parse.quote(cur) if cur else ''))
+            for r in d.get('rows') or []: out[r['mint']] = float(r.get('distributedTokens') or 0)
+            cur = (d.get('page') or {}).get('nextCursor')
+            if len(d.get('rows') or []) < 100 or not cur: break
+            time.sleep(0.2)
+    except Exception as e: log('base payouts list', e); return None
+    return out
+BASE = base_dists()
 # a launch list far smaller than the last one saved (stonkfun's paging changed again, or it's down) replaces nothing
 _lp = len((load('compound/px/launches.json', {}) or {}).get('m') or {})
 if _lp >= 10000 and len(G) < _lp / 2:
@@ -670,17 +687,22 @@ for mint in watch:
             backfill(mint, quote, T, people, wallets[:BACKFILL_W], now - BACKFILL_DAYS * DAY); T['backfilled'] = now; T['since'] = now - BACKFILL_DAYS * DAY
         elif T.get('at') and T.get('bal') is not None:
             dD = max(dist - T.get('dist', dist), 0); E = (elig + T.get('elig', elig)) / 2 or 1
+            # the coin's own tokens it paid out since the last run (its base payouts): each wallet's share lands in its balance
+            # without a buy, so it's taken off the balance change (shared out like the reward token's payouts)
+            bd = (BASE or {}).get(mint); bD = max(bd - T['bdist'], 0) if bd is not None and T.get('bdist') is not None else 0
             for w in set(wallets) | set(T['bal']):
                 b0, b1 = T['bal'].get(w), people.get(w, 0)
                 if b0 is None: continue                               # new to the list: no earlier balance to compare
                 avg = (b0 + b1) / 2
                 R = dD * avg / E * qpx if avg * xpx >= minusd else 0
                 d = b1 - b0
+                if bD and avg * xpx >= minusd and d > 0: d = max(0.0, d - bD * avg / E)   # its share of the coin's own payouts isn't a buy
                 if TRADES and b0 > 0 and abs(d) * xpx >= 1 and CREDITS[0] < TRADES_BUDGET:
                     add(T, w, today, R=R)
                     for day, B_, S_ in swaps(mint, quote, T, w, T['at'], xpx, qpx): add(T, w, day, B=B_, S=S_)
                 else: add(T, w, today, R=R, B=max(d, 0) * xpx if b0 > 0 else 0, S=max(-d, 0) * xpx)
         T.setdefault('since', now)
+        if BASE is not None: T['bdist'] = BASE.get(mint, 0.0)   # (a list that couldn't be read keeps the last one)
         T.update({'at': now, 'dist': dist, 'elig': elig, 'sym': sym, 'qsym': qsym, 'v2': True,
                   'bal': {w: round(people.get(w, 0), 6) for w in wallets}})
         cut = today - KEEP_DAYS                                        # forget days past 90 and wallets with nothing left
