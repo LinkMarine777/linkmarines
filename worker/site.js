@@ -73,8 +73,6 @@ b{color:#ffd23f;font-size:20px;display:block;margin-bottom:10px}small{color:#5d6
 export default {
   async fetch(req, env) {
     { const u = new URL(req.url); if (u.pathname === '/wr/open') return walletOpen(u); if (u.pathname === '/wr/back' || u.pathname === '/wr/get') return walletRelay(req, u); }
-    // the streamer alerts service (alerts/, its own Worker): every /alerts request goes to it, on both domains
-    if (env.ALERTS && /^\/alerts(\/|$)/.test(new URL(req.url).pathname)) return env.ALERTS.fetch(req);
     try { const r = domains(req); if (r) return r; } catch (e) {}
     // a token's share card, from the bot but on this domain (X won't show preview images hosted on workers.dev)
     // (and a wallet's: /card/wallet/<address>.png, the token page's wallet window)
