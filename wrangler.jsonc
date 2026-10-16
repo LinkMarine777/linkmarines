@@ -18,7 +18,7 @@
   // the two domains (also set in the dashboard; listed here so a deploy keeps them) and their www names, which the worker
   // redirects to the bare domain (each www has a proxied CNAME to its domain in Cloudflare DNS)
   "routes": [
-    { "pattern": "terminal7.xyz", "custom_domain": true },
+    { "pattern": "v2.terminal7.xyz", "custom_domain": true },   // the old terminal since 10-16: terminal7.xyz is the "t7" Worker (Terminal 7 v3)
     { "pattern": "themarines.link", "custom_domain": true },
     { "pattern": "www.terminal7.xyz/*", "zone_name": "terminal7.xyz" },
     { "pattern": "www.themarines.link/*", "zone_name": "themarines.link" }

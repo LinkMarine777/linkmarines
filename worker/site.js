@@ -9,16 +9,19 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '
 // Two domains, one site: themarines.link is HQ (the homepage, bridge, memes...), terminal7.xyz is the terminal. Terminal pages
 // opened on themarines.link go to terminal7.xyz; the terminal's HQ links (href="/") go to themarines.link. The stream is served
 // on both as is (nothing pointing at it may break). Every other host (workers.dev, previews) is served unchanged.
-const HQ = 'themarines.link', T7 = 'terminal7.xyz';
+const HQ = 'themarines.link', T7 = 'terminal7.xyz', V2 = 'v2.terminal7.xyz';
+// since 10-16 terminal7.xyz is Terminal 7 v3 (its own Worker, "t7"); this one is the old terminal at v2.terminal7.xyz, and v3
+// hands it the pages it doesn't have (the stream, the bridge, TTS...) on terminal7.xyz itself. HQ's terminal links go to v3.
+const isT7 = h => h === T7 || h === V2;
 const TERMINAL = /^\/(trending|launches|terminal|terminal2|terminal1\.1|flywheel|wallet)(\/|\.html|$)/;
 function domains(req) {
   const u = new URL(req.url), host = u.hostname.replace(/^www\./, '');
   if (u.hostname === 'www.' + HQ || u.hostname === 'www.' + T7) return Response.redirect(`https://${host}${u.pathname}${u.search}`, 301);   // www -> the bare domain
   if (host === HQ && TERMINAL.test(u.pathname)) return Response.redirect(`https://${T7}${u.pathname}${u.search}`, 302);
-  if (host === T7 && (u.pathname === '/' || u.pathname === '/index.html')) {
+  if (isT7(host) && (u.pathname === '/' || u.pathname === '/index.html')) {
     // typed in / shared: the terminal (trending); clicked from inside the terminal (its HQ links): HQ
     let from = ''; try { from = new URL(req.headers.get('referer') || '').hostname.replace(/^www\./, ''); } catch (e) {}
-    return Response.redirect(from === T7 ? `https://${HQ}/` : `https://${u.hostname}/trending/${u.search}`, 302);
+    return Response.redirect(isT7(from) ? `https://${HQ}/` : `https://${u.hostname}/trending/${u.search}`, 302);
   }
   // the old /terminal/ and /terminal2/ addresses: a real redirect (the pages only moved in the browser, so link previews of
   // old shared links came out blank): a token link to its token page, anything else to the stream / trending
