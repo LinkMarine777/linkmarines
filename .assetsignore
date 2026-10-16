@@ -20,3 +20,4 @@ alerts/
 vps/
 # wc/: the source of terminal/wc/ (the built WalletConnect bundle), not served
 /wc/
+promo-kit
