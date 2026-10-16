@@ -93,9 +93,8 @@ const altLink=u=>!standalone()?'':PHU.test(u)?hop(u):u;
 const appA=(u,label,cls)=>{const l=appLink(u),alt=altLink(u);
   return `<a class="t7a-btn ${cls||''}" href="${esc(l)}"${/^https?:/.test(l)?' target="_blank" rel="noopener"':''}>${label}</a>`
     +(alt?`<a class="t7a-alt" href="${esc(alt)}" target="_blank" rel="noopener">didn't open? try this</a>`:'')};
-// WalletConnect (AppKit) opens a wallet app's own link (jupiter://wc?uri=…) with window.open(link,'_self'). In the home-screen
-// app that can land in the in-app browser, where an app link dies silently: send app links (any scheme but http(s)) to a
-// plain page navigation instead, which iOS hands to the app.
+// WalletConnect (AppKit) opens a wallet app's own link (jupiter://wc?uri=…) with window.open(link,'_self'): kept as is (that
+// is what switched to Jupiter from the home-screen app; a location.href instead did not).
 // And because iOS lets an app link through for sure only from a tap, it also shows OPEN <WALLET>, a real link to tap (over
 // AppKit's panel), until the connect or the signing it was for is over. Covers connecting and every signing request.
 let WC_NAME='';
@@ -104,7 +103,7 @@ function appSheet(link){const n=WC_NAME||((/^([a-z0-9]+):/i.exec(link)||[])[1]||
   <div class="t7a-list"><a class="t7a-btn pri" href="${esc(link)}">OPEN ${N} ↗</a></div>`);M._app=true;M.style.zIndex=1002}
 function closeApp(){if(M&&M._app){M._app=false;M.style.zIndex='';close()}}
 {const WO=window.open;window.open=function(u){try{const s=String(u||'');
-  if(/^[a-z][a-z0-9+.-]*:/i.test(s)&&!/^(https?|about|blob|data|javascript):/i.test(s)){appSheet(s);location.href=s;return null}}catch(e){}
+  if(/^[a-z][a-z0-9+.-]*:/i.test(s)&&!/^(https?|about|blob|data|javascript):/i.test(s)){appSheet(s);return WO.apply(this,arguments)}}catch(e){}
   return WO.apply(this,arguments)}}
 let DLP=null;
 const dl=()=>DLP||(DLP=import('/terminal/wc/dl.js').catch(e=>{DLP=null;throw e}));
