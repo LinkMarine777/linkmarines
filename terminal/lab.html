@@ -475,6 +475,20 @@ $('draw').innerHTML=DRAW.filter(([n])=>ok.has(n)).map(([n,l,ic])=>`<button type=
   +'<button type="button" id="clr" title="Remove every drawing" aria-label="Remove every drawing">'+SV('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>')+'</button>';
 const drawOpen=o=>{setTimeout(()=>chart.resize(),170);document.querySelector('.body').classList.toggle('drawOpen',o);$('drawTog').setAttribute('aria-expanded',o);$('drawTog').setAttribute('aria-label',(o?'Hide':'Show')+' the drawing tools')};
 $('drawTog').onclick=()=>drawOpen(!document.querySelector('.body').classList.contains('drawOpen'));
+// phones: a vertical swipe on the chart scrolls the page (the token page around this frame), a sideways drag pans the chart, two
+// fingers zoom it. KLineChart takes every drag (touch-action:none + preventDefault on touchmove): until the finger has moved
+// 6px the chart doesn't see the move; then a mostly vertical one never reaches it, so the browser scrolls (pan-y), else it does.
+// Not while a drawing tool is on (drawing needs vertical drags). Owner 10-16: people couldn't scroll a token page on phones.
+if(matchMedia('(pointer:coarse)').matches){const ch=$('chart'),st=document.createElement('style');
+  st.textContent='#chart>div{touch-action:pan-y!important}';document.head.appendChild(st);
+  let x0=0,y0=0,mode=null;
+  ch.addEventListener('touchstart',e=>{mode=e.touches.length>1||document.querySelector('#draw button.on[data-o]')?'chart':null;x0=e.touches[0].clientX;y0=e.touches[0].clientY},{capture:true,passive:true});
+  ch.addEventListener('touchmove',e=>{
+    if(e.touches.length>1)mode='chart';
+    if(mode==='chart')return;
+    if(!mode){const dx=Math.abs(e.touches[0].clientX-x0),dy=Math.abs(e.touches[0].clientY-y0);if(Math.max(dx,dy)<6){e.stopImmediatePropagation();return}mode=dy>dx?'page':'chart';if(mode==='chart')return}
+    e.stopImmediatePropagation();   // 'page': the chart never sees it, the browser scrolls
+  },{capture:true,passive:true})}
 {const cw=document.querySelector('.cw');let t;cw.addEventListener('touchstart',()=>{cw.classList.add('zshow');clearTimeout(t);t=setTimeout(()=>cw.classList.remove('zshow'),3000)},{passive:true})}
 // finishes a path being drawn: its clicked points (not the one following the pointer, nor a double-click's repeat)
 function pathDone(){const o=chart.getOverlays().find(x=>x.name==='path'&&x.currentStep!==-1);if(!o)return false;pathDone.at=Date.now();
