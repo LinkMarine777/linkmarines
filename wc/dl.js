@@ -55,6 +55,16 @@ export function signRequest(name, txBytes) {
     finish(p) { return b58d(open(s, s.wk, p).transaction) }
   }
 }
+// a message signature (sign-in): returns the 64-byte signature
+export function messageRequest(name, msgBytes) {
+  const w = WALLETS[name], s = all()[name]; if (!s) throw new Error(name + ' is not connected')
+  const id = relayId(), nonce = nacl.randomBytes(24)
+  const payload = nacl.box.after(enc.encode(JSON.stringify({ message: b58e(msgBytes), session: s.session, display: 'utf8' })), nonce, shared(s, s.wk))
+  return {
+    id, url: w.base + 'signMessage?' + q({ dapp_encryption_public_key: b58e(nacl.box.keyPair.fromSecretKey(b58d(s.sk)).publicKey), nonce: b58e(nonce), redirect_link: back(id), payload: b58e(payload) }),
+    finish(p) { return b58d(open(s, s.wk, p).signature) }
+  }
+}
 // the wallet's answer from the relay: polls (and at once when the app comes back to the front); stop() gives up
 export function answer(id, stopped) {
   return new Promise((res, rej) => {
