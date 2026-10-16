@@ -17,28 +17,20 @@ Alerts (each fires once):
   newpair   stonkfun's pair list gains a quote token: coins can launch against it now
   launch    a launch from the last 24 h scores REAL (below), the first time it does
 
-The REAL score (0-100) of each launch from the last 24 h that trades ($2,500+ volume or graduated):
-  organic buyers 25  Jupiter's distinct organic buyers in 24 h (bots and wash wallets filtered out by Jupiter)
-  fee-backed     20  what the coin paid its holders divided by its tax rate, against the volume it reports. A taxed
-                     trade always pays: real trading comes out near 1.0, washed volume far below (farms 0.15-0.45)
-  bundles        15  held now: the bigger of what bundlers hold (Jupiter's Bundlers H.) and linked holders (top 100 holders
-                     funded by one private wallet: not an exchange or a service that funds wallets across many coins)
-  dev            15  the deployer's lifetime record (Jupiter's 👑 graduated / coins launched, this coin left out):
-                     1 in 5 graduated = 15, a serial launcher (5+ coins, under 1 in 20 graduated) = 0; 2,000+ coins is
-                     a launch tool's wallet (shared by many people): neutral
-  holders        10  Jupiter's holder count
-  top 10          5  the top 10 holders' share (less is better)
-  organic vol     5  Jupiter's organic share of the volume
-  fees / trade    5  priority fees + tips traders paid per trade (Jupiter's Fees Paid). Farm bots pay to land their
-                     bundles: farms measured 2.3-5 mSOL a trade, real coins 0.7-2.7
-plus what the price did (price_score, -40 to +5): the drop from the peak weighted by how fast it fell, -10 for a pump and
-dump (peaked within an hour, lost half within the next), up to +5 for a steady climb; minus up to 10 when bundlers held
-10%+ at their peak and have sold most of it (sold into the pump)
-REAL 60+ (not bundled: 20%+ bundled or linked caps it at WATCH; not dumped: 85%+ below a $20K+ peak does too), WATCH 35+,
-FARM = $20,000+ volume the fees don't back up (under 0.45, with under 20 organic buyers or 60 holders; with no payouts to check: under 5 organic buyers),
-THIN otherwise.
+The REAL score (0-100) of each launch from the last 24 h that trades ($2,500+ volume or graduated), see real_score():
+time-weighted and selective (owner 10-16): real buyers (Jupiter's organic buyers), staying power (buyers still coming in the
+last 6 h / hour for the coin's age, the holder count's trend), how long the average coin is held (market cap over the hour's
+selling), size (market cap, liquidity), holders, fee-backed volume, spread (bundles, top 10), the dev's record, fees per
+trade; plus what the price did (a drop from the peak and how fast, a pump and dump, a recovery, a steady climb) and bundlers
+selling into the pump. Coins under $5K or 10 holders score 20 at most, under $8K or 30 holders 40.
+REAL only when every bar is cleared: score 65+, $20K+ market cap, 100+ holders, 25+ organic buyers a day, buyers in the last
+6 h, held 2 h+ on average, an hour old, under 15% bundled, not dumped (80%+ below a $20K+ peak). WATCH 45+ with $8K+, 30+
+holders and 8+ organic buyers. FARM = $20,000+ volume the fees don't back up (under 0.45, with under 20 organic buyers or 60
+holders; with no payouts to check: under 5 organic buyers, or coins held under 30 min on average with under 20). THIN otherwise.
+The site (launches/scan.js) has the same function for any coin's token page: keep the two identical.
 """
 import calendar, json, math, os, re, sys, time, urllib.request
+def clamp(v): return max(0.0, min(1.0, v))
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else 'terminal'
 SF = 'https://www.stonkfun.xyz'
@@ -336,16 +328,64 @@ def chart(m, created):
 
 
 def price_score(dd, pa):
-    """What the price did, -40 to +5. crash: up to -30 for the drop from the peak (none to 40% off, all at 90% off), weighted
-    by how fast it fell (under half the peak within an hour: all of it; after 12 h or more: 60%). spike: -10 when it peaked
-    within an hour of launch and lost half within an hour of the peak, ending 70%+ down (a pump and dump). steady: up to +5
-    for climbing over hours (6 h for all of it) without ever losing half of the peak."""
+    """What the price did, -30 to +5. crash: up to -25 for the drop from the peak (none to 40% off, all at 90% off), weighted by
+    how fast it fell; spike: -10 for a pump and dump (peaked within an hour of launch, lost half within the next hour, still 70%+
+    down); recovered: +3 when it lost half its peak and has come back to within 40% of it (buyers stepped back in); steady: up
+    to +5 for climbing over hours without ever losing half."""
     half, up = (pa or {}).get('half'), (pa or {}).get('up')
-    sp = 0.8 if not pa else 0.6 if half is None else 1 - 0.4 * max(0, min(1, math.log(max(half, 60) / 60) / math.log(12)))
-    crash = 30 * max(0, min(1, (dd - 0.4) / 0.5)) * sp
+    sp = 0.8 if not pa else 0.6 if half is None else 1 - 0.4 * clamp(math.log(max(half, 60) / 60) / math.log(12))
+    crash = 25 * clamp((dd - 0.4) / 0.5) * sp
     spike = 10 if pa and up <= 60 and half is not None and half <= 60 and dd >= 0.7 else 0
+    rec = bool(pa and half is not None and dd < 0.4)
     steady = 5 * min(1, up / 360) if pa and half is None and dd < 0.4 else 0
-    return steady - crash - spike, bool(spike)
+    return steady + (3 if rec else 0) - crash - spike, bool(spike), rec
+
+def real_score(x):
+    """The REAL score, 0-100, and the call (REAL / WATCH / FARM / THIN). x: Jupiter's numbers for the coin + the bundle scan."""
+    g = lambda k, d=0: x.get(k) if x.get(k) is not None else d
+    ob, ob6, ob1, ob7 = g('ob'), g('ob6'), g('ob1'), x.get('ob7')
+    age = max(g('age', 24), 1 / 60); h, mc, liq = g('h'), g('mc'), g('liq')
+    jv, ov = g('jv'), g('ov'); org = ov / jv if jv else 0
+    # how long the average coin is held: the market cap over the hour's selling (all of it: washed volume churns too)
+    sv = g('sv') / min(age, 24) if g('sv') else 0
+    hold = mc / sv if sv else (48 if mc and h >= 30 else 0)
+    # buyers who keep coming: the last 6 h's (and hour's) share of the day's organic buyers against what an even pace would
+    # give at this age; a coin past 2 days: the day's share of the week's. Plus the holder count's trend over 6 h
+    if age > 48 and ob7: pace = clamp((ob / ob7) / (0.6 / 7)) * min(1, ob / 10); pace1 = clamp((ob6 / ob) / 0.15) * min(1, ob6 / 3) if ob else 0
+    else:
+        pace = clamp((ob6 / ob) / (0.6 * min(1, 6 / age))) * min(1, ob6 / 8) if ob else 0
+        pace1 = clamp((ob1 / ob6) / (0.5 * min(1, 1 / min(age, 6)))) * min(1, ob1 / 2) if ob6 else 0
+    trend = clamp((g('hc6') + 10) / 20) * min(1, h / 30)
+    parts = {
+        'buyers':  20 * min(1, math.log10(1 + ob) / 2.3),                                    # ~200 organic buyers in 24 h = all of it
+        'staying': 20 * (0.5 * pace + 0.15 * pace1 + 0.35 * trend),
+        'hold':    15 * clamp(math.log(max(hold, 1e-9) / 0.25) / math.log(48)) * min(1, h / 50),   # 15 min = 0, 12 h+ = all of it
+        'size':    5 * clamp(math.log10(max(mc, 1) / 5000) / 2) + 5 * clamp(math.log10(max(liq, 1) / 2000) / math.log10(50)),
+        'holders': 10 * min(1, math.log10(1 + h) / 3),
+        'fees':    8 * min(1, x['fb'] / 0.7) if x.get('fb') is not None else 5 * min(1, org / 0.08),
+        'spread':  6 * max(0, 1 - g('bund') / 25) + (4 * clamp((80 - x['top']) / 50) if x.get('top') is not None else 2),
+        'dev':     (2 if g('dn') < 1 or g('dn') > 2000 or not x.get('audit') else 4 if g('dg') / g('dn') >= 0.2 else 0 if g('dn') >= 5 and g('dg') / g('dn') < 0.05 else 2),
+        'tips':    3 * clamp((4 - x['fpt']) / 2.5) if x.get('fpt') is not None else 1.5,
+    }
+    px, pnd, rec = price_score(g('dd'), x.get('pa'))
+    sold = 8 * min(1, g('bpk') / 25) if g('bpk') >= 10 and g('bh') < g('bpk') / 2 else 0   # bundlers who sold into the pump
+    s = sum(parts.values()) + px - sold
+    small = mc < 8000 or h < 30
+    if mc < 5000 or h < 10: s = min(s, 20)          # next to nothing: who'd buy it?
+    elif small: s = min(s, 40)
+    sc = max(0, min(100, math.floor(s + 0.5)))   # (rounds like the site's Math.round)
+    dumped = g('dd') >= 0.8 and g('pk') >= 20000
+    fb, vol = x.get('fb'), g('vol')
+    farm = vol >= 20000 and ((fb < 0.45 and (ob < 20 or h < 60)) if fb is not None else ob < 5 or (hold < 0.5 and ob < 20))
+    bundled = g('bund') >= 15
+    # REAL: every bar cleared, not just the score
+    need = [('score 65+', sc >= 65), ('$20K+ market cap', mc >= 20000), ('100+ holders', h >= 100), ('25+ organic buyers a day', ob >= 25),
+            ('buyers in the last 6 h', ob6 >= 3 or (age > 48 and ob >= 10)), ('held 2 h+ on average', hold >= 2), ('an hour old', age >= 1),
+            ('under 15% bundled', not bundled), ('not dumped', not dumped)]
+    miss = [k for k, ok in need if not ok]
+    vd = 'FARM' if farm else 'REAL' if not miss else 'WATCH' if sc >= 45 and mc >= 8000 and h >= 30 and ob >= 8 and not dumped else 'THIN'
+    return {'score': sc, 'vd': vd, 'dumped': dumped, 'pnd': pnd, 'rec': rec, 'small': small, 'hold': round(hold, 1), 'miss': miss,
+            'org': round(org * 100, 1) if jv else None, 'parts': {k: round(v, 1) for k, v in parts.items()}, 'px': round(px - sold, 1)}
 
 
 rows, hot, scanned, charted = [], {}, 0, 0
@@ -369,29 +409,18 @@ for t in cand:
         except Exception as e: log('holders', t.get('symbol'), e)
         time.sleep(0.4)
     bund = max(bh, (sc or {}).get('lk') or 0)   # bundled now: what bundlers and linked holders hold today, not the peak
-    # the score
-    s_ob = 25 * min(1, math.log10(1 + ob) / 2)
-    s_fb = 20 * min(1, fb / 0.7) if fb is not None else 12 * min(1, (ov / jv if jv else 0) / 0.08)   # no payouts to check: organic share, at most 12
-    s_bu = 15 * max(0, 1 - bund / 25)
-    s_dev = 7 if dn < 1 or dn > 2000 or not au else 15 if dg / dn >= 0.2 else 0 if dn >= 5 and dg / dn < 0.05 else 7   # 2,000+ coins: a launch tool's wallet, not a dev
-    s_h = 10 * min(1, math.log10(1 + holders) / 3)
-    s_top = 5 * max(0, min(1, (80 - top) / 50)) if top is not None else 2.5
-    s_ov = 5 * min(1, (ov / jv if jv else 0) / 0.08)
-    s_fpt = 5 * max(0, min(1, (4 - fpt) / 2.5)) if fpt is not None else 2.5
-    # what the price did (price_score): how far it fell from its peak and how fast, a pump and dump, a steady climb; and
-    # bundlers who held 10%+ at their peak and have sold most of it (sold into the pump)
     mc, pk = mk.get('marketCapUsd') or 0, mk.get('peakMarketCapUsd') or 0
     pa = chart(m, ts(t.get('createdAt'))) if pk >= 10000 or vol >= 10000 else None
     dd = pa['dd'] if pa else max(0, 1 - mc / pk) if pk else 0
-    s_px, pnd = price_score(dd, pa)
-    p_bs = 10 * min(1, bpk / 25) if bpk >= 10 and bh < bpk / 2 else 0
-    score = max(0, min(100, round(s_ob + s_fb + s_bu + s_dev + s_h + s_top + s_ov + s_fpt + s_px - p_bs)))
-    dumped = dd >= 0.85 and pk >= 20000
-    farm = vol >= 20000 and (fb < 0.45 and (ob < 20 or holders < 60) if fb is not None else ob < 5)   # payouts lag: a coin with real buyers isn't a farm
-    bundled = bund >= 20
-    verdict = 'FARM' if farm else 'REAL' if score >= 60 and not bundled and not dumped else 'WATCH' if score >= 35 else 'THIN'
+    s6, s1 = a.get('stats6h') or {}, a.get('stats1h') or {}
+    R = real_score({'ob': ob, 'ob6': s6.get('numOrganicBuyers') or 0, 'ob1': s1.get('numOrganicBuyers') or 0, 'age': (now - ts(t.get('createdAt'))) / 3600,
+                    'h': holders, 'hc6': s6.get('holderChange') or 0, 'mc': a.get('mcap') or mc, 'liq': a.get('liquidity') or 0, 'sv': st.get('sellVolume') or 0,
+                    'jv': jv, 'ov': ov, 'fb': fb, 'bund': bund, 'dn': dn, 'dg': dg, 'audit': bool(au), 'top': top, 'fpt': fpt, 'vol': vol,
+                    'dd': dd, 'pa': pa, 'pk': pk, 'bpk': bpk, 'bh': bh})
+    score, verdict, dumped, pnd = R['score'], R['vd'], R['dumped'], R['pnd']
+    bundled = bund >= 15
     q = t.get('quote') or {}
-    flags = (['BUNDLED'] if bundled else []) + (['PUMP & DUMP'] if pnd else ['DUMPED'] if dumped else [])
+    flags = (['BUNDLED'] if bundled else []) + (['PUMP & DUMP'] if pnd else ['DUMPED'] if dumped else []) + (['RECOVERED'] if R['rec'] else []) + (['TOO SMALL'] if R['small'] else [])
     vr = state['vr'].get(m)
     row = {'m': m, 's': t.get('symbol'), 'n': t.get('name'), 'i': img(t.get('imageUrl')), 'c': ts(t.get('createdAt')),
            'q': q.get('symbol'), 'qm': q.get('mint'), 'qc': q.get('categoryLabel'), 'mode': t.get('mode'), 'st': t.get('status'),
@@ -402,7 +431,8 @@ for t in cand:
            'fpt': round(fpt, 2) if fpt is not None else None, 'feesUsd': round(fees * sol) if fees and sol else None,
            'bn': bs.get('totalBundles') or 0, 'bpk': round(bpk, 1), 'bh': round(bh, 1), 'bot': round(au.get('botHoldersPercentage') or 0, 1),
            'dev': a.get('dev'), 'dn': dn, 'dg': dg, 'scan': sc, 'flags': flags,
-           'vr': {'lane': vr['lane'], 'st': vr['st']} if vr else None, 'score': score, 'vd': verdict}
+           'vr': {'lane': vr['lane'], 'st': vr['st']} if vr else None, 'score': score, 'vd': verdict,
+           'ob6': s6.get('numOrganicBuyers') or 0, 'liq': round(a.get('liquidity') or 0), 'hold': R['hold'], 'miss': R['miss'], 'parts': R['parts'], 'sv': 2}
     rows.append(row)
     h = hot.setdefault(q.get('mint'), {'qm': q.get('mint'), 'q': q.get('symbol'), 'qc': q.get('categoryLabel'), 'n': 0, 'v': 0, 'real': 0, 'best': None})
     h['v'] += vol; h['real'] += verdict == 'REAL'
