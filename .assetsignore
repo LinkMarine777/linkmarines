@@ -14,8 +14,6 @@ stream/*.py
 stream/__pycache__
 *.md
 worker/
-# the streamer alerts service: its own Worker serves its pages (alerts/public)
-alerts/
 # the data-jobs VPS scripts (vps/setup.sh)
 vps/
 # wc/: the source of terminal/wc/ (the built WalletConnect bundle), not served
