@@ -1,0 +1,163 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060a1a;--blue:#4a7aff;--blue2:#2a5ada;--green:#39ff6a;--txt:#e8eeff;--dim:#8a96b8;--line:#1b2648}
+*{box-sizing:border-box}html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:var(--bg);font-family:'IBM Plex Mono',monospace;color:var(--txt)}
+#bg{position:absolute;inset:0;background:radial-gradient(1100px 700px at 18% 12%,#16275e 0,rgba(22,39,94,0) 70%),radial-gradient(900px 600px at 95% 100%,#0c3a2a 0,rgba(12,58,42,0) 60%),linear-gradient(#070b1d,#050816)}
+#grid{position:absolute;inset:0;background-image:linear-gradient(rgba(74,122,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(74,122,255,.05) 1px,transparent 1px);background-size:48px 48px}
+#bar{position:absolute;left:0;right:0;bottom:0;height:8px;background:linear-gradient(90deg,var(--blue),var(--green))}
+.scene{position:absolute;inset:0;opacity:0}
+.kick{position:absolute;left:120px;top:150px;color:var(--blue);font-size:26px;letter-spacing:7px;font-weight:600}
+.hl{position:absolute;left:112px;top:190px;font-family:'VT323',monospace;font-size:172px;line-height:.86;letter-spacing:4px;white-space:nowrap}
+.hl .g{color:var(--green)}
+.bul{position:absolute;left:122px;top:560px;width:680px;font-size:30px;line-height:1.38;color:#c9d3f0}
+.bul div{position:relative;padding-left:46px;margin-bottom:24px}.bul div::before{content:'▸';position:absolute;left:0;color:var(--green)}
+.bul b{color:#fff;font-weight:700}
+.foot{position:absolute;left:110px;bottom:46px;display:flex;align-items:center;gap:18px}
+.foot img{width:64px}.foot .a{color:var(--blue);font-size:17px;letter-spacing:4px;font-weight:600}.foot .b{font-family:'VT323';font-size:44px;line-height:.9;letter-spacing:2px}
+.url{position:absolute;right:110px;bottom:52px;color:var(--green);font-size:40px;font-weight:600}
+/* devices */
+.dk{position:absolute;border-radius:14px;background:#0a0f22;border:2px solid #2a3a6e;box-shadow:0 0 0 1px rgba(74,122,255,.35),0 40px 120px rgba(0,0,0,.65),0 0 80px rgba(74,122,255,.18);overflow:hidden}
+.dk .top{height:38px;background:#0d1430;border-bottom:1px solid #1b2648;display:flex;align-items:center;gap:9px;padding:0 16px}
+.dk .top i{width:12px;height:12px;border-radius:50%;background:#2a3a6e}.dk .top span{margin-left:18px;flex:0 0 420px;height:22px;border-radius:6px;background:#060a1a;color:#6b7aa8;font-size:14px;line-height:22px;padding-left:12px}
+.view{position:relative;overflow:hidden}.view img{position:absolute;left:0;top:0;transform-origin:0 0}
+.ph{position:absolute;border-radius:54px;background:#0b1024;border:3px solid #22305c;padding:14px;box-shadow:0 0 0 2px #3a5bd0,0 40px 120px rgba(0,0,0,.7),0 0 90px rgba(74,122,255,.25)}
+.ph .view{border-radius:40px}
+.tag{position:absolute;padding:6px 14px;border:1px solid #6b5a1f;color:#ffd23f;background:rgba(40,32,6,.85);font-size:16px;letter-spacing:3px;border-radius:4px}
+/* sim cards */
+.card{position:absolute;background:linear-gradient(#0d1430,#0a0f22);border:2px solid #2a5ada;border-radius:12px;box-shadow:0 30px 90px rgba(0,0,0,.6),0 0 60px rgba(74,122,255,.25)}
+.mono{font-family:'IBM Plex Mono',monospace}.vt{font-family:'VT323',monospace}
+</style></head><body>
+<div id="bg"></div><div id="grid"></div>
+<div id="root"></div>
+<div id="bar"></div>
+<script>
+const W=1920,H=1080,FPS=30;
+const SEQ={board:130,chart:227,clobr:246,holders:209,holders2:216,tts:307,ads:406,stream:271,m_swap:300,m_token:252,m_trend:260,m_wallet:401,swap:288,trend_alerts:234,trend_board:286,trend_top:168,trend_whale:275,wallet:181};
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),ease=k=>k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2,eo=k=>1-Math.pow(1-k,3);
+const prog=(t,a,d)=>ease(clamp((t-a)/d)),pe=(t,a,d)=>eo(clamp((t-a)/d));
+const $=s=>document.querySelector(s),root=$('#root');
+const el=(tag,cls,html,parent=root)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;parent.appendChild(e);return e};
+const fmt=n=>'$'+n.toLocaleString('en-US',{maximumFractionDigits:0});
+// ---------- scene building blocks ----------
+function frameOf(name,local){const n=SEQ[name];return 'seq/'+name+'/'+String(Math.min(n,Math.max(1,Math.floor(local*FPS)+1))).padStart(4,'0')+'.jpg'}
+function desk(s,x,y,w,clip,url,ar=800/1280){const d=el('div','dk','',s);d.style.cssText+=`left:${x}px;top:${y}px;width:${w}px`;const top=el('div','top','<i></i><i></i><i></i><span>'+(url||'terminal7.xyz')+'</span>',d);
+  const h=Math.round(w*ar);const v=el('div','view','',d);v.style.cssText=`width:${w}px;height:${h}px`;const im=el('img','','',v);im.style.width=w+'px';return{d,im,v,w,h,clip,ar}}
+function phone(s,x,y,w,clip){const d=el('div','ph','',s);const iw=w-28,ih=Math.round(iw*844/390);d.style.cssText+=`left:${x}px;top:${y}px;width:${w}px;height:${ih+28}px`;
+  const v=el('div','view','',d);v.style.cssText=`width:${iw}px;height:${ih}px`;const im=el('img','','',v);im.style.width=iw+'px';return{d,im,v,w:iw,h:ih,clip,ar:844/390}}
+// a device's camera: crop {x,y,w,h} as fractions of the source, interpolated between two crops over the scene
+function cam(dev,c){const z=1/c.w;dev.im.style.width=(dev.w*z)+'px';dev.im.style.transform=`translate(${-c.x*dev.w*z}px,${-c.y*dev.w*z*dev.ar}px)`}
+const lerpC=(a,b,k)=>({x:a.x+(b.x-a.x)*k,y:a.y+(b.y-a.y)*k,w:a.w+(b.w-a.w)*k});
+function textBlock(s,o){const k=el('div','kick',o.kick,s);const h=el('div','hl',o.hl.map((l,i)=>`<div class="${i%2?'g':''}">${l}</div>`).join(''),s);
+  const b=el('div','bul',o.bul.map(x=>`<div>${x}</div>`).join(''),s);if(o.hlSize)h.style.fontSize=o.hlSize+'px';if(o.bulTop)b.style.top=o.bulTop+'px';return{k,h,b}}
+function animText(T,lt){const a=pe(lt,.05,.6);T.k.style.opacity=a;T.k.style.transform=`translateX(${(1-a)*-30}px)`;
+  [...T.h.children].forEach((r,i)=>{const q=pe(lt,.15+i*.18,.55);r.style.opacity=q;r.style.transform=`translateY(${(1-q)*40}px)`;r.style.clipPath=`inset(0 ${100-q*100}% 0 0)`});
+  [...T.b.children].forEach((r,i)=>{const q=pe(lt,.7+i*.35,.5);r.style.opacity=q;r.style.transform=`translateX(${(1-q)*-24}px)`})}
+function foot(s){el('div','foot','<img src="helmet-1024.png"><div><div class="a">THE WAR ROOM</div><div class="b">TERMINAL 7</div></div>',s);el('div','url','terminal7.xyz',s)}
+function devIn(dev,lt,delay=.25,dx=60,dy=0){const q=pe(lt,delay,.8);dev.d.style.opacity=q;dev.d.style.transform=`translate(${(1-q)*dx}px,${(1-q)*dy}px) scale(${.96+.04*q})`}
+// ---------- scenes ----------
+const S=[];let T0=0;const add=(dur,build,anim)=>{const s=el('div','scene');const ctx=build(s);S.push({s,a:T0,d:dur,anim,ctx});T0+=dur};
+// 0 intro
+add(7,s=>{const bgv=desk(s,180,90,1560,'trend_top');bgv.d.style.filter='blur(6px) brightness(.35)';
+  const w=el('div','',`<img src="helmet-1024.png" style="width:220px;filter:drop-shadow(0 0 50px rgba(74,122,255,.6))"><div class="vt" style="font-size:190px;line-height:.9;letter-spacing:10px;margin-top:10px">THE WAR ROOM</div><div style="color:var(--blue);font-size:34px;letter-spacing:22px;font-weight:600;margin-top:8px">TERMINAL 7</div><div id="tg" style="font-size:34px;color:#aab6d8;margin-top:40px;height:44px"></div>`,s);
+  w.style.cssText='position:absolute;left:0;right:0;top:170px;text-align:center';return{bgv,w}},
+ (c,lt)=>{c.bgv.im.src=frameOf('trend_top',lt);c.bgv.d.style.opacity=1;const q=pe(lt,.1,1);c.w.style.opacity=q;c.w.style.transform=`scale(${.92+.08*q})`;
+  const tg='every stonkfun coin · live · on-chain';c.w.querySelector('#tg').textContent=tg.slice(0,Math.floor(clamp((lt-1.4)/1.6)*tg.length))+(lt%0.8<.4&&lt<3.6?'▌':'')});
+// 1 trending
+add(8.5,s=>{const T=textBlock(s,{kick:'TRENDING ON STONKFUN',hl:['WHALE','MOVES'],bul:['<b>Whale Radar:</b> what top holders buy and sell','<b>Money Flow:</b> buys vs sells, 1H or 24H','Every stonkfun coin <b>ranked live</b>']});
+  const D=desk(s,820,150,1000,'trend_whale');const P=phone(s,1580,250,290,'m_trend');foot(s);return{T,D,P}},
+ (c,lt)=>{animText(c.T,lt);devIn(c.D,lt);devIn(c.P,lt,.9,0,80);c.D.im.src=frameOf('trend_whale',lt-.3);cam(c.D,lerpC({x:.02,y:.0,w:1},{x:.3,y:.2,w:.7},prog(lt,2,6)));c.P.im.src=frameOf('m_trend',lt-1);cam(c.P,{x:0,y:0,w:1})});
+// 2 alerts
+add(7,s=>{const T=textBlock(s,{kick:'REAL-TIME ALERTS',hl:['STRAIGHT','FROM CHAIN'],hlSize:150,bul:['<b>Big buys and sells</b> the moment they hit','<b>Holder payouts</b> as they land','<b>Compounding</b> moves, every coin']});
+  const D=desk(s,820,170,1000,'trend_alerts');foot(s);return{T,D}},
+ (c,lt)=>{animText(c.T,lt);devIn(c.D,lt);c.D.im.src=frameOf('trend_alerts',lt-.3);cam(c.D,lerpC({x:0,y:0,w:1},{x:.02,y:.12,w:.62},prog(lt,.8,2.2)))});
+// 3 swap
+add(10,s=>{const T=textBlock(s,{kick:'NEW · JUPITER SWAP',hl:['BUY IN','ONE CLICK'],bul:['<b>Buy or sell</b> right on every coin','Routed by <b>Jupiter</b>, from your own wallet','<b>No fee</b> of our own']});
+  const D=desk(s,800,190,840,'swap');const P=phone(s,1620,170,270,'m_swap');foot(s);return{T,D,P}},
+ (c,lt)=>{animText(c.T,lt);devIn(c.D,lt);devIn(c.P,lt,4.6,0,90);c.D.im.src=frameOf('swap',lt-.3);cam(c.D,lerpC({x:0,y:0,w:1},{x:.58,y:.47,w:.42},prog(lt,2.2,1.6)));c.P.im.src=frameOf('m_swap',lt-4.4);cam(c.P,{x:0,y:0,w:1})});
+// 4 big buy (illustration)
+add(8.2,s=>{const T=textBlock(s,{kick:'THE MOMENT IT HITS THE CHAIN',hl:['BIG BUY?','EVERYONE','SEES IT'],hlSize:150,bul:[]});
+  const C=el('div','card',`<div style="display:flex;align-items:center;gap:26px;padding:34px 40px">
+   <img src="helmet-1024.png" style="width:86px;height:86px;border-radius:50%;background:#132050;padding:6px">
+   <div><div style="color:var(--green);font-weight:700;font-size:28px;letter-spacing:3px">🐋 BIG BUY</div>
+   <div style="font-size:36px;margin-top:6px">Bought <b id="amt">$0</b> of <b>$MARINE</b></div><div style="color:var(--dim);font-size:22px;margin-top:6px">wallet 8V4k · just now</div></div></div>`,s);
+  C.style.cssText+='left:860px;top:300px;width:900px';
+  const pills=['ON TRENDING','ON THE TOKEN PAGE','ON STREAM'].map((t,i)=>{const p=el('div','',t,s);p.style.cssText=`position:absolute;left:${860+i*305}px;top:540px;width:285px;text-align:center;padding:16px 0;border:1px solid #2a5ada;border-radius:8px;color:#8fb0ff;font-size:20px;letter-spacing:3px;background:rgba(13,20,48,.9)`;return p});
+  const tg=el('div','tag','EXAMPLE',s);tg.style.cssText+='left:1650px;top:268px';foot(s);return{T,C,pills,tg}},
+ (c,lt)=>{animText(c.T,lt);const q=pe(lt,.6,.6);c.C.style.opacity=q;c.C.style.transform=`translateY(${(1-q)*-80}px)`;c.tg.style.opacity=q;
+  const pulse=Math.max(0,1-Math.abs(lt-1.3)*2.5);c.C.style.boxShadow=`0 30px 90px rgba(0,0,0,.6),0 0 ${60+pulse*120}px rgba(57,255,106,${.25+pulse*.5})`;
+  c.C.querySelector('#amt').textContent=fmt(Math.round(2400*pe(lt,.8,1.2)));c.pills.forEach((p,i)=>{const k=pe(lt,2+i*.4,.5);p.style.opacity=k;p.style.transform=`translateY(${(1-k)*30}px)`})});
+// 5 rewards (illustration)
+add(8.5,s=>{const T=textBlock(s,{kick:'HOLD $MARINE',hl:['GET PAID','IN $LINK'],bul:['Every buy and sell pays a <b>3% tax</b>','It fills the <b>next pulse</b>, then pays every holder','Watch it fill <b>live</b> on the terminal']});
+  const C=el('div','card',`<div style="padding:36px 44px"><div style="display:flex;justify-content:space-between;color:var(--dim);font-size:22px;letter-spacing:4px"><span>NEXT PULSE · FILLING</span><span id="pct">0%</span></div>
+   <div class="vt" style="font-size:110px;line-height:1;margin-top:10px" id="lk">0.00 LINK</div>
+   <div style="height:22px;border:1px solid #2a3a6e;border-radius:4px;margin-top:18px;overflow:hidden"><div id="fill" style="height:100%;width:0;background:linear-gradient(90deg,var(--blue),var(--green))"></div></div>
+   <div style="display:flex;justify-content:space-between;color:var(--dim);font-size:20px;margin-top:12px"><span id="tax">$0 tax to swap</span><span>min $250</span></div></div>`,s);
+  C.style.cssText+='left:860px;top:230px;width:900px';
+  const P=el('div','card',`<div style="padding:30px 44px;display:flex;align-items:center;gap:30px"><div style="font-size:60px">💸</div><div><div style="color:var(--green);font-weight:700;font-size:26px;letter-spacing:3px">HOLDER PAYOUT SENT</div><div style="font-size:34px;margin-top:6px"><b>+17.6 LINK</b> to <b>304 holders</b></div><div style="color:var(--dim);font-size:22px;margin-top:4px">straight to their wallets · automatic</div></div></div>`,s);
+  P.style.cssText+='left:860px;top:640px;width:900px;border-color:var(--green)';const tg=el('div','tag','EXAMPLE',s);tg.style.cssText+='left:1650px;top:198px';foot(s);return{T,C,P,tg}},
+ (c,lt)=>{animText(c.T,lt);const q=pe(lt,.4,.6);c.C.style.opacity=q;c.tg.style.opacity=q;const f=prog(lt,1,3.4);c.C.querySelector('#fill').style.width=(f*100)+'%';
+  c.C.querySelector('#pct').textContent=Math.round(f*100)+'%';c.C.querySelector('#lk').textContent=(17.6*f).toFixed(2)+' LINK';c.C.querySelector('#tax').textContent=fmt(Math.round(250*f))+' tax to swap';
+  const p=pe(lt,4.6,.6);c.P.style.opacity=p;c.P.style.transform=`translateY(${(1-p)*60}px) scale(${.9+.1*p})`;c.P.style.boxShadow=`0 30px 90px rgba(0,0,0,.6),0 0 ${80*p}px rgba(57,255,106,.45)`});
+// 6 compound (illustration)
+add(7.5,s=>{const T=textBlock(s,{kick:'PUT IT BACK IN',hl:['COMPOUND','IT.'],bul:['Use your rewards to <b>buy more</b>','Your <b>compound score</b> climbs: how much goes back in','<b>Compounder · Partial · Collector · Trader · Seller</b>']});
+  const C=el('div','card',`<div style="padding:40px 50px;display:flex;align-items:center;gap:56px">
+   <div style="position:relative;width:300px;height:300px"><svg width="300" height="300" viewBox="0 0 300 300"><circle cx="150" cy="150" r="128" stroke="#1b2648" stroke-width="22" fill="none"/><circle id="arc" cx="150" cy="150" r="128" stroke="#39ff6a" stroke-width="22" fill="none" stroke-linecap="round" transform="rotate(-90 150 150)" stroke-dasharray="804" stroke-dashoffset="804"/></svg>
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="vt" id="sc" style="font-size:130px;line-height:.8;color:var(--green)">0</div><div style="color:var(--dim);font-size:18px;letter-spacing:3px;margin-top:6px">COMPOUND SCORE</div></div></div>
+   <div style="flex:1"><div style="color:var(--dim);font-size:20px;letter-spacing:3px">REWARD</div><div style="font-size:38px;margin:4px 0 18px"><b style="color:var(--green)">+17.6 LINK</b></div>
+   <div style="color:var(--dim);font-size:20px;letter-spacing:3px">PUT BACK INTO $MARINE</div><div style="font-size:38px;margin:4px 0 18px" id="back"><b>0%</b></div>
+   <div id="tagv" style="display:inline-block;padding:8px 18px;border:2px solid #ffd23f;color:#ffd23f;font-weight:700;font-size:24px;letter-spacing:3px">PARTIAL</div></div></div>`,s);
+  C.style.cssText+='left:860px;top:280px;width:900px';const tg=el('div','tag','EXAMPLE',s);tg.style.cssText+='left:1650px;top:248px';foot(s);return{T,C,tg}},
+ (c,lt)=>{animText(c.T,lt);const q=pe(lt,.4,.6);c.C.style.opacity=q;c.tg.style.opacity=q;const a=prog(lt,1,1.4),b=prog(lt,3.6,2.2);const sc=Math.round(38*a+(81-38)*b);
+  c.C.querySelector('#sc').textContent=sc;c.C.querySelector('#arc').setAttribute('stroke-dashoffset',804*(1-sc/100));c.C.querySelector('#back b').textContent=Math.round(25*a+(90-25)*b)+'%';
+  const comp=sc>=70,tv=c.C.querySelector('#tagv');tv.textContent=comp?'COMPOUNDER':'PARTIAL';tv.style.borderColor=tv.style.color=comp?'#39ff6a':'#ffd23f';
+  const pop=Math.max(0,1-Math.abs(lt-5.9)*2);tv.style.transform=`scale(${1+pop*.18})`});
+// 7 holders (real)
+add(7.5,s=>{const T=textBlock(s,{kick:'ON EVERY COIN · OPEN HOLDERS',hl:['COMPOUND','SCORE'],bul:['<b>Every holder scored</b> and tagged','Rewards put back · new money · supply held by compounders','See who <b>holds and stacks</b>']});
+  const D=desk(s,820,170,1000,'holders2');foot(s);return{T,D}},
+ (c,lt)=>{animText(c.T,lt);devIn(c.D,lt);c.D.im.src=frameOf('holders2',lt-.3);cam(c.D,lerpC({x:0,y:0,w:1},{x:0,y:.05,w:.37},prog(lt,1.4,1.8)))});
+// 8 wallet x-ray (real, like the graphic)
+add(12.5,s=>{const T=textBlock(s,{kick:'NEW ON TERMINAL 7',hl:['WALLET','X-RAY'],bul:['Click any holder or <b>paste a wallet</b>','<b>Every stonkfun coin</b> it holds, live','<b>Compound score</b> + total rewards','<b>P&amp;L</b> + every trade, whole history'],bulTop:520});
+  const P=phone(s,1290,60,430,'m_wallet');const card=el('img','','',s);card.src='card_wallet.png';card.style.cssText='position:absolute;left:760px;top:600px;width:640px;border:2px solid #2a5ada;border-radius:10px;box-shadow:0 30px 90px rgba(0,0,0,.7),0 0 50px rgba(74,122,255,.3)';
+  foot(s);return{T,P,card}},
+ (c,lt)=>{animText(c.T,lt);devIn(c.P,lt,.3,80,0);c.P.im.src=frameOf('m_wallet',lt-.5);cam(c.P,{x:0,y:0,w:1});const q=pe(lt,7.5,.8);c.card.style.opacity=q;c.card.style.transform=`translate(${(1-q)*-120}px,${(1-q)*40}px) rotate(${-4*q}deg)`});
+// 9 chart (real)
+add(7,s=>{const T=textBlock(s,{kick:'TOKEN PAGES',hl:['BASE +','QUOTE'],bul:['<b>$MARINE and its reward token $LINK</b> on one chart','Candles from <b>every pool</b>, via Jupiter','Hover any point for <b>both prices</b>']});
+  const D=desk(s,820,150,1000,'chart');foot(s);return{T,D}},
+ (c,lt)=>{animText(c.T,lt);devIn(c.D,lt);c.D.im.src=frameOf('chart',lt-.3);cam(c.D,lerpC({x:0,y:0,w:1},{x:0,y:.2,w:.74},prog(lt,1,1.6)))});
+// 10 stonk board apys (real)
+add(8,s=>{const T=textBlock(s,{kick:'STONK BOARD',hl:['APYs','LIVE'],bul:['<b>Board rank</b> and APY on every coin','What <b>$100 held</b> earns a day, week, month, year','Holders, rewards, timeline at a glance']});
+  const D=desk(s,820,150,1000,'board');const P=phone(s,1580,250,290,'m_token');foot(s);return{T,D,P}},
+ (c,lt)=>{animText(c.T,lt);devIn(c.D,lt);devIn(c.P,lt,1.4,0,80);c.D.im.src=frameOf('board',lt-.3);cam(c.D,lerpC({x:0,y:0,w:1},{x:.66,y:.33,w:.34},prog(lt,.9,1.6)));c.P.im.src=frameOf('m_token',lt-1.2);cam(c.P,{x:0,y:0,w:1})});
+// 11 clobr (real)
+add(6.5,s=>{const T=textBlock(s,{kick:'POWERED BY CLOBr',hl:['DEPTH','& WALLS'],bul:['<b>Support and resistance</b> right next to price','Whale activity · limit orders · DCA · LP pools','Every coin, <b>one page</b>']});
+  const D=desk(s,820,150,1000,'clobr');foot(s);return{T,D}},
+ (c,lt)=>{animText(c.T,lt);devIn(c.D,lt);c.D.im.src=frameOf('clobr',lt-.3);cam(c.D,lerpC({x:.25,y:.25,w:.75},{x:0,y:0,w:1},prog(lt,2.6,1.4)))});
+// 12b tts
+add(9,s=>{const T=textBlock(s,{kick:'ON SCREEN · ON STREAM',hl:['TTS ON','STREAM'],bul:['<b>$3</b> and your message is <b>read out live</b>','Plays <b>seconds</b> after payment confirms','Up to 200 characters · mod-checked']});
+  const D=desk(s,800,150,860,'tts');const St=desk(s,1170,470,650,'stream','terminal7.xyz/stream',1080/1920);
+  const pop=el('div','card',`<div style="padding:14px 20px;display:flex;gap:14px;align-items:center"><div style="font-size:30px">🔊</div><div><div style="color:#ffd23f;font-weight:700;font-size:15px;letter-spacing:3px">TTS · @marine_maxi</div><div style="font-size:19px;margin-top:3px">LFG Marines! Just compounded all my LINK back into MARINE</div></div></div>`,s);
+  pop.style.cssText+='left:1150px;top:850px;width:690px;border-color:#ffd23f';const tg=el('div','tag','EXAMPLE',s);tg.style.cssText+='left:1740px;top:818px';foot(s);return{T,D,St,pop,tg}},
+ (c,lt)=>{animText(c.T,lt);devIn(c.D,lt);c.D.im.src=frameOf('tts',lt-.3);cam(c.D,lerpC({x:0,y:0,w:1},{x:.14,y:.05,w:.72},prog(lt,1.4,1.4)));
+  devIn(c.St,lt,4.4,0,90);c.St.im.src=frameOf('stream',lt-4.4);cam(c.St,{x:0,y:0,w:1});const q=pe(lt,5.6,.5);c.pop.style.opacity=q;c.tg.style.opacity=q;c.pop.style.transform=`translateY(${(1-q)*30}px) scale(${.92+.08*q})`});
+// 12c ads
+add(8.5,s=>{const T=textBlock(s,{kick:'ON SCREEN · ON STREAM',hl:['YOUR AD','HERE'],bul:['<b>Billboard</b> text ads + <b>image ads</b>','On the terminal <b>and</b> the stream','From <b>$3</b> per 10 min · mod-approved']});
+  const D=desk(s,800,150,860,'ads');const St=desk(s,1170,470,650,'stream','terminal7.xyz/stream',1080/1920);foot(s);return{T,D,St}},
+ (c,lt)=>{animText(c.T,lt);devIn(c.D,lt);c.D.im.src=frameOf('ads',lt-.3);cam(c.D,lerpC({x:0,y:0,w:1},{x:.14,y:.04,w:.72},prog(lt,1.2,1.4)));
+  devIn(c.St,lt,4.2,0,90);c.St.im.src=frameOf('stream',lt+2);cam(c.St,lerpC({x:0,y:0,w:1},{x:.69,y:.31,w:.31},prog(lt,5,1.6)))});
+// 12 outro
+add(8.5,s=>{const w=el('div','',`<img src="helmet-1024.png" style="width:240px;filter:drop-shadow(0 0 60px rgba(74,122,255,.65))"><div class="vt" style="font-size:200px;line-height:.9;letter-spacing:10px;margin-top:10px">THE WAR ROOM</div>
+   <div style="color:var(--blue);font-size:34px;letter-spacing:22px;font-weight:600;margin-top:6px">TERMINAL 7</div><div style="font-size:30px;color:#aab6d8;margin-top:36px">the home of $MARINE</div><div style="color:var(--green);font-size:64px;font-weight:700;margin-top:24px">terminal7.xyz</div>`,s);
+  w.style.cssText='position:absolute;left:0;right:0;top:130px;text-align:center';return{w}},
+ (c,lt)=>{const q=pe(lt,.1,1);c.w.style.opacity=q;c.w.style.transform=`scale(${.94+.06*q})`});
+// tighter cut: each scene as long as its voiceover line; its animations and clips play faster to fit
+const ND=[5.6,6.0,4.9,6.2,6.5,6.2,5.0,5.9,9.0,5.1,5.3,4.6,6.2,6.4,5.8];{let a=0;S.forEach((x,i)=>{x.o=x.d;x.d=ND[i];x.a=a;a+=x.d});T0=a}
+const TOTAL=T0;
+// ---------- render one frame ----------
+window.TOTAL=TOTAL;window.STARTS=S.map(x=>[x.a,x.d]);
+window.render=async t=>{const imgs=[];for(const sc of S){const lt=t-sc.a,on=lt>=-.5&&lt<sc.d+.5;
+  if(!on){sc.s.style.display='none';continue}sc.s.style.display='block';
+  const fin=clamp((lt+.0)/.45),fout=clamp((sc.d-lt)/.45);sc.s.style.opacity=Math.min(fin,fout);
+  sc.anim(sc.ctx,Math.max(0,lt)*sc.o/sc.d);sc.s.querySelectorAll('img').forEach(i=>imgs.push(i))}
+  await Promise.all(imgs.map(i=>i.complete&&i.naturalWidth?0:new Promise(r=>{i.onload=i.onerror=r})))};
+</script></body></html>
