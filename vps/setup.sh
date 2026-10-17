@@ -82,6 +82,7 @@ done
 T git -C $APP/data-compound remote set-url --push origin $DATA_PUSH
 T git -C $APP/data-compound config core.sshCommand "$GIT_SSH_COMMAND"
 compound=1
+T git -C $APP/data-compound fetch -q --depth 1 origin data >/dev/null 2>&1 && T git -C $APP/data-compound reset -q --hard FETCH_HEAD   # (an old copy fails the check as non-fast-forward)
 until T git -C $APP/data-compound push --dry-run -q origin HEAD:data >/dev/null 2>&1; do
   echo
   echo "KEY 2 of 2 — lets the compounding job save its files to the linkmarines data branch."
