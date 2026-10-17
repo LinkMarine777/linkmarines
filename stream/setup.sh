@@ -127,6 +127,10 @@ python3 /opt/wr-stream/wr-relays.py
 RUN
 chmod 755 $APP/run.sh.new; chown $USERN:$USERN $APP/run.sh.new; mv $APP/run.sh.new $APP/run.sh
 
+# the encoder hands each platform's sender its video over local UDP: the default 208 KB socket buffer overflowed on every
+# keyframe ("Packet corrupt" every ~2 s, smeared video on X / Twitch / Kick; 10-17). 16 MB lets each sender take what it asks for
+echo 'net.core.rmem_max=16777216' > /etc/sysctl.d/90-wr-stream.conf; sysctl -q --system >/dev/null 2>&1 || true
+
 cat > /etc/systemd/system/wr-stream.service <<UNIT
 [Unit]
 Description=War Room 24/7 stream (Terminal 1.1 -> RTMP)
