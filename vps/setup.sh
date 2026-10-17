@@ -21,7 +21,7 @@ CODE=git@gh-t7:LinkMarine777/T7.git                       # private: the jobs' c
 DATA=https://github.com/LinkMarine777/linkmarines         # public: the data branch (reads)
 DATA_PUSH=git@gh-data:LinkMarine777/linkmarines.git        # compound's saves (write key)
 JOBS="kick payouts launches whales preload compound"
-T() { runuser -u t7 -- "$@"; }
+T() { (cd / && runuser -u t7 -- env HOME=/opt/t7 "$@"); }
 ask() { local a; read -r -p "$1" a </dev/tty || a=s; echo "$a"; }   # (no terminal to answer from: skip)
 echo "== packages"
 export DEBIAN_FRONTEND=noninteractive
@@ -56,6 +56,7 @@ while ! code_ok; do
   echo
   cat $S/t7_code.pub
   echo
+  echo "  (last check said: $(cd / && T env GIT_SSH_COMMAND="$GIT_SSH_COMMAND" git ls-remote -q $CODE HEAD 2>&1 | tail -1))"
   a=$(ask "Press Enter once it's added (or type s to skip and keep the jobs on the old public code): ")
   [ "$a" = s ] && break
 done
@@ -86,6 +87,7 @@ until T git -C $APP/data-compound push --dry-run -q origin HEAD:data >/dev/null 
   echo
   cat $S/t7_data.pub
   echo
+  echo "  (last check said: $(T git -C $APP/data-compound push --dry-run -q origin HEAD:data 2>&1 | tail -1))"
   a=$(ask "Press Enter once it's added (or type s to skip: compounding stays on GitHub for now): ")
   [ "$a" = s ] && { compound=0; break; }
 done
