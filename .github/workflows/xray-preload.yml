@@ -3,8 +3,7 @@
 # passes the preload budget; nothing is ever read twice. Free: public repo Actions minutes, no secrets.
 name: xray preload
 on:
-  schedule:
-    - cron: '41 * * * *'
+  # (schedule off 10-17: the T7 VPS runs this job; kept here as a manual backup)
   workflow_dispatch:
 permissions:
   contents: read

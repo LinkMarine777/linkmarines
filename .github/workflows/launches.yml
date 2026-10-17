@@ -4,8 +4,7 @@
 # Free: stonkfun's public API, Jupiter's data API and VRFD's public request list. No RPC.
 name: launch radar
 on:
-  schedule:
-    - cron: '13,43 * * * *'
+  # (schedule off 10-17: the T7 VPS runs this job; kept here as a manual backup)
   workflow_dispatch:
 permissions:
   contents: write

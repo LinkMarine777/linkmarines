@@ -3,8 +3,7 @@
 # Free: public repo Actions minutes, Solana RPC (Helius when the SOLANA_RPC or HELIUS_KEY repository secret is set), Jupiter.
 name: whale radar
 on:
-  schedule:
-    - cron: '7,37 * * * *'
+  # (schedule off 10-17: the T7 VPS runs this job; kept here as a manual backup)
   workflow_dispatch:
 permissions:
   contents: write

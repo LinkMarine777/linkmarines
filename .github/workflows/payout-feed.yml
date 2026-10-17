@@ -2,8 +2,7 @@
 # coins the wallet X-Ray needs (exact rewards per wallet and coin; free, no Helius credits). No secrets.
 name: payout feed
 on:
-  schedule:
-    - cron: '11 * * * *'
+  # (schedule off 10-17: the T7 VPS runs this job; kept here as a manual backup)
   workflow_dispatch:
 permissions:
   contents: read
