@@ -3,8 +3,7 @@
 # ~10 Helius credits per token per run (one balance snapshot). "Run workflow" with backfill = the exact last 7 days for $MARINE + the top 10 (one-off).
 name: compounding
 on:
-  schedule:
-    - cron: '23 */6 * * *'
+  # (schedule off 10-17: the T7 VPS runs this job; kept here as a manual backup)
   workflow_dispatch:
     inputs:
       backfill:
