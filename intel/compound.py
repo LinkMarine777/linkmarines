@@ -601,6 +601,16 @@ def px_publish(minutes=float(os.environ.get('PX_MINUTES', 20))):
                                        'e': ECO})   # e: ecosystem coins that aren't launches (see ECO)
     # SOL and the reward tokens first (every coin's trades and payouts are valued through them), then the coins
     rq = sorted({(G[m].get('quote') or {}).get('mint') for m in watch} - STABLE - {None, SOL})
+    # then every other reward token paid out in the last 14 days (basket tokens like FRONTIER / MUSK4, any pair a coin outside the
+    # tracked 200 pays in), the most paid first: the bot's payout feed values each payout at its hour from these (without one, at
+    # today's price). The first fill takes a few runs (it's in this run's minutes); then one call an hour each
+    paid = {}
+    for x in G.values():
+        q, lp = (x.get('quote') or {}).get('mint'), x.get('lastPayoutAt') or ''
+        try: t = calendar.timegm(time.strptime(lp[:19], '%Y-%m-%dT%H:%M:%S'))
+        except Exception: continue
+        if q and t > now - 14 * DAY: paid[q] = paid.get(q, 0) + (x.get('payoutCount') or 0)
+    rq += [q for q in sorted(paid, key=lambda q: -paid[q]) if q not in rq and q not in STABLE and q != SOL]
     todo = [SOL] + rq + [m for m in ECO if m not in rq] + [m for m in watch if m not in rq and m != SOL and m not in STABLE and m not in ECO]; done = 0
     t0 = time.time()   # (its own minutes: counted from the run's start, a 200-coin run left it none)
     for m in todo:
