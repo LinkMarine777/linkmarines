@@ -34,17 +34,20 @@ S=$APP/.ssh; install -d -o t7 -g t7 -m 700 $S
 [ -f $S/t7_data ] || T ssh-keygen -q -t ed25519 -N '' -C t7-vps-data -f $S/t7_data
 cat > $S/config <<'CFG'
 Host gh-t7
-  HostName github.com
+  HostName ssh.github.com
+  Port 443
   User git
   IdentityFile /opt/t7/.ssh/t7_code
   IdentitiesOnly yes
 Host gh-data
-  HostName github.com
+  HostName ssh.github.com
+  Port 443
   User git
   IdentityFile /opt/t7/.ssh/t7_data
   IdentitiesOnly yes
 CFG
-echo 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' > $S/known_hosts   # GitHub's published host key
+# GitHub's published host key (the same on ssh.github.com:443, used here: some hosts block port 22 going out)
+printf '%s\n' 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' '[ssh.github.com]:443 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl' > $S/known_hosts
 chown t7:t7 $S/config $S/known_hosts; chmod 600 $S/config
 export GIT_SSH_COMMAND="ssh -F $S/config -o UserKnownHostsFile=$S/known_hosts"
 code_ok() { T env GIT_SSH_COMMAND="$GIT_SSH_COMMAND" git ls-remote -q $CODE HEAD >/dev/null 2>&1; }
@@ -130,7 +133,7 @@ cat > /usr/local/bin/t7 <<'CMD'
 #!/bin/bash
 J="kick payouts launches whales preload compound"
 case "$1" in
-  status) for j in $J; do printf '%-9s %s\n' $j "$(systemctl is-active t7@$j)"; done; printf 'code      %s\n' "$(git -C /opt/t7/site remote get-url origin 2>/dev/null)"; journalctl -u 't7@*' -n 12 --no-pager -o cat;;
+  status) for j in $J; do printf '%-9s %s\n' $j "$(systemctl is-active t7@$j)"; done; printf 'code      %s\n' "$(git -c safe.directory='*' -C /opt/t7/site remote get-url origin 2>/dev/null)"; journalctl -u 't7@*' -n 12 --no-pager -o cat;;
   logs) journalctl -u "t7@${2:-whales}" -n ${3:-40} --no-pager -o cat;;
   restart) for j in $J; do systemctl is-enabled -q t7@$j 2>/dev/null && systemctl restart t7@$j; done; echo restarted;;
   stop) for j in $J; do systemctl stop t7@$j; done; echo stopped;;
@@ -139,7 +142,9 @@ esac
 CMD
 chmod 755 /usr/local/bin/t7
 systemctl daemon-reload
-for j in kick payouts launches whales preload; do systemctl enable t7@$j >/dev/null 2>&1; systemctl restart t7@$j; done
+for j in kick payouts launches whales; do systemctl enable t7@$j >/dev/null 2>&1; systemctl restart t7@$j; done
+if grep -q 'preload)' $APP/site/vps/run.sh; then systemctl enable t7@preload >/dev/null 2>&1; systemctl restart t7@preload
+else systemctl disable --now t7@preload >/dev/null 2>&1 || true; compound=0; fi   # (still the old code: it has no preload / compound jobs)
 if [ $compound = 1 ] && [ -f $APP/site/intel/compound.py ] && grep -q rpc-vps $APP/site/intel/compound.py; then
   systemctl enable t7@compound >/dev/null 2>&1; systemctl restart t7@compound; echo "   compound: on (this server, every 6 h)"
 else systemctl disable --now t7@compound >/dev/null 2>&1 || true; echo "   compound: off here (GitHub keeps running it)"; fi
