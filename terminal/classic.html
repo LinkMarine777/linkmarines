@@ -171,10 +171,10 @@ tr.whale td{background:rgba(74,122,255,.08)}
 #ttsPop .from{font-size:13px;color:var(--amber);letter-spacing:2px;text-transform:uppercase}
 #ttsPop .msg{font-family:'VT323';font-size:44px;line-height:1.05;color:#fff;margin-top:6px;word-break:break-word}
 .board.house{padding:0;overflow:hidden;background:#07090f;border:1px solid #2a3a6a}
-/* house / sponsor art (10-19): shown whole at its own shape (never stretched), the price / sponsor tag in a strip under it (it used to cover the art) */
-.board.house .hw{position:absolute;inset:0;display:flex;flex-direction:column;color:inherit;text-decoration:none}
-.board.house .hw img{position:static;flex:1 1 0;min-height:0;width:100%;height:auto;object-fit:contain}
-.board.house .htag{flex:none;text-align:right;background:#000d;color:var(--amber);font-size:10px;letter-spacing:1px;padding:2px 6px;line-height:1.3}
+/* house / sponsor art (10-19): drawn at each box's own shape (slot 1 1120x300; slots 2-3 912x176 wide, -b 736x220 for the token page's boxier ones), so it fills the box unstretched; the price / sponsor tag sits in the bottom-right corner the art keeps empty */
+.board.house .hw{position:absolute;inset:0;display:block;color:inherit;text-decoration:none}
+.board.house .hw img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.board.house .htag{position:absolute;right:0;bottom:0;background:#000d;color:var(--amber);font-size:10px;letter-spacing:1px;padding:2px 6px;line-height:1.3}
 .board.house a.sp .htag{color:var(--green)}
 .board.house a.sp:hover .htag{background:var(--green);color:#000}
 .board.house:hover .htag{background:var(--amber);color:#000}
@@ -346,7 +346,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
   #chartWrap{height:230px}
   #mbList .br,#mbList .bh{grid-template-columns:16px 22px minmax(0,1fr) repeat(3,minmax(0,64px));gap:6px;font-size:12px}#mbList img{width:22px;height:22px}#mbList .sym .q{display:none}#mbList .bh{font-size:9px;letter-spacing:.5px}
   .post .txt{-webkit-line-clamp:3}
-  .board{min-height:90px}#slot1{aspect-ratio:1112/358;min-height:0}.slots .board.house,.slots .board.img{aspect-ratio:912/176;min-height:0}.board.house{aspect-ratio:auto!important;min-height:0}.board.house .hw{position:relative;inset:auto}.board.house .hw img{flex:none}.bill .board.sold .head,.board.sold .head{font-size:30px}
+  .board{min-height:90px}#slot1{aspect-ratio:1120/300;min-height:0}.slots .board.house,.slots .board.img{aspect-ratio:912/176;min-height:0}.bill .board.sold .head,.board.sold .head{font-size:30px}
   .src .fx{display:none}.src{padding:6px 12px}
   #mbar{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:6px;position:fixed;left:0;right:0;bottom:0;z-index:45;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(4,6,15,.96);border-top:1px solid var(--line);backdrop-filter:blur(6px)}
   #mbar .btn{text-align:center;padding:11px 6px;font-size:12px;text-decoration:none}
@@ -856,19 +856,20 @@ function renderAds(){['1','2','3'].forEach(k=>{const el=$('slot'+k);if(!el)retur
 // traffic actually attributes. House cards still open the checkout.
 const HOUSE={'1':['s1-better-call-sergey','s1-holding-alone','s1-plaid-motors'],'2':['s2-paper-hands','s2-youre-reading-this'],'3':['s3-bankers-hate','s3-sergey-associates']};
 const SPONSOR={
-  '1':[{img:'house/s1-jtx.png',href:'https://app.jtx.com/ref/TheMarines',tag:'JTX · JOIN ▸'},
-       {img:'house/s1-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}],
-  '2':[{img:'house/s2-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}],
-  '3':[{img:'house/s2-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr · OPEN ▸'}]
+  '1':[{img:'house/s1-jtx.png',href:'https://app.jtx.com/ref/TheMarines',tag:'JTX ▸'},
+       {img:'house/s1-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr ▸'}],
+  '2':[{img:'house/s2-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr ▸'}],
+  '3':[{img:'house/s2-clobr.png',href:'https://clobr.io?ref=DF92VC53',tag:'CLOBr ▸'}]
 };
 function fillers(k){return [...(HOUSE[k]||[]).map(n=>({house:n})),...(SPONSOR[k]||[])]}
-// letterbox colour per house / sponsor image (its edge), so a box of another shape shows the art whole
-const HBG={"s1-better-call-sergey":"#ff0000","s1-bridge":"#07090f","s1-clobr-pro":"#07090f","s1-clobr":"#07090f","s1-helius":"#07090f","s1-holding-alone":"#ff50e6","s1-jtx":"#07090f","s1-plaid-motors":"#0034be","s1-stonkfun":"#07090f","s2-bridge":"#07090f","s2-clobr-pro":"#07090f","s2-clobr":"#07090f","s2-helius":"#07090f","s2-paper-hands":"#0000c8","s2-stonkfun-community":"#07090f","s2-stonkfun":"#07090f","s2-youre-reading-this":"#07090f","s3-bankers-hate":"#ffffbe","s3-sergey-associates":"#07090f"};
+// slot 1: the 1120x300 art (-w; the plain s1 files stay the stream's, its box is another shape); slots 2-3: the boxier art (-b) when the box is under 4.2:1 (the token page's desktop boxes), else the wide one
+const ART=(k,src)=>{const el=$('slot'+k);if(k==='1')return src.replace(/\.png$/,'-w.png');return el&&el.clientHeight&&el.clientWidth/el.clientHeight<4.2?src.replace(/\.png$/,'-b.png'):src};
+addEventListener('resize',()=>{clearTimeout(renderAds.t);renderAds.t=setTimeout(renderAds,200)});
 function houseAd(k,pr){
   const L=fillers(k);if(!L.length)return'';
   const f=L[Math.floor(Date.now()/20000+ +k)%L.length];
-  if(f.house)return `<div class="hw" style="background:${HBG[f.house]||'#07090f'}"><img src="house/${f.house}.png" alt="ad space open"><span class="htag">${PAY?'$'+PAY.prices.slots[k]+'/'+PAY.blockMinutes+'M · ':''}BUY ▸</span></div>`;
-  return `<a class="sp hw" style="background:${HBG[(f.img.match(/([\w-]+)\.png$/)||[])[1]]||'#07090f'}" href="${esc(f.href)}" target="_blank" rel="noopener sponsored"><img src="${esc(f.img)}" alt=""><span class="htag">${esc(f.tag)}</span></a>`}
+  if(f.house)return `<div class="hw"><img src="${ART(k,'house/'+f.house+'.png')}" alt="ad space open"><span class="htag">${PAY?'$'+PAY.prices.slots[k]+'/'+PAY.blockMinutes+'M · ':''}BUY ▸</span></div>`;
+  return `<a class="sp hw" href="${esc(f.href)}" target="_blank" rel="noopener sponsored"><img src="${esc(ART(k,f.img))}" alt=""><span class="htag">${esc(f.tag)}</span></a>`}
 function fillSlotSel(){if(!PAY)return;$('fSlot').innerHTML=['1','2','3'].map(k=>`<option value="${k}">${SLOTN[k]} · $${PAY.prices.slots[k]}/${PAY.blockMinutes}m</option>`).join('');
   $('fBlocks').innerHTML=Array.from({length:PAY.maxBlocks},(_,i)=>`<option value="${i+1}">${(i+1)*PAY.blockMinutes} min</option>`).join('')}
 let imgId=null,imgBusy=false;
