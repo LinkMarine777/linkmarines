@@ -1016,7 +1016,7 @@ async function loadRewards(){
   pulseBadge();
   PAYMIN=r.minHoldingUsd;payMin();
   const w=r.window24h,w7=r.window7d;
-  $('s24').innerHTML=w&&w.coveredSec>=3600&&w.tokens>=0.05?'<span class="up">+'+amt(Math.max(0,w.tokens),1)+' '+TK.quote+'</span> <span class="dim">'+(w.complete?'last 24h':'in '+ago(Date.now()-w.coveredSec*1000))+(w7&&w7.complete?' · '+amt(w7.tokens,0)+' last 7d':'')+'</span>':(w?'<span class="dim">24h total: tracking…</span>':'&nbsp;');
+  $('s24').innerHTML=w&&w.coveredSec>=3600&&w.tokens>=0.05?'<span class="up">+'+amt(Math.max(0,w.tokens),1)+' '+esc(TK.quote)+'</span> <span class="dim">'+(w.complete?'last 24h':'in '+ago(Date.now()-w.coveredSec*1000))+(w7&&w7.complete?' · '+amt(w7.tokens,0)+' last 7d':'')+'</span>':(w?'<span class="dim">24h total: tracking…</span>':'&nbsp;');
   tickLast();
   const stale=Date.now()/1000-r.snapshotAt>1800;
   $('live').classList.toggle('stale',stale);$('liveTxt').textContent=stale?'DELAYED':'LIVE';
@@ -1473,10 +1473,10 @@ function renderTape(){
     const buy=a.to_token_address===CA;
     const amt=+(buy?a.to_token_amount:a.from_token_amount),price=+(buy?a.price_to_in_usd:a.price_from_in_usd),v=+a.volume_in_usd;
     const fresh=!seen.has(a.tx_hash);seen.add(a.tx_hash);
-    return`<tr class="${v>=WHALE?'whale':''}"${fresh&&tapeLoaded?'':' style="animation:none"'}><td class="dim"><a class="txA" href="https://solscan.io/tx/${a.tx_hash}" target="_blank" rel="noopener" title="the transaction on Solscan">${ago(Date.parse(a.block_timestamp))}</a></td>
+    return`<tr class="${v>=WHALE?'whale':''}"${fresh&&tapeLoaded?'':' style="animation:none"'}><td class="dim"><a class="txA" href="https://solscan.io/tx/${esc(a.tx_hash)}" target="_blank" rel="noopener" title="the transaction on Solscan">${ago(Date.parse(a.block_timestamp))}</a></td>
       <td class="${buy?'up':'dn'}">${buy?'BUY':'SELL'}${v>=WHALE?'<span class="tag">LARGE</span>':''}</td>
       <td class="r">${usd(v)}</td><td class="r">${compact(amt,'')}</td><td class="r dim fx">${px(price)}</td>
-      <td class="r hide-sm"><a href="/wallet/${esc(a.tx_from_address)}" class="walA${KOL[a.tx_from_address]?' kolN':''}" data-w="${esc(a.tx_from_address)}" title="${esc(a.tx_from_address)} · open its Wallet X-Ray">${KOL[a.tx_from_address]?esc(KOL[a.tx_from_address].name.slice(0,14)):(a.tx_from_address||'').slice(0,4)}</a></td></tr>`});
+      <td class="r hide-sm"><a href="/wallet/${esc(a.tx_from_address)}" class="walA${KOL[a.tx_from_address]?' kolN':''}" data-w="${esc(a.tx_from_address)}" title="${esc(a.tx_from_address)} · open its Wallet X-Ray">${KOL[a.tx_from_address]?esc(KOL[a.tx_from_address].name.slice(0,14)):esc((a.tx_from_address||'').slice(0,4))}</a></td></tr>`});
   if(Date.now()-(renderTape.k||0)>30000){renderTape.k=Date.now();const ws=[...new Set(tapeRaw.map(a=>a.tx_from_address).filter(w=>WRE.test(w||'')&&!(w in KOL)))].slice(0,25);
     if(ws.length)kolGet(ws).then(f=>{if(f.length)renderTape()})}
   tapeLoaded=true;$('trades').tBodies[0].innerHTML=list.join('')||`<tr><td colspan="6" class="dim">quiet on the line${tapeMin?' (no $'+tapeMin+'+ trades in the last 300)':''}</td></tr>`;
@@ -1582,7 +1582,7 @@ function renderBoard(){if(!board)return;const L=board[boardKey]||[];
     <span class="dim">#${i+1}</span>${t.logo?`<img src="${esc(t.logo)}" alt="" loading="lazy" onerror="this.remove()">`:''}
     <b>$${esc(String(t.symbol).replace(/^\$/,''))}</b><span class="q">/${esc(t.quote)}</span>
     <span class="apy">${apyFmt(t.apy)} APY</span><span class="dim">mc ${compact(t.mcap)}</span></a>`).join('');
-  const m=boardStats();if(m&&m.rank)html+=`<a class="tk me" href="${esc(tokLink(TK.mint))}" target="_blank" rel="noopener"><span class="dim">board #${m.rank}</span><b>$${TK.symbol}</b><span class="q">/${TK.quote}</span><span class="apy">${apyFmt(m[boardKey])} APY</span></a>`
+  const m=boardStats();if(m&&m.rank)html+=`<a class="tk me" href="${esc(tokLink(TK.mint))}" target="_blank" rel="noopener"><span class="dim">board #${m.rank}</span><b>$${esc(TK.symbol)}</b><span class="q">/${esc(TK.quote)}</span><span class="apy">${apyFmt(m[boardKey])} APY</span></a>`
   setTrack('boardTicker',html)}
 // board-x.json: the hourly extras for each coin (launch, flywheel rank, transfers, holder growth, concentration)
 let boardX=null;
