@@ -111,7 +111,7 @@
     $('walKol').innerHTML = '';
     kolGet([w]).then(() => { const k = KOL[w]; if (!k || cur !== w) return; $('walAddr').textContent = k.name;
       if (isPage) document.title = k.name + ' · Wallet X-Ray · Terminal 7';
-      $('walKol').innerHTML = `<span class="dim">${esc(short)} · <a href="${kolUrl(k)}" target="_blank" rel="noopener">${k.x ? '@' + esc(k.x) : k.p ? 'pump.fun' : 'KOLlector'}</a>${k.f ? ` · ${kolFol(k.f)} followers` : ''} · <span title="${esc(k.how)}">name via <a href="https://dethective.com/kollector/" target="_blank" rel="noopener">KOLlector</a></span></span>`; });
+      $('walKol').innerHTML = `<span class="dim">${esc(short)} · <a href="${kolUrl(k)}" target="_blank" rel="noopener">${k.x ? '@' + esc(k.x) : k.p ? 'pump.fun' : 'KOLlector'}</a>${k.f ? ` · ${esc(kolFol(k.f))} followers` : ''} · <span title="${esc(k.how)}">name via <a href="https://dethective.com/kollector/" target="_blank" rel="noopener">KOLlector</a></span></span>`; });
     $('walAddr').textContent = short; $('walScan').href = 'https://solscan.io/account/' + w; $('walCa').textContent = 'COPY ADDRESS';
     if ($('walPage')) $('walPage').href = '/wallet/' + w;
     if (isPage) document.title = 'Wallet ' + short + ' · Wallet X-Ray · Terminal 7';
