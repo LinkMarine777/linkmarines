@@ -70,8 +70,27 @@ b{color:#ffd23f;font-size:20px;display:block;margin-bottom:10px}small{color:#5d6
     { headers: { 'content-type': 'text/html;charset=utf-8', 'cache-control': 'no-store' } });
 }
 
+// security headers on every answer: HTTPS only (HSTS), no guessing file types; pages can't be put in another site's frame
+// (clickjacking: a hidden pay / sign button under a fake page), only ours. The stream's pages are left framable (OBS and
+// overlay tools), and a page that sets its own policy keeps it. Websocket upgrades (101) can't be touched.
+const FRAMERS = "frame-ancestors 'self' https://terminal7.xyz https://v2.terminal7.xyz https://v3.terminal7.xyz https://themarines.link; object-src 'none'; base-uri 'self'";
+function secure(req, res) {
+  if (res.status === 101 || res.webSocket) return res;
+  const out = new Response(res.body, res), h = out.headers;
+  h.set('strict-transport-security', 'max-age=31536000');
+  h.set('x-content-type-options', 'nosniff');
+  if ((h.get('content-type') || '').includes('text/html') && !/^\/stream(\/|$)/.test(new URL(req.url).pathname)) {
+    if (!h.has('content-security-policy')) h.set('content-security-policy', FRAMERS);
+    if (!h.has('referrer-policy')) h.set('referrer-policy', 'strict-origin-when-cross-origin');
+  }
+  return out;
+}
+
 export default {
-  async fetch(req, env) {
+  async fetch(req, env) { return secure(req, await serve(req, env)); },
+};
+async function serve(req, env) {
+  {
     { const u = new URL(req.url); if (u.pathname === '/wr/open') return walletOpen(u); if (u.pathname === '/wr/back' || u.pathname === '/wr/get') return walletRelay(req, u); }
     try { const r = domains(req); if (r) return r; } catch (e) {}
     // a token's share card, from the bot but on this domain (X won't show preview images hosted on workers.dev)
@@ -120,5 +139,5 @@ export default {
       if (title) rw = rw.on('title', { element(e) { e.setInnerContent(title); } }).on('meta[property="og:title"]', set(esc(title).replace(/&amp;/g, '&'))).on('meta[property="og:description"]', set(desc)).on('meta[name="description"]', set(desc));
       return rw.transform(res);
     } catch (e) { return res; }
-  },
-};
+  }
+}
