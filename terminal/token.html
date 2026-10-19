@@ -986,14 +986,20 @@ async function marineRewards(){const[a,b]=await Promise.allSettled([j(DATA+'rewa
   const s=a.status==='fulfilled'?a.value:null,l=b.status==='fulfilled'&&b.value&&b.value.rewards;
   if(l&&l.distributedTokens>=(s&&s.distributedTokens||0))return Object.assign({},s,l,{snapshotAt:Math.floor(Date.now()/1000)});
   if(!s)throw new Error('no rewards');return s}
+var pulseAt=0;
 async function loadRewards(){
   try{rewards=CA===MARINE?await marineRewards():(await j(BOT+'/token/'+CA)).rewards;}catch(e){return}
   document.body.classList.toggle('norew',!rewards);
   if(!rewards){$('sDist').textContent='—';$('sDistUsd').textContent='no holder rewards for this token';$('live').classList.remove('stale');$('liveTxt').textContent='LIVE';return}
   if(!rewards.snapshotAt)rewards.snapshotAt=Math.floor(Date.now()/1000);
   const r=rewards;
-  if(prevR&&r.lastPayoutAt&&r.lastPayoutAt!==prevR.lastPayoutAt&&r.distributedTokens>prevR.distributedTokens)
-    pulseTakeover(r.distributedTokens-prevR.distributedTokens,(r.distributedUsd||0)-(prevR.distributedUsd||0),(HOLD&&(HOLD.over||HOLD.holders))||(CA===MARINE&&WRM&&(WRM.eligible||WRM.holders))||r.holderCount,r.distributedTokens);
+  // stonkfun pays a round in pieces (most holders at once, then single transfers for minutes): one pop-up a round. A piece under
+  // 10% of the payout minimum, or within 5 min of the last pop-up, is that round's tail: in the totals, no pop-up ($UHI 10-19:
+  // $0.12 pops). Valued at the totals' own price: distributedUsd is the lifetime total at today's price, its change moves with it
+  if(prevR&&r.lastPayoutAt&&r.lastPayoutAt!==prevR.lastPayoutAt&&r.distributedTokens>prevR.distributedTokens){
+    const dt=r.distributedTokens-prevR.distributedTokens,du=r.distributedUsd>0?dt*r.distributedUsd/r.distributedTokens:0;
+    if(!(du&&r.minDistributionUsd>0&&du<r.minDistributionUsd*.1)&&Date.now()-pulseAt>3e5){pulseAt=Date.now();
+      pulseTakeover(dt,du,(HOLD&&(HOLD.over||HOLD.holders))||(CA===MARINE&&WRM&&(WRM.eligible||WRM.holders))||r.holderCount,r.distributedTokens)}}
   prevR=r;
   const qx=r.distributedTokens>0&&r.distributedUsd>0?Math.max(0,Math.floor(Math.log10(r.distributedUsd/r.distributedTokens))-1):0;   // a pricey reward token (WBTC) gets more decimals
   $('sDist').textContent=amt(r.distributedTokens,1+qx)+' '+TK.quote;$('sDist').title=num(r.distributedTokens,1+qx)+' '+TK.quote;
