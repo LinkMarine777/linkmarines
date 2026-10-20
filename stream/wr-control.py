@@ -7,7 +7,7 @@ Each platform goes live or offline on its own (the others keep streaming), and /
 Stream keys go Telegram -> this server only, and the message that carried a key is deleted right away.
 Only Telegram user ids in ADMIN_IDS (/etc/wr-control.env) are obeyed, in private chats.
 """
-import base64, json, os, re, socket, subprocess, threading, time, urllib.parse, urllib.request, uuid
+import base64, hashlib, json, os, re, socket, subprocess, threading, time, urllib.parse, urllib.request, uuid
 
 ENV = '/etc/wr-control.env'
 CONF = '/etc/wr-stream.json'
@@ -263,6 +263,7 @@ HELP = """War Room stream control
 /music — what's in the rotation · /music clear — empty it
 /shot — screenshot of the stream
 /logs — last lines of the stream log
+/update — get the latest bot + sender from GitHub (stays on air)
 
 Messages with keys are deleted as soon as they're saved."""
 
@@ -396,6 +397,8 @@ def handle(msg):
         threading.Thread(target=add_music, args=(chat, link), daemon=True).start()
         return
 
+    if cmd == '/update': return reply(start_update(chat))
+
     if cmd == '/logs':
         return reply(mask(sh('journalctl', '-u', 'wr-stream', '-n', '25', '--no-pager', '-o', 'cat'))[-3500:] or 'No log lines yet.')
 
@@ -437,15 +440,58 @@ def x_watch():
             print('x watch failed:', mask(str(e)))
 
 
+# ---- /update (owner 10-20): the scripts from GitHub (setup.sh update: never takes the stream off air), run as its own systemd job
+# because setup.sh restarts this bot at its end; the new bot reads the note and tells whoever asked what changed
+SETUP = 'https://raw.githubusercontent.com/LinkMarine777/linkmarines/main/stream/setup.sh'
+UPD = '/opt/wr-control/.update'
+FILES = {'bot': os.path.abspath(__file__), 'sender': '/opt/wr-stream/wr-relays.py'}
+WHAT = {'bot': 'the Telegram bot', 'sender': 'the stream sender'}
+
+
+def fid(path):
+    try: return hashlib.sha256(open(path, 'rb').read()).hexdigest()[:10]
+    except Exception: return None
+
+
+def start_update(chat):
+    if sh('systemctl', 'is-active', 'wr-update') in ('active', 'activating'): return '⏳ Already updating: the bot restarts in about a minute.'
+    json.dump({'chat': chat, 'was': {k: fid(f) for k, f in FILES.items()}}, open(UPD, 'w'))
+    r = subprocess.run(['systemd-run', '--unit', 'wr-update', '--collect', '--quiet', '/bin/bash', '-c',
+                        f'curl -fsSL "{SETUP}?t=$(date +%s)" | bash -s update'], capture_output=True, text=True)
+    if r.returncode:
+        os.remove(UPD); return '⚠️ The update could not start: ' + (r.stderr or r.stdout)[-300:]
+
+    def watch():   # the bot restarts when it works; still here after 5 min = it failed
+        for _ in range(60):
+            time.sleep(5)
+            if sh('systemctl', 'is-active', 'wr-update') == 'failed' or not os.path.exists(UPD): break
+        if os.path.exists(UPD):
+            os.remove(UPD)
+            tg('sendMessage', chat_id=chat, text='⚠️ The update failed; nothing changed. Last lines:\n' + mask(sh('journalctl', '-u', 'wr-update', '-n', '12', '--no-pager', '-o', 'cat'))[-1500:])
+    threading.Thread(target=watch, daemon=True).start()
+    return '🔄 Updating from GitHub. The stream stays on air; this bot restarts in about a minute and tells you what changed.'
+
+
+def update_done():
+    try: u = json.load(open(UPD))
+    except Exception: return
+    os.remove(UPD)
+    ch = [k for k, f in FILES.items() if fid(f) != u['was'].get(k)]
+    msg = ('✅ Updated: ' + ' and '.join(WHAT[k] for k in ch) + '.') if ch else '✅ Already up to date (a change merged in the last few minutes can take ~5 min to reach GitHub\'s download link).'
+    if 'sender' in ch: msg += '\n\nThe stream sender\'s changes apply on the next /restart (about 15 s off air: X will need its broadcast started again).'
+    tg('sendMessage', chat_id=u['chat'], text=msg)
+
+
 def main():
     if not TOKEN:
         print(f'set TG_TOKEN in {ENV}'); time.sleep(60); return
     threading.Thread(target=x_watch, daemon=True).start()
+    update_done()
     # with no ADMIN_IDS yet it still answers, telling each person their id and how to authorize it
     tg('setMyCommands', commands=[{'command': c, 'description': d} for c, d in [
         ('status', 'live or not, where, CPU'), ('live', 'go live: /live youtube'), ('off', 'one platform offline: /off kick'),
         ('stop', 'everything off air'), ('page', 'switch the page: /page 1.0'), ('reload', 'reload the page'), ('restart', 'restart page + stream'), ('key', 'save a stream key'), ('keys', 'saved platforms'),
-        ('remove', 'forget a platform key'), ('volume', 'lofi volume 0-1'), ('music', 'lofi: /music lofi'), ('shot', 'screenshot'), ('logs', 'stream log'), ('help', 'all commands')]])
+        ('remove', 'forget a platform key'), ('volume', 'lofi volume 0-1'), ('music', 'lofi: /music lofi'), ('shot', 'screenshot'), ('logs', 'stream log'), ('update', 'latest scripts from GitHub'), ('help', 'all commands')]])
     offset = None
     while True:
         r = tg('getUpdates', timeout=50, **({'offset': offset} if offset else {}), allowed_updates=['message'])
