@@ -402,9 +402,45 @@ def handle(msg):
     return reply('Unknown command. /help')
 
 
+# ---- the X watcher (owner 10-20: "X is the most important one"): every 15 s, while X is on the live list and the stream runs,
+# check that video is actually going out to X. Stuck for 2 min -> restart only the X sender once (the others keep going);
+# still nothing at 3 min -> message every admin, and again when it's back. X can also end a broadcast on its side while
+# still taking the video: that can't be seen from here, only in X's Media Studio.
+XW = {'down': None, 'kicked': False, 'told': False}
+
+
+def x_watch():
+    while True:
+        time.sleep(15)
+        try:
+            c = conf()
+            if 'x' not in c.get('live', []) or 'x' not in c.get('dests', {}) or not running() or not relays_mode():
+                XW.update(down=None, kicked=False, told=False); continue
+            ok, info = sending('x')
+            now = time.time()
+            if ok:
+                if XW['told']:
+                    mins = round((now - XW['down']) / 60)
+                    for a in ADMINS: tg('sendMessage', chat_id=a, text=f"✅ X: video is going out again (it stopped for about {mins} min).\n\nIf X ended the broadcast meanwhile, start it again in X Media Studio: X doesn't pick a broadcast back up by itself.")
+                XW.update(down=None, kicked=False, told=False); continue
+            if XW['down'] is None: XW['down'] = now; continue
+            gone = now - XW['down']
+            if gone >= 120 and not XW['kicked']:
+                XW['kicked'] = True; print('x watch: X sender stuck, restarting it')
+                subprocess.run(['pkill', '-f', 'progress-x'])   # wr-relays.py starts it again within ~5 s
+            if gone >= 180 and not XW['told']:
+                XW['told'] = True
+                for a in ADMINS: tg('sendMessage', chat_id=a, text=f"⚠️ X: no video has gone out to X for {round(gone / 60)} min (Kick / Twitch unaffected). I restarted the X sender once; it didn't help."
+                                    + (f"\n\nLast error: {info}" if info else '')
+                                    + "\n\nX has probably ended the broadcast: start it again in X Media Studio (if it gives you a new stream key: /key x <server url> <key>), then /live x. /status to check.")
+        except Exception as e:
+            print('x watch failed:', mask(str(e)))
+
+
 def main():
     if not TOKEN:
         print(f'set TG_TOKEN in {ENV}'); time.sleep(60); return
+    threading.Thread(target=x_watch, daemon=True).start()
     # with no ADMIN_IDS yet it still answers, telling each person their id and how to authorize it
     tg('setMyCommands', commands=[{'command': c, 'description': d} for c, d in [
         ('status', 'live or not, where, CPU'), ('live', 'go live: /live youtube'), ('off', 'one platform offline: /off kick'),
