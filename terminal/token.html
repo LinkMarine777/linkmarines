@@ -1986,7 +1986,7 @@ async function buildTx(W3,from){
 $('payBtn').onclick=async()=>{const m=check();if(m)return say(m,'err');
   const b=$('payBtn');b.disabled=true;
   const w=await connectWallet(false);if(!w){b.disabled=false;return}
-  try{say('Loading…');web3=web3||await import('https://esm.sh/@solana/web3.js@1.98.0');
+  try{say('Loading…');web3=web3||await import('/vendor/solana-web3-1.98.0.js');
     const from=wAddr;
     const tx=await buildTx(web3,from);say('Approve it in your wallet…');
     let sig;if(w.signAndSendTransaction){const o=await w.signAndSendTransaction(tx);sig=o.signature||o}
