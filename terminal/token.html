@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<script>/* iPhone / iPad: no zoom-in when a text box is tapped (Jupiter's token picker search). iOS still allows pinch-zoom with this */
+if(/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1))document.querySelector('meta[name=viewport]').setAttribute('content','width=device-width,initial-scale=1,maximum-scale=1')</script>
 <title>WAR ROOM TERMINAL 7</title>
 <meta name="description" content="Live terminal for any stonkfun token: holder rewards, next pulse, price, chart, tape, APY and CLOBr depth.">
 <meta property="og:title" content="WAR ROOM TERMINAL 7">
@@ -336,6 +338,8 @@ html.rtabs #sbP .ph,html.rtabs #swP .ph,html.rtabs #radarP .ph{flex-wrap:wrap;ga
 #jupSwap .ld{padding:40px 0;text-align:center;font-size:12px;color:var(--dim)}
 #swP .foot{font-size:10px;color:var(--dim);margin-top:2px;line-height:1.45}
 #swP .foot a{color:var(--amber)}
+#swP .swAdv{display:flex;align-items:center;gap:6px;margin:6px 0 4px}#swP .swAdv a{flex:1;text-align:center;border:1px solid var(--line);color:#c9d3ee;text-decoration:none;font-size:11px;letter-spacing:1px;padding:7px 6px}
+#swP .swAdv a:hover{border-color:var(--amber);color:#fff}#swP .swAdv span{font-size:10px;color:var(--dim);white-space:nowrap}
 @media (max-width:999px){
   html.swap #swP{position:fixed;left:0;right:0;bottom:0;z-index:72;max-height:90vh;overflow-y:auto;border-top:2px solid var(--amber);
     box-shadow:0 -20px 60px #000;transform:translateY(105%);transition:transform .25s ease-out;visibility:hidden}
@@ -716,6 +720,7 @@ html.fit header img[src$="t7-mark.svg"]{width:60px;height:46px}
       <div class="ph"><h2><span class="tkSym">$MARINE</span></h2><div class="tabs rtb"></div><span class="meta">routed by Jupiter</span><button class="x" id="swX" type="button" title="Close (back to the Stonk Board)">✕</button></div>
       <div id="swT7a"></div>
       <div id="jupSwap"><div class="ld">Loading Jupiter…</div></div>
+      <div class="swAdv"><a id="swLim" href="#" target="_blank" rel="noopener" title="Buy or sell at a price you set, on jup.ag">LIMIT ORDER ↗</a><a id="swDca" href="#" target="_blank" rel="noopener" title="Buy a set amount every day / week, on jup.ag">DCA ↗</a><span>on jup.ag</span></div>
       <div class="foot">Sent by Jupiter from your own wallet. We add no fee: you pay Jupiter's swap fee, the token's tax and network fees.
         Not financial advice. <a class="buyTk" href="#" target="_blank" rel="noopener">Open on jup.ag ↗</a></div>
     </section>
@@ -1845,6 +1850,9 @@ function styleSwap(n=0){const h=[...document.querySelectorAll('#jupSwap *')].fin
   if(h.shadowRoot.getElementById('swCss'))return;
   const st=document.createElement('style');st.id='swCss';st.textContent=SW_CSS;h.shadowRoot.appendChild(st);
   setTimeout(fitSwap,300)}   // the widget just loaded: it's taller than the loading line, fit it again
+// limit orders and DCA aren't in Jupiter's swap widget: these open jup.ag's own screens with this token (paying in SOL)
+{const lim=document.getElementById('swLim'),dca=document.getElementById('swDca');
+  if(lim)lim.href='https://jup.ag/limit/SOL-'+CA;if(dca)dca.href='https://jup.ag/recurring/SOL-'+CA}
 function initSwap(){window.Jupiter.init({displayMode:'integrated',integratedTargetId:'jupSwap',formProps:swForm()});styleSwap()}
 // OPEN IN WALLET APP above the swap on a phone outside a wallet's browser (terminal/walletapp.js)
 function mountT7a(){if(window.T7A)T7A.mount($('swT7a'))}
