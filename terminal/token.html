@@ -1849,6 +1849,11 @@ function styleSwap(n=0){const h=[...document.querySelectorAll('#jupSwap *')].fin
   if(!h||!h.shadowRoot.getElementById('jupiter-plugin')){if(n<100)setTimeout(()=>styleSwap(n+1),100);return}
   if(h.shadowRoot.getElementById('swCss'))return;
   const st=document.createElement('style');st.id='swCss';st.textContent=SW_CSS;h.shadowRoot.appendChild(st);
+  // touch screens: Jupiter's token picker puts the cursor in its search by itself, which pops the keyboard (and on iPhones
+  // zoomed the page) when you only wanted to pick from the list. The search only takes the cursor when it's tapped
+  if(matchMedia('(pointer:coarse)').matches){let tapAt=0,tapOn=null;const sr=h.shadowRoot;
+    sr.addEventListener('touchstart',e=>{tapAt=Date.now();tapOn=e.composedPath()[0]},{capture:true,passive:true});
+    sr.addEventListener('focusin',e=>{const t=e.target;if(t&&t.tagName==='INPUT'&&/search/i.test(t.placeholder||'')&&!(tapOn===t&&Date.now()-tapAt<1500))setTimeout(()=>t.blur(),0)},true)}
   setTimeout(fitSwap,300)}   // the widget just loaded: it's taller than the loading line, fit it again
 // limit orders and DCA aren't in Jupiter's swap widget: these open jup.ag's own screens with this token (paying in SOL)
 {const lim=document.getElementById('swLim'),dca=document.getElementById('swDca');

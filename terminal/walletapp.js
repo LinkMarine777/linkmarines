@@ -26,7 +26,8 @@ const wc=()=>WCP||(WCP=import('/terminal/wc/entry.js').then(m=>{
   m.init({projectId:WC_ID,name:'Terminal 7',url:location.origin,icon:location.origin+'/terminal/img/app-t7-192.png'});return WC=m},e=>{WCP=null;throw e}));
 // preload on a phone outside a wallet's browser when the swap opens: the first tap would otherwise wait seconds on ~3 MB
 let warmed=false;
-function warm(){if(warmed)return;warmed=true;(window.requestIdleCallback||setTimeout)(()=>wc().then(m=>m.warm()).catch(()=>{warmed=false}),1500)}
+function warm(){if(warmed)return;warmed=true;const f=()=>wc().then(m=>m.warm()).catch(()=>{warmed=false});
+  window.requestIdleCallback?requestIdleCallback(f,{timeout:1500}):setTimeout(f,1500)}   // (Chrome throws on a bare number as requestIdleCallback's 2nd argument)
 // "Opening Jupiter Mobile…" from the tap until AppKit's panel shows (or the error, if it can't)
 let TO=null;
 function toast(t,err,ms){if(!TO){TO=document.createElement('div');TO.title='Tap to close';TO.onclick=()=>toast('');TO.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:1003;max-width:calc(100vw - 32px);box-sizing:border-box;background:#0a0f1f;border:1px solid #ffd23f;color:#c9d3ee;font:12px/1.45 ui-monospace,monospace;padding:10px 14px;text-align:center';document.body.appendChild(TO)}
