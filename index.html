@@ -867,7 +867,8 @@
 <script>
 // live payroll numbers — direct fetch, CORS-proxy fallback, baked numbers as last resort
 (function(){
-  var API='https://www.stonkfun.xyz/api/rewards?mint=F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK';
+  // (11-05: stonkfun's own API refuses other sites' pages (CORS): every visit failed it first; the bot's copy of the same answer (a minute old at most) comes first now)
+  var API='https://war-room-bot.linkmarine777.workers.dev/token/F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK';
   var fmt=function(n){return Math.floor(n).toLocaleString('en-US')};
   function apply(d){
     if(!d||!d.distributedTokens)return;
@@ -891,7 +892,7 @@
     document.getElementById('stat-last-lbl').textContent='since last payout fired';
   }
   function load(){
-    fetch(API).then(function(r){return r.json()}).then(apply)
+    fetch(API).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){if(!d||!d.rewards||!d.rewards.distributedTokens)throw 0;apply(d.rewards)})
       .catch(function(){
         fetch('https://war-room-bot.linkmarine777.workers.dev/data/stats.json?t='+Date.now()).then(r=>r.ok?r:fetch('stats.json?t='+Date.now())).catch(()=>fetch('stats.json?t='+Date.now()))
           .then(function(r){return r.json()}).then(apply).catch(function(){});
