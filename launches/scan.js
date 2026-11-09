@@ -10,7 +10,7 @@ window.LRS = (() => {
   // bundled now: the bigger of what bundlers hold (Jupiter's Bundlers H.) and linked holders, as on jup.ag: not the peak
   const bnow = r => r.bh ?? r.bpk ?? 0;   // rows from before bh was collected: the peak
   const bundOf = r => Math.max(bnow(r), (r.scan && r.scan.lk) || 0);
-  const vd = r => `<span class="vd v-${esc(r.vd)}"><i>${r.score}</i>${esc(r.vd)}</span>`;
+  const vd = r => r.score == null ? '' : `<span class="vd v-${esc(r.vd)}"><i>${r.score}</i>${esc(r.vd)}</span>`;
   const tile = (v, label, bad, tip, bm) => `<div class="tile${bm ? ' bmt' : ''}"${tip ? ` title="${tip}"` : ''}${bm ? ` data-bm="${esc(bm)}" role="button" tabindex="0"` : ''}><b class="${bad == null ? '' : bad ? 'r' : 'g'}">${v}</b><span>${label}</span></div>`;
   const pc = v => v == null ? '—' : (+v).toFixed(2) + '%';
   function tiles(r) {
@@ -115,38 +115,14 @@ window.LRS = (() => {
     const w2 = w.map(x => x[2] === 'c' && cnt[x[3]] < 2 ? [x[0], x[1], 'i', x[3]] : x);
     return { ...summarize(w2, sc.fresh, sc.n), vetted: sc.cl.length, apps: out.size };
   }
-  // the radar's score (intel/launches.py), for any coin: 25 organic buyers, 20 fee-backed volume (or the organic share when
-  // there are no payouts to check), 15 bundles, 15 dev, 10 holders, 5 top 10, 5 organic share, 5 fees per trade; minus up
-  // to 40 for what the price did (priceScore) and 10 for bundles sold into the pump
-  // the shape of the move (intel/launches.py price_action / price_score), from market-cap candles: minutes from launch to the
-  // peak (up), from the peak to the first close under half of it (half; null if it never lost half), the close now below
-  // the peak (dd). Score -40 to +5: the drop weighted by how fast it fell, -10 for a pump and dump, +5 for a steady climb.
+  // the shape of the move: minutes from launch to the peak (up), from the peak to the first close under half of it (half),
+  // the close now below the peak (dd). (11-09: the score itself is worked out by the bot, war-room-bot /coin/<mint>/real.)
   function priceAction(C, created) {
     C = (C || []).filter(c => c.close); if (C.length < 3) return null;
-    const held = C.slice(0, -1).map((c, k) => Math.min(c.close, C[k + 1].close));   // a peak held two candles: one bad tick isn't one
+    const held = C.slice(0, -1).map((c, k) => Math.min(c.close, C[k + 1].close));
     let i = 0; held.forEach((v, k) => { if (v > held[i]) i = k; });
     const pc = held[i], tp = C[i].time, h = C.slice(i + 1).find(c => c.close < pc / 2);
     return { pk: Math.round(pc), up: Math.round(Math.max(0, tp - created) / 60), half: h ? Math.round((h.time - tp) / 60) : null, dd: +Math.max(0, 1 - C[C.length - 1].close / pc).toFixed(3) };
   }
-  function priceScore(dd, pa) {
-    const cap = v => Math.max(0, Math.min(1, v)), half = pa ? pa.half : null, up = pa ? pa.up : null;
-    const sp = !pa ? 0.8 : half == null ? 0.6 : 1 - 0.4 * cap(Math.log(Math.max(half, 60) / 60) / Math.log(12));
-    const crash = 30 * cap((dd - 0.4) / 0.5) * sp, spike = pa && up <= 60 && half != null && half <= 60 && dd >= 0.7 ? 10 : 0;
-    const steady = pa && half == null && dd < 0.4 ? 5 * Math.min(1, up / 360) : 0;
-    return [steady - crash - spike, !!spike];
-  }
-  function score(x) {
-    const lg = Math.log10, cap = v => Math.max(0, Math.min(1, v)), org = x.jv ? x.ov / x.jv : 0;
-    const s = 25 * Math.min(1, lg(1 + x.ob) / 2) + (x.fb != null ? 20 * Math.min(1, x.fb / 0.7) : 12 * Math.min(1, org / 0.08))
-      + 15 * Math.max(0, 1 - x.bund / 25)
-      + (x.dn < 1 || x.dn > 2000 || !x.audit ? 7 : x.dg / x.dn >= 0.2 ? 15 : x.dn >= 5 && x.dg / x.dn < 0.05 ? 0 : 7)
-      + 10 * Math.min(1, lg(1 + x.h) / 3) + (x.top != null ? 5 * cap((80 - x.top) / 50) : 2.5) + 5 * Math.min(1, org / 0.08)
-      + (x.fpt != null ? 5 * cap((4 - x.fpt) / 2.5) : 2.5)
-      + priceScore(x.dd || 0, x.pa)[0]   // what the price did
-      - (x.bpk >= 10 && (x.bh || 0) < x.bpk / 2 ? 10 * Math.min(1, x.bpk / 25) : 0);   // bundlers who sold into the pump
-    const pnd = priceScore(x.dd || 0, x.pa)[1], dumped = (x.dd || 0) >= 0.85 && x.pk >= 20000;
-    const sc = Math.max(0, Math.min(100, Math.round(s))), farm = x.vol >= 20000 && (x.fb != null ? x.fb < 0.45 && (x.ob < 20 || x.h < 60) : x.ob < 5);
-    return { score: sc, dumped, pnd, vd: farm ? 'FARM' : sc >= 60 && x.bund < 20 && !dumped ? 'REAL' : sc >= 35 ? 'WATCH' : 'THIN', org: x.jv ? +(org * 100).toFixed(1) : null };
-  }
-  return { esc, num, short, SITE, bnow, bundOf, scanHolders, summarize, vetFunders, score, priceAction, priceScore, vd, tiles, funding, beforeBuy };
+  return { esc, num, short, SITE, bnow, bundOf, scanHolders, summarize, vetFunders, priceAction, vd, tiles, funding, beforeBuy };
 })();
