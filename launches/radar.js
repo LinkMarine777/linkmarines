@@ -62,17 +62,8 @@ ROOT.innerHTML = `
       <div class="list" id="lr-pairs"><div class="empty">loading…</div></div></div>
   </section>
   <section class="lr-panel"><details class="how"><summary>HOW THE SCORE WORKS</summary>
-    <p>Every launch of the last 24 h that trades ($2,500+ volume, or graduated) gets a score out of 100:</p>
-    <ul>
-      <li><b>Organic buyers (25)</b>: distinct wallets Jupiter counts as organic buyers in 24 h. Bots and wash wallets are filtered out.</li>
-      <li><b>Fee-backed volume (20)</b>: what the coin paid its holders, divided by its tax rate, against the volume it reports. Every taxed trade pays, so real trading comes out near <code>1.0</code>. Washed volume comes out far below: farms measure 0.15–0.45.</li>
-      <li><b>Bundles (15)</b>: what's held <b>now</b>, the bigger of the bundlers' share of the supply (Jupiter's Bundlers H.) and <b>linked holders</b>: top-100 holders funded by one private wallet. An exchange (Binance, Coinbase, OKX, Bybit, MEXC) or any service that funds holders across many coins doesn't count as a link.</li>
-      <li><b>Dev (15)</b>: the deployer's other coins, 👑 graduated out of launched (Jupiter). 1 in 5 graduated gives the full 15. A serial launcher (5+ coins, under 1 in 20 graduated) gets 0. A wallet with 2,000+ coins is a launch tool shared by many people, so it counts as neutral.</li>
-      <li><b>Holders (10)</b>, <b>top 10 holders' share (5)</b>, <b>organic share of volume (5)</b>.</li>
-      <li><b>The price (−40 to +5)</b>: how far it fell from its peak and <b>how fast</b>: up to −30, nothing until 40% off, all of it at 90% off; losing half within an hour of the peak counts in full, a fade over 12 h or more 60%. <b>Pump and dump (−10)</b>: peaked within an hour of launch and lost half within the next hour, ending 70%+ down. <b>Steady (+5)</b>: climbed over hours without ever losing half of its peak. <b>Sold bundles (−10)</b>: bundlers held 10%+ at their peak and have sold most of it, into the pump.</li>
-      <li><b>Fees per trade (5)</b>: priority fees and tips traders paid per trade (Jupiter's Fees Paid). Farm bots pay to land their bundles: farms measured 2.3–5 mSOL a trade, real coins 0.7–2.7.</li>
-    </ul>
-    <p><span class="v-REAL">REAL</span> 60+, not bundled (20%+ bundled or linked caps it at WATCH) and not dumped (85%+ below a $20K+ peak, tagged DUMPED, caps it too) · <span class="v-WATCH">WATCH</span> 35+ · <span class="v-FARM">FARM</span> $20,000+ volume the fees don't back up, with few organic buyers or holders · <span class="v-THIN">THIN</span> the rest.</p>
+    <p>Every launch of the last 24 h that trades ($2,500+ volume, or graduated) gets a score out of 100, worked out by Terminal 7 from what happens on chain over time: do real buyers keep coming and keep holding. How it's weighed is ours.</p>
+    <p><span class="v-REAL">REAL</span> clears every one of our bars, not just the score · <span class="v-WATCH">WATCH</span> some of it checks out · <span class="v-FARM">FARM</span> volume that doesn't look real · <span class="v-THIN">THIN</span> the rest.</p>
     <p>Not financial advice: a score reads what already happened on chain.</p>
   </details></section>
   <div class="lr-foot">updated <span id="lr-upd2">…</span> · a pass every ~5 min · data: stonkfun, Jupiter, Jupiter VRFD</div>`;

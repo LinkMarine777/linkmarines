@@ -1,5 +1,4 @@
-// The token page's TOKEN INFO, for every coin: the radar score (the same formula as New launches, from the last 24 h of
-// trading), Jupiter's Token Info tiles, who funded the top 100 holders and the clusters one private wallet funded (scanned
+// The token page's TOKEN INFO, for every coin: the radar score (worked out by the bot: /coin/<mint>/real), Jupiter's Token Info tiles, who funded the top 100 holders and the clusters one private wallet funded (scanned
 // here, live from Jupiter's data API, each cluster's funder checked on chain so app and exchange wallets aren't counted as
 // links), the 🫧 bubble map, and BEFORE YOU BUY above the swap. The score sits with CLOBr's and Compound's in the scores box.
 // A launch the radar scored in its first 24 h (terminal/launches.json) adds its VRFD request and fees per trade.
@@ -12,6 +11,8 @@
   const ago = t => { const s = Date.now() / 1000 - t; return s < 3600 ? Math.max(1, Math.floor(s / 60)) + 'm' : s < 172800 ? Math.floor(s / 3600) + 'h' : Math.floor(s / 86400) + 'd'; };
   const stat = (label, v, cls = '', tip = '') => `<div${tip ? ` title="${tip}"` : ''}><label>${label}</label><b class="${cls}">${v}</b></div>`;
   const getJ = async u => { const r = await fetch(u, { cache: 'no-store' }); if (!r.ok) throw new Error(r.status); return r.json(); };
+  const REALP = getJ(`https://war-room-bot.linkmarine777.workers.dev/coin/${CA}/real`).then(d => d && d.score != null ? d : null).catch(() => null);
+  let REAL = null;
   const WHY = { REAL: 'the fees, buyers and holders back the volume', FARM: 'volume the fees don\'t back', WATCH: 'some of it checks out', THIN: 'not much real trading in the last 24 h' };
 
   // what holders were paid in the last 24 h, from the page's own payouts data (a reward coin): fee-backed = paid ÷ tax ÷ volume
@@ -41,12 +42,12 @@
     if (a.mcap) r.mc = a.mcap;
     const pa = (L && L.pa) || PA || null; r.pa = pa; if (!L && pa) r.pk = pa.pk;
     const dd = pa ? pa.dd : r.pk ? Math.max(0, 1 - r.mc / r.pk) : 0;
-    const s = LRS.score({ ob: r.ob, fb: r.fb, jv, ov, bund: bundOf(r), dn, dg, audit: !!a.audit, h: r.h, top: r.top, fpt: L ? L.fpt : null, vol: jv, dd, pa, pk: r.pk || 0, bpk: r.bpk, bh: r.bh });
+    const R = REAL || L, s = R ? { score: R.score, vd: R.vd, dumped: !!R.dumped, pnd: !!R.pnd, org: R.org != null ? R.org : (jv ? +(ov / jv * 100).toFixed(1) : null) } : { score: null, vd: '', dumped: false, pnd: false, org: jv ? +(ov / jv * 100).toFixed(1) : null };   // (11-09: the bot's score; a launch's own row until it answers)
     return Object.assign(r, s);
   }
   // the score in the scores box (with CLOBr's and Compound's); a click opens TOKEN INFO
   function score(r) {
-    const el = document.getElementById('radarStat'); if (!el) return;
+    const el = document.getElementById('radarStat'); if (!el || r.score == null) return;
     const b = document.getElementById('sRadar'); b.className = 'v-' + r.vd; b.textContent = r.score;
     const m = document.getElementById('sRadarMsg'); m.innerHTML = `<i class="v-${esc(r.vd)}">${esc(r.vd)}</i>`; m.title = WHY[r.vd];
     el.style.display = ''; if (window.syncScores) syncScores();
@@ -60,7 +61,7 @@
     document.getElementById('radarBody').innerHTML = `<div class="lrscan">
       <div class="rtop">${LRS.vd(r)}<span class="dim">${r.pnd ? 'a pump and dump: up fast after launch, half of it gone within the hour' : r.dumped ? `the trading was real, but it's down ${Math.round((r.pa ? r.pa.dd : 1 - r.mc / r.pk) * 100)}% from its peak` : WHY[r.vd]}</span></div>
       <div class="rstats">
-        ${r.fb != null ? stat('Fee-backed', r.fb.toFixed(2), fbc, 'what holders were paid in 24 h ÷ the tax ÷ the 24 h volume: real trading comes out near 1.0') : stat('Organic volume', r.org == null ? '—' : r.org + '%', r.org >= 8 ? 'up' : r.org < 2 ? 'dn' : '', 'Jupiter\'s organic share of the 24 h volume (no payouts to check)')}
+        ${r.fb != null ? stat('Fee-backed', r.fb.toFixed(2), fbc, 'how well what holders were paid backs up the reported volume') : stat('Organic volume', r.org == null ? '—' : r.org + '%', r.org >= 8 ? 'up' : r.org < 2 ? 'dn' : '', 'Jupiter\'s organic share of the 24 h volume (no payouts to check)')}
         ${stat('Org buyers 24h', num(r.ob), r.ob >= 40 ? 'up' : r.ob < 5 ? 'dn' : '')}
         ${stat('Bundled / linked', bund.toFixed(1) + '%', bund >= 20 ? 'dn' : bund >= 10 ? 'am' : 'up')}${dev}
         ${r.vr ? stat('Jupiter VRFD', (r.vr.lane === 'express' ? '⚡ ' : '') + esc(r.vr.st), r.vr.st === 'verified' ? 'up' : r.vr.st === 'rejected' ? 'dn' : 'am') : ''}
@@ -92,8 +93,9 @@
     const age = Date.now() / 1000 - (created || 0), [iv, n] = age < 2 * 86400 ? ['5_MINUTE', 600] : age < 30 * 86400 ? ['1_HOUR', 720] : ['1_DAY', 1000];
     if (!(L && L.pa)) PA = await getJ(`https://datapi.jup.ag/v2/charts/${CA}?interval=${iv}&to=${Date.now()}&candles=${n}&type=mcap&quote=usd`)
       .then(d => LRS.priceAction(d.candles, created)).catch(() => null);
-    const show = (s, checking) => { (window.LRS_SCANS = window.LRS_SCANS || {})[CA] = s; render(rowOf(asset, s, L, rw, PA), L, checking); };
+    let last = null; const show = (s, checking) => { last = [s, checking]; (window.LRS_SCANS = window.LRS_SCANS || {})[CA] = s; render(rowOf(asset, s, L, rw, PA), L, checking); };
     show(sc, !!(sc && sc.cl.length));
+    REALP.then(R => { if (R) { REAL = R; show(...last); } });
     // then again with the payouts (when they land) and app / exchange wallets taken out of the links
     const [v, r2] = await Promise.all([sc && sc.cl.length ? LRS.vetFunders(sc) : sc, rw ? rw : paid24()]);
     rw = r2; show(v, false);
