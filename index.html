@@ -347,6 +347,10 @@
   .hero .cta-row{grid-row:3/span 2;align-self:start;margin-top:14px;justify-content:flex-start;gap:8px}
   .hero .cta-row a{min-width:0;padding:11px 16px;font-size:12.5px;letter-spacing:1.5px}
   .hero .tts-link{justify-self:start;margin-top:8px}
+  /* the CA, the boxes and the yellow lines: one column, 8 px apart like the boxes (owner 11-11) */
+  .hero .hside{grid-column:2;grid-row:1/span 5;align-self:center;display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-width:0}
+  .hero .hside .ca,.hero .hside .cta-row,.hero .hside .tts-link{margin:0;align-self:flex-start}
+  .hero .hside .cta-row{margin-bottom:4px}
   .chips{display:none}
   .manual{display:grid;grid-template-columns:230px minmax(0,1fr);max-width:1240px;margin:0 auto;padding:0 24px}
   .toc{position:sticky;top:72px;align-self:start;padding:28px 18px 24px 0;border-right:1px solid rgba(74,122,255,.2);max-height:calc(100vh - 72px);overflow-y:auto}
@@ -380,6 +384,7 @@
     .hb{padding:8px 9px}.hb.live span,.hb.t7 span{display:none}
     .hero{grid-template-columns:1fr;padding:22px 16px 18px}.hero>*,.hero .ca,.hero .cta-row,.hero .tts-link{grid-column:1;grid-row:auto}
     .hero .ca{margin-top:16px}.hero .cta-row a{flex:1 1 40%;text-align:center;padding:11px 8px}
+    .hero .hside{grid-column:1;grid-row:auto;margin-top:16px;align-items:stretch}.hero .hside .ca,.hero .hside .cta-row{align-self:stretch}.hero .hside .tts-link{align-self:flex-start}
     .chips{display:flex;gap:6px;position:sticky;top:54px;z-index:55;overflow-x:auto;padding:8px 12px;background:rgba(4,6,15,.96);border-bottom:1px solid rgba(74,122,255,.25);scrollbar-width:none}
     .chips::-webkit-scrollbar{display:none}
     .chips a{font-family:'VT323',monospace;font-size:16px;letter-spacing:1px;color:#9fb0e0;border:1px solid rgba(74,122,255,.3);padding:2px 10px;white-space:nowrap;text-decoration:none}
@@ -416,6 +421,7 @@
   <p class="sub">
     the first cult that was <b>right</b>. hold <b>$MARINE</b>, get paid in <b>$LINK</b>.
   </p>
+  <div class="hside">
   <div class="ca">
     <span id="ca-text">F8Sc8HoZvJcMrTY6vBsetTqGPv6XQmM2XgVAZo1sSTNK</span>
     <button onclick="copyCA(this)">COPY CA</button>
@@ -425,9 +431,10 @@
     <a class="warroom" href="https://x.com/i/chat/group_join/g2100093244189344145/C2cWaUPPPt" target="_blank" rel="noopener">⚔ War Room Chat</a>
     <a href="https://terminal7.xyz/">Terminal 7</a>
   </div>
-  <a class="tts-link" href="/tts/checkout?k=t" onclick="return wrCheckout('t')">📢 Put your message on The War Room stream (TTS)</a><br>
+  <a class="tts-link" href="/tts/checkout?k=t" onclick="return wrCheckout('t')">📢 Put your message on The War Room stream (TTS)</a>
   <a class="tts-link" href="https://terminal7.xyz/flywheel/">♻️ How $LINK rewards work: the flywheel ▸</a>
   <a class="tts-link" href="/bridge/">🌉 New to Solana? Learn how to bridge and buy $MARINE ▸</a>
+  </div>
 </div>
 
 <div class="wall">
