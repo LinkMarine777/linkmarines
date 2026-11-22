@@ -432,8 +432,8 @@ html.fit #tip{font-size:20px;padding:10px 14px}
 <body>
 <div id="ttsModal"><div class="box">
   <button class="x" id="ttsClose" type="button" aria-label="Close">✕</button>
-  <h3>ON SCREEN · ON STREAM</h3>
-  <div class="kind" id="kind"><button data-k="t" class="on">🔊 TTS</button><button data-k="a">📢 BILLBOARD</button><button data-k="i">🖼 IMAGE AD</button></div>
+  <h3>TTS ON STREAM</h3>
+  <div class="kind" id="kind" hidden style="display:none"><button data-k="t" class="on">🔊 TTS</button><button data-k="a">📢 BILLBOARD</button><button data-k="i">🖼 IMAGE AD</button></div>
   <label class="f" id="fFromL">Your name / X handle</label><input id="fFrom" maxlength="24" placeholder="@you">
   <div id="kT">
     <label class="f">Message · read out loud</label>
@@ -455,7 +455,7 @@ html.fit #tip{font-size:20px;padding:10px 14px}
     <div><label class="f">Pay with</label><select id="fTok" title="USDC only (a little SOL in the wallet covers the network fee)"><option value="usdc">USDC</option></select></div>
     <div style="text-align:right"><div class="dim" style="font-size:10px;letter-spacing:1.5px">TOTAL</div><div class="total" id="fTotal">—</div></div>
   </div>
-  <p style="font-size:11px" class="dim" id="rules">TTS is a donation: it plays on stream a few seconds after the payment confirms. Keep it within Twitch / Kick / YouTube / X rules. No links, contract addresses, or anything hateful. Anything that breaks the rules is held for a mod and, if rejected, not refunded. Want a longer run or an all-day sponsor slot? DM <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener" style="color:var(--amber)">@TheMarinesX</a>.</p>
+  <p style="font-size:11px" class="dim" id="rules">TTS is a donation: it plays on stream a few seconds after the payment confirms. Keep it within Twitch / Kick / YouTube / X rules. No links, contract addresses, or anything hateful. Anything that breaks the rules is held for a mod and, if rejected, not refunded.</p>
   <div id="payMsg"></div>
   <div class="acts"><button class="btn" id="wBtn" type="button">CONNECT WALLET</button><a class="btn" id="payLink" href="#">OPEN IN WALLET APP</a><button class="btn primary" id="payBtn">PAY</button></div>
   <div id="mySec" style="display:none">
@@ -540,7 +540,8 @@ function refresh(){const a=amount();{const wt=wasTotal(),ut=usdTotal();$('fTotal
   const off=!PAY||!PAY.treasury;$('payBtn').disabled=off;L.style.display=off||!(coarse()||!detected().length)?'none':'';
   if(off)say('Checkout opens shortly. Until then DM <a href="https://x.com/TheMarinesX" target="_blank" rel="noopener">@TheMarinesX</a>.','')}
 function say(h,c){$('payMsg').innerHTML=h;$('payMsg').className=c||''}
-function openBuy(k,slot){kind=k;fillSlotSel();if(slot)$('fSlot').value=slot;
+function openBuy(k,slot){k='t';slot=undefined;kind=k;   // TTS only (owner 11-22: no billboard / image ads for sale)
+fillSlotSel();if(slot)$('fSlot').value=slot;
   [...$('kind').children].forEach(b=>b.classList.toggle('on',b.dataset.k===k));$('kT').style.display=k==='t'?'':'none';$('kA').style.display=k!=='t'?'':'none';
   $('fFromL').textContent=k==='t'?'Your name / X handle':'Your X handle · clicking the ad opens your X';
   $('kAt').style.display=k==='a'?'':'none';$('kAi').style.display=k==='i'?'':'none';
